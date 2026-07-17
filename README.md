@@ -1,21 +1,121 @@
-# Next.js template
+<!-- markdownlint-disable MD033 MD041 -->
+> [!IMPORTANT]
+> **Human review needed.** This file is AI-generated prose and has not yet been
+> confirmed by a human. Remove this notice once reviewed (see AI_POLICY.md).
 
-This is a Next.js template with shadcn/ui.
+<div align="center">
 
-## Adding components
+# 🦘 KangaFlow
 
-To add components to your app, run the following command:
+**A bilingual, three-theme Next.js playground — vim command palette, unlockable
+achievements, live weather — shipped as a fully static site to GitHub Pages.**
+
+[![Deploy](https://github.com/KangaZero/KangaFlow/actions/workflows/deploy.yml/badge.svg)](https://github.com/KangaZero/KangaFlow/actions/workflows/deploy.yml)
+[![Live Demo](https://img.shields.io/badge/demo-live-22c55e)](https://kangazero.github.io/KangaFlow/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+
+![Next.js](https://img.shields.io/badge/Next.js-16.3-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-7-3178c6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?logo=tailwindcss&logoColor=white)
+![Biome](https://img.shields.io/badge/Biome-2.4-60a5fb?logo=biome&logoColor=white)
+![pnpm](https://img.shields.io/badge/pnpm-11-f69220?logo=pnpm&logoColor=white)
+
+### [→ Open the live site](https://kangazero.github.io/KangaFlow/)
+
+</div>
+
+---
+
+## ✨ Highlights
+
+| | |
+| --- | --- |
+| ⌨️ **Vim command palette** | Press <kbd>:</kbd> to open, type `:q` (or <kbd>Esc</kbd> / click-away / ✕) to close. Jump to any theme, page, or language. |
+| 🎨 **Three themes** | Light · Dark · Terminal, with a View-Transition **circular reveal** on switch. Cycle with <kbd>d</kbd> or the toggle. |
+| 🌏 **Bilingual (EN / 日本語)** | End-to-end **type-safe** i18n — invalid keys don't compile. Locale lives in the URL (`/en`, `/ja`). |
+| 🏆 **Achievements** | Unlockable with rarities, secrets, a localStorage save, and an animated toast. |
+| 🌤️ **Live weather + date** | Client-side [Open-Meteo](https://open-meteo.com/) fetch with a skeleton while loading. |
+| ⚡ **Fully static** | No server — exported to GitHub Pages and deployed on every push to `main`. |
+
+## 🧱 Tech stack
+
+- **Next.js 16.3** (App Router, `output: "export"`) · **React 19** · **Tailwind CSS v4**
+- **TypeScript 7** (the Go-native `tsc`), strict — `noUncheckedIndexedAccess`,
+  `exactOptionalPropertyTypes`, and friends
+- **[Biome](https://biomejs.dev/) 2.4** — one binary for the git hook, CI, and `just` (no ESLint/Prettier)
+- **shadcn/ui** ("radix-mira") + **[animate-ui](https://animate-ui.com/)** + **Motion**
+- **Vitest** for unit tests · **Nix flake** + **just** for a reproducible toolchain
+
+## 🚀 Getting started
+
+With **Nix** (recommended — pins Node 26, pnpm, just, and the git hooks):
 
 ```bash
-npx shadcn@latest add button
+nix develop      # enter the dev shell
+pnpm install
+just dev         # http://localhost:3000
 ```
 
-This will place the ui components in the `components` directory.
+Without Nix, you'll need Node 26 + pnpm 11 yourself, then `pnpm install && just dev`.
 
-## Using components
+## 🛠️ Tasks (`just`)
 
-To use the components in your app, import them as follows:
+| Recipe | What it does |
+| --- | --- |
+| `just dev` | Start the dev server |
+| `just build` | Production static export → `./out` |
+| `just fix` | Auto-fix + format (Biome, writes) |
+| `just lint` | Lint + format check, no writes (what CI runs) |
+| `just typecheck` | Type-check with native TS 7 |
+| `just test` | Run the Vitest suite |
+| `just verify` | The full gate: lint + typecheck + test + build |
+| `just preview` | Serve `./out` under the `/KangaFlow` base path |
+| `just review` / `just review-count` | List / count files pending human review |
+| `just push` | `verify`, then push (CI deploys) |
 
-```tsx
-import { Button } from "@/components/ui/button";
+## 🗂️ Project layout
+
+```text
+app/
+  [lang]/            # /en and /ja (generateStaticParams, dynamicParams=false)
+    achievements/    # achievements page
+  page.tsx           # root — client redirect to the preferred locale
+components/          # app components (theme toggle, command menu, header date…)
+  ui/                # vendored shadcn primitives
+  animate-ui/        # vendored animate-ui primitives
+hooks/               # use-weather (Open-Meteo)
+lib/
+  i18n/              # typed dictionaries (en/ja) + t()
+  themes.ts          # theme union + cycle (single source of truth)
+  weather.ts         # WMO → icon + temperature colour
+  achievements.ts    # catalogue + pure unlock/reconcile reducer
 ```
+
+## 🧭 Architecture notes
+
+- **Single source of truth.** Themes, locales, WMO codes, and the achievement
+  catalogue are each declared once and their types/lists derive from it.
+- **Static-export constraints.** No server or middleware: i18n routing is
+  client-side, locale is chosen at `/` by a client redirect, and anything needing
+  a request (weather) is fetched in the browser. Assets are served under the
+  `/KangaFlow` base path with a `.nojekyll` marker.
+- **Strict, no escape hatches.** `any` is banned; every user-facing string flows
+  through i18n (a missing translation fails the build).
+
+## 🚢 Deployment
+
+Pushing to `main` runs GitHub Actions: Biome CI → TS 7 type-check → Vitest →
+static build → deploy to GitHub Pages. Locally, `just push` runs the same gate
+first. Live at **<https://kangazero.github.io/KangaFlow/>**.
+
+## 🤖 AI usage
+
+This repository is built with AI assistance under a disclosed policy — see
+[`AI_POLICY.md`](./AI_POLICY.md). AI-generated prose carries a *"Human review
+needed"* marker until a human confirms it (`just review` tracks the backlog), and
+AI-assisted commits disclose the tool via an `Assisted-by:` trailer.
+
+## 📄 License
+
+Released under the [MIT License](./LICENSE).

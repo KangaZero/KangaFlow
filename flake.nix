@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: Unlicense
+# SPDX-License-Identifier: MIT
 # [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 {
   inputs = {
