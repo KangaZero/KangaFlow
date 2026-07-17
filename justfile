@@ -25,9 +25,9 @@ lint:
 typecheck:
     pnpm exec tsc --noEmit
 
-# Run the test suite once (non-watch). --passWithNoTests until the suite lands.
+# Run the test suite once (non-watch).
 test:
-    pnpm exec vitest run --passWithNoTests
+    pnpm exec vitest run
 
 # Full gate: everything CI runs, in the same order.
 verify: lint typecheck test build
