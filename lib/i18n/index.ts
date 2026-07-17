@@ -8,6 +8,14 @@ export type Locale = "en" | "ja"
 
 export const LOCALES: readonly Locale[] = ["en", "ja"]
 
+export const DEFAULT_LOCALE: Locale = "en"
+
+// Narrows an arbitrary string (route param, cookie, navigator.language) to a
+// supported Locale.
+export function isLocale(value: string | undefined): value is Locale {
+  return value != null && (LOCALES as readonly string[]).includes(value)
+}
+
 // English is the source of truth for keys; other locales must structurally
 // match its shape (enforced by `satisfies` below).
 export type Translation = typeof en

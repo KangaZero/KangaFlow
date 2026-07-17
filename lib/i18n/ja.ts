@@ -39,6 +39,11 @@ const ja = {
       "師走",
     ],
   },
+  home: {
+    commandHint: ": キーでコマンド",
+    tagline: "ささやかなフローアプリ。",
+    themeHint: "d キーでテーマを切り替え",
+  },
   nav: {
     achievements: "実績",
     home: "ホーム",

@@ -40,6 +40,11 @@ const en = {
       "Dec",
     ],
   },
+  home: {
+    commandHint: "Press : for commands",
+    tagline: "A little flow app.",
+    themeHint: "Press d to cycle theme",
+  },
   nav: {
     achievements: "Achievements",
     home: "Home",
