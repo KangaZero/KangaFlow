@@ -1,6 +1,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { notFound } from "next/navigation"
 
+import { HeaderDate } from "@/components/header-date"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { isLocale, t } from "@/lib/i18n"
 
@@ -20,7 +21,10 @@ export default async function Home({
     <main className="flex min-h-svh flex-col p-6">
       <header className="flex items-center justify-between gap-4">
         <h1 className="font-medium text-lg">KangaFlow</h1>
-        <ThemeToggle />
+        <div className="flex items-center gap-4">
+          <HeaderDate />
+          <ThemeToggle />
+        </div>
       </header>
 
       <p className="mt-4 text-muted-foreground text-sm">
