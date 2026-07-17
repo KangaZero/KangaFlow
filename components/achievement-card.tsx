@@ -2,8 +2,6 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import { Share2 } from "lucide-react"
-
-import { useLocale } from "@/components/locale-provider"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,6 +17,7 @@ import {
   RARITY_ICON,
   rarityColorVar,
 } from "@/lib/achievements"
+import { useLocale } from "@/providers/locale-provider"
 
 export function AchievementCard({ achievement }: { achievement: Achievement }) {
   const { locale, translate } = useLocale()

@@ -53,10 +53,18 @@
   animation-duration: 0.4s;
 }
 
+.shape.cyan-fill svg rect {
+  fill: var(--p5-shape-cyan);
+}
+
 .shape.red-fill {
   animation-duration: 0.45s;
   animation-delay: 0.08s;
   opacity: 0.8;
+}
+
+.shape.red-fill svg rect {
+  fill: var(--p5-shape-red);
 }
 
 /* Hover effect on cyan fill */
@@ -75,9 +83,9 @@
   align-items: flex-start;
   transform: rotate(-8deg);
   text-shadow:
-    2.2px 2.2px hsl(var(--text-shadow-hsl) / 0.2),
-    2.6px 2.6px hsl(var(--text-shadow-hsl) / 0.3),
-    3px 3px hsl(var(--text-shadow-hsl) / 0.4);
+    2.2px 2.2px hsl(var(--text-shadow-hsla) / 0.2),
+    2.6px 2.6px hsl(var(--text-shadow-hsla) / 0.3),
+    3px 3px hsl(var(--text-shadow-hsla) / 0.4);
   position: relative;
   z-index: 999;
   width: auto;
@@ -87,9 +95,9 @@
 
 .dark .p5DateMonthDay {
   text-shadow:
-    2.2px 2.2px hsl(var(--text-shadow-hsl) / 0.9),
-    2.6px 2.6px hsl(var(--text-shadow-hsl) / 0.95),
-    3px 3px hsl(var(--text-shadow-hsl) / 1);
+    2.2px 2.2px hsl(var(--text-shadow-hsla) / 0.9),
+    2.6px 2.6px hsl(var(--text-shadow-hsla) / 0.95),
+    3px 3px hsl(var(--text-shadow-hsla) / 1);
 }
 
 .p5DateBox.hover-active {
@@ -248,8 +256,8 @@
 .jelly {
   animation-name: jelly;
   transform-origin: center;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
+  animation-iteration-count: 5;
+  animation-timing-function: ease-out;
 }
 
 /* Keyframe Animations */

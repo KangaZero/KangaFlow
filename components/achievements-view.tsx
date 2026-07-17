@@ -6,8 +6,6 @@ import { AnimatePresence, motion } from "motion/react"
 import * as React from "react"
 
 import { AchievementCard } from "@/components/achievement-card"
-import { useAchievements } from "@/components/achievements-provider"
-import { useLocale } from "@/components/locale-provider"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -19,6 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { getAchievementDef, RARITIES, type Rarity } from "@/lib/achievements"
+import { useAchievements } from "@/providers/achievements-provider"
+import { useLocale } from "@/providers/locale-provider"
 
 const COLUMN_OPTIONS = [1, 2, 3] as const
 type ColumnCount = (typeof COLUMN_OPTIONS)[number]

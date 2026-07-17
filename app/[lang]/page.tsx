@@ -20,11 +20,9 @@ export default async function Home({
   return (
     <main className="flex min-h-svh flex-col p-6">
       <header className="flex items-center justify-between gap-4">
+        <HeaderDate />
         <h1 className="font-medium text-lg">KangaFlow</h1>
-        <div className="flex items-center gap-4">
-          <HeaderDate />
-          <ThemeToggle />
-        </div>
+        <ThemeToggle />
       </header>
 
       <p className="mt-4 text-muted-foreground text-sm">

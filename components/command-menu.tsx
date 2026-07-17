@@ -1,173 +1,215 @@
 "use client"
-// [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import {
-  Home,
-  Languages,
-  LogOut,
-  Moon,
-  Sun,
-  Terminal,
-  Trophy,
+  BellIcon,
+  CalculatorIcon,
+  CalendarIcon,
+  ClipboardPasteIcon,
+  CodeIcon,
+  CopyIcon,
+  CreditCardIcon,
+  FolderPlusIcon,
+  HelpCircleIcon,
+  ImageIcon,
+  LayoutGridIcon,
+  ListIcon,
+  type LucideIcon,
+  PlusIcon,
+  ScissorsIcon,
+  SettingsIcon,
+  TrashIcon,
+  UserIcon,
+  ZoomInIcon,
+  ZoomOutIcon,
 } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
-import * as React from "react"
 
-import { useLocale } from "@/components/locale-provider"
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
+  CommandShortcut,
 } from "@/components/ui/command"
-import { LOCALES } from "@/lib/i18n"
-import { THEMES, type Theme } from "@/lib/themes"
+import type { GlobalStatesContextValue } from "@/lib/globalStates"
 
-const THEME_ICON: Record<Theme, React.ComponentType> = {
-  dark: Moon,
-  light: Sun,
-  terminal: Terminal,
+type CommandMenuProps = Pick<
+  GlobalStatesContextValue,
+  "isCommandPaletteOpen" | "setIsCommandPaletteOpen"
+> & {
+  commands: {
+    name: string
+    shortcut: {
+      hasMetaOrCtrlKey: boolean
+      hasAltOrOptionKey: boolean
+      hasShiftKey: boolean
+      character: null | string // grapheme length must be 1
+    }
+    icon: LucideIcon
+  }[]
 }
 
-function isTypingTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) {
-    return false
+//TODO move as a global lib fn
+export const IS_MAC =
+  typeof navigator !== "undefined" &&
+  /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
+
+export const CommandMenu = ({
+  isCommandPaletteOpen,
+  setIsCommandPaletteOpen,
+  commands,
+}: CommandMenuProps) => {
+  if (!isCommandPaletteOpen) return null
+
+  //TODO move this to where settings is applied
+  const graphemeLength = (grapheme: string): number => {
+    const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    return [...segmenter.segment(grapheme.trim())].length
   }
-  return (
-    target.isContentEditable ||
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT"
-  )
-}
 
-export function CommandMenu() {
-  const [open, setOpen] = React.useState(false)
-  const [query, setQuery] = React.useState("")
-  const router = useRouter()
-  const { setTheme } = useTheme()
-  const { locale, setLocale, translate } = useLocale()
-
-  // ":" enters command mode (vim). Ignored while typing elsewhere so it never
-  // hijacks a real colon in an input.
-  React.useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.defaultPrevented || event.repeat) {
-        return
-      }
-      if (event.metaKey || event.ctrlKey || event.altKey) {
-        return
-      }
-      if (event.key === ":" && !isTypingTarget(event.target)) {
-        event.preventDefault()
-        setOpen(true)
-      }
-    }
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [])
-
-  const close = React.useCallback(() => {
-    setOpen(false)
-    setQuery("")
-  }, [])
-
-  // Close first, then run — so navigation/theme changes happen after unmount.
-  const run = React.useCallback(
-    (action: () => void) => {
-      close()
-      action()
-    },
-    [close]
-  )
-
-  // Typed ":q"/":quit" + Enter quits, mirroring vim's ex command.
-  function onInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
-    const command = query.trim()
-    if (event.key === "Enter" && (command === ":q" || command === ":quit")) {
-      event.preventDefault()
-      close()
-    }
+  const shortcutsToLabel = (
+    shortcut: CommandMenuProps["commands"][number]["shortcut"]
+  ): string => {
+    if (!shortcut.character) return ""
+    const shortcutAsLabel: string[] = []
+    if (shortcut.hasMetaOrCtrlKey) shortcutAsLabel.push(IS_MAC ? "⌘" : "Ctrl")
+    if (shortcut.hasAltOrOptionKey) shortcutAsLabel.push(IS_MAC ? "⌥" : "Alt")
+    if (shortcut.hasShiftKey) shortcutAsLabel.push(IS_MAC ? "⌘" : "Shift")
+    shortcutAsLabel.push(shortcut.character.toUpperCase())
+    return shortcutAsLabel.join(IS_MAC ? "" : " + ")
   }
+
+  const commandsSanitized: CommandMenuProps["commands"] = commands.map(
+    (command) => {
+      const shortcutCharacter = command.shortcut.character
+      if (!shortcutCharacter || graphemeLength(shortcutCharacter) > 1)
+        command.shortcut.character = null
+      return command
+    }
+  )
 
   return (
     <CommandDialog
-      className="data-closed:slide-out-to-top-8 data-open:slide-in-from-top-8 top-4 translate-y-0 font-mono sm:max-w-xl"
-      description={translate("command.description")}
-      onOpenChange={setOpen}
-      open={open}
-      showCloseButton
-      title={translate("command.title")}
+      onOpenChange={setIsCommandPaletteOpen}
+      open={isCommandPaletteOpen}
     >
-      <CommandInput
-        onKeyDown={onInputKeyDown}
-        onValueChange={setQuery}
-        placeholder={translate("command.placeholder")}
-        value={query}
-      />
-      <CommandList>
-        <CommandEmpty>{translate("command.empty")}</CommandEmpty>
-
-        <CommandGroup heading={translate("command.groups.theme")}>
-          {THEMES.map((theme) => {
-            const Icon = THEME_ICON[theme]
-            return (
-              <CommandItem
-                key={theme}
-                onSelect={() => run(() => setTheme(theme))}
-                value={`theme ${theme}`}
-              >
+      <Command>
+        <CommandInput placeholder="Type a command or search..." />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Navigation">
+            {commandsSanitized.map(({ name, icon: Icon, shortcut }) => (
+              <CommandItem key={name}>
                 <Icon />
-                {translate(`theme.${theme}`)}
+                <span>{name}</span>
+                <CommandShortcut>{shortcutsToLabel(shortcut)}</CommandShortcut>
               </CommandItem>
-            )
-          })}
-        </CommandGroup>
-
-        <CommandGroup heading={translate("command.groups.navigation")}>
-          <CommandItem
-            onSelect={() => run(() => router.push(`/${locale}`))}
-            value="home"
-          >
-            <Home />
-            {translate("nav.home")}
-          </CommandItem>
-          <CommandItem
-            onSelect={() => run(() => router.push(`/${locale}/achievements`))}
-            value="achievements"
-          >
-            <Trophy />
-            {translate("nav.achievements")}
-          </CommandItem>
-        </CommandGroup>
-
-        <CommandGroup heading={translate("command.groups.locale")}>
-          {LOCALES.map((code) => (
-            <CommandItem
-              key={code}
-              onSelect={() => run(() => setLocale(code))}
-              value={`locale ${code}`}
-            >
-              <Languages />
-              {translate(`command.locales.${code}`)}
+            ))}
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Actions">
+            <CommandItem>
+              <PlusIcon />
+              <span>New File</span>
+              <CommandShortcut>⌘N</CommandShortcut>
             </CommandItem>
-          ))}
-        </CommandGroup>
-
-        <CommandGroup heading={translate("command.groups.general")}>
-          <CommandItem
-            keywords={[":q", ":quit", "exit"]}
-            onSelect={close}
-            value="quit"
-          >
-            <LogOut />
-            {translate("command.quit")}
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
+            <CommandItem>
+              <FolderPlusIcon />
+              <span>New Folder</span>
+              <CommandShortcut>⇧⌘N</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <CopyIcon />
+              <span>Copy</span>
+              <CommandShortcut>⌘C</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <ScissorsIcon />
+              <span>Cut</span>
+              <CommandShortcut>⌘X</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <ClipboardPasteIcon />
+              <span>Paste</span>
+              <CommandShortcut>⌘V</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <TrashIcon />
+              <span>Delete</span>
+              <CommandShortcut>⌫</CommandShortcut>
+            </CommandItem>
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="View">
+            <CommandItem>
+              <LayoutGridIcon />
+              <span>Grid View</span>
+            </CommandItem>
+            <CommandItem>
+              <ListIcon />
+              <span>List View</span>
+            </CommandItem>
+            <CommandItem>
+              <ZoomInIcon />
+              <span>Zoom In</span>
+              <CommandShortcut>⌘+</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <ZoomOutIcon />
+              <span>Zoom Out</span>
+              <CommandShortcut>⌘-</CommandShortcut>
+            </CommandItem>
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Account">
+            <CommandItem>
+              <UserIcon />
+              <span>Profile</span>
+              <CommandShortcut>⌘P</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <CreditCardIcon />
+              <span>Billing</span>
+              <CommandShortcut>⌘B</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <SettingsIcon />
+              <span>Settings</span>
+              <CommandShortcut>⌘S</CommandShortcut>
+            </CommandItem>
+            <CommandItem>
+              <BellIcon />
+              <span>Notifications</span>
+            </CommandItem>
+            <CommandItem>
+              <HelpCircleIcon />
+              <span>Help & Support</span>
+            </CommandItem>
+          </CommandGroup>
+          <CommandSeparator />
+          <CommandGroup heading="Tools">
+            <CommandItem>
+              <CalculatorIcon />
+              <span>Calculator</span>
+            </CommandItem>
+            <CommandItem>
+              <CalendarIcon />
+              <span>Calendar</span>
+            </CommandItem>
+            <CommandItem>
+              <ImageIcon />
+              <span>Image Editor</span>
+            </CommandItem>
+            <CommandItem>
+              <CodeIcon />
+              <span>Code Editor</span>
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </Command>
     </CommandDialog>
   )
 }

@@ -1,11 +1,11 @@
-// [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { notFound } from "next/navigation"
 
 import { AchievementToast } from "@/components/achievement-toast"
-import { AchievementsProvider } from "@/components/achievements-provider"
 import { CommandMenu } from "@/components/command-menu"
-import { LocaleProvider } from "@/components/locale-provider"
 import { isLocale, LOCALES } from "@/lib/i18n"
+import { AchievementsProvider } from "@/providers/achievements-provider"
+import { GlobalStatesProvider } from "@/providers/global-state-provider"
+import { LocaleProvider } from "@/providers/locale-provider"
 
 // Pre-render exactly /en and /ja; reject anything else (required for a static
 // export — no server exists to resolve unknown params at request time).
@@ -29,11 +29,13 @@ export default async function LangLayout({
 
   return (
     <LocaleProvider locale={lang}>
-      <AchievementsProvider>
-        {children}
-        <CommandMenu />
-        <AchievementToast />
-      </AchievementsProvider>
+      <GlobalStatesProvider>
+        <AchievementsProvider>
+          {children}
+          <CommandMenu />
+          <AchievementToast />
+        </AchievementsProvider>
+      </GlobalStatesProvider>
     </LocaleProvider>
   )
 }

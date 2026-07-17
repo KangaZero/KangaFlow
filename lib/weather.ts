@@ -98,20 +98,21 @@ export function getWeatherIconKey(
   return isDay ? pair.day : pair.night
 }
 
-// Map a Celsius temperature to an oklch colour, cold (blue) → hot (red). Pure
-// and bucketed so it is trivially unit-testable.
+// Map a Celsius temperature to a colour token, cold (blue) → hot (red). Values
+// live in globals.css (`--temp-*`); this stays pure and bucketed so it is
+// trivially unit-testable. `switch (true)` matches top-down, so each case only
+// needs its upper bound; default catches NaN (missing forecast data).
 export function getTemperatureColor(celsius: number): string {
-  if (celsius <= 0) {
-    return "oklch(0.72 0.14 250)"
+  switch (true) {
+    case celsius <= 0:
+      return "var(--temp-cold)"
+    case celsius <= 15:
+      return "var(--temp-cool)"
+    case celsius <= 25:
+      return "var(--temp-warm)"
+    case celsius > 25:
+      return "var(--temp-hot)"
+    default:
+      return "var(--temp-unknown)"
   }
-  if (celsius <= 10) {
-    return "oklch(0.75 0.12 220)"
-  }
-  if (celsius <= 20) {
-    return "oklch(0.78 0.14 150)"
-  }
-  if (celsius <= 28) {
-    return "oklch(0.8 0.15 80)"
-  }
-  return "oklch(0.7 0.2 30)"
 }

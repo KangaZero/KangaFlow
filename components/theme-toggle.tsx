@@ -6,9 +6,9 @@ import { useTheme } from "next-themes"
 import * as React from "react"
 
 import { ThemeToggler } from "@/components/animate-ui/primitives/effects/theme-toggler"
-import { useLocale } from "@/components/locale-provider"
 import { Button } from "@/components/ui/button"
 import { DEFAULT_THEME, isTheme, nextTheme, type Theme } from "@/lib/themes"
+import { useLocale } from "@/providers/locale-provider"
 
 const THEME_ICON: Record<Theme, React.ComponentType> = {
   dark: Moon,

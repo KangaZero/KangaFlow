@@ -23,11 +23,11 @@ describe("weather", () => {
     expect(isWmoCode(1234)).toBe(false)
   })
 
-  it("maps temperature to distinct cold/hot oklch colours", () => {
+  it("maps temperature to distinct cold/hot colour tokens", () => {
     const cold = getTemperatureColor(-5)
     const hot = getTemperatureColor(35)
-    expect(cold).toContain("oklch")
-    expect(hot).toContain("oklch")
+    expect(cold).toContain("var(--temp-")
+    expect(hot).toContain("var(--temp-")
     expect(cold).not.toBe(hot)
   })
 })

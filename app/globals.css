@@ -52,11 +52,22 @@
 :root {
   /* P5 date box: text-shadow colour (H S L, consumed as hsl(... / a)) and the
      bounceIn timing knobs (animate.css convention). */
-  --text-shadow-hsl: 0 0% 0%;
+  --text-shadow-hsla: 0 20% 0%;
   --animate-duration: 1s;
   --animate-delay: 0s;
   --animate-bounce-in-duration: 0.6s;
   --animated-bounce-in-delay: 0.1s;
+  /* Temperature scale, cold -> hot. Single source consumed via
+     lib/weather.ts getTemperatureColor (currently the P5 date box readout). */
+  --temp-cold: dodgerblue;
+  --temp-cool: deepskyblue;
+  --temp-warm: orange;
+  --temp-hot: red;
+  --temp-unknown: gray;
+  /* P5 shape fills. Kept pure RGB: the sepia/saturate + screen blend in
+     header-date.css relies on full saturation. */
+  --p5-shape-cyan: #00ffff;
+  --p5-shape-red: #ff0000;
   --background: oklch(1 0 0);
   --foreground: oklch(0.147 0.004 49.25);
   --card: oklch(1 0 0);

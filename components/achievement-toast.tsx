@@ -4,9 +4,6 @@
 import { X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import * as React from "react"
-
-import { useAchievements } from "@/components/achievements-provider"
-import { useLocale } from "@/components/locale-provider"
 import { Button } from "@/components/ui/button"
 import {
   type Achievement,
@@ -14,6 +11,8 @@ import {
   RARITY_ICON,
   rarityColorVar,
 } from "@/lib/achievements"
+import { useAchievements } from "@/providers/achievements-provider"
+import { useLocale } from "@/providers/locale-provider"
 
 const AUTO_DISMISS_MS = 6000
 

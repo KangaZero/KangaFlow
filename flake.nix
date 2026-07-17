@@ -45,6 +45,23 @@
                 enable = true;
                 settings.binPath = "./node_modules/.bin/biome";
               };
+              just-hook = {
+                enable = true;
+                name = "just hook";
+                entry = "${pkgs.writeShellScriptBin "just-hook" ''
+                  just review-count
+                  # Nudge only (never blocks the commit): remind to refresh the
+                  # README image when UI files are staged. Screenshot stays a
+                  # manual `just screenshot` so PNG blobs don't bloat git history.
+                  if git diff --cached --name-only | grep -qE '^(app|components)/'; then
+                    echo "note: UI files staged - refresh the README image with: just screenshot"
+                  fi
+                ''}/bin/just-hook";
+                language = "system";
+                pass_filenames = false;
+                always_run = true;
+                stages = [ "pre-commit" ];
+              };
 
               # Pre-push guard: reject any incoming commit whose author OR
               # committer is not the personal identity. Keeps work identity out

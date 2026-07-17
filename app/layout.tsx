@@ -2,8 +2,8 @@
 import { Geist, JetBrains_Mono } from "next/font/google"
 
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
+import { ThemeProvider } from "@/providers/theme-provider"
 
 const fontSans = Geist({
   subsets: ["latin"],

@@ -5,8 +5,6 @@ import "./bounceIn.css"
 import { useEffect, useState } from "react"
 
 import { getDailyWeatherForecast } from "@/api/queries/getDailyWeatherForecast"
-import { useAchievements } from "@/components/achievements-provider"
-import { useLocale } from "@/components/locale-provider"
 import {
   HoverCard,
   HoverCardContent,
@@ -14,7 +12,13 @@ import {
 } from "@/components/ui/hover-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { person } from "@/lib/person"
-import { getWeatherIconKey, WEATHER_ICON } from "@/lib/weather"
+import {
+  getTemperatureColor,
+  getWeatherIconKey,
+  WEATHER_ICON,
+} from "@/lib/weather"
+import { useAchievements } from "@/providers/achievements-provider"
+import { useLocale } from "@/providers/locale-provider"
 
 const HeaderDate = () => {
   const { unlockAchievement } = useAchievements()
@@ -27,6 +31,8 @@ const HeaderDate = () => {
     timezone: person.location,
   })
   const [isHovered, setIsHovered] = useState(false)
+  const [isJellyHoverAnimationOver, setIsJellyHoverAnimationOver] =
+    useState(false)
   const [now, setNow] = useState<Date | null>(null)
   useEffect(() => {
     setNow(new Date())
@@ -57,20 +63,6 @@ const HeaderDate = () => {
     `weather.conditions.${code}.${isDay ? "day" : "night"}`
   )
 
-  function getTemperatureColor(temp: number) {
-    switch (true) {
-      case temp <= 0:
-        return "dodgerblue"
-      case temp > 0 && temp <= 15:
-        return "deepskyblue"
-      case temp > 15 && temp <= 25:
-        return "orange"
-      case temp > 25:
-        return "red"
-      default:
-        return "gray"
-    }
-  }
   const gradient = getTemperatureColor(temperature)
 
   return (
@@ -86,11 +78,13 @@ const HeaderDate = () => {
           className="link-wrapper"
           onMouseEnter={() => {
             setIsHovered(true)
+            setIsJellyHoverAnimationOver(false)
             unlockAchievement("snoopy-detective")
           }}
           onMouseLeave={() => setIsHovered(false)}
           onTouchStart={() => {
             setIsHovered(!isHovered)
+            setIsJellyHoverAnimationOver(false)
             unlockAchievement("snoopy-detective")
           }}
         >
@@ -99,7 +93,14 @@ const HeaderDate = () => {
           </div>
 
           <div className={`shape-wrapper ${isHovered ? "active" : ""}`}>
-            <div className="shape cyan-fill jelly">
+            <div
+              className={`shape cyan-fill jelly ${isJellyHoverAnimationOver ? "hidden" : ""}`}
+              onAnimationEnd={(event) => {
+                if (event.animationName === "jelly") {
+                  setIsJellyHoverAnimationOver(true)
+                }
+              }}
+            >
               <svg
                 height="35"
                 preserveAspectRatio="none"
@@ -107,10 +108,12 @@ const HeaderDate = () => {
                 width="100%"
               >
                 <title>cyan shape</title>
-                <rect fill="#00FFFF" height="35" width="200" />
+                <rect height="35" width="200" />
               </svg>
             </div>
-            <div className="shape red-fill jelly">
+            <div
+              className={`shape red-fill jelly ${isJellyHoverAnimationOver ? "scale-125" : ""}`}
+            >
               <svg
                 height="35"
                 preserveAspectRatio="none"
@@ -118,7 +121,7 @@ const HeaderDate = () => {
                 width="100%"
               >
                 <title>red shape</title>
-                <rect fill="#FF0000" height="35" width="200" />
+                <rect height="35" width="200" />
               </svg>
             </div>
           </div>
