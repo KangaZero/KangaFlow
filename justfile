@@ -49,6 +49,17 @@ preview: build
     @echo "Preview: http://localhost:8000/KangaFlow/"
     python3 -m http.server 8000 --directory .preview
 
+# Capture a headless screenshot into assets/ for the README.
+# Usage: just screenshot [page] [name] [base]
+#   just screenshot en/achievements achievements
+#   just screenshot en home http://localhost:3000   # capture the dev server
+screenshot page="en" name="screenshot" base="https://kangazero.github.io/KangaFlow":
+    @mkdir -p assets
+    nix run nixpkgs#chromium -- --headless=new --no-sandbox --disable-gpu \
+      --hide-scrollbars --force-device-scale-factor=2 --window-size=1280,820 \
+      --virtual-time-budget=6000 --screenshot=assets/{{name}}.png "{{base}}/{{page}}/"
+    @echo "saved assets/{{name}}.png <- {{base}}/{{page}}/"
+
 # Remove build + preview artifacts.
 clean:
     rm -rf out .next .preview

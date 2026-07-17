@@ -7,30 +7,34 @@
 
 <h1>🦘 KangaFlow</h1>
 
-**A bilingual, three-theme Next.js playground**
-**vim command palette · unlockable achievements · live weather — shipped fully static to GitHub Pages**
+[**Live Demo**](https://kangazero.github.io/KangaFlow/) &nbsp;•&nbsp;
+[Highlights](#highlights) &nbsp;•&nbsp;
+[Requirements](#requirements) &nbsp;•&nbsp;
+[Getting Started](#getting-started) &nbsp;•&nbsp;
+[Tasks](#tasks) &nbsp;•&nbsp;
+[AI Usage](#ai-usage)
 
-<br/>
+**A bilingual, three-theme Next.js playground — vim command palette, unlockable
+achievements, and live weather, shipped fully static to GitHub Pages.**
 
 [![Stars](https://img.shields.io/github/stars/KangaZero/KangaFlow?style=social)](https://github.com/KangaZero/KangaFlow/stargazers)
 [![License MIT](https://img.shields.io/badge/License-MIT-blue?style=social)](./LICENSE)
 [![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=social&logo=github)](https://kangazero.github.io/KangaFlow/)
 
----
-
 [![Deploy](https://github.com/KangaZero/KangaFlow/actions/workflows/deploy.yml/badge.svg)](https://github.com/KangaZero/KangaFlow/actions/workflows/deploy.yml)
-&nbsp;
-![Next.js](https://img.shields.io/badge/Next.js-16.3-000000?logo=nextdotjs&logoColor=white)
-![React](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-7-3178c6?logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?logo=tailwindcss&logoColor=white)
-![Biome](https://img.shields.io/badge/Biome-2.4-60a5fb?logo=biome&logoColor=white)
-![pnpm](https://img.shields.io/badge/pnpm-11-f69220?logo=pnpm&logoColor=white)
+![Last commit](https://img.shields.io/github/last-commit/KangaZero/KangaFlow?style=flat-square&color=58839b)
+![Next.js](https://img.shields.io/badge/Next.js-16.3-000000?style=flat-square&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-7-3178c6?style=flat-square&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)
+![Biome](https://img.shields.io/badge/Biome-2.4-60a5fb?style=flat-square&logo=biome&logoColor=white)
+
+<br/>
+
+[![KangaFlow screenshot](./assets/screenshot.png)](https://kangazero.github.io/KangaFlow/)
 
 > **Type-safe, animation-forward, and shipped static** — a personal playground
 > that treats polish as a feature.
-
-### [→ Open the live site](https://kangazero.github.io/KangaFlow/)
 
 </div>
 
@@ -38,6 +42,7 @@
 
 - [Highlights](#highlights)
 - [Tech Stack](#tech-stack)
+- [Requirements](#requirements)
 - [Getting Started](#getting-started)
 - [Tasks](#tasks)
 - [Project Layout](#project-layout)
@@ -65,6 +70,32 @@
 - **[Biome](https://biomejs.dev/) 2.4** — one binary for the git hook, CI, and `just` (no ESLint/Prettier)
 - **shadcn/ui** ("radix-mira") + **[animate-ui](https://animate-ui.com/)** + **Motion**
 - **Vitest** for unit tests · **Nix flake** + **just** for a reproducible toolchain
+
+## Requirements
+
+> [!IMPORTANT]
+> KangaFlow rides the bleeding edge on purpose: **Next.js 16.3 (preview)** and
+> **TypeScript 7** (Go-native `tsc`). Stable Next.js 16.2 crashes on TS 7, so
+> Next is pinned to a preview release via `experimental.useTypeScriptCli` —
+> expect churn until 16.3 is GA.
+
+- **Node.js 26** and **pnpm 11** — or simply run `nix develop`, which pins both
+  (plus `just` and the git hooks) for a reproducible environment.
+- A **modern browser**. The theme switch uses the
+  [View Transitions API](https://developer.mozilla.org/docs/Web/API/View_Transitions_API);
+  where it's unsupported the circular reveal is skipped and the theme still
+  changes instantly.
+
+> [!WARNING]
+> This is a **static export** — there is no server. Anything needing a request
+> (the weather box → Open-Meteo) runs client-side, and Next.js server features
+> (middleware, route handlers, server actions, image optimization) are
+> unavailable by design.
+
+> [!NOTE]
+> The production build bakes in the `/KangaFlow` base path, so preview `./out`
+> with `just preview` (which mounts it under that path) rather than a bare
+> static server — otherwise assets 404.
 
 ## Getting Started
 
