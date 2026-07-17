@@ -3,6 +3,67 @@
 // locale must satisfy (see ./index.ts). Keep keys in sync across locales.
 // `as const` is required so nested string literals become the typed key surface.
 const en = {
+  achievements: {
+    filter: {
+      label: "Filter by rarity",
+    },
+    heading: "Achievements",
+    hidden: "???",
+    items: {
+      eos: {
+        description: "Changed the theme of the page.",
+        title: "Eos",
+      },
+      "go-touch-grass": {
+        description: "Unlocked every achievable achievement.",
+        title: "Go Touch Grass",
+      },
+      "new-beginnings": {
+        description: "Entered the site for the first time.",
+        title: "New Beginnings",
+      },
+      "out-of-bounds": {
+        description: "Wandered somewhere you were not meant to go.",
+        title: "Out of Bounds",
+      },
+      "puzzle-master": {
+        description: "Solved the most difficult puzzle ever devised.",
+        title: "Puzzle Master",
+      },
+      "sand-mandala": {
+        description: "Reset your progress under mysterious conditions.",
+        title: "Sand Mandala",
+      },
+      "snoopy-detective": {
+        description: "Hovered the date & weather box.",
+        title: "Snoopy Detective",
+      },
+      speedophile: {
+        description: "Completed everything in under 67 seconds.",
+        title: "Speedophile",
+      },
+    },
+    locked: "Locked",
+    rarities: {
+      common: "Common",
+      legendary: "Legendary",
+      mythic: "Mythic",
+      rare: "Rare",
+      uncommon: "Uncommon",
+    },
+    search: {
+      noResults: "No achievements found.",
+      placeholder: "Search achievements…",
+      results: "result(s)",
+    },
+    share: "Share",
+    toast: {
+      dismiss: "Dismiss",
+      unlocked: "Achievement unlocked!",
+    },
+    toggleColumns: "Toggle layout",
+    unlocked: "Unlocked",
+  },
   command: {
     description: "Run a command or search.",
     empty: "No results.",

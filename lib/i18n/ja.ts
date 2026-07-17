@@ -2,6 +2,67 @@
 // Japanese locale. Structure mirrors ./en.ts exactly for type safety — the
 // compiler enforces that this object is assignable to the English base shape.
 const ja = {
+  achievements: {
+    filter: {
+      label: "レア度で絞り込み",
+    },
+    heading: "実績",
+    hidden: "???",
+    items: {
+      eos: {
+        description: "ページのテーマを変更した。",
+        title: "エオス",
+      },
+      "go-touch-grass": {
+        description: "達成可能な実績をすべて解除した。",
+        title: "外の空気を吸え",
+      },
+      "new-beginnings": {
+        description: "初めてサイトを訪れた。",
+        title: "新たな始まり",
+      },
+      "out-of-bounds": {
+        description: "行ってはいけない場所へ迷い込んだ。",
+        title: "立入禁止",
+      },
+      "puzzle-master": {
+        description: "史上最難関のパズルを解いた。",
+        title: "パズルマスター",
+      },
+      "sand-mandala": {
+        description: "謎の条件で進行状況をリセットした。",
+        title: "砂曼荼羅",
+      },
+      "snoopy-detective": {
+        description: "日付と天気のボックスにカーソルを合わせた。",
+        title: "スヌーピー探偵",
+      },
+      speedophile: {
+        description: "67秒未満ですべてを達成した。",
+        title: "スピード狂",
+      },
+    },
+    locked: "未解除",
+    rarities: {
+      common: "コモン",
+      legendary: "レジェンダリー",
+      mythic: "ミシック",
+      rare: "レア",
+      uncommon: "アンコモン",
+    },
+    search: {
+      noResults: "実績が見つかりません。",
+      placeholder: "実績を検索…",
+      results: "件",
+    },
+    share: "共有",
+    toast: {
+      dismiss: "閉じる",
+      unlocked: "実績を解除しました！",
+    },
+    toggleColumns: "レイアウト切替",
+    unlocked: "解除済み",
+  },
   command: {
     description: "コマンドを実行または検索。",
     empty: "結果がありません。",

@@ -1,7 +1,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { notFound } from "next/navigation"
 
-import { HeaderDate } from "@/components/header-date"
+import { SnoopyDate } from "@/components/snoopy-date"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { isLocale, t } from "@/lib/i18n"
 
@@ -22,7 +22,7 @@ export default async function Home({
       <header className="flex items-center justify-between gap-4">
         <h1 className="font-medium text-lg">KangaFlow</h1>
         <div className="flex items-center gap-4">
-          <HeaderDate />
+          <SnoopyDate />
           <ThemeToggle />
         </div>
       </header>

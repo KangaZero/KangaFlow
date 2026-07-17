@@ -1,6 +1,8 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { notFound } from "next/navigation"
 
+import { AchievementToast } from "@/components/achievement-toast"
+import { AchievementsProvider } from "@/components/achievements-provider"
 import { CommandMenu } from "@/components/command-menu"
 import { LocaleProvider } from "@/components/locale-provider"
 import { isLocale, LOCALES } from "@/lib/i18n"
@@ -27,8 +29,11 @@ export default async function LangLayout({
 
   return (
     <LocaleProvider locale={lang}>
-      {children}
-      <CommandMenu />
+      <AchievementsProvider>
+        {children}
+        <CommandMenu />
+        <AchievementToast />
+      </AchievementsProvider>
     </LocaleProvider>
   )
 }
