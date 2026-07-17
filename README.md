@@ -5,6 +5,10 @@
 
 <div align="center">
 
+<a href="https://kangazero.github.io/KangaFlow/">
+  <img src="./assets/logo.svg" alt="KangaFlow" width="340" />
+</a>
+
 <h1>🦘 KangaFlow</h1>
 
 [**Live Demo**](https://kangazero.github.io/KangaFlow/) &nbsp;•&nbsp;
