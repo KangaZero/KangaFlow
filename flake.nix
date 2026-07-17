@@ -29,7 +29,7 @@
     in
     {
       checks = forEachSystem (
-        system: _pkgs: {
+        system: pkgs: {
           pre-commit-check = inputs.git-hooks.lib.${system}.run {
             src = ./.;
             hooks = {
@@ -44,6 +44,50 @@
               biome = {
                 enable = true;
                 settings.binPath = "./node_modules/.bin/biome";
+              };
+
+              # Pre-push guard: reject any incoming commit whose author OR
+              # committer is not the personal identity. Keeps work identity out
+              # of this repo's history for good.
+              check-author = {
+                enable = true;
+                name = "check git author";
+                # writeShellScriptBin puts the binary at $out/bin/<name>, so the
+                # entry must suffix /bin/check-author (the drv alone is $out).
+                entry = "${pkgs.writeShellScriptBin "check-author" ''
+                  expected="samuelyongw@gmail.com"
+                  zero="0000000000000000000000000000000000000000"
+                  while IFS=' ' read -r _local_ref local_sha _remote_ref remote_sha; do
+                    # Skip branch deletions.
+                    [ "$local_sha" = "$zero" ] && continue
+
+                    # Isolate only the new incoming commits.
+                    if [ "$remote_sha" = "$zero" ]; then
+                      commits=$(git rev-list "$local_sha" --not --remotes 2>/dev/null)
+                    else
+                      commits=$(git rev-list "$remote_sha..$local_sha" 2>/dev/null)
+                    fi
+
+                    [ -z "$commits" ] && continue
+
+                    while IFS= read -r commit; do
+                      IFS='|' read -r author_email committer_email <<< "$(git log -1 --format="%ae|%ce" "$commit" 2>/dev/null)"
+
+                      if [ "$author_email" != "$expected" ]; then
+                        echo "Push rejected: $commit not authored by KangaZero <$expected> (got: $author_email)"
+                        exit 1
+                      fi
+                      if [ "$committer_email" != "$expected" ]; then
+                        echo "Push rejected: $commit not committed by KangaZero <$expected> (got: $committer_email)"
+                        exit 1
+                      fi
+                    done <<< "$commits"
+                  done
+                ''}/bin/check-author";
+                language = "system";
+                pass_filenames = false;
+                always_run = true;
+                stages = [ "pre-push" ];
               };
             };
           };
