@@ -18,6 +18,7 @@ type LocaleContextValue = {
 const LocaleContext = React.createContext<LocaleContextValue | null>(null)
 
 function persistLocale(locale: Locale) {
+  // biome-ignore lint/suspicious/noDocumentCookie: document.cookie is the cross-browser way to set a simple locale cookie; the CookieStore API lacks Firefox support.
   document.cookie = `${COOKIE}=${locale}; path=/; max-age=${ONE_YEAR_SECONDS}; samesite=lax`
 }
 

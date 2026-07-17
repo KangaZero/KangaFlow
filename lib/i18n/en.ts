@@ -3,6 +3,23 @@
 // locale must satisfy (see ./index.ts). Keep keys in sync across locales.
 // `as const` is required so nested string literals become the typed key surface.
 const en = {
+  command: {
+    description: "Run a command or search.",
+    empty: "No results.",
+    groups: {
+      general: "General",
+      locale: "Language",
+      navigation: "Navigation",
+      theme: "Theme",
+    },
+    locales: {
+      en: "English",
+      ja: "日本語",
+    },
+    placeholder: "Type a command or search…",
+    quit: "Quit",
+    title: "Command Palette",
+  },
   common: {
     loading: [
       "Did you know waiting causes time to pass",

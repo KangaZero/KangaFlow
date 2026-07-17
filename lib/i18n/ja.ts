@@ -2,6 +2,23 @@
 // Japanese locale. Structure mirrors ./en.ts exactly for type safety — the
 // compiler enforces that this object is assignable to the English base shape.
 const ja = {
+  command: {
+    description: "コマンドを実行または検索。",
+    empty: "結果がありません。",
+    groups: {
+      general: "一般",
+      locale: "言語",
+      navigation: "ナビゲーション",
+      theme: "テーマ",
+    },
+    locales: {
+      en: "English",
+      ja: "日本語",
+    },
+    placeholder: "コマンドを入力または検索…",
+    quit: "終了",
+    title: "コマンドパレット",
+  },
   common: {
     loading: [
       "生まれたことがある人の死亡率は１００％です",

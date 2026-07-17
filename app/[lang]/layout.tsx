@@ -1,6 +1,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { notFound } from "next/navigation"
 
+import { CommandMenu } from "@/components/command-menu"
 import { LocaleProvider } from "@/components/locale-provider"
 import { isLocale, LOCALES } from "@/lib/i18n"
 
@@ -24,5 +25,10 @@ export default async function LangLayout({
     notFound()
   }
 
-  return <LocaleProvider locale={lang}>{children}</LocaleProvider>
+  return (
+    <LocaleProvider locale={lang}>
+      {children}
+      <CommandMenu />
+    </LocaleProvider>
+  )
 }
