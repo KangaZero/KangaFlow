@@ -1,106 +1,182 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+import "./header-date.css"
+import "./bounceIn.css"
+import { useEffect, useState } from "react"
 
-import * as React from "react"
-
+import { getDailyWeatherForecast } from "@/api/queries/getDailyWeatherForecast"
+import { useAchievements } from "@/components/achievements-provider"
 import { useLocale } from "@/components/locale-provider"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useWeather, type WeatherState } from "@/hooks/use-weather"
-import type { Translate } from "@/lib/i18n"
 import {
-  getTemperatureColor,
-  getWeatherIconKey,
-  WEATHER_ICON,
-} from "@/lib/weather"
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { person } from "@/lib/person"
+import { getWeatherIconKey, WEATHER_ICON } from "@/lib/weather"
 
-// Default location: Tokyo (matches the app's JA locale and the portfolio's
-// origin). Overridable via props.
-const DEFAULT_LATITUDE = 35.6762
-const DEFAULT_LONGITUDE = 139.6503
-
-function WeatherReadout({
-  weather,
-  translate,
-}: {
-  weather: WeatherState
-  translate: Translate
-}) {
-  if (weather.status === "loading") {
-    return <Skeleton className="h-4 w-28" />
-  }
-  if (weather.status === "error") {
-    return (
-      <span className="text-muted-foreground">
-        {translate("weather.unavailable")}
-      </span>
-    )
-  }
-
-  const { temperature, code, isDay } = weather.data
-  const Icon = WEATHER_ICON[getWeatherIconKey(code, isDay)]
-  const description = translate(
-    `weather.conditions.${code}.${isDay ? "day" : "night"}`
-  )
-
-  return (
-    <span className="flex items-center gap-1.5">
-      <Icon className="size-4" />
-      <span style={{ color: getTemperatureColor(temperature) }}>
-        {Math.round(temperature)}°
-      </span>
-      <span className="text-muted-foreground">{description}</span>
-    </span>
-  )
-}
-
-export function HeaderDate({
-  latitude = DEFAULT_LATITUDE,
-  longitude = DEFAULT_LONGITUDE,
-  onReveal,
-}: {
-  latitude?: number
-  longitude?: number
-  // Fired the first time the box is hovered (wired to the "Snoopy Detective"
-  // achievement by the achievements provider — Workstream F).
-  onReveal?: () => void
-}) {
+const HeaderDate = () => {
+  const { unlockAchievement } = useAchievements()
   const { translate } = useLocale()
-  const weather = useWeather(latitude, longitude)
-  const [now, setNow] = React.useState<Date | null>(null)
-
-  // Resolve the date on the client so the server render (unknown timezone)
-  // cannot mismatch and warn during hydration.
-  React.useEffect(() => {
+  const [latitude, longitude] = person.locationCoordinates
+  const { data } = getDailyWeatherForecast({
+    forecastDays: 1,
+    latitude,
+    longitude,
+    timezone: person.location,
+  })
+  const [isHovered, setIsHovered] = useState(false)
+  const [now, setNow] = useState<Date | null>(null)
+  useEffect(() => {
     setNow(new Date())
   }, [])
 
-  const days = translate("headerDate.days")
-  const months = translate("headerDate.months")
+  // KangaFlow i18n treats arrays as leaves, so index the returned array rather
+  // than keying `headerDate.days.<n>` directly.
+  const day = now ? (translate("headerDate.days")[now.getDay()] ?? "") : ""
+  const allButLastCharDay = day.slice(0, -1)
+  const lastDayChar = day.slice(-1)
+  const date = now?.getDate() ?? null
+  const hour = now?.getHours() ?? null
+  const isDay = data
+    ? Boolean(data.current.is_day)
+    : hour !== null
+      ? hour >= 6 && hour < 18
+      : true
+  const month = now
+    ? (translate("headerDate.months")[now.getMonth()] ?? "")
+    : ""
+  const temperature = data ? Math.round(data.current.temperature_2m) : 0
+
+  // WMOCodeDescriptions -> lib/weather + i18n (the KangaFlow equivalent).
+  // Defaults to the clear-sky (code 0) icon/description when data is missing.
+  const code = data?.current.weather_code ?? 0
+  const WeatherIcon = WEATHER_ICON[getWeatherIconKey(code, isDay)]
+  const weatherDescription = translate(
+    `weather.conditions.${code}.${isDay ? "day" : "night"}`
+  )
+
+  function getTemperatureColor(temp: number) {
+    switch (true) {
+      case temp <= 0:
+        return "dodgerblue"
+      case temp > 0 && temp <= 15:
+        return "deepskyblue"
+      case temp > 15 && temp <= 25:
+        return "orange"
+      case temp > 25:
+        return "red"
+      default:
+        return "gray"
+    }
+  }
+  const gradient = getTemperatureColor(temperature)
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: hover is a progressive enhancement (an achievement easter egg); all real content stays keyboard-reachable.
-    <div
-      className="flex items-center gap-3 font-mono text-xs"
-      onMouseEnter={onReveal}
+    <HoverCard
+      closeDelay={0}
+      onOpenChange={setIsHovered}
+      open={isHovered}
+      openDelay={0}
     >
-      <span className="flex flex-col">
-        {now == null ? (
-          <>
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="mt-1 h-3 w-24" />
-          </>
-        ) : (
-          <>
-            <span className="font-medium text-foreground">
-              {days[now.getDay()] ?? ""}
-            </span>
-            <span className="text-muted-foreground">
-              {`${months[now.getMonth()] ?? ""} ${now.getDate()} ${now.getFullYear()}`}
-            </span>
-          </>
-        )}
-      </span>
-      <WeatherReadout translate={translate} weather={weather} />
-    </div>
+      <HoverCardTrigger asChild>
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: hover/touch is a progressive-enhancement easter egg; the fallback text keeps the date accessible. */}
+        <div
+          className="link-wrapper"
+          onMouseEnter={() => {
+            setIsHovered(true)
+            unlockAchievement("snoopy-detective")
+          }}
+          onMouseLeave={() => setIsHovered(false)}
+          onTouchStart={() => {
+            setIsHovered(!isHovered)
+            unlockAchievement("snoopy-detective")
+          }}
+        >
+          <div className="fallback">
+            {day} {month} {date}
+          </div>
+
+          <div className={`shape-wrapper ${isHovered ? "active" : ""}`}>
+            <div className="shape cyan-fill jelly">
+              <svg
+                height="35"
+                preserveAspectRatio="none"
+                viewBox="0 0 200 35"
+                width="100%"
+              >
+                <title>cyan shape</title>
+                <rect fill="#00FFFF" height="35" width="200" />
+              </svg>
+            </div>
+            <div className="shape red-fill jelly">
+              <svg
+                height="35"
+                preserveAspectRatio="none"
+                viewBox="0 0 200 35"
+                width="100%"
+              >
+                <title>red shape</title>
+                <rect fill="#FF0000" height="35" width="200" />
+              </svg>
+            </div>
+          </div>
+
+          <div className="img-wrapper">
+            <div className={`p5DateBox ${isHovered ? "hover-active" : ""}`}>
+              <div className="p5DateDay">
+                <span className="p5Day bounceIn">{allButLastCharDay}</span>
+                <span className="p5Day2 bounceIn">{lastDayChar}</span>
+                {data ? (
+                  <span
+                    className="p5DateWeatherIcon bounceIn"
+                    title={weatherDescription}
+                  >
+                    <WeatherIcon className="size-8" />
+                  </span>
+                ) : (
+                  <Skeleton className="p5DateWeatherIcon bounceIn size-8 rounded-full" />
+                )}
+              </div>
+              <div className="p5DateMonthDay">
+                <span className="p5Month bounceIn">{month}</span>
+                <span className="p5DateMonthDaySeparator bounceIn">/</span>
+                <span className="p5Date bounceIn">{date}</span>
+                {data && (
+                  <>
+                    <span
+                      className="p5Temperature bounceIn"
+                      style={{
+                        textShadow: `0 0 3px ${gradient}`,
+                        WebkitTextFillColor: gradient,
+                      }}
+                    >
+                      {temperature}
+                    </span>
+                    <span
+                      className="p5Celsius bounceIn"
+                      style={{
+                        textShadow: `0 0 3px ${gradient}`,
+                        WebkitTextFillColor: gradient,
+                      }}
+                    >
+                      °C
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </HoverCardTrigger>
+      <HoverCardContent align="start" className="w-auto font-mono text-xs">
+        <p>{`${translate("headerCard.basedIn")} ${person.location}`}</p>
+        <p>{translate("headerCard.workplace")}</p>
+        <p>{translate("headerCard.status")}</p>
+      </HoverCardContent>
+    </HoverCard>
   )
 }
+
+export { HeaderDate }

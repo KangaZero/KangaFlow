@@ -93,6 +93,11 @@ const en = {
       text: "The page you are looking for does not exist.",
     },
   },
+  headerCard: {
+    basedIn: "Based in",
+    status: "Currently coding",
+    workplace: "Working at Accenture",
+  },
   headerDate: {
     days: [
       "Sunday",

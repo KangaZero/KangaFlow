@@ -92,6 +92,11 @@ const ja = {
       text: "お探しのページは存在しません。",
     },
   },
+  headerCard: {
+    basedIn: "現在地",
+    status: "只今コーディング中",
+    workplace: "アクセンチュアに在職中",
+  },
   headerDate: {
     days: [
       "日曜日",
