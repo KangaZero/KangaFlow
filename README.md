@@ -5,15 +5,21 @@
 
 <div align="center">
 
-# 🦘 KangaFlow
+<h1>🦘 KangaFlow</h1>
 
-**A bilingual, three-theme Next.js playground — vim command palette, unlockable
-achievements, live weather — shipped as a fully static site to GitHub Pages.**
+**A bilingual, three-theme Next.js playground**
+**vim command palette · unlockable achievements · live weather — shipped fully static to GitHub Pages**
+
+<br/>
+
+[![Stars](https://img.shields.io/github/stars/KangaZero/KangaFlow?style=social)](https://github.com/KangaZero/KangaFlow/stargazers)
+[![License MIT](https://img.shields.io/badge/License-MIT-blue?style=social)](./LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-brightgreen?style=social&logo=github)](https://kangazero.github.io/KangaFlow/)
+
+---
 
 [![Deploy](https://github.com/KangaZero/KangaFlow/actions/workflows/deploy.yml/badge.svg)](https://github.com/KangaZero/KangaFlow/actions/workflows/deploy.yml)
-[![Live Demo](https://img.shields.io/badge/demo-live-22c55e)](https://kangazero.github.io/KangaFlow/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
-
+&nbsp;
 ![Next.js](https://img.shields.io/badge/Next.js-16.3-000000?logo=nextdotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-149eca?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178c6?logo=typescript&logoColor=white)
@@ -21,13 +27,26 @@ achievements, live weather — shipped as a fully static site to GitHub Pages.**
 ![Biome](https://img.shields.io/badge/Biome-2.4-60a5fb?logo=biome&logoColor=white)
 ![pnpm](https://img.shields.io/badge/pnpm-11-f69220?logo=pnpm&logoColor=white)
 
+> **Type-safe, animation-forward, and shipped static** — a personal playground
+> that treats polish as a feature.
+
 ### [→ Open the live site](https://kangazero.github.io/KangaFlow/)
 
 </div>
 
----
+## Table of Contents
 
-## ✨ Highlights
+- [Highlights](#highlights)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Tasks](#tasks)
+- [Project Layout](#project-layout)
+- [Architecture Notes](#architecture-notes)
+- [Deployment](#deployment)
+- [AI Usage](#ai-usage)
+- [License](#license)
+
+## Highlights
 
 | | |
 | --- | --- |
@@ -38,7 +57,7 @@ achievements, live weather — shipped as a fully static site to GitHub Pages.**
 | 🌤️ **Live weather + date** | Client-side [Open-Meteo](https://open-meteo.com/) fetch with a skeleton while loading. |
 | ⚡ **Fully static** | No server — exported to GitHub Pages and deployed on every push to `main`. |
 
-## 🧱 Tech stack
+## Tech Stack
 
 - **Next.js 16.3** (App Router, `output: "export"`) · **React 19** · **Tailwind CSS v4**
 - **TypeScript 7** (the Go-native `tsc`), strict — `noUncheckedIndexedAccess`,
@@ -47,7 +66,7 @@ achievements, live weather — shipped as a fully static site to GitHub Pages.**
 - **shadcn/ui** ("radix-mira") + **[animate-ui](https://animate-ui.com/)** + **Motion**
 - **Vitest** for unit tests · **Nix flake** + **just** for a reproducible toolchain
 
-## 🚀 Getting started
+## Getting Started
 
 With **Nix** (recommended — pins Node 26, pnpm, just, and the git hooks):
 
@@ -59,7 +78,9 @@ just dev         # http://localhost:3000
 
 Without Nix, you'll need Node 26 + pnpm 11 yourself, then `pnpm install && just dev`.
 
-## 🛠️ Tasks (`just`)
+## Tasks
+
+Everything runs through `just`:
 
 | Recipe | What it does |
 | --- | --- |
@@ -74,7 +95,7 @@ Without Nix, you'll need Node 26 + pnpm 11 yourself, then `pnpm install && just 
 | `just review` / `just review-count` | List / count files pending human review |
 | `just push` | `verify`, then push (CI deploys) |
 
-## 🗂️ Project layout
+## Project Layout
 
 ```text
 app/
@@ -92,7 +113,7 @@ lib/
   achievements.ts    # catalogue + pure unlock/reconcile reducer
 ```
 
-## 🧭 Architecture notes
+## Architecture Notes
 
 - **Single source of truth.** Themes, locales, WMO codes, and the achievement
   catalogue are each declared once and their types/lists derive from it.
@@ -103,19 +124,19 @@ lib/
 - **Strict, no escape hatches.** `any` is banned; every user-facing string flows
   through i18n (a missing translation fails the build).
 
-## 🚢 Deployment
+## Deployment
 
 Pushing to `main` runs GitHub Actions: Biome CI → TS 7 type-check → Vitest →
 static build → deploy to GitHub Pages. Locally, `just push` runs the same gate
 first. Live at **<https://kangazero.github.io/KangaFlow/>**.
 
-## 🤖 AI usage
+## AI Usage
 
 This repository is built with AI assistance under a disclosed policy — see
 [`AI_POLICY.md`](./AI_POLICY.md). AI-generated prose carries a *"Human review
 needed"* marker until a human confirms it (`just review` tracks the backlog), and
 AI-assisted commits disclose the tool via an `Assisted-by:` trailer.
 
-## 📄 License
+## License
 
 Released under the [MIT License](./LICENSE).
