@@ -1,0 +1,95 @@
+// [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+// English is the base locale: its shape defines the key/value types every other
+// locale must satisfy (see ./index.ts). Keep keys in sync across locales.
+// `as const` is required so nested string literals become the typed key surface.
+const en = {
+  common: {
+    loading: [
+      "Did you know waiting causes time to pass",
+      "It is impossible to open doors that are already open",
+      "The word 'water' looks nothing like 水",
+    ],
+    notFound: {
+      heading: "Page Not Found",
+      link: "Return Home",
+      text: "The page you are looking for does not exist.",
+    },
+  },
+  headerDate: {
+    days: [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ],
+    months: [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ],
+  },
+  nav: {
+    achievements: "Achievements",
+    home: "Home",
+  },
+  theme: {
+    dark: "Dark theme",
+    label: "Theme",
+    light: "Light theme",
+    terminal: "Terminal theme",
+  },
+  weather: {
+    // Descriptions keyed by WMO weather-interpretation code (Open-Meteo). Only
+    // codes 0/1 differ between day and night; the rest repeat for a uniform,
+    // type-safe shape. Icon mapping lives in lib/weather.ts, not here.
+    conditions: {
+      "0": { day: "Sunny", night: "Clear" },
+      "1": { day: "Mainly Sunny", night: "Mainly Clear" },
+      "2": { day: "Partly Cloudy", night: "Partly Cloudy" },
+      "3": { day: "Cloudy", night: "Cloudy" },
+      "45": { day: "Foggy", night: "Foggy" },
+      "48": { day: "Rime Fog", night: "Rime Fog" },
+      "51": { day: "Light Drizzle", night: "Light Drizzle" },
+      "53": { day: "Drizzle", night: "Drizzle" },
+      "55": { day: "Heavy Drizzle", night: "Heavy Drizzle" },
+      "56": { day: "Light Freezing Drizzle", night: "Light Freezing Drizzle" },
+      "57": { day: "Freezing Drizzle", night: "Freezing Drizzle" },
+      "61": { day: "Light Rain", night: "Light Rain" },
+      "63": { day: "Rain", night: "Rain" },
+      "65": { day: "Heavy Rain", night: "Heavy Rain" },
+      "66": { day: "Light Freezing Rain", night: "Light Freezing Rain" },
+      "67": { day: "Freezing Rain", night: "Freezing Rain" },
+      "71": { day: "Light Snow", night: "Light Snow" },
+      "73": { day: "Snow", night: "Snow" },
+      "75": { day: "Heavy Snow", night: "Heavy Snow" },
+      "77": { day: "Snow Grains", night: "Snow Grains" },
+      "80": { day: "Light Showers", night: "Light Showers" },
+      "81": { day: "Showers", night: "Showers" },
+      "82": { day: "Heavy Showers", night: "Heavy Showers" },
+      "85": { day: "Light Snow Showers", night: "Light Snow Showers" },
+      "86": { day: "Snow Showers", night: "Snow Showers" },
+      "95": { day: "Thunderstorm", night: "Thunderstorm" },
+      "96": { day: "Thunderstorm With Hail", night: "Thunderstorm With Hail" },
+      "99": {
+        day: "Heavy Thunderstorm With Hail",
+        night: "Heavy Thunderstorm With Hail",
+      },
+    },
+    loading: "Fetching weather…",
+    unavailable: "Weather unavailable",
+  },
+} as const
+
+export default en
