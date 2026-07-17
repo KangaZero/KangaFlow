@@ -45,7 +45,7 @@ jobs:
         run: pnpm exec tsc --noEmit
 
       - name: Test
-        run: pnpm test -- --run
+        run: pnpm exec vitest run --passWithNoTests
 
       - name: Build static export
         run: pnpm build
