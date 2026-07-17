@@ -1,0 +1,79 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on",
+        "useSortedAttributes": "on",
+        "useSortedKeys": "on"
+      }
+    },
+    "enabled": true
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "files": {
+    "ignoreUnknown": true
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "arrowParentheses": "always",
+      "jsxQuoteStyle": "double",
+      "quoteStyle": "double",
+      "semicolons": "asNeeded",
+      "trailingCommas": "es5"
+    }
+  },
+  "linter": {
+    "domains": {
+      "next": "all",
+      "project": "all",
+      "react": "all"
+    },
+    "enabled": true,
+    "rules": {
+      "correctness": {
+        "noUnresolvedImports": "off",
+        "useImportExtensions": "off"
+      },
+      "nursery": {
+        "recommended": true,
+        "useSortedClasses": {
+          "level": "error",
+          "options": {
+            "functions": ["clsx", "cva", "cn", "twMerge"]
+          }
+        }
+      },
+      "recommended": true,
+      "style": {
+        "noNonNullAssertion": "error",
+        "noParameterAssign": "error",
+        "useComponentExportOnlyModules": "off",
+        "useConst": "error",
+        "useExportType": "error",
+        "useImportType": "error",
+        "useTemplate": "error"
+      },
+      "suspicious": {
+        "noExplicitAny": "error"
+      }
+    }
+  },
+  "vcs": {
+    "clientKind": "git",
+    "defaultBranch": "main",
+    "enabled": true,
+    "useIgnoreFile": true
+  }
+}
