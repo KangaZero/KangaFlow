@@ -1,7 +1,10 @@
 "use client"
+// [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
+import * as React from "react"
+
+import { DEFAULT_THEME, isTheme, nextTheme, THEMES } from "@/lib/themes"
 
 function ThemeProvider({
   children,
@@ -10,9 +13,11 @@ function ThemeProvider({
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme={DEFAULT_THEME}
       disableTransitionOnChange
+      // Three explicit themes, no OS "system" theme.
+      enableSystem={false}
+      themes={[...THEMES]}
       {...props}
     >
       <ThemeHotkey />
@@ -35,7 +40,7 @@ function isTypingTarget(target: EventTarget | null) {
 }
 
 function ThemeHotkey() {
-  const { resolvedTheme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
 
   React.useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -55,7 +60,9 @@ function ThemeHotkey() {
         return
       }
 
-      setTheme(resolvedTheme === "dark" ? "light" : "dark")
+      // Instant cycle (no View Transition reveal — that lives on the button).
+      const current = isTheme(theme) ? theme : DEFAULT_THEME
+      setTheme(nextTheme(current))
     }
 
     window.addEventListener("keydown", onKeyDown)
@@ -63,7 +70,7 @@ function ThemeHotkey() {
     return () => {
       window.removeEventListener("keydown", onKeyDown)
     }
-  }, [resolvedTheme, setTheme])
+  }, [theme, setTheme])
 
   return null
 }
