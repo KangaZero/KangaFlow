@@ -2,6 +2,8 @@ import { notFound } from "next/navigation"
 
 import { AchievementToast } from "@/components/achievement-toast"
 import { CommandMenu } from "@/components/command-menu"
+import { LightRays } from "@/components/LightRays"
+import { SiteHeader } from "@/components/site-header"
 import { isLocale, LOCALES } from "@/lib/i18n"
 import { AchievementsProvider } from "@/providers/achievements-provider"
 import { GlobalStatesProvider } from "@/providers/global-state-provider"
@@ -31,9 +33,13 @@ export default async function LangLayout({
     <LocaleProvider locale={lang}>
       <GlobalStatesProvider>
         <AchievementsProvider>
-          {children}
-          <CommandMenu />
-          <AchievementToast />
+          <div className="relative min-h-screen pb-28 sm:pb-0">
+            <LightRays className="pointer-events-none fixed inset-0 -z-10" />
+            <SiteHeader />
+            {children}
+            <CommandMenu />
+            <AchievementToast />
+          </div>
         </AchievementsProvider>
       </GlobalStatesProvider>
     </LocaleProvider>

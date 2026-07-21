@@ -1,3 +1,4 @@
+"use client"
 import { Mesh, Program, Renderer, Triangle } from "ogl"
 import { useEffect, useRef, useState } from "react"
 import "./LightRays.css"
@@ -485,4 +486,4 @@ void main() {
   )
 }
 
-export default LightRays
+export { LightRays }

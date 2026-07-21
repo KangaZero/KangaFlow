@@ -3,6 +3,10 @@
 // locale must satisfy (see ./index.ts). Keep keys in sync across locales.
 // `as const` is required so nested string literals become the typed key surface.
 const en = {
+  about: {
+    education: "Education",
+    technical: "Technical skills",
+  },
   achievements: {
     filter: {
       label: "Filter by rarity",
@@ -131,6 +135,8 @@ const en = {
   nav: {
     achievements: "Achievements",
     home: "Home",
+    language: "Language",
+    settings: "Settings",
   },
   theme: {
     dark: "Dark theme",

@@ -2,6 +2,10 @@
 // Japanese locale. Structure mirrors ./en.ts exactly for type safety — the
 // compiler enforces that this object is assignable to the English base shape.
 const ja = {
+  about: {
+    education: "学歴",
+    technical: "技術スキル",
+  },
   achievements: {
     filter: {
       label: "レア度で絞り込み",
@@ -130,6 +134,8 @@ const ja = {
   nav: {
     achievements: "実績",
     home: "ホーム",
+    language: "言語",
+    settings: "設定",
   },
   theme: {
     dark: "ダークテーマ",

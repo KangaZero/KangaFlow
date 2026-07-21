@@ -47,7 +47,6 @@ export function ThemeToggle() {
             aria-label={label}
             onClick={() => toggleTheme(nextTheme(active))}
             size="icon"
-            title={label}
             variant="ghost"
           >
             <Icon />

@@ -31,6 +31,47 @@ type OpenMeteoCurrent = {
   }
 }
 
+// Cache the forecast in localStorage and only hit the network once an hour from
+// the last successful fetch (Open-Meteo updates ~hourly, so anything finer is
+// wasted requests).
+const ONE_HOUR_MS = 60 * 60 * 1000
+
+// `lastUpdated` is an epoch timestamp (ms) so the "over an hour" check is a
+// plain subtraction; `details` is the forecast payload.
+type CachedForecast = { details: DailyWeatherForecast; lastUpdated: number }
+
+// Returns the cached forecast only if it was stored under an hour ago; otherwise
+// undefined so the caller fetches fresh. Guarded: private mode / corrupt JSON
+// falls through to a network fetch rather than throwing.
+function readFreshForecast(key: string): DailyWeatherForecast | undefined {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) {
+      return undefined
+    }
+    const parsed = JSON.parse(raw) as Partial<CachedForecast>
+    if (
+      typeof parsed.lastUpdated !== "number" ||
+      parsed.details == null ||
+      Date.now() - parsed.lastUpdated > ONE_HOUR_MS
+    ) {
+      return undefined
+    }
+    return parsed.details
+  } catch {
+    return undefined
+  }
+}
+
+function writeForecast(key: string, data: DailyWeatherForecast): void {
+  try {
+    const entry: CachedForecast = { details: data, lastUpdated: Date.now() }
+    localStorage.setItem(key, JSON.stringify(entry))
+  } catch {
+    // Storage unavailable (private mode / quota) — caching is best-effort.
+  }
+}
+
 export function getDailyWeatherForecast(props: GetWeatherParams): {
   data: DailyWeatherForecast | undefined
 } {
@@ -43,7 +84,15 @@ export function getDailyWeatherForecast(props: GetWeatherParams): {
   // biome-ignore lint/correctness/useHookAtTopLevel: see above — hook, called at component top level.
   React.useEffect(() => {
     const controller = new AbortController()
+    const cacheKey = `kangaflow:weather:${latitude},${longitude},${timezone},${forecastDays}`
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&models=jma_seamless&current=temperature_2m,is_day,weather_code&timezone=${timezone}&forecast_days=${forecastDays}`
+
+    // Under an hour old? Serve the cached forecast and skip the network.
+    const cached = readFreshForecast(cacheKey)
+    if (cached) {
+      setData(cached)
+      return () => controller.abort()
+    }
 
     async function load() {
       try {
@@ -60,13 +109,15 @@ export function getDailyWeatherForecast(props: GetWeatherParams): {
           typeof current.weather_code === "number" &&
           isWmoCode(current.weather_code)
         ) {
-          setData({
+          const forecast: DailyWeatherForecast = {
             current: {
               is_day: current.is_day,
               temperature_2m: current.temperature_2m,
               weather_code: current.weather_code,
             },
-          })
+          }
+          setData(forecast)
+          writeForecast(cacheKey, forecast)
         }
       } catch {
         // Leave `data` undefined; the box renders its skeleton/fallback.

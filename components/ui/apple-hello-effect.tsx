@@ -1,7 +1,7 @@
 "use client"
 
-import { motion } from "motion/react"
-
+import { motion, type Transition } from "motion/react"
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 
 const initialProps = {
@@ -19,169 +19,116 @@ type Props = React.ComponentProps<typeof motion.svg> & {
   onAnimationComplete?: () => void
 }
 
-function AppleHelloVietnameseEffect({
+// Monoline stroke paths (in writing order) for こ ん に ち は, one inner array
+// per glyph. Each glyph is drawn on a 109×109 canvas.
+// Source: KanjiVG — github.com/KanjiVG/kanjivg (CC BY-SA 3.0).
+const KONNICHIWA_STROKES: readonly (readonly string[])[] = [
+  // こ
+  [
+    "M34.75,26.75c1.12,0.88,2.91,2.01,6,1.5c7.62-1.25,14.11-2.56,22.38-2.62c15.5-0.12,5.88,5-5.75,9",
+    "M30,68.12c2.25,14.5,15.26,17.96,31,16.75c6.5-0.5,11.88-1.25,17.62-2.88",
+  ],
+  // ん
+  [
+    "M56.35,16.5c0.75,1.75,1.13,5.83-0.38,8.25c-7,11.25-27.22,43.47-33.88,54.37c-9,14.75-7.62,16.25,1.5,1.25c17.86-29.36,32-23.76,32-6.75c0,25,19,26.5,34.25-5",
+  ],
+  // に
+  [
+    "M24.53,22.75c1.25,1.5,1.62,3.75,1.12,6.38c-3,15.88-9,32.5-7.38,47.62c2.02,18.84,4.5,5.75,8.5-3.5",
+    "M53.2,30.64c0.96,0.79,2.44,1.58,5.1,1.35c6.98-0.61,15.01-3.3,22.04-3.36c13.19-0.11,1.5,3.75-8.39,7.35",
+    "M52.53,68c1.76,12.92,11.92,16.01,24.23,14.93c5.08-0.45,8.9-0.8,14.27-2.06",
+  ],
+  // ち
+  [
+    "M24.5,32.62c1.38,0.62,3.88,1.51,6.38,1.12c6.5-1,18.25-4.12,26.88-6c2.64-0.57,5.38-1.5,7.62-2.38",
+    "M45.62,15.62c0.75,1.25,0.71,3.58,0.38,5.25c-3,15-4.25,22.59-8.38,38.62c-3.25,12.62-5.38,11.12,3.62,4.38c8.29-6.21,19.75-9.5,28.5-9.5c8.62,0,14.58,5.88,14.5,14.5c-0.12,13.5-16.5,20.62-29.88,23.25",
+  ],
+  // は
+  [
+    "M24.51,18c1.25,1.5,2.15,4,1.62,6.62c-3.5,17.62-6.98,36.4-4,54.88c2.5,15.5,1.12,2,5.62-6.25",
+    "M49.64,37.89c2.41,1.57,4.85,2.16,7.8,1.71c9.36-1.43,17.46-2.94,23.4-4.57c3.12-0.86,5.96-1.29,7.8-1.29",
+    "M69.77,16.5c2.25,2.12,2.88,4.12,2.88,6.5c0,2.38,1.5,38.62,1.5,48c0,22.5-30.62,19.62-30.62,10.5c0-9.75,23.88-5.62,29.5-2.88c5.62,2.74,11.98,8.26,13.36,9.38",
+  ],
+]
+
+const GLYPH_SIZE = 109
+
+// Flatten glyphs → strokes once, tagging each stroke with its horizontal glyph
+// offset and its global draw index (used for the cascade + last-stroke hook).
+const JAPANESE_STROKES = KONNICHIWA_STROKES.flatMap((glyph, glyphIndex) =>
+  glyph.map((d) => ({ d, x: glyphIndex * GLYPH_SIZE }))
+).map((stroke, index, all) => ({
+  ...stroke,
+  index,
+  isLast: index === all.length - 1,
+}))
+
+// Each stroke draws itself, then the next begins — a pen cascading across the
+// word. Given a stroke's position in the draw order, decide WHEN it starts and
+// HOW LONG it takes. `speed` scales the whole animation (it multiplies timing,
+// matching the English variant's convention: larger = slower/longer).
+function strokeTransition(index: number, speed: number): Transition {
+  const calc = (x: number) => x * speed
+  const delay = calc(index * 0.35)
+  return {
+    delay,
+    duration: calc(0.45),
+    ease: "easeInOut",
+    opacity: { delay, duration: 0.15 },
+  }
+}
+
+// Seconds the finished lettering lingers on screen before it fades out.
+const HOLD_SECONDS = 3
+
+// Shared completion wiring for both effects: flips `done` once the final stroke
+// has drawn (driving a state-based fade-out) and forwards the caller's optional
+// callback. Returns a [done, handler] tuple so each component stays DRY.
+function useHelloEffectComplete(onAnimationComplete?: () => void) {
+  const [done, setDone] = useState(false)
+  const handleComplete = () => {
+    setDone(true)
+    onAnimationComplete?.()
+  }
+  return [done, handleComplete] as const
+}
+
+function AppleHelloJapaneseEffect({
   className,
   speed = 1,
-  onAnimationComplete = () => {},
+  onAnimationComplete,
   ...props
 }: Props) {
-  const calc = (x: number) => x * speed
+  const [done, handleComplete] = useHelloEffectComplete(onAnimationComplete)
 
   return (
     <motion.svg
+      animate={{ opacity: done ? 0 : 1 }}
       className={cn("h-20", className)}
       exit={{ opacity: 0 }}
       fill="none"
       initial={{ opacity: 1 }}
       stroke="currentColor"
-      strokeWidth="14.8883"
-      transition={{ duration: 0.5 }}
-      viewBox="0 0 1009 200"
+      strokeWidth="5.5"
+      transition={{ delay: done ? HOLD_SECONDS : 0, duration: 0.6 }}
+      viewBox={`0 0 ${GLYPH_SIZE * KONNICHIWA_STROKES.length} ${GLYPH_SIZE}`}
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
-      <title>xin chào</title>
+      <title>こんにちは</title>
 
-      {/* x1 */}
-      <motion.path
-        animate={animateProps}
-        d="M102.233 96.2277C75.6823 127.245 45.1612 158.759 11.4143 190.521"
-        initial={initialProps}
-        style={{ strokeLinecap: "round" }}
-        transition={{
-          duration: calc(0.3),
-          ease: "easeInOut",
-          opacity: { duration: 0.15 },
-        }}
-      />
-
-      {/* x2 */}
-      <motion.path
-        animate={animateProps}
-        d="M7.69214 116.575C9.67725 105.16 16.8733 95.7311 28.5358 95.7311C40.4465 95.7311 46.8981 105.408 53.3497 124.019C56.7409 133.283 60.1322 142.547 63.5234 151.81C73.689 179.58 81.1988 191.513 100.855 191.513C128.722 191.513 154.043 159.148 161.595 118.502C162.929 111.321 164.774 103.736 166.043 96.2273"
-        initial={initialProps}
-        style={{ strokeLinecap: "round" }}
-        transition={{
-          delay: calc(0.4),
-          duration: calc(0.7),
-          ease: "easeInOut",
-          opacity: { delay: calc(0.4), duration: 0.35 },
-        }}
-      />
-
-      {/* i */}
-      <motion.path
-        animate={animateProps}
-        d="M166.043 96.2273C163.191 113.101 160.565 126.997 158.92 139.404C157.989 147.592 157.544 154.54 157.596 161.488C157.729 179.354 164.764 191.513 182.695 191.513C209.39 191.513 236.181 159.123 243.73 118.5C245.064 111.321 247.012 103.759 248.139 96.2273"
-        initial={initialProps}
-        style={{ strokeLinecap: "round" }}
-        transition={{
-          delay: calc(1),
-          duration: calc(0.5),
-          ease: "easeOut",
-          opacity: { delay: calc(1), duration: 0.25 },
-        }}
-      />
-
-      {/* n1 */}
-      <motion.path
-        animate={animateProps}
-        d="M248.139 96.2278C243.424 127.741 239.454 158.759 234.491 190.272"
-        initial={initialProps}
-        style={{ strokeLinecap: "round" }}
-        transition={{
-          delay: calc(1.5),
-          duration: calc(0.3),
-          ease: "easeOut",
-          opacity: { delay: calc(1.5), duration: 0.15 },
-        }}
-      />
-
-      {/* n2 */}
-      <motion.path
-        animate={animateProps}
-        d="M237.873 167.951C244.704 121.32 265.508 94.2422 290.322 94.2422C307.692 94.2422 316.625 106.153 315.136 123.026C313.896 135.681 309.677 150.322 308.685 162.729C307.444 179.85 316.499 191.513 330.769 191.513C348.722 191.513 359.309 179.314 364.143 165.965"
-        initial={initialProps}
-        style={{ strokeLinecap: "round" }}
-        transition={{
-          delay: calc(1.8),
-          duration: calc(0.9),
-          ease: "easeOut",
-          opacity: { delay: calc(1.8), duration: 0.45 },
-        }}
-      />
-
-      {/* c, h1 */}
-      <motion.path
-        animate={animateProps}
-        d="M535.91 109.876C531.265 100.446 520.943 93.4984 505.459 93.4984C476.516 93.4984 462.044 117.816 462.044 143.374C462.044 171.503 482.265 192.506 511.307 192.506C559.762 192.506 592.902 136.708 621.581 97.8807C640.764 71.9101 649.874 49.2359 650.372 31.1674C650.62 17.7684 644.168 7.60362 632.01 7.60362C618.61 7.60362 610.173 17.7684 604.963 41.1011C599.255 66.7441 595.037 96.1684 584.367 190.521"
-        initial={initialProps}
-        style={{ strokeLinecap: "round" }}
-        transition={{
-          delay: calc(2.6),
-          duration: calc(1.1),
-          ease: "easeInOut",
-          opacity: { delay: calc(2.6), duration: 0.55 },
-        }}
-      />
-
-      {/* h2 */}
-      <motion.path
-        animate={animateProps}
-        d="M585.413 181.299C590.677 135.025 611.663 98.2125 638.213 98.2125C654.094 98.2125 664.187 110.868 661.321 128.982C659.708 139.652 656.794 152.059 655.128 164.217C653.102 179.602 658.89 191.513 676.813 191.513C702.178 191.513 717.375 164.077 725.613 135.196"
-        initial={initialProps}
-        style={{ strokeLinecap: "round" }}
-        transition={{
-          delay: calc(3.6),
-          duration: calc(1),
-          ease: "easeInOut",
-          opacity: { delay: calc(3.6), duration: 0.5 },
-        }}
-      />
-
-      {/* a1 */}
-      <motion.path
-        animate={animateProps}
-        d="M803.871 112.995C799.007 101.8 788.666 94.2423 772.207 94.2423C744.912 94.2423 724.398 121.538 723.052 150.818C721.878 177.617 734.244 192.681 751.857 192.505C776.858 192.255 795.234 167.699 803.437 115.742C804.449 109.332 805.498 102.638 806.51 96.2274"
-        initial={initialProps}
-        style={{ strokeLinecap: "round" }}
-        transition={{
-          delay: calc(4.6),
-          duration: calc(0.8),
-          ease: "easeOut",
-          opacity: { delay: calc(4.6), duration: 0.4 },
-        }}
-      />
-
-      {/* a2, o */}
-      <motion.path
-        animate={animateProps}
-        d="M806.51 96.2274C805.486 102.73 804.461 109.232 803.436 115.735C798.955 144.175 796.887 155.395 797.109 162.729C797.628 179.85 803.785 191.513 820.064 191.513C842.563 191.513 860.966 164.721 870.266 138.289C879.653 111.612 891.315 94.9867 915.633 94.9867C935.732 94.9867 951.613 109.875 951.613 137.915C951.613 168.932 931.489 192.257 906.059 192.505C883.681 192.753 868.983 174.639 870.471 147.344C872.208 117.071 890.571 94.9867 914.64 94.9867C928.536 94.9867 940.207 101.164 949.38 107.89C974.247 126.031 993.407 114.82 1000.74 96.8832"
-        initial={initialProps}
-        style={{ strokeLinecap: "round" }}
-        transition={{
-          delay: calc(5.4),
-          duration: calc(1.5),
-          ease: "easeOut",
-          opacity: { delay: calc(5.4), duration: 0.75 },
-        }}
-      />
-
-      {/* sign */}
-      <motion.path
-        animate={animateProps}
-        className="stroke-yellow-400"
-        d="M763.027 19.3039C768.734 34.6886 780.397 48.3362 792.059 55.5322"
-        initial={initialProps}
-        onAnimationComplete={onAnimationComplete}
-        style={{ strokeLinecap: "round" }}
-        transition={{
-          delay: calc(7),
-          duration: calc(0.8),
-          ease: "easeInOut",
-          opacity: { delay: calc(7), duration: 0.4 },
-        }}
-      />
+      {JAPANESE_STROKES.map(({ d, x, index, isLast }) => (
+        <g key={d} transform={`translate(${x} 0)`}>
+          <motion.path
+            animate={animateProps}
+            d={d}
+            initial={initialProps}
+            style={{ strokeLinecap: "round", strokeLinejoin: "round" }}
+            transition={strokeTransition(index, speed)}
+            {...(isLast ? { onAnimationComplete: handleComplete } : {})}
+          />
+        </g>
+      ))}
     </motion.svg>
   )
 }
@@ -189,20 +136,22 @@ function AppleHelloVietnameseEffect({
 function AppleHelloEnglishEffect({
   className,
   speed = 1,
-  onAnimationComplete = () => {},
+  onAnimationComplete,
   ...props
 }: Props) {
   const calc = (x: number) => x * speed
+  const [done, handleComplete] = useHelloEffectComplete(onAnimationComplete)
 
   return (
     <motion.svg
+      animate={{ opacity: done ? 0 : 1 }}
       className={cn("h-20", className)}
       exit={{ opacity: 0 }}
       fill="none"
       initial={{ opacity: 1 }}
       stroke="currentColor"
       strokeWidth="14.8883"
-      transition={{ duration: 0.5 }}
+      transition={{ delay: done ? HOLD_SECONDS : 0, duration: 0.6 }}
       viewBox="0 0 638 200"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
@@ -227,7 +176,7 @@ function AppleHelloEnglishEffect({
         animate={animateProps}
         d="M55.1624 181.135C60.6251 133.114 81.4118 98.0479 107.963 98.0479C123.844 98.0479 133.937 110.703 131.071 128.817C129.457 139.487 127.587 150.405 125.408 163.06C122.869 178.941 130.128 191.348 152.122 191.348C184.197 191.348 219.189 173.523 237.097 145.915C243.198 136.509 245.68 128.073 245.928 119.884C246.176 104.996 237.739 93.8296 222.851 93.8296C203.992 93.8296 189.6 115.17 189.6 142.465C189.6 171.745 205.481 192.341 239.208 192.341C285.066 192.341 335.86 137.292 359.199 75.8585C365.788 58.513 368.26 42.4065 368.26 31.1512C368.26 17.8057 364.042 7.55823 352.131 7.55823C340.469 7.55823 332.777 16.6141 325.829 30.9129C317.688 47.4967 311.667 71.4162 309.203 98.4549C303 166.301 316.896 191.348 349.936 191.348C390 191.348 434.542 135.534 457.286 75.6686C463.803 58.513 466.275 42.4065 466.275 31.1512C466.275 17.8057 462.057 7.55823 450.146 7.55823C438.484 7.55823 430.792 16.6141 423.844 30.9129C415.703 47.4967 409.682 71.4162 407.218 98.4549C401.015 166.301 414.911 191.348 444.416 191.348C473.874 191.348 489.877 165.67 499.471 138.402C508.955 111.447 520.618 94.8221 544.935 94.8221C565.035 94.8221 580.916 109.71 580.916 137.75C580.916 168.768 560.792 192.093 535.362 192.341C512.984 192.589 498.285 174.475 499.774 147.179C501.511 116.907 519.873 94.8221 543.943 94.8221C557.839 94.8221 569.51 100.999 578.682 107.725C603.549 125.866 622.709 114.656 630.047 96.7186"
         initial={initialProps}
-        onAnimationComplete={onAnimationComplete}
+        onAnimationComplete={handleComplete}
         style={{ strokeLinecap: "round" }}
         transition={{
           delay: calc(0.7),
@@ -240,13 +189,11 @@ function AppleHelloEnglishEffect({
   )
 }
 
-export { AppleHelloEnglishEffect, AppleHelloVietnameseEffect }
+export { AppleHelloEnglishEffect, AppleHelloJapaneseEffect }
 
 // Demo
-import { useState } from "react"
-
 export function Demo() {
-  const [language, setLanguage] = useState<"english" | "vietnamese">("english")
+  const [language, setLanguage] = useState<"english" | "japanese">("english")
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center gap-8 bg-black">
@@ -254,11 +201,11 @@ export function Demo() {
         <AppleHelloEnglishEffect
           className="h-24 text-white"
           onAnimationComplete={() =>
-            setTimeout(() => setLanguage("vietnamese"), 1000)
+            setTimeout(() => setLanguage("japanese"), 1000)
           }
         />
       ) : (
-        <AppleHelloVietnameseEffect
+        <AppleHelloJapaneseEffect
           className="h-24 text-white"
           onAnimationComplete={() =>
             setTimeout(() => setLanguage("english"), 1000)
@@ -266,7 +213,7 @@ export function Demo() {
         />
       )}
       <p className="text-sm text-white/50">
-        Animation cycles between English and Vietnamese
+        Animation cycles between English and Japanese
       </p>
     </div>
   )

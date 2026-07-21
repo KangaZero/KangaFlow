@@ -34,22 +34,23 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command"
-import type { GlobalStatesContextValue } from "@/lib/globalStates"
+import { useGlobalStates } from "@/providers/global-state-provider"
 
-type CommandMenuProps = Pick<
-  GlobalStatesContextValue,
-  "isCommandPaletteOpen" | "setIsCommandPaletteOpen"
-> & {
-  commands: {
-    name: string
-    shortcut: {
-      hasMetaOrCtrlKey: boolean
-      hasAltOrOptionKey: boolean
-      hasShiftKey: boolean
-      character: null | string // grapheme length must be 1
-    }
-    icon: LucideIcon
-  }[]
+type CommandItemDef = {
+  name: string
+  shortcut: {
+    hasMetaOrCtrlKey: boolean
+    hasAltOrOptionKey: boolean
+    hasShiftKey: boolean
+    character: null | string // grapheme length must be 1
+  }
+  icon: LucideIcon
+}
+
+type CommandMenuProps = {
+  // Open state comes from GlobalStatesProvider; `commands` is optional so the
+  // menu can be dropped in bare (e.g. from the server layout).
+  commands?: CommandItemDef[]
 }
 
 //TODO move as a global lib fn
@@ -57,11 +58,8 @@ export const IS_MAC =
   typeof navigator !== "undefined" &&
   /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
 
-export const CommandMenu = ({
-  isCommandPaletteOpen,
-  setIsCommandPaletteOpen,
-  commands,
-}: CommandMenuProps) => {
+export const CommandMenu = ({ commands = [] }: CommandMenuProps) => {
+  const { isCommandPaletteOpen, setIsCommandPaletteOpen } = useGlobalStates()
   if (!isCommandPaletteOpen) return null
 
   //TODO move this to where settings is applied
@@ -70,9 +68,7 @@ export const CommandMenu = ({
     return [...segmenter.segment(grapheme.trim())].length
   }
 
-  const shortcutsToLabel = (
-    shortcut: CommandMenuProps["commands"][number]["shortcut"]
-  ): string => {
+  const shortcutsToLabel = (shortcut: CommandItemDef["shortcut"]): string => {
     if (!shortcut.character) return ""
     const shortcutAsLabel: string[] = []
     if (shortcut.hasMetaOrCtrlKey) shortcutAsLabel.push(IS_MAC ? "⌘" : "Ctrl")
@@ -82,14 +78,12 @@ export const CommandMenu = ({
     return shortcutAsLabel.join(IS_MAC ? "" : " + ")
   }
 
-  const commandsSanitized: CommandMenuProps["commands"] = commands.map(
-    (command) => {
-      const shortcutCharacter = command.shortcut.character
-      if (!shortcutCharacter || graphemeLength(shortcutCharacter) > 1)
-        command.shortcut.character = null
-      return command
-    }
-  )
+  const commandsSanitized: CommandItemDef[] = commands.map((command) => {
+    const shortcutCharacter = command.shortcut.character
+    if (!shortcutCharacter || graphemeLength(shortcutCharacter) > 1)
+      command.shortcut.character = null
+    return command
+  })
 
   return (
     <CommandDialog

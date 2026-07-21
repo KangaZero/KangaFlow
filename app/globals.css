@@ -143,46 +143,44 @@
 }
 
 /*
- * Terminal theme. TODO(human): replace the token values below with your own
- * terminal palette (e.g. a phosphor-green foreground on a near-black
- * background, an amber accent, etc.). Rules:
- *   - Keep every token key — components read only these variables, so a missing
- *     one falls back to unstyled defaults under `.terminal`.
- *   - Values are oklch(L C H) (optionally `/ alpha`); match the format above.
- * Seeded from the dark palette so the theme renders before you customize it.
+ * Terminal theme — Catppuccin Mocha (https://catppuccin.com/palette/).
+ * Base #1e1e2e · Text #cdd6f4 · Surface0 #313244 · Surface1 #45475a.
+ * `primary` uses Mocha Green (#a6e3a1) to keep the app's green accent identity;
+ * `destructive` is Mocha Red (#f38ba8). Keep every token key — components read
+ * only these variables.
  */
 .terminal {
-  --background: oklch(0.147 0.004 49.25);
-  --foreground: oklch(0.985 0.001 106.423);
-  --card: oklch(0.216 0.006 56.043);
-  --card-foreground: oklch(0.985 0.001 106.423);
-  --popover: oklch(0.216 0.006 56.043);
-  --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: oklch(0.432 0.095 166.913);
-  --primary-foreground: oklch(0.979 0.021 166.113);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.268 0.007 34.298);
-  --muted-foreground: oklch(0.709 0.01 56.259);
-  --accent: oklch(0.268 0.007 34.298);
-  --accent-foreground: oklch(0.985 0.001 106.423);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.553 0.013 58.071);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.216 0.006 56.043);
-  --sidebar-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-primary: oklch(0.696 0.17 162.48);
-  --sidebar-primary-foreground: oklch(0.262 0.051 172.552);
-  --sidebar-accent: oklch(0.268 0.007 34.298);
-  --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.553 0.013 58.071);
+  --background: #1e1e2e; /* Base */
+  --foreground: #cdd6f4; /* Text */
+  --card: #313244; /* Surface0 */
+  --card-foreground: #cdd6f4;
+  --popover: #313244;
+  --popover-foreground: #cdd6f4;
+  --primary: #a6e3a1; /* Green */
+  --primary-foreground: #1e1e2e; /* Base */
+  --secondary: #45475a; /* Surface1 */
+  --secondary-foreground: #cdd6f4;
+  --muted: #313244; /* Surface0 */
+  --muted-foreground: #a6adc8; /* Subtext0 */
+  --accent: #45475a; /* Surface1 */
+  --accent-foreground: #cdd6f4;
+  --destructive: #f38ba8; /* Red */
+  --border: #45475a; /* Surface1 */
+  --input: #585b70; /* Surface2 */
+  --ring: #a6e3a1; /* Green */
+  --chart-1: #89b4fa; /* Blue */
+  --chart-2: #a6e3a1; /* Green */
+  --chart-3: #fab387; /* Peach */
+  --chart-4: #cba6f7; /* Mauve */
+  --chart-5: #94e2d5; /* Teal */
+  --sidebar: #181825; /* Mantle */
+  --sidebar-foreground: #cdd6f4;
+  --sidebar-primary: #a6e3a1;
+  --sidebar-primary-foreground: #1e1e2e;
+  --sidebar-accent: #313244;
+  --sidebar-accent-foreground: #cdd6f4;
+  --sidebar-border: #45475a;
+  --sidebar-ring: #a6e3a1;
 }
 
 @layer base {
