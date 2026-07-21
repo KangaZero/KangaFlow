@@ -140,6 +140,27 @@ const en = {
     language: "Language",
     settings: "Settings",
   },
+  settings: {
+    actions: {
+      cycleTheme: "Cycle theme",
+      goAchievements: "Go to achievements",
+      goHome: "Go to home",
+      openCommandMenu: "Open command menu",
+      toggleColumns: "Toggle grid columns",
+      toggleLanguage: "Toggle language",
+      toggleSettings: "Toggle settings",
+    },
+    currentLabel: "Current",
+    description: "Rebind keyboard shortcuts. Changes save automatically.",
+    errors: {
+      duplicate: "This combination is already in use.",
+      empty: "Set a key for this shortcut.",
+      noModifier: "Add a modifier so this doesn't fire while typing.",
+    },
+    keyLabel: "Key",
+    resetToDefaults: "Reset to defaults",
+    title: "Keyboard shortcuts",
+  },
   theme: {
     dark: "Dark theme",
     label: "Theme",

@@ -12,8 +12,8 @@ export const person = {
 
   // Intro paragraphs shown under the name (verbatim from about.intro).
   intro: [
-    "Professional Frontend Developer specialized in React and TypeScript.",
-    "Hobbyist Backend Developer and Rust, Golang, NIXOS enjoyer.",
+    "Senior Frontend Developer specialized in React and TypeScript.",
+    "Also works with: Swift, Lua, Nix, Rust, Python",
   ],
   lastName: "Yong",
 
@@ -29,7 +29,8 @@ export const person = {
   // the furigana in on the Japanese locale and out on English.
   rubyName: [
     { furigana: "サムエル", kanji: "", romaji: "Samuel" },
-    { furigana: "ワイウエング", kanji: "偉栄", romaji: "Wai Weng" },
+    { furigana: "ワイ", kanji: "偉", romaji: "Wai" },
+    { furigana: "ウエング", kanji: "栄", romaji: "Weng" },
     { furigana: "ヨング", kanji: "楊", romaji: "Yong" },
   ],
 
@@ -59,15 +60,17 @@ export const person = {
   // `category` drives the styling accent.
   technologies: [
     { category: "professional", icon: "typescript", name: "TypeScript" },
-    { category: "professional", icon: "react", name: "React" },
     { category: "professional", icon: "javascript", name: "JavaScript" },
+    { category: "professional", icon: "react", name: "React" },
     { category: "professional", icon: "git", name: "Git" },
     { category: "professional", icon: "bash", name: "Bash" },
     { category: "hobby", icon: "vue", name: "Vue" },
+    { category: "hobby", icon: "swift", name: "Swift" },
+    { category: "hobby", icon: "lua", name: "Lua" },
+    { category: "hobby", icon: "nix", name: "Nix" },
     { category: "hobby", icon: "rust", name: "Rust" },
-    { category: "hobby", icon: "go", name: "Go" },
-    { category: "hobby", icon: "nixos", name: "NixOS" },
-    { category: "hobby", icon: "vim", name: "Vim" },
+    { category: "hobby", icon: "python", name: "Python" },
+    // { category: "professional", icon: "vim", name: "Vim" },
   ],
 
   // Work section. `subtitle`/`subtitleBlur` drive the TrueFocus heading: the

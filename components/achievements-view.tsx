@@ -17,11 +17,11 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { getAchievementDef, RARITIES, type Rarity } from "@/lib/achievements"
+import { fuzzyScore } from "@/lib/fuzzy"
+import { COLUMN_OPTIONS } from "@/lib/globalStates"
 import { useAchievements } from "@/providers/achievements-provider"
+import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
-
-const COLUMN_OPTIONS = [1, 2, 3] as const
-type ColumnCount = (typeof COLUMN_OPTIONS)[number]
 
 const titleContainer = {
   hidden: {},
@@ -35,24 +35,31 @@ const titleChar = {
 export function AchievementsView() {
   const { achievements, countByRarity } = useAchievements()
   const { translate } = useLocale()
+  const { columnCount, setColumnCount } = useGlobalStates()
   const [search, setSearch] = React.useState("")
   const [rarityFilter, setRarityFilter] = React.useState<Rarity[]>([])
-  const [columns, setColumns] = React.useState<ColumnCount>(3)
 
   const heading = translate("achievements.heading")
-  const query = search.trim().toLowerCase()
+  const query = search.trim()
 
-  const filtered = achievements.filter((achievement) => {
-    const def = getAchievementDef(achievement.id)
-    const hidden = def.secret && !achievement.isUnlocked
-    const title = hidden
-      ? translate("achievements.hidden")
-      : translate(`achievements.items.${achievement.id}.title`)
-    const matchesSearch = title.toLowerCase().includes(query)
-    const matchesRarity =
-      rarityFilter.length === 0 || rarityFilter.includes(def.rarity)
-    return matchesSearch && matchesRarity
-  })
+  const filtered = achievements
+    .map((achievement) => {
+      const def = getAchievementDef(achievement.id)
+      const hidden = def.secret && !achievement.isUnlocked
+      const title = hidden
+        ? translate("achievements.hidden")
+        : translate(`achievements.items.${achievement.id}.title`)
+      return { achievement, def, score: fuzzyScore(query, title) }
+    })
+    .filter(
+      // Keep fuzzy matches (score !== null) that also pass the rarity filter.
+      (row): row is typeof row & { score: number } =>
+        row.score !== null &&
+        (rarityFilter.length === 0 || rarityFilter.includes(row.def.rarity))
+    )
+    // Best matches first; equal scores keep their original order (stable sort).
+    .sort((a, b) => b.score - a.score)
+    .map((row) => row.achievement)
 
   function toggleRarity(rarity: Rarity) {
     setRarityFilter((prev) =>
@@ -63,10 +70,9 @@ export function AchievementsView() {
   }
 
   function cycleColumns() {
-    setColumns((prev) => {
-      const index = COLUMN_OPTIONS.indexOf(prev)
-      return COLUMN_OPTIONS[(index + 1) % COLUMN_OPTIONS.length] ?? 1
-    })
+    const index = COLUMN_OPTIONS.indexOf(columnCount)
+    const next = COLUMN_OPTIONS[(index + 1) % COLUMN_OPTIONS.length]
+    if (next) setColumnCount(next)
   }
 
   const hasFilters = query.length > 0 || rarityFilter.length > 0
@@ -139,7 +145,9 @@ export function AchievementsView() {
       <motion.div
         className="grid gap-4"
         layout
-        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        style={{
+          gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
+        }}
       >
         <AnimatePresence>
           {filtered.map((achievement) => (

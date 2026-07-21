@@ -9,11 +9,18 @@ import {
 } from "motion/react"
 import { useState } from "react"
 
+import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { cn } from "@/lib/utils"
 
 export interface AnimatedTooltipProps {
   /** Text shown in the floating tooltip. */
   label: string
+  /**
+   * Optional keyboard-shortcut tokens (e.g. `["⌘", "K"]`) rendered as <Kbd>
+   * chips beside the label. Pre-formatted by the caller so this primitive stays
+   * free of app-domain types; omit or pass an empty array for no shortcut.
+   */
+  shortcut?: readonly string[] | undefined
   /** The trigger (e.g. an icon button). */
   children: React.ReactNode
   /**
@@ -41,6 +48,7 @@ const SIDE_STYLES = {
 // shows a text label on a configurable side.
 export function AnimatedTooltip({
   label,
+  shortcut,
   children,
   side = "bottom",
   className,
@@ -78,14 +86,22 @@ export function AnimatedTooltip({
               y: 0,
             }}
             className={cn(
-              "pointer-events-none absolute left-1/2 z-50 flex -translate-x-1/2 flex-col items-center whitespace-nowrap rounded-md bg-card px-3 py-1.5 text-card-foreground text-xs shadow-xl ring-1 ring-foreground/10",
+              "pointer-events-none absolute left-1/2 z-50 flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-md bg-card px-3 py-1.5 text-card-foreground text-xs shadow-xl ring-1 ring-foreground/10",
               placement.className
             )}
+            data-slot="tooltip-content"
             exit={{ opacity: 0, scale: 0.6, y: placement.y }}
             initial={{ opacity: 0, scale: 0.6, y: placement.y }}
             style={{ rotate, translateX }}
           >
             {label}
+            {shortcut && shortcut.length > 0 ? (
+              <KbdGroup>
+                {shortcut.map((token) => (
+                  <Kbd key={token}>{token}</Kbd>
+                ))}
+              </KbdGroup>
+            ) : null}
           </motion.div>
         )}
       </AnimatePresence>

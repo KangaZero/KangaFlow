@@ -9,7 +9,7 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/components/ui/hover-card"
+} from "@/components/animate-ui/components/radix/hover-card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { person } from "@/lib/person"
 import {
@@ -65,6 +65,14 @@ const HeaderDate = () => {
 
   const gradient = getTemperatureColor(temperature)
 
+  // Reveal the P5 date box on hover or click: open the card, replay the jelly
+  // animation, and grant the easter-egg achievement.
+  const handleReveal = () => {
+    setIsHovered(true)
+    setIsJellyHoverAnimationOver(false)
+    unlockAchievement("snoopy-detective")
+  }
+
   return (
     <HoverCard
       closeDelay={0}
@@ -74,13 +82,11 @@ const HeaderDate = () => {
     >
       <HoverCardTrigger asChild>
         {/* biome-ignore lint/a11y/noStaticElementInteractions: hover/touch is a progressive-enhancement easter egg; the fallback text keeps the date accessible. */}
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: same easter-egg rationale — the fallback text keeps the date fully accessible without the click. */}
         <div
           className="link-wrapper"
-          onMouseEnter={() => {
-            setIsHovered(true)
-            setIsJellyHoverAnimationOver(false)
-            unlockAchievement("snoopy-detective")
-          }}
+          onClick={handleReveal}
+          onMouseEnter={handleReveal}
           onMouseLeave={() => setIsHovered(false)}
           onTouchStart={() => {
             setIsHovered(!isHovered)

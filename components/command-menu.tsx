@@ -34,6 +34,7 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command"
+import { IS_MAC } from "@/lib/shortcuts"
 import { useGlobalStates } from "@/providers/global-state-provider"
 
 type CommandItemDef = {
@@ -52,11 +53,6 @@ type CommandMenuProps = {
   // menu can be dropped in bare (e.g. from the server layout).
   commands?: CommandItemDef[]
 }
-
-//TODO move as a global lib fn
-export const IS_MAC =
-  typeof navigator !== "undefined" &&
-  /Mac|iPhone|iPad|iPod/.test(navigator.userAgent)
 
 export const CommandMenu = ({ commands = [] }: CommandMenuProps) => {
   const { isCommandPaletteOpen, setIsCommandPaletteOpen } = useGlobalStates()

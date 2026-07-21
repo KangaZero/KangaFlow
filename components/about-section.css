@@ -58,18 +58,21 @@
   border-right: none;
   border-bottom: none;
 }
+
 .focus-corner.top-right {
   top: -10px;
   right: -10px;
   border-left: none;
   border-bottom: none;
 }
+
 .focus-corner.bottom-left {
   bottom: -10px;
   left: -10px;
   border-right: none;
   border-top: none;
 }
+
 .focus-corner.bottom-right {
   bottom: -10px;
   right: -10px;
@@ -81,7 +84,7 @@
 .avatar-wrapper {
   position: relative;
   width: 180px;
-  height: 260px;
+  height: 220px;
 }
 
 .avatar-polygon-container {
@@ -101,7 +104,7 @@
     86% 78%,
     100% 1%
   );
-  background: var(--muted);
+  background: var(--foreground);
   overflow: visible;
   z-index: 1;
 }
@@ -128,10 +131,12 @@
     opacity 0.4s,
     transform 0.4s;
 }
+
 .ruby-furigana.fade-in {
   opacity: 1;
   transform: translateY(0);
 }
+
 .ruby-furigana.fade-out {
   opacity: 0;
   transform: translateY(30px);

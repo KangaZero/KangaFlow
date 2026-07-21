@@ -3,6 +3,8 @@ import { notFound } from "next/navigation"
 import { AchievementToast } from "@/components/achievement-toast"
 import { CommandMenu } from "@/components/command-menu"
 import { LightRays } from "@/components/LightRays"
+import { SettingsDialog } from "@/components/settings-dialog"
+import { ShortcutDispatcher } from "@/components/shortcut-dispatcher"
 import { SiteHeader } from "@/components/site-header"
 import { isLocale, LOCALES } from "@/lib/i18n"
 import { AchievementsProvider } from "@/providers/achievements-provider"
@@ -38,6 +40,8 @@ export default async function LangLayout({
             <SiteHeader />
             {children}
             <CommandMenu />
+            <SettingsDialog />
+            <ShortcutDispatcher />
             <AchievementToast />
           </div>
         </AchievementsProvider>

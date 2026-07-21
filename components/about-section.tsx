@@ -11,13 +11,14 @@ import { FaGithub, FaLinkedin } from "react-icons/fa6"
 import {
   SiGit,
   SiGnubash,
-  SiGo,
   SiJavascript,
+  SiLua,
   SiNixos,
+  SiPython,
   SiReact,
   SiRust,
+  SiSwift,
   SiTypescript,
-  SiVim,
   SiVuedotjs,
 } from "react-icons/si"
 
@@ -35,7 +36,8 @@ import { person } from "@/lib/person"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
 import "./about-section.css"
-
+import type { Mutable } from "@/lib/typescript-hooks/mutable"
+import { useGlobalStates } from "@/providers/global-state-provider"
 // Section ids + i18n labels — the single source shared with the scroll-spy
 // sidebar (components/section-sidebar.tsx). Order = document order.
 export const ABOUT_SECTIONS = [
@@ -48,20 +50,33 @@ export const ABOUT_SECTIONS = [
 // literals) — also sidesteps useUniqueElementIds, which only flags literals.
 const [overviewSection, workSection, educationSection] = ABOUT_SECTIONS
 
-// Slug → brand logo. Slugs come from person.ts so the data file stays free of
-// component imports.
-const TECH_ICONS: Record<string, IconType> = {
-  bash: SiGnubash,
-  git: SiGit,
-  go: SiGo,
-  javascript: SiJavascript,
-  nixos: SiNixos,
-  react: SiReact,
-  rust: SiRust,
-  typescript: SiTypescript,
-  vim: SiVim,
-  vue: SiVuedotjs,
+// Slug → brand logo + official Simple Icons brand hue (verified against
+// simpleicons.org, not memory). Slugs come from person.ts so the data file stays
+// free of component imports; deriving the key union from there keeps this map
+// exhaustive — add a tech in person.ts and TS forces its icon here. Brand hues
+// are identity constants (not themeable), so they live here rather than as
+// globals.css tokens.
+type TechSlug = (typeof person.technologies)[number]["icon"]
+
+const TECH_ICONS: Record<TechSlug, { Icon: IconType; color: string }> = {
+  bash: { color: "#4EAA25", Icon: SiGnubash },
+  git: { color: "#F03C2E", Icon: SiGit },
+  javascript: { color: "#F7DF1E", Icon: SiJavascript },
+  lua: { color: "#000080", Icon: SiLua },
+  nix: { color: "#5277C3", Icon: SiNixos },
+  python: { color: "#3776AB", Icon: SiPython },
+  react: { color: "#61DAFB", Icon: SiReact },
+  rust: { color: "#000000", Icon: SiRust },
+  swift: { color: "#F05138", Icon: SiSwift },
+  typescript: { color: "#3178C6", Icon: SiTypescript },
+  vue: { color: "#4FC08D", Icon: SiVuedotjs },
 }
+
+// Every logo sits on a fixed light chip so its brand hue keeps the same contrast
+// in any theme — Rust #000000 / Lua #000080 would vanish on a dark surface
+// otherwise. Shared by the plain icons and the TS/JS flip card.
+const ICON_PILL =
+  "flex size-9 items-center justify-center rounded-full bg-slate-200 shadow-sm ring-1 ring-black/5 transition hover:scale-110"
 
 const SOCIAL_ICONS: Record<string, IconType> = {
   github: FaGithub,
@@ -216,9 +231,24 @@ function TrueFocus({
 }
 
 function RubyName({ isJapanese }: { isJapanese: boolean }) {
+  // My solution : (
+  // const rubyNameLength = person.rubyName.length
+  // const lastName = person.rubyName[
+  //   rubyNameLength - 1
+  // ] as (typeof person.rubyName)[3]
+  // const rubyNameOrdered = isJapanese
+  //   ? person.rubyName.filter((_part, index) => index !== rubyNameLength - 1)
+  //   : [...person.rubyName]
+  //   if (isJapanese) rubyNameOrdered.unshift(lastName)
+  //   Ai's solution
+  const rubyNameOrdered = isJapanese
+    ? ([person.rubyName.at(-1), ...person.rubyName.slice(0, -1)] as Mutable<
+        typeof person.rubyName
+      >)
+    : person.rubyName
   return (
     <h1 className="text-center font-heading font-semibold text-3xl leading-relaxed sm:text-4xl">
-      {person.rubyName.map((part) => (
+      {rubyNameOrdered.map((part) => (
         <ruby className="mx-1" key={part.romaji}>
           {part.romaji}
           <rt
@@ -242,19 +272,24 @@ function FlipTechIcon({
   front,
   back,
 }: {
-  front: { name: string; Icon: IconType }
-  back: { name: string; Icon: IconType }
+  front: { name: string; Icon: IconType; color: string }
+  back: { name: string; Icon: IconType; color: string }
 }) {
-  const [flipped, setFlipped] = useState(false)
-  const shown = flipped ? back : front
+  const {
+    isJavascriptFlipTechIconFlipped,
+    setIsJavascriptFlipTechIconFlipped,
+  } = useGlobalStates()
+  const shown = isJavascriptFlipTechIconFlipped ? back : front
   const Icon = shown.Icon
 
   return (
     <AnimatedTooltip label={shown.name}>
       <button
         aria-label={shown.name}
-        className="flex size-9 items-center justify-center rounded-lg text-foreground transition-colors [perspective:400px] hover:bg-muted"
-        onClick={() => setFlipped((prev) => !prev)}
+        className={cn(ICON_PILL, "perspective-[400px]")}
+        onClick={() =>
+          setIsJavascriptFlipTechIconFlipped(!isJavascriptFlipTechIconFlipped)
+        }
         type="button"
       >
         <AnimatePresence initial={false} mode="wait">
@@ -264,6 +299,7 @@ function FlipTechIcon({
             exit={{ opacity: 0, rotateY: 90 }}
             initial={{ opacity: 0, rotateY: -90 }}
             key={shown.name}
+            style={{ color: shown.color }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <Icon aria-hidden className="size-5" />
@@ -293,17 +329,21 @@ export function AboutSection() {
         </div>
         <div className="flex flex-wrap justify-center gap-1">
           {person.technologies.map((tech) => {
-            const Icon = TECH_ICONS[tech.icon]
-            if (!Icon) {
-              return null
-            }
             // TypeScript and JavaScript each render as a flip card that reveals
             // the other on click (front = self, back = the sibling language).
             if (tech.icon === "javascript") {
               return (
                 <FlipTechIcon
-                  back={{ Icon: SiTypescript, name: "TypeScript" }}
-                  front={{ Icon: SiJavascript, name: tech.name }}
+                  back={{
+                    color: TECH_ICONS.typescript.color,
+                    Icon: SiTypescript,
+                    name: "TypeScript",
+                  }}
+                  front={{
+                    color: TECH_ICONS.javascript.color,
+                    Icon: SiJavascript,
+                    name: tech.name,
+                  }}
                   key={tech.name}
                 />
               )
@@ -311,23 +351,28 @@ export function AboutSection() {
             if (tech.icon === "typescript") {
               return (
                 <FlipTechIcon
-                  back={{ Icon: SiJavascript, name: "JavaScript" }}
-                  front={{ Icon: SiTypescript, name: tech.name }}
+                  back={{
+                    color: TECH_ICONS.javascript.color,
+                    Icon: SiJavascript,
+                    name: "JavaScript",
+                  }}
+                  front={{
+                    color: TECH_ICONS.typescript.color,
+                    Icon: SiTypescript,
+                    name: tech.name,
+                  }}
                   key={tech.name}
                 />
               )
             }
+            const { Icon, color } = TECH_ICONS[tech.icon]
             return (
               <AnimatedTooltip key={tech.name} label={tech.name}>
                 <span
                   aria-label={tech.name}
-                  className={cn(
-                    "flex size-9 items-center justify-center rounded-lg transition-colors hover:bg-muted",
-                    tech.category === "professional"
-                      ? "text-foreground"
-                      : "text-muted-foreground"
-                  )}
+                  className={ICON_PILL}
                   role="img"
+                  style={{ color }}
                 >
                   <Icon aria-hidden className="size-5" />
                 </span>

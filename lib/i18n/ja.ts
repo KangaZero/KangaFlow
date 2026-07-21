@@ -139,6 +139,27 @@ const ja = {
     language: "言語",
     settings: "設定",
   },
+  settings: {
+    actions: {
+      cycleTheme: "テーマ切り替え",
+      goAchievements: "実績へ移動",
+      goHome: "ホームへ移動",
+      openCommandMenu: "コマンドメニューを開く",
+      toggleColumns: "列数の切り替え",
+      toggleLanguage: "言語の切り替え",
+      toggleSettings: "設定の切り替え",
+    },
+    currentLabel: "現在",
+    description: "ショートカットを再設定できます。変更は自動保存されます。",
+    errors: {
+      duplicate: "この組み合わせは既に使われています。",
+      empty: "このショートカットにキーを設定してください。",
+      noModifier: "入力中の誤爆を防ぐため修飾キーを追加してください。",
+    },
+    keyLabel: "キー",
+    resetToDefaults: "デフォルトに戻す",
+    title: "キーボードショートカット",
+  },
   theme: {
     dark: "ダークテーマ",
     label: "テーマ",

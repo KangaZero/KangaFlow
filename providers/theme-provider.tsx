@@ -1,10 +1,10 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
-import * as React from "react"
+import { ThemeProvider as NextThemesProvider } from "next-themes"
+import type * as React from "react"
 
-import { DEFAULT_THEME, isTheme, nextTheme, THEMES } from "@/lib/themes"
+import { DEFAULT_THEME, THEMES } from "@/lib/themes"
 
 function ThemeProvider({
   children,
@@ -20,12 +20,13 @@ function ThemeProvider({
       themes={[...THEMES]}
       {...props}
     >
-      <ThemeHotkey />
       {children}
     </NextThemesProvider>
   )
 }
 
+// True when the event target is a text-entry element — used by the global
+// shortcut dispatcher to ignore bare-key shortcuts while the user is typing.
 function isTypingTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) {
     return false
@@ -39,40 +40,4 @@ function isTypingTarget(target: EventTarget | null) {
   )
 }
 
-function ThemeHotkey() {
-  const { theme, setTheme } = useTheme()
-
-  React.useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.defaultPrevented || event.repeat) {
-        return
-      }
-
-      if (event.metaKey || event.ctrlKey || event.altKey) {
-        return
-      }
-
-      if (event.key.toLowerCase() !== "d") {
-        return
-      }
-
-      if (isTypingTarget(event.target)) {
-        return
-      }
-
-      // Instant cycle (no View Transition reveal — that lives on the button).
-      const current = isTheme(theme) ? theme : DEFAULT_THEME
-      setTheme(nextTheme(current))
-    }
-
-    window.addEventListener("keydown", onKeyDown)
-
-    return () => {
-      window.removeEventListener("keydown", onKeyDown)
-    }
-  }, [theme, setTheme])
-
-  return null
-}
-
-export { ThemeProvider }
+export { isTypingTarget, ThemeProvider }
