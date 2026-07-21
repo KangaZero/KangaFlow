@@ -1,0 +1,153 @@
+/* Self-authored daytime blue-sky background — no dependencies, no WebGL.
+   A vertical sky gradient with a warm sun, two parallax cloud layers, and
+   flapping birds, all GPU-composited. Decorative; motion respects the user's
+   reduced-motion preference. Palette: cool blue (sky) + warm amber (sun) form a
+   complementary pair; white clouds and slate birds sit as neutrals. */
+
+.blue-sky {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    to bottom,
+    #6cb7f0 0%,
+    #8fcbf3 38%,
+    #c3e5f7 74%,
+    #eef7fb 100%
+  );
+}
+
+/* Warm sun — the complementary accent to the cool sky. */
+.blue-sky-sun {
+  position: absolute;
+  top: 8%;
+  right: 12%;
+  width: min(30vw, 260px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 248, 219, 0.95) 0%,
+    rgba(255, 231, 158, 0.55) 42%,
+    rgba(255, 221, 130, 0) 70%
+  );
+}
+
+/* Each layer is twice the viewport width so a -50% translate loops seamlessly.
+   Clouds are soft white radial-gradient blobs tiled every 50% of the layer. */
+.blue-sky-clouds {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  background-repeat: repeat-x;
+  background-size: 50% auto;
+  will-change: transform;
+  animation: blue-sky-drift linear infinite;
+}
+
+.blue-sky-clouds-back {
+  opacity: 0.55;
+  animation-duration: 140s;
+  background-image:
+    radial-gradient(
+      70px 26px at 12% 22%,
+      rgba(255, 255, 255, 0.9),
+      transparent 70%
+    ),
+    radial-gradient(
+      110px 40px at 34% 16%,
+      rgba(255, 255, 255, 0.85),
+      transparent 72%
+    ),
+    radial-gradient(
+      90px 32px at 68% 26%,
+      rgba(255, 255, 255, 0.8),
+      transparent 70%
+    );
+}
+
+.blue-sky-clouds-front {
+  opacity: 0.9;
+  animation-duration: 90s;
+  background-image:
+    radial-gradient(
+      120px 46px at 20% 40%,
+      rgba(255, 255, 255, 0.95),
+      transparent 72%
+    ),
+    radial-gradient(
+      160px 60px at 55% 32%,
+      rgba(255, 255, 255, 0.92),
+      transparent 74%
+    ),
+    radial-gradient(
+      100px 40px at 82% 44%,
+      rgba(255, 255, 255, 0.9),
+      transparent 72%
+    );
+}
+
+/* Birds fly across on their own lanes; the wing path flaps in place. */
+.blue-sky-birds {
+  position: absolute;
+  inset: 0;
+}
+
+.blue-sky-bird {
+  position: absolute;
+  left: 0;
+  width: calc(28px * var(--bird-scale, 1));
+  height: auto;
+  fill: none;
+  stroke: rgba(51, 65, 85, 0.55);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  overflow: visible;
+  will-change: transform;
+  animation-name: blue-sky-fly;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.blue-sky-bird-wing {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: blue-sky-flap 0.45s ease-in-out infinite;
+}
+
+@keyframes blue-sky-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+@keyframes blue-sky-fly {
+  from {
+    transform: translate3d(-10vw, 0, 0);
+  }
+  to {
+    transform: translate3d(115vw, -4vh, 0);
+  }
+}
+
+@keyframes blue-sky-flap {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blue-sky-clouds,
+  .blue-sky-bird,
+  .blue-sky-bird-wing {
+    animation: none;
+  }
+}
