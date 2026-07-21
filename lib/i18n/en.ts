@@ -5,7 +5,9 @@
 const en = {
   about: {
     education: "Education",
+    overview: "Overview",
     technical: "Technical skills",
+    work: "Work",
   },
   achievements: {
     filter: {

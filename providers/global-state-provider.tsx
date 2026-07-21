@@ -1,23 +1,37 @@
 "use client"
 
-import * as React from "react"
-
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useMemo,
+  useState,
+} from "react"
 import type { GlobalStatesContextValue } from "@/lib/globalStates"
 
 const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isCommandPaletteOpen: false,
+  isHelloEffectAnimationComplete: false,
   setIsCommandPaletteOpen: () => {},
+  setIsHelloEffectAnimationComplete: () => {},
 }
 
-const GlobalStatesContext = React.createContext<GlobalStatesContextValue>(
+const GlobalStatesContext = createContext<GlobalStatesContextValue>(
   DEFAULT_GLOBAL_STATES
 )
 
-function GlobalStatesProvider({ children }: { children: React.ReactNode }) {
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = React.useState(false)
-  const value = React.useMemo<GlobalStatesContextValue>(
-    () => ({ isCommandPaletteOpen, setIsCommandPaletteOpen }),
-    [isCommandPaletteOpen]
+function GlobalStatesProvider({ children }: { children: ReactNode }) {
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
+  const [isHelloEffectAnimationComplete, setIsHelloEffectAnimationComplete] =
+    useState(false)
+  const value = useMemo<GlobalStatesContextValue>(
+    () => ({
+      isCommandPaletteOpen,
+      isHelloEffectAnimationComplete,
+      setIsCommandPaletteOpen,
+      setIsHelloEffectAnimationComplete,
+    }),
+    [isCommandPaletteOpen, isHelloEffectAnimationComplete]
   )
 
   return (
@@ -28,7 +42,7 @@ function GlobalStatesProvider({ children }: { children: React.ReactNode }) {
 }
 
 function useGlobalStates(): GlobalStatesContextValue {
-  const ctx = React.useContext(GlobalStatesContext)
+  const ctx = useContext(GlobalStatesContext)
   if (ctx == null) {
     throw new Error(
       "useGlobalStates must be used within a <GlobalStatesProvider>"

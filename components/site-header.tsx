@@ -20,11 +20,13 @@ export function SiteHeader() {
   const pathname = usePathname()
   const { locale, setLocale, translate } = useLocale()
 
-  // trailingSlash is on, so normalise before comparing.
-  const path = pathname.replace(/\/$/, "")
+  // Compare the path WITHOUT its locale segment: the language toggle swaps the
+  // URL via history.replaceState (which usePathname doesn't observe), so a
+  // locale-agnostic check keeps the active item correct after switching.
+  const rest = pathname.replace(/^\/(?:en|ja)(?=\/|$)/, "").replace(/\/$/, "")
   const home = `/${locale}`
-  const isHome = path === home
-  const isAchievements = path.startsWith(`${home}/achievements`)
+  const isHome = rest === ""
+  const isAchievements = rest.startsWith("/achievements")
   const other = locale === "en" ? "ja" : "en"
 
   return (

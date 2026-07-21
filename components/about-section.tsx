@@ -30,10 +30,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import type { TranslationKey } from "@/lib/i18n"
 import { person } from "@/lib/person"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
 import "./about-section.css"
+
+// Section ids + i18n labels — the single source shared with the scroll-spy
+// sidebar (components/section-sidebar.tsx). Order = document order.
+export const ABOUT_SECTIONS = [
+  { id: "about-overview", labelKey: "about.overview" },
+  { id: "about-work", labelKey: "about.work" },
+  { id: "about-education", labelKey: "about.education" },
+] as const satisfies readonly { id: string; labelKey: TranslationKey }[]
+
+// Destructured so section ids come from the shared source (not re-typed
+// literals) — also sidesteps useUniqueElementIds, which only flags literals.
+const [overviewSection, workSection, educationSection] = ABOUT_SECTIONS
 
 // Slug → brand logo. Slugs come from person.ts so the data file stays free of
 // component imports.
@@ -62,17 +75,20 @@ const reveal = {
 } as const
 
 function Section({
+  id,
   title,
   children,
   className,
 }: {
+  id?: string
   title?: React.ReactNode
   children: React.ReactNode
   className?: string
 }) {
   return (
     <motion.section
-      className={cn("flex w-full flex-col gap-6", className)}
+      className={cn("flex w-full scroll-mt-24 flex-col gap-6", className)}
+      id={id}
       initial="hidden"
       transition={{ duration: 0.5, ease: "easeOut" }}
       variants={reveal}
@@ -220,13 +236,50 @@ function RubyName({ isJapanese }: { isJapanese: boolean }) {
   )
 }
 
+// TypeScript ⇄ JavaScript: click flips the card to reveal the other language,
+// matching the portfolio's SkillsContainer.
+function FlipTechIcon({
+  front,
+  back,
+}: {
+  front: { name: string; Icon: IconType }
+  back: { name: string; Icon: IconType }
+}) {
+  const [flipped, setFlipped] = useState(false)
+  const shown = flipped ? back : front
+  const FrontIcon = front.Icon
+  const BackIcon = back.Icon
+
+  return (
+    <AnimatedTooltip label={shown.name}>
+      <button
+        aria-label={shown.name}
+        className="flex size-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted"
+        onClick={() => setFlipped((prev) => !prev)}
+        type="button"
+      >
+        <span className={cn("flip-card", flipped && "flipped")}>
+          <span className="flip-card-inner">
+            <span className="flip-card-front">
+              <FrontIcon aria-hidden className="size-5" />
+            </span>
+            <span className="flip-card-back">
+              <BackIcon aria-hidden className="size-5" />
+            </span>
+          </span>
+        </span>
+      </button>
+    </AnimatedTooltip>
+  )
+}
+
 export function AboutSection() {
   const { locale, translate } = useLocale()
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-16 py-8">
       {/* Identity */}
-      <Section className="items-center text-center">
+      <Section className="items-center text-center" id={overviewSection.id}>
         <Avatar />
         <RubyName isJapanese={locale === "ja"} />
         <p className="text-muted-foreground text-sm">
@@ -239,8 +292,23 @@ export function AboutSection() {
         </div>
         <div className="flex flex-wrap justify-center gap-1">
           {person.technologies.map((tech) => {
+            // JavaScript is the flip side of the TypeScript card, not its own icon.
+            if (tech.icon === "javascript") {
+              return null
+            }
             const Icon = TECH_ICONS[tech.icon]
-            if (!Icon) return null
+            if (!Icon) {
+              return null
+            }
+            if (tech.icon === "typescript") {
+              return (
+                <FlipTechIcon
+                  back={{ Icon: SiJavascript, name: "JavaScript" }}
+                  front={{ Icon: SiTypescript, name: tech.name }}
+                  key={tech.name}
+                />
+              )
+            }
             return (
               <AnimatedTooltip key={tech.name} label={tech.name}>
                 <span
@@ -276,6 +344,7 @@ export function AboutSection() {
 
       {/* Work */}
       <Section
+        id={workSection.id}
         title={
           <TrueFocus
             subtitle={person.work.subtitle}
@@ -314,6 +383,7 @@ export function AboutSection() {
 
       {/* Education */}
       <Section
+        id={educationSection.id}
         title={
           <h2 className="font-heading font-semibold text-2xl sm:text-3xl">
             {translate("about.education")}

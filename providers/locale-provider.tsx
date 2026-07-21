@@ -1,7 +1,6 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { usePathname, useRouter } from "next/navigation"
 import * as React from "react"
 
 import { type Locale, type Translate, t } from "@/lib/i18n"
@@ -23,14 +22,20 @@ function persistLocale(locale: Locale) {
 }
 
 function LocaleProvider({
-  locale,
+  locale: initialLocale,
   children,
 }: {
   locale: Locale
   children: React.ReactNode
 }) {
-  const router = useRouter()
-  const pathname = usePathname()
+  // Locale lives in state (seeded from the route param) so switching it
+  // re-renders translations WITHOUT a route change or reload.
+  const [locale, setLocaleState] = React.useState<Locale>(initialLocale)
+
+  // Real navigation / a direct load changes the route param → resync.
+  React.useEffect(() => {
+    setLocaleState(initialLocale)
+  }, [initialLocale])
 
   // Persist the active locale and mirror it onto <html lang> for a11y/SEO.
   React.useEffect(() => {
@@ -38,15 +43,16 @@ function LocaleProvider({
     document.documentElement.lang = locale
   }, [locale])
 
-  const setLocale = React.useCallback(
-    (next: Locale) => {
-      persistLocale(next)
-      // Swap the leading /<lang> segment and navigate client-side.
-      const rest = pathname.replace(/^\/(?:en|ja)(?=\/|$)/, "")
-      router.push(`/${next}${rest}`)
-    },
-    [pathname, router]
-  )
+  const setLocale = React.useCallback((next: Locale) => {
+    setLocaleState(next)
+    persistLocale(next)
+    // Swap only the leading /<lang> segment in the address bar via the History
+    // API — no router navigation, no reload. The state change above re-renders
+    // the translated strings in place (matches the portfolio's LocaleToggle).
+    const { pathname, search, hash } = window.location
+    const swapped = pathname.replace(/(^|\/)(?:en|ja)(?=\/|$)/, `$1${next}`)
+    window.history.replaceState(null, "", `${swapped}${search}${hash}`)
+  }, [])
 
   // Locale-bound translate that keeps `t`'s precise per-key return type.
   const translate = React.useMemo<Translate>(
