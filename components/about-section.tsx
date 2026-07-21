@@ -3,7 +3,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import { Mail } from "lucide-react"
-import { motion } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import type { IconType } from "react-icons"
@@ -247,27 +247,28 @@ function FlipTechIcon({
 }) {
   const [flipped, setFlipped] = useState(false)
   const shown = flipped ? back : front
-  const FrontIcon = front.Icon
-  const BackIcon = back.Icon
+  const Icon = shown.Icon
 
   return (
     <AnimatedTooltip label={shown.name}>
       <button
         aria-label={shown.name}
-        className="flex size-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-muted"
+        className="flex size-9 items-center justify-center rounded-lg text-foreground transition-colors [perspective:400px] hover:bg-muted"
         onClick={() => setFlipped((prev) => !prev)}
         type="button"
       >
-        <span className={cn("flip-card", flipped && "flipped")}>
-          <span className="flip-card-inner">
-            <span className="flip-card-front">
-              <FrontIcon aria-hidden className="size-5" />
-            </span>
-            <span className="flip-card-back">
-              <BackIcon aria-hidden className="size-5" />
-            </span>
-          </span>
-        </span>
+        <AnimatePresence initial={false} mode="wait">
+          <motion.span
+            animate={{ opacity: 1, rotateY: 0 }}
+            className="inline-flex"
+            exit={{ opacity: 0, rotateY: 90 }}
+            initial={{ opacity: 0, rotateY: -90 }}
+            key={shown.name}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          >
+            <Icon aria-hidden className="size-5" />
+          </motion.span>
+        </AnimatePresence>
       </button>
     </AnimatedTooltip>
   )
