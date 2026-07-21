@@ -2,6 +2,7 @@
 
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
+import { AnimatePresence, motion } from "motion/react"
 import dynamic from "next/dynamic"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
@@ -41,9 +42,25 @@ export function ThemeBackground() {
 
   useEffect(() => setMounted(true), [])
 
+  // Crossfade on theme change: keyed by theme, so the outgoing layer fades out
+  // while the incoming fades in (with a gentle zoom for a soft cross-dissolve).
+  // Overlapping — no `mode="wait"` — so there's never a bare gap between them.
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
-      {mounted ? activeBackground(resolvedTheme) : null}
+      <AnimatePresence>
+        {mounted ? (
+          <motion.div
+            animate={{ opacity: 1, scale: 1 }}
+            className="absolute inset-0"
+            exit={{ opacity: 0, scale: 1.04 }}
+            initial={{ opacity: 0, scale: 1.04 }}
+            key={resolvedTheme ?? "light"}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+          >
+            {activeBackground(resolvedTheme)}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   )
 }
