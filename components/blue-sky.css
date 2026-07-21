@@ -108,6 +108,9 @@
   animation-name: blue-sky-fly;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+  /* Hold the first keyframe (off-screen left) during the stagger delay instead
+     of parking at the static spawn position. */
+  animation-fill-mode: backwards;
 }
 
 .blue-sky-bird-wing {
