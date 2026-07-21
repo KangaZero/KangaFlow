@@ -6,6 +6,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { HeaderDate } from "@/components/header-date"
+import { HeaderStatus } from "@/components/header-status"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
@@ -32,6 +33,8 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 flex items-center px-6 py-4">
       <HeaderDate />
+
+      <HeaderStatus className="ml-auto hidden sm:block" />
 
       <nav className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border bg-card/80 p-1 shadow-lg backdrop-blur-sm sm:absolute sm:bottom-auto">
         <AnimatedTooltip label={translate("nav.home")} side="responsive">

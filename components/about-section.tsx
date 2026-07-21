@@ -292,13 +292,20 @@ export function AboutSection() {
         </div>
         <div className="flex flex-wrap justify-center gap-1">
           {person.technologies.map((tech) => {
-            // JavaScript is the flip side of the TypeScript card, not its own icon.
-            if (tech.icon === "javascript") {
-              return null
-            }
             const Icon = TECH_ICONS[tech.icon]
             if (!Icon) {
               return null
+            }
+            // TypeScript and JavaScript each render as a flip card that reveals
+            // the other on click (front = self, back = the sibling language).
+            if (tech.icon === "javascript") {
+              return (
+                <FlipTechIcon
+                  back={{ Icon: SiTypescript, name: "TypeScript" }}
+                  front={{ Icon: SiJavascript, name: tech.name }}
+                  key={tech.name}
+                />
+              )
             }
             if (tech.icon === "typescript") {
               return (
