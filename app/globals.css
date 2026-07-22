@@ -106,6 +106,11 @@
   --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
   --sidebar-border: oklch(0.923 0.003 48.717);
   --sidebar-ring: oklch(0.709 0.01 56.259);
+  /* LineSidebar (right-rail TOC) accents. Dedicated tokens so the sidebar gets
+     readable contrast without retuning the app-wide --primary/--border (which
+     drive every button/border). Cascades to .dark/.terminal below. */
+  --line-accent: oklch(0.5 0.15 163);
+  --line-marker: oklch(0.62 0.008 60);
 }
 
 .dark {
@@ -140,6 +145,12 @@
   --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.553 0.013 58.071);
+  /* Active-highlight green tuned for the dark base (oklch(0.147)): L=0.76 sits
+     well clear of the background, chroma 0.15 stays vivid without shimmering,
+     hue matches the app's green identity. Drives the active label colour and
+     the marker proximity highlight (color-mix in LineSidebar.css). */
+  --line-accent: oklch(0.76 0.15 163);
+  --line-marker: oklch(0.55 0.01 60);
 }
 
 /*
@@ -150,30 +161,49 @@
  * only these variables.
  */
 .terminal {
-  --background: #1e1e2e; /* Base */
-  --foreground: #cdd6f4; /* Text */
-  --card: #313244; /* Surface0 */
+  --background: #1e1e2e;
+  /* Base */
+  --foreground: #cdd6f4;
+  /* Text */
+  --card: #313244;
+  /* Surface0 */
   --card-foreground: #cdd6f4;
   --popover: #313244;
   --popover-foreground: #cdd6f4;
-  --primary: #a6e3a1; /* Green */
-  --primary-foreground: #1e1e2e; /* Base */
-  --secondary: #45475a; /* Surface1 */
+  --primary: #a6e3a1;
+  /* Green */
+  --primary-foreground: #1e1e2e;
+  /* Base */
+  --secondary: #45475a;
+  /* Surface1 */
   --secondary-foreground: #cdd6f4;
-  --muted: #313244; /* Surface0 */
-  --muted-foreground: #a6adc8; /* Subtext0 */
-  --accent: #45475a; /* Surface1 */
+  --muted: #313244;
+  /* Surface0 */
+  --muted-foreground: #a6adc8;
+  /* Subtext0 */
+  --accent: #45475a;
+  /* Surface1 */
   --accent-foreground: #cdd6f4;
-  --destructive: #f38ba8; /* Red */
-  --border: #45475a; /* Surface1 */
-  --input: #585b70; /* Surface2 */
-  --ring: #a6e3a1; /* Green */
-  --chart-1: #89b4fa; /* Blue */
-  --chart-2: #a6e3a1; /* Green */
-  --chart-3: #fab387; /* Peach */
-  --chart-4: #cba6f7; /* Mauve */
-  --chart-5: #94e2d5; /* Teal */
-  --sidebar: #181825; /* Mantle */
+  --destructive: #f38ba8;
+  /* Red */
+  --border: #45475a;
+  /* Surface1 */
+  --input: #585b70;
+  /* Surface2 */
+  --ring: #a6e3a1;
+  /* Green */
+  --chart-1: #89b4fa;
+  /* Blue */
+  --chart-2: #a6e3a1;
+  /* Green */
+  --chart-3: #fab387;
+  /* Peach */
+  --chart-4: #cba6f7;
+  /* Mauve */
+  --chart-5: #94e2d5;
+  /* Teal */
+  --sidebar: #181825;
+  /* Mantle */
   --sidebar-foreground: #cdd6f4;
   --sidebar-primary: #a6e3a1;
   --sidebar-primary-foreground: #1e1e2e;
@@ -181,20 +211,43 @@
   --sidebar-accent-foreground: #cdd6f4;
   --sidebar-border: #45475a;
   --sidebar-ring: #a6e3a1;
+  /* Terminal contrast already reads well — keep the Mocha palette's own green
+     and surface line so this theme is unchanged. */
+  --line-accent: var(--primary);
+  /* Green #a6e3a1 */
+  --line-marker: var(--border);
+  /* Surface1 #45475a */
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
+
   html {
     @apply font-mono;
   }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 2s ease-in-out forwards;
 }

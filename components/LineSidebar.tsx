@@ -61,9 +61,9 @@ const DEFAULT_ITEMS = [
 
 const LineSidebar = ({
   items = DEFAULT_ITEMS,
-  accentColor = "var(--primary)",
+  accentColor = "var(--line-accent)",
   textColor = "var(--muted-foreground)",
-  markerColor = "var(--border)",
+  markerColor = "var(--line-marker)",
   showIndex = true,
   showMarker = true,
   proximityRadius = 100,

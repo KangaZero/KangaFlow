@@ -4,7 +4,7 @@
    overrides these from props. */
 .line-sidebar {
   --accent-color: var(--primary);
-  --text-color: var(--muted-foreground);
+  --text-color: var(--accent-foreground);
   --marker-color: var(--border);
   --marker-length: 60px;
   --marker-gap: 0px;
