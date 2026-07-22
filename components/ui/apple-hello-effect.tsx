@@ -1,7 +1,13 @@
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: <Needed to avoid duplicates> */
 "use client"
 
 import { motion, type Transition } from "motion/react"
-import { useState } from "react"
+import { useId, useRef, useState } from "react"
+import {
+  INTRO_BRAND,
+  INTRO_JA_WELCOME,
+  type IntroStroke,
+} from "@/components/ui/apple-hello-paths"
 import { cn } from "@/lib/utils"
 
 const initialProps = {
@@ -189,7 +195,200 @@ function AppleHelloEnglishEffect({
   )
 }
 
-export { AppleHelloEnglishEffect, AppleHelloJapaneseEffect }
+// KangaFlow wordmark: one gradient stroke drawn with the same pathLength trick
+// as the lettering above. Self-contained gradient (cyan → pink) so it reads on
+// every theme background. Source: assets/logo.svg.
+const KANGAFLOW_LOGO_D =
+  "M235.52891872600594 281.4371176993752C235.92811916545907 257.8842231070901 237.52492092327157 154.69060687580756 237.9241213627247 140.11975014566434C238.32332180217782 125.5488934155211 225.3492719161101 194.41117775796903 237.9241213627247 194.0119773185159C250.49897080933928 193.61277687906278 307.78439408814785 141.51696439940784 313.3732180424122 137.7245475089456C318.96204199667653 133.93213061848334 278.84229356324556 158.28342354654325 271.4570650883106 171.25747597574247C264.0718366133757 184.23152840494168 261.67662126099947 198.40319486815784 269.0618471928028 215.5688620841409C276.44707312460616 232.73452930012397 303.79237189169606 276.04788633544297 315.76842067913094 274.25147927164085C327.7444694665658 272.45507220783884 322.9540641931283 199.60079872964872 340.9181399174122 204.7904197013284C358.88221564169606 209.9800406730081 411.77643154338875 295.8083691235289 423.55287502483407 305.38920510171897C435.3293185062794 314.97004107990915 385.6286959476856 268.2634574210549 411.57680080608407 262.275435570469C437.5249056644825 256.2874137198831 551.2973869470345 268.263467593581 579.2415041752247 269.46107399820335"
+const KANGAFLOW_LOGO_TRANSFORM =
+  "matrix(0.8552315624999999,0,0,0.8552315624999999,52.919468154139565,10.13515450322393)"
+
+function KangaFlowLogo({
+  className,
+  speed = 1,
+  onAnimationComplete,
+}: {
+  className?: string
+  speed?: number
+  onAnimationComplete?: () => void
+}) {
+  const gradientId = useId()
+
+  return (
+    <motion.svg
+      aria-hidden
+      className={cn("h-14 w-auto", className)}
+      fill="none"
+      viewBox="0 0 800 400"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <motion.path
+        animate={animateProps}
+        d={KANGAFLOW_LOGO_D}
+        initial={initialProps}
+        stroke={`url(#${gradientId})`}
+        strokeWidth={19}
+        style={{ strokeLinecap: "round" }}
+        transform={KANGAFLOW_LOGO_TRANSFORM}
+        transition={{ duration: 1.4 * speed, ease: "easeInOut" }}
+        {...(onAnimationComplete ? { onAnimationComplete } : {})}
+      />
+      <defs>
+        <linearGradient id={gradientId}>
+          <stop offset="0" stopColor="hsl(184, 74%, 44%)" />
+          <stop offset="1" stopColor="hsl(332, 87%, 70%)" />
+        </linearGradient>
+      </defs>
+    </motion.svg>
+  )
+}
+
+// Milliseconds the fully-revealed intro holds before handing off to content.
+const INTRO_HOLD_MS = 1200
+
+// A word written in kana: KanjiVG strokes drawn one at a time with the shared
+// cascade (strokeTransition), matching the こんにちは greeting. `label` is the
+// accessible text; the final stroke reports completion.
+function DrawnKana({
+  strokes,
+  viewBox,
+  label,
+  className,
+  speed = 1,
+  onAnimationComplete,
+}: {
+  strokes: readonly IntroStroke[]
+  viewBox: string
+  label: string
+  className?: string
+  speed?: number
+  onAnimationComplete?: () => void
+}) {
+  return (
+    <motion.svg
+      className={cn("h-16 w-auto", className)}
+      fill="none"
+      role="img"
+      stroke="currentColor"
+      strokeWidth={5.5}
+      viewBox={viewBox}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <title>{label}</title>
+      {strokes.map((stroke, index, all) => (
+        <motion.path
+          animate={animateProps}
+          d={stroke.d}
+          initial={initialProps}
+          key={`${stroke.d}${index}`}
+          style={{ strokeLinecap: "round", strokeLinejoin: "round" }}
+          transform={`translate(${stroke.x} 0)`}
+          transition={strokeTransition(index, speed)}
+          {...(index === all.length - 1 && onAnimationComplete
+            ? { onAnimationComplete }
+            : {})}
+        />
+      ))}
+    </motion.svg>
+  )
+}
+
+type AppleHelloIntroProps = {
+  brand: string
+  welcome: string
+  locale: "en" | "ja"
+  // Multiplies every beat's timing (and the greeting's), matching the effects'
+  // convention: larger = slower/longer, smaller = snappier.
+  speed?: number
+  onAnimationComplete?: () => void
+}
+
+type BeatDef = {
+  id: string
+  render: (onDone: () => void) => React.ReactElement
+}
+
+// Staged beats after the hand-drawn greeting; each advances the next when its
+// final stroke finishes, so the chain can't stall. Both locales draw the brand
+// カンガフロウ (KangaFlow in katakana) beside the logo; JA adds へようこそ, reading
+// "こんにちは / カンガフロウ / へようこそ" — EN stops at "hello / カンガフロウ".
+// `brand`/`welcome` supply the accessible labels.
+function AppleHelloIntro({
+  brand,
+  welcome,
+  locale,
+  speed = 1,
+  onAnimationComplete,
+}: AppleHelloIntroProps) {
+  const [step, setStep] = useState(0)
+  const completedRef = useRef(false)
+
+  const HelloEffect =
+    locale === "ja" ? AppleHelloJapaneseEffect : AppleHelloEnglishEffect
+
+  const brandBeat: BeatDef = {
+    id: "brand",
+    render: (onDone) => (
+      <div className="flex items-center gap-3">
+        <DrawnKana
+          label={brand}
+          onAnimationComplete={onDone}
+          speed={speed}
+          strokes={INTRO_BRAND.strokes}
+          viewBox={INTRO_BRAND.viewBox}
+        />
+        <KangaFlowLogo speed={speed} />
+      </div>
+    ),
+  }
+  const welcomeBeat: BeatDef = {
+    id: "welcome",
+    render: (onDone) => (
+      <DrawnKana
+        label={welcome}
+        onAnimationComplete={onDone}
+        speed={speed}
+        strokes={INTRO_JA_WELCOME.strokes}
+        viewBox={INTRO_JA_WELCOME.viewBox}
+      />
+    ),
+  }
+
+  const beats: BeatDef[] =
+    locale === "ja" ? [brandBeat, welcomeBeat] : [brandBeat]
+
+  // Guarded so the hold-then-handoff fires exactly once.
+  const finish = () => {
+    if (completedRef.current) {
+      return
+    }
+    completedRef.current = true
+    setTimeout(() => onAnimationComplete?.(), INTRO_HOLD_MS * speed)
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-6 text-center">
+      <HelloEffect onAnimationComplete={() => setStep(1)} speed={speed} />
+
+      {beats.map(({ id, render }, index) =>
+        step >= index + 1 ? (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 12 }}
+            key={id}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+          >
+            {render(
+              index === beats.length - 1 ? finish : () => setStep(index + 2)
+            )}
+          </motion.div>
+        ) : null
+      )}
+    </div>
+  )
+}
+
+export { AppleHelloEnglishEffect, AppleHelloIntro, AppleHelloJapaneseEffect }
 
 // Demo
 export function Demo() {

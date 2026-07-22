@@ -4,6 +4,10 @@
 const ja = {
   about: {
     education: "学歴",
+    intro: {
+      brand: "KangaFlow",
+      welcome: "へようこそ",
+    },
     overview: "概要",
     technical: "技術スキル",
     work: "職務経歴",

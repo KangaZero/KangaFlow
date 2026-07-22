@@ -36,6 +36,7 @@ import { person } from "@/lib/person"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
 import "./about-section.css"
+import { AppleHelloIntro } from "@/components/ui/apple-hello-effect"
 import type { Mutable } from "@/lib/typescript-hooks/mutable"
 import { useGlobalStates } from "@/providers/global-state-provider"
 // Section ids + i18n labels — the single source shared with the scroll-spy
@@ -76,7 +77,7 @@ const TECH_ICONS: Record<TechSlug, { Icon: IconType; color: string }> = {
 // in any theme — Rust #000000 / Lua #000080 would vanish on a dark surface
 // otherwise. Shared by the plain icons and the TS/JS flip card.
 const ICON_PILL =
-  "flex size-9 items-center justify-center rounded-full bg-slate-200 shadow-sm ring-1 ring-black/5 transition hover:scale-110"
+  "flex size-9 items-center justify-center rounded-full bg-green-100 shadow-sm ring-1 ring-black/5 transition hover:scale-110"
 
 const SOCIAL_ICONS: Record<string, IconType> = {
   github: FaGithub,
@@ -117,7 +118,7 @@ function Section({
 }
 
 function Avatar() {
-  const [failed, setFailed] = useState(false)
+  const [failed, _setFailed] = useState(false)
 
   return (
     <div className="avatar-wrapper">
@@ -131,9 +132,9 @@ function Avatar() {
           alt={person.firstName}
           className="avatar-img"
           height={300}
-          onError={() => setFailed(true)}
+          // onError={() => setFailed(true)}
           priority
-          src={person.avatar}
+          src="/images/avatar.png"
           width={150}
         />
       )}
@@ -312,147 +313,172 @@ function FlipTechIcon({
 
 export function AboutSection() {
   const { locale, translate } = useLocale()
+  const { isHelloEffectAnimationComplete, setIsHelloEffectAnimationComplete } =
+    useGlobalStates()
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-16 py-8">
       {/* Identity */}
-      <Section className="items-center text-center" id={overviewSection.id}>
-        <Avatar />
-        <RubyName isJapanese={locale === "ja"} />
-        <p className="text-muted-foreground text-sm">
-          {person.role} @ {person.workplace}
-        </p>
-        <div className="flex flex-col gap-2 text-pretty text-sm/relaxed">
-          {person.intro.map((line) => (
-            <p key={line}>{line}</p>
-          ))}
-        </div>
-        <div className="flex flex-wrap justify-center gap-1">
-          {person.technologies.map((tech) => {
-            // TypeScript and JavaScript each render as a flip card that reveals
-            // the other on click (front = self, back = the sibling language).
-            if (tech.icon === "javascript") {
-              return (
-                <FlipTechIcon
-                  back={{
-                    color: TECH_ICONS.typescript.color,
-                    Icon: SiTypescript,
-                    name: "TypeScript",
-                  }}
-                  front={{
-                    color: TECH_ICONS.javascript.color,
-                    Icon: SiJavascript,
-                    name: tech.name,
-                  }}
-                  key={tech.name}
-                />
-              )
-            }
-            if (tech.icon === "typescript") {
-              return (
-                <FlipTechIcon
-                  back={{
-                    color: TECH_ICONS.javascript.color,
-                    Icon: SiJavascript,
-                    name: "JavaScript",
-                  }}
-                  front={{
-                    color: TECH_ICONS.typescript.color,
-                    Icon: SiTypescript,
-                    name: tech.name,
-                  }}
-                  key={tech.name}
-                />
-              )
-            }
-            const { Icon, color } = TECH_ICONS[tech.icon]
-            return (
-              <AnimatedTooltip key={tech.name} label={tech.name}>
-                <span
-                  aria-label={tech.name}
-                  className={ICON_PILL}
-                  role="img"
-                  style={{ color }}
-                >
-                  <Icon aria-hidden className="size-5" />
-                </span>
-              </AnimatedTooltip>
-            )
-          })}
-        </div>
-        <div className="flex flex-wrap justify-center gap-2">
-          {person.socials.map((social) => {
-            const Icon = SOCIAL_ICONS[social.icon] ?? Mail
-            return (
-              <Button asChild key={social.name} variant="secondary">
-                <a href={social.href} rel="noreferrer" target="_blank">
-                  <Icon aria-hidden />
-                  {social.name}
-                </a>
-              </Button>
-            )
-          })}
-        </div>
-      </Section>
-
-      {/* Work */}
-      <Section
-        id={workSection.id}
-        title={
-          <TrueFocus
-            subtitle={person.work.subtitle}
-            subtitleBlur={person.work.subtitleBlur}
+      {!isHelloEffectAnimationComplete ? (
+        <motion.div
+          className="mb-15 flex min-h-screen w-full items-center justify-center"
+          exit={{ opacity: 0 }}
+          key="intro"
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        >
+          <AppleHelloIntro
+            brand={translate("about.intro.brand")}
+            locale={locale}
+            onAnimationComplete={() => setIsHelloEffectAnimationComplete(true)}
+            speed={2}
+            welcome={translate("about.intro.welcome")}
           />
-        }
-      >
-        {/* Technical skills — plain text, top of the résumé. */}
-        <div className="flex flex-col gap-1">
-          <h3 className="font-heading font-medium text-sm">
-            {translate("about.technical")}
-          </h3>
-          <p className="text-muted-foreground text-sm">
-            {person.technologies.map((tech) => tech.name).join(", ")}
-          </p>
-        </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          animate={{ opacity: 1 }}
+          className="flex w-full flex-col gap-16"
+          initial={{ opacity: 0 }}
+          key="content"
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        >
+          <Section className="items-center text-center" id={overviewSection.id}>
+            <Avatar />
+            <RubyName isJapanese={locale === "ja"} />
+            <p className="text-muted-foreground text-sm">
+              {person.role} @ {person.workplace}
+            </p>
+            <div className="flex flex-col gap-2 text-pretty text-sm/relaxed">
+              {person.intro.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+            <div className="flex flex-wrap justify-center gap-1">
+              {person.technologies.map((tech) => {
+                // TypeScript and JavaScript each render as a flip card that reveals
+                // the other on click (front = self, back = the sibling language).
+                if (tech.icon === "javascript") {
+                  return (
+                    <FlipTechIcon
+                      back={{
+                        color: TECH_ICONS.typescript.color,
+                        Icon: SiTypescript,
+                        name: "TypeScript",
+                      }}
+                      front={{
+                        color: TECH_ICONS.javascript.color,
+                        Icon: SiJavascript,
+                        name: tech.name,
+                      }}
+                      key={tech.name}
+                    />
+                  )
+                }
+                if (tech.icon === "typescript") {
+                  return (
+                    <FlipTechIcon
+                      back={{
+                        color: TECH_ICONS.javascript.color,
+                        Icon: SiJavascript,
+                        name: "JavaScript",
+                      }}
+                      front={{
+                        color: TECH_ICONS.typescript.color,
+                        Icon: SiTypescript,
+                        name: tech.name,
+                      }}
+                      key={tech.name}
+                    />
+                  )
+                }
+                const { Icon, color } = TECH_ICONS[tech.icon]
+                return (
+                  <AnimatedTooltip key={tech.name} label={tech.name}>
+                    <span
+                      aria-label={tech.name}
+                      className={ICON_PILL}
+                      role="img"
+                      style={{ color }}
+                    >
+                      <Icon aria-hidden className="size-5" />
+                    </span>
+                  </AnimatedTooltip>
+                )
+              })}
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {person.socials.map((social) => {
+                const Icon = SOCIAL_ICONS[social.icon] ?? Mail
+                return (
+                  <Button asChild key={social.name} variant="secondary">
+                    <a href={social.href} rel="noreferrer" target="_blank">
+                      <Icon aria-hidden />
+                      {social.name}
+                    </a>
+                  </Button>
+                )
+              })}
+            </div>
+          </Section>
+          {/* Work */}
+          <Section
+            id={workSection.id}
+            title={
+              <TrueFocus
+                subtitle={person.work.subtitle}
+                subtitleBlur={person.work.subtitleBlur}
+              />
+            }
+          >
+            {/* Technical skills — plain text, top of the résumé. */}
+            <div className="flex flex-col gap-1">
+              <h3 className="font-heading font-medium text-sm">
+                {translate("about.technical")}
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                {person.technologies.map((tech) => tech.name).join(", ")}
+              </p>
+            </div>
 
-        {person.work.experiences.map((job) => (
-          <Card key={`${job.company}-${job.role}`}>
-            <CardHeader>
-              <CardTitle className="text-base">{job.company}</CardTitle>
-              <CardDescription>
-                {job.role} · {job.timeframe}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="flex list-disc flex-col gap-2 pl-4 marker:text-muted-foreground">
-                {job.achievements.map((achievement) => (
-                  <li key={achievement}>{achievement}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        ))}
-      </Section>
-
-      {/* Education */}
-      <Section
-        id={educationSection.id}
-        title={
-          <h2 className="font-heading font-semibold text-2xl sm:text-3xl">
-            {translate("about.education")}
-          </h2>
-        }
-      >
-        {person.studies.map((study) => (
-          <Card key={study.name}>
-            <CardHeader>
-              <CardTitle className="text-base">{study.name}</CardTitle>
-              <CardDescription>{study.title}</CardDescription>
-            </CardHeader>
-            <CardContent>{study.description}</CardContent>
-          </Card>
-        ))}
-      </Section>
+            {person.work.experiences.map((job) => (
+              <Card key={`${job.company}-${job.role}`}>
+                <CardHeader>
+                  <CardTitle className="text-base">{job.company}</CardTitle>
+                  <CardDescription>
+                    {job.role} · {job.timeframe}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="flex list-disc flex-col gap-2 pl-4 marker:text-muted-foreground">
+                    {job.achievements.map((achievement) => (
+                      <li key={achievement}>{achievement}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            ))}
+          </Section>
+          {/* Education */}
+          <Section
+            id={educationSection.id}
+            title={
+              <h2 className="font-heading font-semibold text-2xl sm:text-3xl">
+                {translate("about.education")}
+              </h2>
+            }
+          >
+            {person.studies.map((study) => (
+              <Card key={study.name}>
+                <CardHeader>
+                  <CardTitle className="text-base">{study.name}</CardTitle>
+                  <CardDescription>{study.title}</CardDescription>
+                </CardHeader>
+                <CardContent>{study.description}</CardContent>
+              </Card>
+            ))}
+          </Section>
+        </motion.div>
+      )}
     </div>
   )
 }

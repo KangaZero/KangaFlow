@@ -5,6 +5,10 @@
 const en = {
   about: {
     education: "Education",
+    intro: {
+      brand: "KangaFlow",
+      welcome: "welcome to",
+    },
     overview: "Overview",
     technical: "Technical skills",
     work: "Work",
