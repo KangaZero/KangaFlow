@@ -321,7 +321,7 @@ export function AboutSection() {
       {/* Identity */}
       {!isHelloEffectAnimationComplete ? (
         <motion.div
-          className="mb-15 flex min-h-screen w-full items-center justify-center"
+          className="flex min-h-screen w-full items-center justify-center"
           exit={{ opacity: 0 }}
           key="intro"
           transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -329,8 +329,8 @@ export function AboutSection() {
           <AppleHelloIntro
             brand={translate("about.intro.brand")}
             locale={locale}
-            onAnimationComplete={() => setIsHelloEffectAnimationComplete(true)}
-            speed={2}
+            // onAnimationComplete={() => setIsHelloEffectAnimationComplete(true)}
+            speed={0.4}
             welcome={translate("about.intro.welcome")}
           />
         </motion.div>

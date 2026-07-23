@@ -23,6 +23,7 @@ const animateProps = {
 type Props = React.ComponentProps<typeof motion.svg> & {
   speed?: number
   onAnimationComplete?: () => void
+  forceVisibleAlways?: boolean
 }
 
 // Monoline stroke paths (in writing order) for こ ん に ち は, one inner array
@@ -59,10 +60,11 @@ const KONNICHIWA_STROKES: readonly (readonly string[])[] = [
 
 const GLYPH_SIZE = 109
 
-// Flatten glyphs → strokes once, tagging each stroke with its horizontal glyph
-// offset and its global draw index (used for the cascade + last-stroke hook).
+// Flatten glyphs → strokes once, tagging each stroke with its vertical glyph
+// offset (tategaki — 縦書き, stacked top-to-bottom) and its global draw index
+// (used for the cascade + last-stroke hook).
 const JAPANESE_STROKES = KONNICHIWA_STROKES.flatMap((glyph, glyphIndex) =>
-  glyph.map((d) => ({ d, x: glyphIndex * GLYPH_SIZE }))
+  glyph.map((d) => ({ d, y: glyphIndex * GLYPH_SIZE }))
 ).map((stroke, index, all) => ({
   ...stroke,
   index,
@@ -103,28 +105,29 @@ function AppleHelloJapaneseEffect({
   className,
   speed = 1,
   onAnimationComplete,
+  forceVisibleAlways,
   ...props
 }: Props) {
   const [done, handleComplete] = useHelloEffectComplete(onAnimationComplete)
 
   return (
     <motion.svg
-      animate={{ opacity: done ? 0 : 1 }}
-      className={cn("h-20", className)}
+      animate={{ opacity: forceVisibleAlways ? 1 : done ? 0 : 1 }}
+      className={cn("h-auto w-20", className)}
       exit={{ opacity: 0 }}
       fill="none"
       initial={{ opacity: 1 }}
       stroke="currentColor"
       strokeWidth="5.5"
       transition={{ delay: done ? HOLD_SECONDS : 0, duration: 0.6 }}
-      viewBox={`0 0 ${GLYPH_SIZE * KONNICHIWA_STROKES.length} ${GLYPH_SIZE}`}
+      viewBox={`0 0 ${GLYPH_SIZE} ${GLYPH_SIZE * KONNICHIWA_STROKES.length}`}
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <title>こんにちは</title>
 
-      {JAPANESE_STROKES.map(({ d, x, index, isLast }) => (
-        <g key={d} transform={`translate(${x} 0)`}>
+      {JAPANESE_STROKES.map(({ d, y, index, isLast }) => (
+        <g key={d} transform={`translate(0 ${y})`}>
           <motion.path
             animate={animateProps}
             d={d}
@@ -143,6 +146,7 @@ function AppleHelloEnglishEffect({
   className,
   speed = 1,
   onAnimationComplete,
+  forceVisibleAlways,
   ...props
 }: Props) {
   const calc = (x: number) => x * speed
@@ -150,7 +154,7 @@ function AppleHelloEnglishEffect({
 
   return (
     <motion.svg
-      animate={{ opacity: done ? 0 : 1 }}
+      animate={{ opacity: forceVisibleAlways ? 1 : done ? 0 : 1 }}
       className={cn("h-20", className)}
       exit={{ opacity: 0 }}
       fill="none"
@@ -246,9 +250,19 @@ function KangaFlowLogo({
 // Milliseconds the fully-revealed intro holds before handing off to content.
 const INTRO_HOLD_MS = 1200
 
+// Rotate a horizontal writing-axis viewBox ("minX minY W H") into its vertical
+// (tategaki — 縦書き) counterpart by swapping width and height. Orientation is a
+// presentation concern, so it lives here rather than in the generated path data.
+function toVerticalViewBox(viewBox: string): string {
+  const [minX = "0", minY = "0", width = "0", height = "0"] = viewBox.split(" ")
+  return `${minX} ${minY} ${height} ${width}`
+}
+
 // A word written in kana: KanjiVG strokes drawn one at a time with the shared
-// cascade (strokeTransition), matching the こんにちは greeting. `label` is the
-// accessible text; the final stroke reports completion.
+// cascade (strokeTransition), matching the こんにちは greeting. Rendered tategaki
+// (top-to-bottom): each glyph's baked offset (`stroke.x`) becomes a Y translate
+// and the viewBox is rotated. `label` is the accessible text; the final stroke
+// reports completion.
 function DrawnKana({
   strokes,
   viewBox,
@@ -266,12 +280,12 @@ function DrawnKana({
 }) {
   return (
     <motion.svg
-      className={cn("h-16 w-auto", className)}
+      className={cn("h-auto w-20", className)}
       fill="none"
       role="img"
       stroke="currentColor"
       strokeWidth={5.5}
-      viewBox={viewBox}
+      viewBox={toVerticalViewBox(viewBox)}
       xmlns="http://www.w3.org/2000/svg"
     >
       <title>{label}</title>
@@ -282,7 +296,7 @@ function DrawnKana({
           initial={initialProps}
           key={`${stroke.d}${index}`}
           style={{ strokeLinecap: "round", strokeLinejoin: "round" }}
-          transform={`translate(${stroke.x} 0)`}
+          transform={`translate(0 ${stroke.x})`}
           transition={strokeTransition(index, speed)}
           {...(index === all.length - 1 && onAnimationComplete
             ? { onAnimationComplete }
@@ -301,6 +315,7 @@ type AppleHelloIntroProps = {
   // convention: larger = slower/longer, smaller = snappier.
   speed?: number
   onAnimationComplete?: () => void
+  forceVisibleAlways?: boolean
 }
 
 type BeatDef = {
@@ -319,6 +334,7 @@ function AppleHelloIntro({
   locale,
   speed = 1,
   onAnimationComplete,
+  forceVisibleAlways = true,
 }: AppleHelloIntroProps) {
   const [step, setStep] = useState(0)
   const completedRef = useRef(false)
@@ -326,21 +342,40 @@ function AppleHelloIntro({
   const HelloEffect =
     locale === "ja" ? AppleHelloJapaneseEffect : AppleHelloEnglishEffect
 
+  const katakanaBrandBeat: BeatDef = {
+    id: "katakana-brand",
+    render: (onDone) => (
+      <DrawnKana
+        label={brand}
+        onAnimationComplete={onDone}
+        speed={speed}
+        strokes={INTRO_BRAND.strokes}
+        viewBox={INTRO_BRAND.viewBox}
+      />
+    ),
+  }
+
   const brandBeat: BeatDef = {
     id: "brand",
     render: (onDone) => (
-      <div className="flex items-center gap-3">
-        <DrawnKana
-          label={brand}
-          onAnimationComplete={onDone}
-          speed={speed}
-          strokes={INTRO_BRAND.strokes}
-          viewBox={INTRO_BRAND.viewBox}
-        />
-        <KangaFlowLogo speed={speed} />
-      </div>
+      <KangaFlowLogo onAnimationComplete={onDone} speed={speed} />
     ),
   }
+  //
+  // const heBeat: BeatDef = {
+  //   id: "he",
+  //   render: (onDone) => (
+  //     <DrawnKana
+  //       label="he"
+  //       onAnimationComplete={onDone}
+  //       speed={speed}
+  //       strokes={INTRO_JA_HE.strokes}
+  //       // へ alone fills one glyph cell; crop to a square box (its source viewBox
+  //       // reserves 5 cells to align with ようこそ) so it centers in the column.
+  //       viewBox={`0 0 ${GLYPH_SIZE} ${GLYPH_SIZE}`}
+  //     />
+  //   ),
+  // }
   const welcomeBeat: BeatDef = {
     id: "welcome",
     render: (onDone) => (
@@ -355,7 +390,7 @@ function AppleHelloIntro({
   }
 
   const beats: BeatDef[] =
-    locale === "ja" ? [brandBeat, welcomeBeat] : [brandBeat]
+    locale === "ja" ? [katakanaBrandBeat, welcomeBeat, brandBeat] : [brandBeat]
 
   // Guarded so the hold-then-handoff fires exactly once.
   const finish = () => {
@@ -367,8 +402,14 @@ function AppleHelloIntro({
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 text-center">
-      <HelloEffect onAnimationComplete={() => setStep(1)} speed={speed} />
+    <div
+      className={`mb-100 flex min-h-100 ${locale === "ja" ? "flex-row-reverse text-right" : "flex-col text-center"} gap-6`}
+    >
+      <HelloEffect
+        forceVisibleAlways={forceVisibleAlways}
+        onAnimationComplete={() => setStep(1)}
+        speed={speed}
+      />
 
       {beats.map(({ id, render }, index) =>
         step >= index + 1 ? (
