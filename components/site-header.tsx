@@ -47,7 +47,7 @@ function PillHover({ children }: { children: ReactNode }) {
       {/* Two stacked copies in one grid cell: the resting icon rolls up and out
           while the inverted-colour copy rolls in from below. */}
       <span className="relative z-10 grid place-items-center">
-        <span className="col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:-translate-y-[150%]">
+        <span className="col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-y-[-150%]">
           {children}
         </span>
         <span
@@ -64,7 +64,8 @@ function PillHover({ children }: { children: ReactNode }) {
 export function SiteHeader() {
   const pathname = usePathname()
   const { locale, setLocale, translate } = useLocale()
-  const { setIsSettingsOpen, shortcuts } = useGlobalStates()
+  const { setIsSettingsOpen, shortcuts, isHelloEffectAnimationComplete } =
+    useGlobalStates()
   // Clip the items only while the width sweep plays; drop it afterwards so the
   // (non-portaled, absolutely-positioned) tooltips aren't clipped by the dock.
   const [loaded, setLoaded] = useState(false)
@@ -155,6 +156,7 @@ export function SiteHeader() {
           <Button
             aria-label={translate("nav.language")}
             className="group relative overflow-hidden"
+            disabled={!isHelloEffectAnimationComplete}
             onClick={() => setLocale(other)}
             size="icon"
             variant="ghost"

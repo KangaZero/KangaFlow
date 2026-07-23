@@ -27,6 +27,7 @@ export function ShortcutDispatcher() {
     setIsSettingsOpen,
     columnCount,
     setColumnCount,
+    isHelloEffectAnimationComplete,
   } = useGlobalStates()
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export function ShortcutDispatcher() {
           setIsCommandPaletteOpen(!isCommandPaletteOpen)
           break
         case "toggleLanguage":
+          if (!isHelloEffectAnimationComplete) return //Without this language change may cause animation to never complete resulting in never rendering the about section and stuck on the hello-effect
           setLocale(locale === "en" ? "ja" : "en")
           break
         case "toggleColumns": {
@@ -83,6 +85,7 @@ export function ShortcutDispatcher() {
     setIsSettingsOpen,
     columnCount,
     setColumnCount,
+    isHelloEffectAnimationComplete,
   ])
 
   return null

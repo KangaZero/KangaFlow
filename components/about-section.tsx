@@ -77,7 +77,7 @@ const TECH_ICONS: Record<TechSlug, { Icon: IconType; color: string }> = {
 // in any theme — Rust #000000 / Lua #000080 would vanish on a dark surface
 // otherwise. Shared by the plain icons and the TS/JS flip card.
 const ICON_PILL =
-  "flex size-9 items-center justify-center rounded-full bg-green-100 shadow-sm ring-1 ring-black/5 transition hover:scale-110"
+  "flex size-9 items-center justify-center rounded-full bg-green-50 shadow-sm ring-1 ring-black/5 transition hover:scale-110"
 
 const SOCIAL_ICONS: Record<string, IconType> = {
   github: FaGithub,
@@ -85,6 +85,7 @@ const SOCIAL_ICONS: Record<string, IconType> = {
 }
 
 // One shared reveal, played as each block scrolls into view.
+//TODO consider moving all motion variants to their own lib file
 const reveal = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0 },
@@ -329,7 +330,7 @@ export function AboutSection() {
           <AppleHelloIntro
             brand={translate("about.intro.brand")}
             locale={locale}
-            // onAnimationComplete={() => setIsHelloEffectAnimationComplete(true)}
+            onAnimationComplete={() => setIsHelloEffectAnimationComplete(true)}
             speed={0.4}
             welcome={translate("about.intro.welcome")}
           />

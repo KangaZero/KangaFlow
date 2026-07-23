@@ -49,9 +49,9 @@ export const DEFAULT_SHORTCUTS: readonly Shortcut[] = [
   },
   {
     action: "cycleTheme",
-    character: "d",
-    hasAltOrOptionKey: false,
-    hasMetaOrCtrlKey: false,
+    character: "t",
+    hasAltOrOptionKey: true,
+    hasMetaOrCtrlKey: true,
     hasShiftKey: false,
   },
   {

@@ -221,7 +221,7 @@ function KangaFlowLogo({
   return (
     <motion.svg
       aria-hidden
-      className={cn("h-14 w-auto", className)}
+      className={cn("h-50 w-auto", className)}
       fill="none"
       viewBox="0 0 800 400"
       xmlns="http://www.w3.org/2000/svg"
@@ -390,7 +390,9 @@ function AppleHelloIntro({
   }
 
   const beats: BeatDef[] =
-    locale === "ja" ? [katakanaBrandBeat, welcomeBeat, brandBeat] : [brandBeat]
+    locale === "ja" ? [katakanaBrandBeat, welcomeBeat] : []
+
+  const brandLogo: BeatDef[] = [brandBeat]
 
   // Guarded so the hold-then-handoff fires exactly once.
   const finish = () => {
@@ -403,16 +405,16 @@ function AppleHelloIntro({
 
   return (
     <div
-      className={`mb-100 flex min-h-100 ${locale === "ja" ? "flex-row-reverse text-right" : "flex-col text-center"} gap-6`}
+      className={`mb-100 flex min-h-120 md:min-w-200 ${locale === "ja" ? "flex-row-reverse justify-between text-right" : "flex-col items-center text-center"}`}
     >
       <HelloEffect
         forceVisibleAlways={forceVisibleAlways}
-        onAnimationComplete={() => setStep(1)}
+        onAnimationComplete={() => setStep(0.5)}
         speed={speed}
       />
 
-      {beats.map(({ id, render }, index) =>
-        step >= index + 1 ? (
+      {brandLogo.map(({ id, render }, index) =>
+        step >= 0.5 ? (
           <motion.div
             animate={{ opacity: 1, y: 0 }}
             initial={{ opacity: 0, y: 12 }}
@@ -420,11 +422,33 @@ function AppleHelloIntro({
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             {render(
-              index === beats.length - 1 ? finish : () => setStep(index + 2)
+              index === brandLogo.length - 1
+                ? () => {
+                    setStep(1)
+                    if (locale === "en") finish()
+                  }
+                : () => {}
             )}
           </motion.div>
         ) : null
       )}
+
+      <div className={`${locale === "ja" && "flex min-w-45 flex-row-reverse"}`}>
+        {beats.map(({ id, render }, index) =>
+          step >= index + 1 ? (
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 12 }}
+              key={id}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+            >
+              {render(
+                index === beats.length - 1 ? finish : () => setStep(index + 2)
+              )}
+            </motion.div>
+          ) : null
+        )}
+      </div>
     </div>
   )
 }
