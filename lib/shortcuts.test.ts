@@ -22,7 +22,7 @@ describe("formatShortcut", () => {
 
   it("renders a bare key with no modifiers", () => {
     const theme = DEFAULT_SHORTCUTS.find((s) => s.action === "cycleTheme")
-    expect(theme && formatShortcut(theme)).toEqual(["D"])
+    expect(theme && formatShortcut(theme)).toEqual(["Ctrl", "Alt", "T"])
   })
 })
 
