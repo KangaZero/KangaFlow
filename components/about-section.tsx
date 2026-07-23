@@ -21,6 +21,7 @@ import {
   SiTypescript,
   SiVuedotjs,
 } from "react-icons/si"
+import avatarSrc from "@/assets/avatar.png"
 
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
@@ -119,7 +120,7 @@ function Section({
 }
 
 function Avatar() {
-  const [failed, _setFailed] = useState(false)
+  const [failed, setFailed] = useState(false)
 
   return (
     <div className="avatar-wrapper">
@@ -133,9 +134,9 @@ function Avatar() {
           alt={person.firstName}
           className="avatar-img"
           height={300}
-          // onError={() => setFailed(true)}
+          onError={() => setFailed(true)}
           priority
-          src="/images/avatar.png"
+          src={avatarSrc}
           width={150}
         />
       )}
