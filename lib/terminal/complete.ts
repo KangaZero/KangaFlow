@@ -97,6 +97,7 @@ export function suggestLine(
   const base = line.slice(0, wordStart)
   if (candidates.length === 1) {
     const only = candidates[0]
+    // Exact match → already complete, nothing to suggest.
     if (!only || only === word) return null
     return `${base}${only} `
   }

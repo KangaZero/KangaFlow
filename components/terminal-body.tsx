@@ -1,18 +1,41 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
+// ─── KNOWN ISSUES / TODO(human) ─────────────────────────────────────────────
+// The in-browser terminal works but is rough. Outstanding bugs to fix:
+//
+// 1. Completion over-triggers. Tab/→ can still act when the argument is already
+//    complete. `acceptSuggestion()` trusts `s.suggestion`, which can be stale
+//    (not every code path calls `renderLine()` to refresh it), and Tab on an
+//    already-filled `cmd <file> ` re-lists every file because the empty trailing
+//    word matches all candidates. Recompute before accepting and treat an exact
+//    match as "nothing to do".
+// 2. Esc in the editor exits the whole dialog instead of returning to NORMAL
+//    mode — Radix Dialog's onEscapeKeyDown closes it before CodeMirror sees Esc.
+//    Fix in code-editor.tsx / terminal-dialog.tsx: preventDefault + stop
+//    propagation on Esc while the editor overlay is open so vim handles it.
+// 3. Sizing. fit() runs once before the open animation settles, so cols/rows can
+//    be wrong on first open (and after the editor closes). Use a ResizeObserver
+//    on the container instead of the one-shot fit + window listener.
+// 4. Ghost/menu redraw glitches: opening or cycling the completion menu doesn't
+//    always clear a previously drawn ghost, so stale dim text can linger.
+// 5. `clear` leaves the fresh prompt on row 2 (2J+H then prints \r\n+prompt);
+//    it should home the cursor and print the prompt at the top.
+// 6. No in-line cursor editing: ← / Home / End / mid-line insert are unhandled
+//    (append-only), and → is overloaded solely to accept the ghost.
+// 7. Editor is ephemeral: `:w` is a silent no-op and edits are discarded on
+//    close (by design) — should signal this or disable write.
+// 8. Multi-line paste is appended as a single line (newlines aren't split into
+//    separate command runs).
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { FitAddon } from "@xterm/addon-fit"
 import { useTheme } from "next-themes"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useXTerm } from "react-xtermjs"
+import { CodeEditor } from "@/components/code-editor"
 import { completeLine, suggestLine } from "@/lib/terminal/complete"
 import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
-import {
-  handleKey,
-  initPager,
-  type PagerState,
-  renderPager,
-} from "@/lib/terminal/pager"
 import {
   paletteForTheme,
   TERMINAL_FONT_FAMILY,
@@ -23,21 +46,18 @@ import {
 import { isTheme, THEMES } from "@/lib/themes"
 import { useLocale } from "@/providers/locale-provider"
 
-// Mutable per-session terminal state, kept in a ref so the xterm data handler
+// Mutable per-session shell state, kept in a ref so the xterm data handler
 // (bound once to the instance) always sees the latest without re-subscribing.
-type Mode = "shell" | "nvim"
 type Session = {
-  mode: Mode
   line: string
   history: string[]
   histIndex: number
-  pager: PagerState
-  pagerLines: readonly string[]
-  fileName: string
   // Active zsh-style completion menu (null when not cycling candidates).
   menu: { base: string; candidates: string[]; index: number } | null
   // Current ghost-text suggestion (full predicted line), or null.
   suggestion: string | null
+  // True while the nvim editor overlay has control (xterm ignores input).
+  editorOpen: boolean
 }
 
 type BarState = { mode: string; tab: string }
@@ -159,18 +179,29 @@ export function TerminalBody({
     if (instance) instance.options.theme = xtermTheme(palette)
   }, [instance, palette])
 
+  const [editor, setEditor] = useState<{ content: string } | null>(null)
+  const dark = resolvedTheme !== "light"
+
   const startedAt = useRef(Date.now())
   const session = useRef<Session>({
-    fileName: "",
+    editorOpen: false,
     histIndex: 0,
     history: [],
     line: "",
     menu: null,
-    mode: "shell",
-    pager: initPager(),
-    pagerLines: [],
     suggestion: null,
   })
+
+  // Return from the nvim editor overlay to the shell prompt.
+  const closeEditor = () => {
+    setEditor(null)
+    session.current.editorOpen = false
+    setBar({ mode: "NORMAL", tab: "zsh" })
+    if (instance) {
+      instance.write(`\r\n${TERMINAL_PROMPT}`)
+      instance.focus()
+    }
+  }
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: one-time setup bound to the xterm instance; handlers read live values via the `session` ref, and the closed-over props are stable for a session's lifetime.
   useEffect(() => {
@@ -192,29 +223,18 @@ export function TerminalBody({
       for (const line of renderFastfetch(info)) term.writeln(line)
     }
 
-    const drawPager = () => {
-      term.write("\x1b[?25l\x1b[2J\x1b[H")
-      const frame = renderPager(s.pager, s.pagerLines, {
-        cols: term.cols,
-        fileName: s.fileName,
-        rows: term.rows,
-      })
-      term.write(frame.join("\r\n"))
-    }
-
-    const openNvim = (path: string) => {
+    // Hand off to the CodeMirror (real vim) editor overlay. Returns whether it
+    // opened, so the shell can decide whether to reprint the prompt.
+    const openEditor = (path: string): boolean => {
       const content = files[path]
       if (content === undefined) {
         term.write(`\r\nnvim: ${path}: no such file`)
-        prompt()
-        return
+        return false
       }
-      s.mode = "nvim"
-      s.pager = initPager()
-      s.pagerLines = content.split("\n")
-      s.fileName = path
+      s.editorOpen = true
+      setEditor({ content })
       setBar({ mode: "NORMAL", tab: `nvim ${baseName(path)}` })
-      drawPager()
+      return true
     }
 
     const runCommand = (raw: string): boolean => {
@@ -252,8 +272,8 @@ export function TerminalBody({
             term.write("\r\nusage: nvim <file>  (try `ls`)")
             return true
           }
-          openNvim(arg)
-          return false
+          // If the editor opened it owns the screen; otherwise reprint prompt.
+          return !openEditor(arg)
         case "theme":
           if (isTheme(arg)) {
             setTheme(arg)
@@ -356,7 +376,7 @@ export function TerminalBody({
           s.histIndex = s.history.length
         }
         const reprompt = runCommand(line)
-        if (reprompt && s.mode === "shell") prompt()
+        if (reprompt && !s.editorOpen) prompt()
         return
       }
       if (data === "\x7f") {
@@ -396,31 +416,23 @@ export function TerminalBody({
       }
     }
 
-    const onNvimData = (data: string) => {
-      const result = handleKey(s.pager, data, s.pagerLines, term.rows - 1)
-      s.pager = result.state
-      if (result.quit) {
-        s.mode = "shell"
-        term.write("\x1b[?25h\x1b[2J\x1b[H")
-        setBar({ mode: "NORMAL", tab: "zsh" })
-        term.write(TERMINAL_PROMPT)
-        return
-      }
-      drawPager()
-      setBar({
-        mode: s.pager.mode.toUpperCase(),
-        tab: `nvim ${baseName(s.fileName)}`,
-      })
-    }
+    // xterm's canvas renderer can't resolve CSS var(), so read the concrete
+    // next/font family name from --font-mono (JetBrains Mono) and apply it.
+    const mono = getComputedStyle(document.documentElement)
+      .getPropertyValue("--font-mono")
+      .trim()
+    if (mono) term.options.fontFamily = `${mono}, ${TERMINAL_FONT_FAMILY}`
 
     fit.fit()
     fastfetch()
-    if (initialFile) openNvim(initialFile)
-    else prompt()
+    // Open straight into the editor if a file was requested (page code button),
+    // else drop to the shell prompt.
+    if (!(initialFile && openEditor(initialFile))) prompt()
 
-    const sub = term.onData((data) =>
-      s.mode === "nvim" ? onNvimData(data) : onShellData(data)
-    )
+    // While the editor overlay owns the screen, xterm ignores keystrokes.
+    const sub = term.onData((data) => {
+      if (!s.editorOpen) onShellData(data)
+    })
     const onResize = () => fit.fit()
     window.addEventListener("resize", onResize)
     term.focus()
@@ -433,10 +445,21 @@ export function TerminalBody({
 
   return (
     <>
-      <div
-        className="min-h-0 w-full flex-1 overflow-hidden rounded-t-md"
-        ref={ref}
-      />
+      <div className="relative min-h-0 w-full flex-1 overflow-hidden">
+        <div className="h-full w-full overflow-hidden rounded-t-md" ref={ref} />
+        {editor ? (
+          <div className="absolute inset-0">
+            <CodeEditor
+              dark={dark}
+              onClose={closeEditor}
+              onMode={(mode) =>
+                setBar((prev) => ({ ...prev, mode: mode.toUpperCase() }))
+              }
+              value={editor.content}
+            />
+          </div>
+        ) : null}
+      </div>
       <ZjStatusBar mode={bar.mode} palette={palette} tab={bar.tab} />
     </>
   )
