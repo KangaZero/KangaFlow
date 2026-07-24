@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -13,6 +15,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-icons": "^5.7.0",
+    "react-xtermjs": "^1.0.12",
     "shadcn": "^4.13.0",
     "tailwind-merge": "^3.6.0",
     "three": "^0.185.1",

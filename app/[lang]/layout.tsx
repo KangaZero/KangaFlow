@@ -6,8 +6,10 @@ import { MediaPlayer } from "@/components/media-player"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { ShortcutDispatcher } from "@/components/shortcut-dispatcher"
 import { SiteHeader } from "@/components/site-header"
+import { TerminalDialog } from "@/components/terminal-dialog"
 import { ThemeBackground } from "@/components/theme-background"
 import { isLocale, LOCALES } from "@/lib/i18n"
+import { readSourceFiles } from "@/lib/terminal/source"
 import { AchievementsProvider } from "@/providers/achievements-provider"
 import { GlobalStatesProvider } from "@/providers/global-state-provider"
 import { LocaleProvider } from "@/providers/locale-provider"
@@ -32,6 +34,10 @@ export default async function LangLayout({
     notFound()
   }
 
+  // Read at build time (static export) → real repo source for the terminal's
+  // nvim/cat/ls, shipped as strings. No runtime filesystem access.
+  const sourceFiles = readSourceFiles()
+
   return (
     <LocaleProvider locale={lang}>
       <GlobalStatesProvider>
@@ -43,6 +49,7 @@ export default async function LangLayout({
             <CommandMenu />
             <SettingsDialog />
             <MediaPlayer />
+            <TerminalDialog files={sourceFiles} />
             <ShortcutDispatcher />
             <AchievementToast />
           </div>

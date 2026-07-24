@@ -26,6 +26,9 @@ export function ShortcutDispatcher() {
     setIsSettingsOpen,
     isMediaPlayerOpen,
     setIsMediaPlayerOpen,
+    isTerminalOpen,
+    setIsTerminalOpen,
+    setTerminalFile,
     columnCount,
     setColumnCount,
     isHelloEffectAnimationComplete,
@@ -46,6 +49,9 @@ export function ShortcutDispatcher() {
           break
         case "goAchievements":
           router.push(`/${locale}/achievements`)
+          break
+        case "goTimeline":
+          router.push(`/${locale}/timeline`)
           break
         case "cycleTheme": {
           const current = isTheme(theme) ? theme : DEFAULT_THEME
@@ -75,6 +81,12 @@ export function ShortcutDispatcher() {
         case "toggleSettings":
           setIsSettingsOpen(!isSettingsOpen)
           break
+        case "toggleTerminal": {
+          // A bare Ctrl+/ opens a plain shell, so clear any pending file target.
+          if (!isTerminalOpen) setTerminalFile(null)
+          setIsTerminalOpen(!isTerminalOpen)
+          break
+        }
       }
     }
 
@@ -93,6 +105,9 @@ export function ShortcutDispatcher() {
     setIsSettingsOpen,
     isMediaPlayerOpen,
     setIsMediaPlayerOpen,
+    isTerminalOpen,
+    setIsTerminalOpen,
+    setTerminalFile,
     columnCount,
     setColumnCount,
     isHelloEffectAnimationComplete,

@@ -154,17 +154,20 @@ const en = {
     home: "Home",
     language: "Language",
     settings: "Settings",
+    timeline: "Timeline",
   },
   settings: {
     actions: {
       cycleTheme: "Cycle theme",
       goAchievements: "Go to achievements",
       goHome: "Go to home",
+      goTimeline: "Go to timeline",
       openCommandMenu: "Open command menu",
       openMediaPlayer: "Open media player",
       toggleColumns: "Toggle grid columns",
       toggleLanguage: "Toggle language",
       toggleSettings: "Toggle settings",
+      toggleTerminal: "Toggle terminal",
     },
     currentLabel: "Current",
     description: "Rebind keyboard shortcuts. Changes save automatically.",
@@ -177,11 +180,34 @@ const en = {
     resetToDefaults: "Reset to defaults",
     title: "Keyboard shortcuts",
   },
+  terminal: {
+    title: "Terminal",
+    viewCode: "View this page's source",
+  },
   theme: {
     dark: "Dark theme",
     label: "Theme",
     light: "Light theme",
     terminal: "Terminal theme",
+  },
+  timeline: {
+    current: "Current",
+    entries: {
+      kangaFlow:
+        "The current site — a Next.js 16 static export with three themes, typed EN/JA i18n, achievements, and a live-weather date box.",
+      kangaWorks:
+        "A 2023 rebuild, reworked to present my projects more boldly.",
+      myPage:
+        "A vanilla-JavaScript refresh showcasing my early web-development work.",
+      personalPortfolio:
+        "My very first portfolio — a hand-written static HTML & CSS page.",
+      portfolio:
+        "A feature-rich Next.js portfolio with an interactive terminal, gamified achievements, and WebGL backgrounds. KangaFlow's direct predecessor.",
+    },
+    heading: "Timeline",
+    subtitle: "Every portfolio I've shipped — oldest to newest.",
+    viewSource: "View source",
+    visitSite: "Visit site",
   },
   weather: {
     // Descriptions keyed by WMO weather-interpretation code (Open-Meteo). Only

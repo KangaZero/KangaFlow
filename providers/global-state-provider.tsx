@@ -31,14 +31,18 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isJavascriptFlipTechIconFlipped: false,
   isMediaPlayerOpen: false,
   isSettingsOpen: false,
+  isTerminalOpen: false,
   setColumnCount: () => {},
   setIsCommandPaletteOpen: () => {},
   setIsHelloEffectAnimationComplete: () => {},
   setIsJavascriptFlipTechIconFlipped: () => {},
   setIsMediaPlayerOpen: () => {},
   setIsSettingsOpen: () => {},
+  setIsTerminalOpen: () => {},
   setShortcuts: () => {},
+  setTerminalFile: () => {},
   shortcuts: [...DEFAULT_SHORTCUTS],
+  terminalFile: null,
 }
 
 const GlobalStatesContext = createContext<GlobalStatesContextValue>(
@@ -64,6 +68,8 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isMediaPlayerOpen, setIsMediaPlayerOpen] = useState(false)
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false)
+  const [terminalFile, setTerminalFile] = useState<string | null>(null)
 
   // Persisted settings start at their SSR-safe defaults, then hydrate from
   // localStorage after mount (reading storage during render would mismatch the
@@ -100,14 +106,18 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isJavascriptFlipTechIconFlipped,
       isMediaPlayerOpen,
       isSettingsOpen,
+      isTerminalOpen,
       setColumnCount,
       setIsCommandPaletteOpen,
       setIsHelloEffectAnimationComplete,
       setIsJavascriptFlipTechIconFlipped,
       setIsMediaPlayerOpen,
       setIsSettingsOpen,
+      setIsTerminalOpen,
       setShortcuts,
+      setTerminalFile,
       shortcuts,
+      terminalFile,
     }),
     [
       columnCount,
@@ -116,7 +126,9 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isJavascriptFlipTechIconFlipped,
       isMediaPlayerOpen,
       isSettingsOpen,
+      isTerminalOpen,
       shortcuts,
+      terminalFile,
     ]
   )
 

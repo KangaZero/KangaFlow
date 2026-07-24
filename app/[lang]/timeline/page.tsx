@@ -1,11 +1,11 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { notFound } from "next/navigation"
 
-import { AchievementsView } from "@/components/achievements-view"
 import { PageCodeButton } from "@/components/page-code-button"
+import { TimelineView } from "@/components/timeline-view"
 import { isLocale } from "@/lib/i18n"
 
-export default async function AchievementsPage({
+export default async function TimelinePage({
   params,
 }: {
   params: Promise<{ lang: string }>
@@ -17,8 +17,8 @@ export default async function AchievementsPage({
 
   return (
     <>
-      <AchievementsView />
-      <PageCodeButton file="app/[lang]/achievements/page.tsx" />
+      <TimelineView />
+      <PageCodeButton file="app/[lang]/timeline/page.tsx" />
     </>
   )
 }

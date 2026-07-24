@@ -153,17 +153,20 @@ const ja = {
     home: "ホーム",
     language: "言語",
     settings: "設定",
+    timeline: "タイムライン",
   },
   settings: {
     actions: {
       cycleTheme: "テーマ切り替え",
       goAchievements: "実績へ移動",
       goHome: "ホームへ移動",
+      goTimeline: "タイムラインへ移動",
       openCommandMenu: "コマンドメニューを開く",
       openMediaPlayer: "メディアプレーヤーを開く",
       toggleColumns: "列数の切り替え",
       toggleLanguage: "言語の切り替え",
       toggleSettings: "設定の切り替え",
+      toggleTerminal: "ターミナルの切り替え",
     },
     currentLabel: "現在",
     description: "ショートカットを再設定できます。変更は自動保存されます。",
@@ -176,11 +179,33 @@ const ja = {
     resetToDefaults: "デフォルトに戻す",
     title: "キーボードショートカット",
   },
+  terminal: {
+    title: "ターミナル",
+    viewCode: "このページのソースを見る",
+  },
   theme: {
     dark: "ダークテーマ",
     label: "テーマ",
     light: "ライトテーマ",
     terminal: "ターミナルテーマ",
+  },
+  timeline: {
+    current: "現在",
+    entries: {
+      kangaFlow:
+        "現在のサイト。Next.js 16の静的書き出しで、3テーマ、型付きの英日i18n、実績、ライブ天気の日付ボックスを備える。",
+      kangaWorks:
+        "2023年版。プロジェクトをより大胆に見せるために作り直したサイト。",
+      myPage: "素のJavaScriptで作り直した、初期の制作物をまとめたサイト。",
+      personalPortfolio:
+        "初めてのポートフォリオ。手書きの静的HTML・CSSページ。",
+      portfolio:
+        "多機能なNext.jsポートフォリオ。対話型ターミナル、ゲーム化した実績、WebGL背景を搭載。KangaFlowの直接の前身。",
+    },
+    heading: "タイムライン",
+    subtitle: "これまで公開したポートフォリオを、古い順に。",
+    viewSource: "ソースを見る",
+    visitSite: "サイトを見る",
   },
   weather: {
     conditions: {

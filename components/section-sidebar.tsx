@@ -6,6 +6,7 @@ import { motion } from "motion/react"
 import { useEffect, useState } from "react"
 import { ABOUT_SECTIONS } from "@/components/about-section"
 import LineSidebar from "@/components/LineSidebar"
+import { LocaleTransition } from "@/components/locale-transition"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -70,24 +71,26 @@ export function SectionSidebar() {
       transition={{ duration: 0.6, ease: "easeIn" }}
       variants={slideFromLeft}
     >
-      <LineSidebar
-        activeIndex={active}
-        defaultActive={0}
-        falloff="smooth"
-        fontSize={0.85}
-        itemGap={20}
-        items={items}
-        markerGap={0}
-        markerLength={32}
-        maxShift={30}
-        onItemClick={scrollToSection}
-        proximityRadius={80}
-        scaleTick
-        showIndex
-        showMarker
-        smoothing={100}
-        tickScale={0.5}
-      />
+      <LocaleTransition variant="fade">
+        <LineSidebar
+          activeIndex={active}
+          defaultActive={0}
+          falloff="smooth"
+          fontSize={0.85}
+          itemGap={20}
+          items={items}
+          markerGap={0}
+          markerLength={32}
+          maxShift={30}
+          onItemClick={scrollToSection}
+          proximityRadius={80}
+          scaleTick
+          showIndex
+          showMarker
+          smoothing={100}
+          tickScale={0.5}
+        />
+      </LocaleTransition>
     </motion.div>
   )
 }

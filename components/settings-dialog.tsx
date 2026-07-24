@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/animate-ui/components/radix/dialog"
+import { LocaleTransition } from "@/components/locale-transition"
 import { Button } from "@/components/ui/button"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import {
@@ -78,7 +79,7 @@ export function SettingsDialog() {
 
   return (
     <Dialog onOpenChange={setIsSettingsOpen} open={isSettingsOpen}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-lg md:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{translate("settings.title")}</DialogTitle>
           <DialogDescription>
@@ -86,98 +87,102 @@ export function SettingsDialog() {
           </DialogDescription>
         </DialogHeader>
 
-        <ul className="flex flex-col divide-y divide-border">
-          {shortcuts.map((s) => {
-            const label = translate(`settings.actions.${s.action}`)
-            const empty = s.character === ""
-            const noModifier = !(s.hasMetaOrCtrlKey || s.hasAltOrOptionKey)
-            const duplicate =
-              !empty && (counts.get(shortcutSignature(s)) ?? 0) > 1
-            const invalid = empty || noModifier || duplicate
-            const tokens = formatShortcut(s)
+        <LocaleTransition variant="fade">
+          <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {shortcuts.map((s) => {
+              const label = translate(
+                `settings.actions.${s.action}` as "settings.actions.goHome"
+              )
+              const empty = s.character === ""
+              const noModifier = !(s.hasMetaOrCtrlKey || s.hasAltOrOptionKey)
+              const duplicate =
+                !empty && (counts.get(shortcutSignature(s)) ?? 0) > 1
+              const invalid = empty || noModifier || duplicate
+              const tokens = formatShortcut(s)
 
-            return (
-              <li
-                className="flex flex-wrap items-center gap-3 py-3"
-                key={s.action}
-              >
-                <div className="min-w-40 flex-1">
-                  <p className="font-medium text-sm">{label}</p>
-                  <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
-                    {translate("settings.currentLabel")}
-                    {tokens.length > 0 ? (
-                      <KbdGroup>
-                        {tokens.map((token) => (
-                          <Kbd key={token}>{token}</Kbd>
-                        ))}
-                      </KbdGroup>
-                    ) : (
-                      <span>…</span>
-                    )}
-                  </p>
-                </div>
+              return (
+                <li
+                  className="flex flex-wrap items-center gap-3 rounded-md border border-border p-3"
+                  key={s.action}
+                >
+                  <div className="min-w-40 flex-1">
+                    <p className="font-medium text-sm">{label}</p>
+                    <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                      {translate("settings.currentLabel")}
+                      {tokens.length > 0 ? (
+                        <KbdGroup>
+                          {tokens.map((token) => (
+                            <Kbd key={token}>{token}</Kbd>
+                          ))}
+                        </KbdGroup>
+                      ) : (
+                        <span>…</span>
+                      )}
+                    </p>
+                  </div>
 
-                <div className="flex items-center gap-1.5">
-                  <ModifierToggle
-                    ariaLabel={`${label} — ${metaLabel}`}
-                    label={metaLabel}
-                    onToggle={() =>
-                      patch(s.action, {
-                        hasMetaOrCtrlKey: !s.hasMetaOrCtrlKey,
-                      })
-                    }
-                    pressed={s.hasMetaOrCtrlKey}
-                  />
-                  <ModifierToggle
-                    ariaLabel={`${label} — ${altLabel}`}
-                    label={altLabel}
-                    onToggle={() =>
-                      patch(s.action, {
-                        hasAltOrOptionKey: !s.hasAltOrOptionKey,
-                      })
-                    }
-                    pressed={s.hasAltOrOptionKey}
-                  />
-                  <ModifierToggle
-                    ariaLabel={`${label} — ${shiftLabel}`}
-                    label={shiftLabel}
-                    onToggle={() =>
-                      patch(s.action, { hasShiftKey: !s.hasShiftKey })
-                    }
-                    pressed={s.hasShiftKey}
-                  />
-                  <span className="text-muted-foreground">+</span>
-                  <input
-                    aria-invalid={invalid}
-                    aria-label={`${label} — ${translate("settings.keyLabel")}`}
-                    className={cn(
-                      "h-9 w-10 rounded-md border bg-background text-center text-sm uppercase focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-                      invalid ? "border-destructive" : "border-input"
-                    )}
-                    maxLength={1}
-                    onChange={(event) =>
-                      patch(s.action, {
-                        character: event.target.value.slice(-1).toLowerCase(),
-                      })
-                    }
-                    type="text"
-                    value={s.character}
-                  />
-                </div>
+                  <div className="flex items-center gap-1.5">
+                    <ModifierToggle
+                      ariaLabel={`${label} — ${metaLabel}`}
+                      label={metaLabel}
+                      onToggle={() =>
+                        patch(s.action, {
+                          hasMetaOrCtrlKey: !s.hasMetaOrCtrlKey,
+                        })
+                      }
+                      pressed={s.hasMetaOrCtrlKey}
+                    />
+                    <ModifierToggle
+                      ariaLabel={`${label} — ${altLabel}`}
+                      label={altLabel}
+                      onToggle={() =>
+                        patch(s.action, {
+                          hasAltOrOptionKey: !s.hasAltOrOptionKey,
+                        })
+                      }
+                      pressed={s.hasAltOrOptionKey}
+                    />
+                    <ModifierToggle
+                      ariaLabel={`${label} — ${shiftLabel}`}
+                      label={shiftLabel}
+                      onToggle={() =>
+                        patch(s.action, { hasShiftKey: !s.hasShiftKey })
+                      }
+                      pressed={s.hasShiftKey}
+                    />
+                    <span className="text-muted-foreground">+</span>
+                    <input
+                      aria-invalid={invalid}
+                      aria-label={`${label} — ${translate("settings.keyLabel")}`}
+                      className={cn(
+                        "h-9 w-10 rounded-md border bg-background text-center text-sm uppercase focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                        invalid ? "border-destructive" : "border-input"
+                      )}
+                      maxLength={1}
+                      onChange={(event) =>
+                        patch(s.action, {
+                          character: event.target.value.slice(-1).toLowerCase(),
+                        })
+                      }
+                      type="text"
+                      value={s.character}
+                    />
+                  </div>
 
-                {invalid ? (
-                  <p className="w-full text-destructive text-xs" role="alert">
-                    {empty
-                      ? translate("settings.errors.empty")
-                      : noModifier
-                        ? translate("settings.errors.noModifier")
-                        : translate("settings.errors.duplicate")}
-                  </p>
-                ) : null}
-              </li>
-            )
-          })}
-        </ul>
+                  {invalid ? (
+                    <p className="w-full text-destructive text-xs" role="alert">
+                      {empty
+                        ? translate("settings.errors.empty")
+                        : noModifier
+                          ? translate("settings.errors.noModifier")
+                          : translate("settings.errors.duplicate")}
+                    </p>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+        </LocaleTransition>
 
         <DialogFooter>
           <Button

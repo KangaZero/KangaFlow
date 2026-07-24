@@ -2,6 +2,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import { ShareButton } from "@/components/animate-ui/components/community/share-button"
+import { LocaleTransition } from "@/components/locale-transition"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -79,7 +80,9 @@ export function AchievementCard({ achievement }: { achievement: Achievement }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Icon style={{ color }} />
-          <span>{title}</span>
+          <LocaleTransition>
+            <span>{title}</span>
+          </LocaleTransition>
           <Badge
             className="ml-auto"
             style={{ borderColor: color, color }}
@@ -89,9 +92,11 @@ export function AchievementCard({ achievement }: { achievement: Achievement }) {
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-2">
-        <p className="text-muted-foreground text-sm">{description}</p>
-        <span className="text-muted-foreground text-xs">{status}</span>
+      <CardContent>
+        <LocaleTransition className="flex flex-col gap-2">
+          <p className="text-muted-foreground text-sm">{description}</p>
+          <span className="text-muted-foreground text-xs">{status}</span>
+        </LocaleTransition>
       </CardContent>
       {achievement.isUnlocked ? (
         <CardFooter>

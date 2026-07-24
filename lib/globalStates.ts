@@ -22,6 +22,12 @@ export type GlobalStatesContextValue = {
   // Media-player floating panel open state (ephemeral — not persisted).
   isMediaPlayerOpen: boolean
   setIsMediaPlayerOpen: (state: boolean) => void
+  // Terminal dialog open state + the file to open in `nvim` (null = plain shell).
+  // Ephemeral; only reachable under the terminal theme.
+  isTerminalOpen: boolean
+  setIsTerminalOpen: (state: boolean) => void
+  terminalFile: string | null
+  setTerminalFile: (file: string | null) => void
   // Persisted settings (localStorage).
   shortcuts: Shortcut[]
   setShortcuts: (shortcuts: Shortcut[]) => void

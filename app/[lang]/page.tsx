@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { AboutSection } from "@/components/about-section"
+import { PageCodeButton } from "@/components/page-code-button"
 import { SectionSidebar } from "@/components/section-sidebar"
 import { SiteFooter } from "@/components/site-footer"
 import { isLocale } from "@/lib/i18n"
@@ -23,6 +24,7 @@ export default async function Home({
       <aside className="fixed top-1/2 left-8 z-30 hidden -translate-y-1/2 lg:block">
         <SectionSidebar />
       </aside>
+      <PageCodeButton file="app/[lang]/page.tsx" />
     </main>
   )
 }

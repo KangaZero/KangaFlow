@@ -1,7 +1,13 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { House, Languages, Settings, Trophy } from "lucide-react"
+import {
+  GalleryVerticalEnd,
+  House,
+  Languages,
+  Settings,
+  Trophy,
+} from "lucide-react"
 import { motion } from "motion/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -121,6 +127,7 @@ export function SiteHeader() {
   const home = `/${locale}`
   const isHome = rest === ""
   const isAchievements = rest.startsWith("/achievements")
+  const isTimeline = rest.startsWith("/timeline")
   const other = locale === "en" ? "ja" : "en"
 
   return (
@@ -178,6 +185,27 @@ export function SiteHeader() {
             <Link href={`${home}/achievements`}>
               <PillHover>
                 <Trophy />
+              </PillHover>
+            </Link>
+          </Button>
+        </AnimatedTooltip>
+
+        <AnimatedTooltip
+          label={translate("nav.timeline")}
+          shortcut={shortcutTokens("goTimeline")}
+          side="responsive"
+        >
+          <Button
+            aria-current={isTimeline ? "page" : undefined}
+            aria-label={translate("nav.timeline")}
+            asChild
+            className="group relative overflow-hidden"
+            size="icon"
+            variant={isTimeline ? "secondary" : "ghost"}
+          >
+            <Link href={`${home}/timeline`}>
+              <PillHover>
+                <GalleryVerticalEnd />
               </PillHover>
             </Link>
           </Button>

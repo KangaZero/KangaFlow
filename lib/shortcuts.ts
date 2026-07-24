@@ -10,12 +10,14 @@
 export type ShortcutAction =
   | "goHome"
   | "goAchievements"
+  | "goTimeline"
   | "cycleTheme"
   | "openCommandMenu"
   | "openMediaPlayer"
   | "toggleLanguage"
   | "toggleColumns"
   | "toggleSettings"
+  | "toggleTerminal"
 
 export type Shortcut = {
   action: ShortcutAction
@@ -44,6 +46,13 @@ export const DEFAULT_SHORTCUTS: readonly Shortcut[] = [
   {
     action: "goAchievements",
     character: "2",
+    hasAltOrOptionKey: true,
+    hasMetaOrCtrlKey: true,
+    hasShiftKey: false,
+  },
+  {
+    action: "goTimeline",
+    character: "3",
     hasAltOrOptionKey: true,
     hasMetaOrCtrlKey: true,
     hasShiftKey: false,
@@ -86,6 +95,13 @@ export const DEFAULT_SHORTCUTS: readonly Shortcut[] = [
   {
     action: "toggleSettings",
     character: ",",
+    hasAltOrOptionKey: false,
+    hasMetaOrCtrlKey: true,
+    hasShiftKey: false,
+  },
+  {
+    action: "toggleTerminal",
+    character: "/",
     hasAltOrOptionKey: false,
     hasMetaOrCtrlKey: true,
     hasShiftKey: false,

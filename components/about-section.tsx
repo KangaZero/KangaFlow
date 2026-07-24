@@ -189,7 +189,7 @@ function FloatingLogo({
   })
 
   const targetY = 2
-  const targetX = viewportWidth / 2 + 45
+  const targetX = viewportWidth / 2 + 55
 
   return (
     <motion.div
@@ -250,7 +250,7 @@ function ScrollShrinkLogo({ className }: { className?: string }) {
         style={{ height: LOGO_HEIGHT, width: LOGO_WIDTH }}
       >
         {/* Visible in-flow until measured, then handed off to the fixed copy. */}
-        {anchor ? null : <Avatar />}
+        {anchor ? null : <KangaFlowLogo />}
       </div>
       {anchor ? (
         <FloatingLogo anchor={anchor} viewportWidth={viewportWidth} />
