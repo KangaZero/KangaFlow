@@ -62,6 +62,21 @@
                 stages = [ "pre-commit" ];
               };
 
+              # Pre-push type gate: run the same `tsc --noEmit` as CI so a clean
+              # checkout (no generated next-env.d.ts) can't slip type errors past
+              # `git push`. Mirrors `just typecheck`.
+              typecheck = {
+                enable = true;
+                name = "typecheck";
+                entry = "${pkgs.writeShellScriptBin "typecheck-hook" ''
+                  just typecheck
+                ''}/bin/typecheck-hook";
+                language = "system";
+                pass_filenames = false;
+                always_run = true;
+                stages = [ "pre-push" ];
+              };
+
               # Pre-push guard: reject any incoming commit whose author OR
               # committer is not the personal identity. Keeps work identity out
               # of this repo's history for good.
