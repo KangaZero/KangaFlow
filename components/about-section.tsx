@@ -6,9 +6,9 @@ import { Mail } from "lucide-react"
 import {
   AnimatePresence,
   motion,
+  useMotionValueEvent,
   useReducedMotion,
   useScroll,
-  useTransform,
 } from "motion/react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
@@ -28,7 +28,7 @@ import {
   SiVuedotjs,
 } from "react-icons/si"
 import avatarSrc from "@/assets/avatar.png"
-
+import { LocaleTransition } from "@/components/locale-transition"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import {
@@ -154,25 +154,23 @@ function Avatar() {
   )
 }
 
-// ---- Scroll-shrink avatar --------------------------------------------------
-// Small-Worlds-style transition: the hero avatar shrinks and glides to a badge
-// pinned at the left-middle of the viewport as you scroll down, and reverses
-// exactly on scroll-up. Every property is a pure function of scrollY, so the
-// return trip is free (no timeline to rewind).
+// ---- Scroll-shrink logo ----------------------------------------------------
+// The hero logo shrinks to a pinned badge on scroll and returns at the top.
+// This is scroll-TRIGGERED, not scroll-linked: crossing a small threshold flips
+// a boolean and a spring plays the full start↔end transition. The start and end
+// states are therefore always identical regardless of how far you scroll, and it
+// reverses once you're back within the leeway of the top.
 
-const SHRINK_DISTANCE = 50 // px of scroll over which the transition completes
 const MIN_SCALE = 0.42 // resting size of the pinned badge
 const LOGO_WIDTH = 180
 const LOGO_HEIGHT = 220
-
-const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
-const lerp = (from: number, to: number, t: number) => from + (to - from) * t
+// Shrink once scrolled past this; restore when back within it of the top.
+const SCROLL_TRIGGER = 20
 
 type HeroAnchor = { left: number; top: number }
 
-// The fixed, scroll-driven copy. Mounted only once its anchor is measured, so
-// every useTransform starts with correct ranges (function form re-reads the
-// latest anchor/height on resize).
+// The fixed copy. Mounted only once its anchor is measured, so the resting
+// (start) state lines up exactly with the in-flow logo it replaces.
 function FloatingLogo({
   anchor,
   viewportWidth,
@@ -181,24 +179,30 @@ function FloatingLogo({
   viewportWidth: number
 }) {
   const { scrollY } = useScroll()
-  const targetY = 2
-  // Solve for the LEFT edge: the badge grows rightward (top-left origin), so pin
-  // its right edge FLOAT_RIGHT from the viewport edge by subtracting its scaled
-  // width. (For left-floating this whole term collapses to a constant.)
-  const targetX = viewportWidth / 2 + 45
+  const [shrunk, setShrunk] = useState(false)
 
-  const progress = (value: number) => clamp01(value / SHRINK_DISTANCE)
-  const x = useTransform(scrollY, (v) =>
-    lerp(anchor.left, targetX, progress(v))
-  )
-  const y = useTransform(scrollY, (v) => lerp(anchor.top, targetY, progress(v)))
-  const scale = useTransform(scrollY, (v) => lerp(1, MIN_SCALE, progress(v)))
+  // Threshold trigger (not a scroll-linked scrub): flip state when crossing the
+  // leeway. setState no-ops on an unchanged boolean, so this only re-renders on
+  // an actual start↔end transition, not every scroll frame.
+  useMotionValueEvent(scrollY, "change", (value) => {
+    setShrunk(value > SCROLL_TRIGGER)
+  })
+
+  const targetY = 2
+  const targetX = viewportWidth / 2 + 45
 
   return (
     <motion.div
+      animate={
+        shrunk
+          ? { scale: MIN_SCALE, x: targetX, y: targetY }
+          : { scale: 1, x: anchor.left, y: anchor.top }
+      }
       aria-hidden
       className="pointer-events-none fixed top-0 left-0 z-30"
-      style={{ scale, transformOrigin: "top left", x, y }}
+      initial={false}
+      style={{ transformOrigin: "top left" }}
+      transition={{ damping: 30, stiffness: 260, type: "spring" }}
     >
       <KangaFlowLogo />
     </motion.div>
@@ -363,18 +367,25 @@ function RubyName({ isJapanese }: { isJapanese: boolean }) {
   return (
     <h1 className="text-center font-heading font-semibold text-3xl leading-relaxed sm:text-4xl">
       {rubyNameOrdered.map((part) => (
-        <ruby className="mx-1" key={part.romaji}>
-          {part.romaji}
-          <rt
-            className={cn(
-              "text-[0.4em] text-muted-foreground",
-              "ruby-furigana",
-              isJapanese ? "fade-in" : "fade-out"
-            )}
-          >
-            {part.furigana}
-          </rt>
-        </ruby>
+        <motion.span
+          className="inline-block"
+          key={part.romaji}
+          layout
+          transition={{ damping: 50, stiffness: 200, type: "spring" }}
+        >
+          <ruby className="mx-1">
+            {part.romaji}
+            <rt
+              className={cn(
+                "text-[0.4em] text-muted-foreground",
+                "ruby-furigana",
+                isJapanese ? "fade-in" : "fade-out"
+              )}
+            >
+              {part.furigana}
+            </rt>
+          </ruby>
+        </motion.span>
       ))}
     </h1>
   )
@@ -461,145 +472,149 @@ export function AboutSection() {
               <ScrollShrinkLogo className="absolute top-20 left-2" />
             </div>
             <RubyName isJapanese={locale === "ja"} />
-            <p className="text-muted-foreground text-sm">
-              {person.role} @ {person.workplace}
-            </p>
-            <div className="flex flex-col gap-2 text-pretty text-sm/relaxed">
-              {person.intro.map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-            </div>
-            <div className="flex flex-wrap justify-center gap-1">
-              {person.technologies.map((tech) => {
-                // TypeScript and JavaScript each render as a flip card that reveals
-                // the other on click (front = self, back = the sibling language).
-                if (tech.icon === "javascript") {
-                  return (
-                    <FlipTechIcon
-                      back={{
-                        color: TECH_ICONS.typescript.color,
-                        Icon: SiTypescript,
-                        name: "TypeScript",
-                      }}
-                      front={{
-                        color: TECH_ICONS.javascript.color,
-                        Icon: SiJavascript,
-                        name: tech.name,
-                      }}
-                      key={tech.name}
-                    />
-                  )
-                }
-                if (tech.icon === "typescript") {
-                  return (
-                    <FlipTechIcon
-                      back={{
-                        color: TECH_ICONS.javascript.color,
-                        Icon: SiJavascript,
-                        name: "JavaScript",
-                      }}
-                      front={{
-                        color: TECH_ICONS.typescript.color,
-                        Icon: SiTypescript,
-                        name: tech.name,
-                      }}
-                      key={tech.name}
-                    />
-                  )
-                }
-                const { Icon, color } = TECH_ICONS[tech.icon]
-                return (
-                  <AnimatedTooltip key={tech.name} label={tech.name}>
-                    <span
-                      aria-label={tech.name}
-                      className={ICON_PILL}
-                      role="img"
-                      style={{ color }}
-                    >
-                      <Icon aria-hidden className="size-5" />
-                    </span>
-                  </AnimatedTooltip>
-                )
-              })}
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {person.socials.map((social) => {
-                const Icon = SOCIAL_ICONS[social.icon] ?? Mail
-                return (
-                  <Button asChild key={social.name} variant="secondary">
-                    <a href={social.href} rel="noreferrer" target="_blank">
-                      <Icon aria-hidden />
-                      {social.name}
-                    </a>
-                  </Button>
-                )
-              })}
-            </div>
-          </Section>
-          {/* Project */}
-          <Section
-            id={projectSection.id}
-            title={<GradientText neon text={translate("about.project")} />}
-          >
-            <p>test</p>
-          </Section>
-          {/* Work */}
-          <Section
-            id={workSection.id}
-            title={
-              <TrueFocus
-                subtitle={person.work.subtitle}
-                subtitleBlur={person.work.subtitleBlur}
-              />
-            }
-          >
-            {/* Technical skills — plain text, top of the résumé. */}
-            <div className="flex flex-col gap-1">
-              <h3 className="font-heading font-medium text-sm">
-                {translate("about.technical")}
-              </h3>
+            <LocaleTransition className="flex w-full flex-col items-center gap-6">
               <p className="text-muted-foreground text-sm">
-                {person.technologies.map((tech) => tech.name).join(", ")}
+                {person.role} @ {person.workplace}
               </p>
-            </div>
+              <div className="flex flex-col gap-2 text-pretty text-sm/relaxed">
+                {person.intro.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </div>
+              <div className="flex flex-wrap justify-center gap-1">
+                {person.technologies.map((tech) => {
+                  // TypeScript and JavaScript each render as a flip card that reveals
+                  // the other on click (front = self, back = the sibling language).
+                  if (tech.icon === "javascript") {
+                    return (
+                      <FlipTechIcon
+                        back={{
+                          color: TECH_ICONS.typescript.color,
+                          Icon: SiTypescript,
+                          name: "TypeScript",
+                        }}
+                        front={{
+                          color: TECH_ICONS.javascript.color,
+                          Icon: SiJavascript,
+                          name: tech.name,
+                        }}
+                        key={tech.name}
+                      />
+                    )
+                  }
+                  if (tech.icon === "typescript") {
+                    return (
+                      <FlipTechIcon
+                        back={{
+                          color: TECH_ICONS.javascript.color,
+                          Icon: SiJavascript,
+                          name: "JavaScript",
+                        }}
+                        front={{
+                          color: TECH_ICONS.typescript.color,
+                          Icon: SiTypescript,
+                          name: tech.name,
+                        }}
+                        key={tech.name}
+                      />
+                    )
+                  }
+                  const { Icon, color } = TECH_ICONS[tech.icon]
+                  return (
+                    <AnimatedTooltip key={tech.name} label={tech.name}>
+                      <span
+                        aria-label={tech.name}
+                        className={ICON_PILL}
+                        role="img"
+                        style={{ color }}
+                      >
+                        <Icon aria-hidden className="size-5" />
+                      </span>
+                    </AnimatedTooltip>
+                  )
+                })}
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {person.socials.map((social) => {
+                  const Icon = SOCIAL_ICONS[social.icon] ?? Mail
+                  return (
+                    <Button asChild key={social.name} variant="secondary">
+                      <a href={social.href} rel="noreferrer" target="_blank">
+                        <Icon aria-hidden />
+                        {social.name}
+                      </a>
+                    </Button>
+                  )
+                })}
+              </div>
+            </LocaleTransition>
+          </Section>
+          <LocaleTransition className="flex w-full flex-col gap-16">
+            {/* Project */}
+            <Section
+              id={projectSection.id}
+              title={<GradientText neon text={translate("about.project")} />}
+            >
+              <p>test</p>
+            </Section>
+            {/* Work */}
+            <Section
+              id={workSection.id}
+              title={
+                <TrueFocus
+                  subtitle={person.work.subtitle}
+                  subtitleBlur={person.work.subtitleBlur}
+                />
+              }
+            >
+              {/* Technical skills — plain text, top of the résumé. */}
+              <div className="flex flex-col gap-1">
+                <h3 className="font-heading font-medium text-sm">
+                  {translate("about.technical")}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  {person.technologies.map((tech) => tech.name).join(", ")}
+                </p>
+              </div>
 
-            {person.work.experiences.map((job) => (
-              <Card key={`${job.company}-${job.role}`}>
-                <CardHeader>
-                  <CardTitle className="text-base">{job.company}</CardTitle>
-                  <CardDescription>
-                    {job.role} · {job.timeframe}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="flex list-disc flex-col gap-2 pl-4 marker:text-muted-foreground">
-                    {job.achievements.map((achievement) => (
-                      <li key={achievement}>{achievement}</li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            ))}
-          </Section>
-          {/* Education */}
-          <Section
-            id={educationSection.id}
-            title={
-              <h2 className="font-heading font-semibold text-2xl sm:text-3xl">
-                {translate("about.education")}
-              </h2>
-            }
-          >
-            {person.studies.map((study) => (
-              <Card key={study.name}>
-                <CardHeader>
-                  <CardTitle className="text-base">{study.name}</CardTitle>
-                  <CardDescription>{study.title}</CardDescription>
-                </CardHeader>
-                <CardContent>{study.description}</CardContent>
-              </Card>
-            ))}
-          </Section>
+              {person.work.experiences.map((job) => (
+                <Card key={`${job.company}-${job.role}`}>
+                  <CardHeader>
+                    <CardTitle className="text-base">{job.company}</CardTitle>
+                    <CardDescription>
+                      {job.role} · {job.timeframe}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="flex list-disc flex-col gap-2 pl-4 marker:text-muted-foreground">
+                      {job.achievements.map((achievement) => (
+                        <li key={achievement}>{achievement}</li>
+                      ))}
+                    </ul>
+                  </CardContent>
+                </Card>
+              ))}
+            </Section>
+            {/* Education */}
+            <Section
+              id={educationSection.id}
+              title={
+                <h2 className="font-heading font-semibold text-2xl sm:text-3xl">
+                  {translate("about.education")}
+                </h2>
+              }
+            >
+              {person.studies.map((study) => (
+                <Card key={study.name}>
+                  <CardHeader>
+                    <CardTitle className="text-base">{study.name}</CardTitle>
+                    <CardDescription>{study.title}</CardDescription>
+                  </CardHeader>
+                  <CardContent>{study.description}</CardContent>
+                </Card>
+              ))}
+            </Section>
+          </LocaleTransition>
         </motion.div>
       )}
     </div>
