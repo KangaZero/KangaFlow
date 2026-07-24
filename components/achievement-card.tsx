@@ -1,9 +1,8 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { Share2 } from "lucide-react"
+import { ShareButton } from "@/components/animate-ui/components/community/share-button"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -17,6 +16,7 @@ import {
   RARITY_ICON,
   rarityColorVar,
 } from "@/lib/achievements"
+import { type SharePlatform, shareIntentUrl } from "@/lib/share"
 import { useLocale } from "@/providers/locale-provider"
 
 export function AchievementCard({ achievement }: { achievement: Achievement }) {
@@ -55,6 +55,19 @@ export function AchievementCard({ achievement }: { achievement: Achievement }) {
     await navigator.clipboard?.writeText(url)
   }
 
+  // Per-platform share intents surfaced by the ShareButton's hover icons. GitHub
+  // has no share endpoint (shareIntentUrl returns null), so it copies the link.
+  function shareTo(platform: SharePlatform) {
+    const url = window.location.href
+    const text = `${translate("achievements.toast.unlocked")} ${title}`
+    const intent = shareIntentUrl(platform, { text, url })
+    if (intent) {
+      window.open(intent, "_blank", "noopener,noreferrer")
+      return
+    }
+    void navigator.clipboard?.writeText(url)
+  }
+
   return (
     <Card
       className="h-full"
@@ -82,10 +95,14 @@ export function AchievementCard({ achievement }: { achievement: Achievement }) {
       </CardContent>
       {achievement.isUnlocked ? (
         <CardFooter>
-          <Button onClick={share} size="sm" variant="outline">
-            <Share2 />
+          <ShareButton
+            icon="prefix"
+            onClick={share}
+            onIconClick={shareTo}
+            size="sm"
+          >
             {translate("achievements.share")}
-          </Button>
+          </ShareButton>
         </CardFooter>
       ) : null}
     </Card>

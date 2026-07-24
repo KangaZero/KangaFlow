@@ -29,11 +29,13 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isCommandPaletteOpen: false,
   isHelloEffectAnimationComplete: false,
   isJavascriptFlipTechIconFlipped: false,
+  isMediaPlayerOpen: false,
   isSettingsOpen: false,
   setColumnCount: () => {},
   setIsCommandPaletteOpen: () => {},
   setIsHelloEffectAnimationComplete: () => {},
   setIsJavascriptFlipTechIconFlipped: () => {},
+  setIsMediaPlayerOpen: () => {},
   setIsSettingsOpen: () => {},
   setShortcuts: () => {},
   shortcuts: [...DEFAULT_SHORTCUTS],
@@ -61,6 +63,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [isJavascriptFlipTechIconFlipped, setIsJavascriptFlipTechIconFlipped] =
     useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isMediaPlayerOpen, setIsMediaPlayerOpen] = useState(false)
 
   // Persisted settings start at their SSR-safe defaults, then hydrate from
   // localStorage after mount (reading storage during render would mismatch the
@@ -95,11 +98,13 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isCommandPaletteOpen,
       isHelloEffectAnimationComplete,
       isJavascriptFlipTechIconFlipped,
+      isMediaPlayerOpen,
       isSettingsOpen,
       setColumnCount,
       setIsCommandPaletteOpen,
       setIsHelloEffectAnimationComplete,
       setIsJavascriptFlipTechIconFlipped,
+      setIsMediaPlayerOpen,
       setIsSettingsOpen,
       setShortcuts,
       shortcuts,
@@ -109,6 +114,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isCommandPaletteOpen,
       isHelloEffectAnimationComplete,
       isJavascriptFlipTechIconFlipped,
+      isMediaPlayerOpen,
       isSettingsOpen,
       shortcuts,
     ]

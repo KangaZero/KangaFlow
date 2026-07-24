@@ -16,7 +16,15 @@ const THEME_ICON: Record<Theme, React.ComponentType> = {
   terminal: Terminal,
 }
 
-export function ThemeToggle() {
+// Render prop: the toggle owns theme state and hands the caller the icon for the
+// active theme plus the icon for the theme it will cycle to next, so the caller
+// controls the visual (e.g. a pill-hover that previews the next icon).
+type ThemeIconRender = (icons: {
+  CurrentIcon: React.ComponentType
+  NextIcon: React.ComponentType
+}) => React.ReactNode
+
+export function ThemeToggle({ children }: { children: ThemeIconRender }) {
   const { theme, setTheme } = useTheme()
   const { translate } = useLocale()
   const [mounted, setMounted] = React.useState(false)
@@ -40,16 +48,19 @@ export function ThemeToggle() {
   return (
     <ThemeToggler setTheme={setTheme} theme={current}>
       {({ theme: active, toggleTheme }) => {
-        const Icon = THEME_ICON[active]
         const label = translate(`theme.${active}`)
         return (
           <Button
             aria-label={label}
+            className="group relative overflow-hidden"
             onClick={() => toggleTheme(nextTheme(active))}
             size="icon"
             variant="ghost"
           >
-            <Icon />
+            {children({
+              CurrentIcon: THEME_ICON[active],
+              NextIcon: THEME_ICON[nextTheme(active)],
+            })}
           </Button>
         )
       }}

@@ -1,12 +1,10 @@
 "use client"
 
-// [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
-
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect } from "react"
 
-import { COLUMN_OPTIONS } from "@/lib/globalStates"
+import { type AppPath, COLUMN_OPTIONS } from "@/lib/globalStates"
 import { matchesShortcut } from "@/lib/shortcuts"
 import { DEFAULT_THEME, isTheme, nextTheme } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -17,6 +15,7 @@ import { isTypingTarget } from "@/providers/theme-provider"
 // runs the corresponding action. Replaces the old hardcoded theme hotkey.
 export function ShortcutDispatcher() {
   const router = useRouter()
+  const currentPath = usePathname() as AppPath
   const { theme, setTheme } = useTheme()
   const { locale, setLocale } = useLocale()
   const {
@@ -25,6 +24,8 @@ export function ShortcutDispatcher() {
     setIsCommandPaletteOpen,
     isSettingsOpen,
     setIsSettingsOpen,
+    isMediaPlayerOpen,
+    setIsMediaPlayerOpen,
     columnCount,
     setColumnCount,
     isHelloEffectAnimationComplete,
@@ -54,8 +55,15 @@ export function ShortcutDispatcher() {
         case "openCommandMenu":
           setIsCommandPaletteOpen(!isCommandPaletteOpen)
           break
+        case "openMediaPlayer":
+          setIsMediaPlayerOpen(!isMediaPlayerOpen)
+          break
         case "toggleLanguage":
-          if (!isHelloEffectAnimationComplete) return //Without this language change may cause animation to never complete resulting in never rendering the about section and stuck on the hello-effect
+          if (
+            !isHelloEffectAnimationComplete &&
+            (currentPath === "/en/" || currentPath === "/ja/")
+          )
+            return //Without this language change may cause animation to never complete resulting in never rendering the about section and stuck on the hello-effect
           setLocale(locale === "en" ? "ja" : "en")
           break
         case "toggleColumns": {
@@ -83,9 +91,12 @@ export function ShortcutDispatcher() {
     setIsCommandPaletteOpen,
     isSettingsOpen,
     setIsSettingsOpen,
+    isMediaPlayerOpen,
+    setIsMediaPlayerOpen,
     columnCount,
     setColumnCount,
     isHelloEffectAnimationComplete,
+    currentPath,
   ])
 
   return null

@@ -12,6 +12,7 @@ export type ShortcutAction =
   | "goAchievements"
   | "cycleTheme"
   | "openCommandMenu"
+  | "openMediaPlayer"
   | "toggleLanguage"
   | "toggleColumns"
   | "toggleSettings"
@@ -60,6 +61,13 @@ export const DEFAULT_SHORTCUTS: readonly Shortcut[] = [
     hasAltOrOptionKey: false,
     hasMetaOrCtrlKey: true,
     hasShiftKey: false,
+  },
+  {
+    action: "openMediaPlayer",
+    character: "m",
+    hasAltOrOptionKey: false,
+    hasMetaOrCtrlKey: true,
+    hasShiftKey: true,
   },
   {
     action: "toggleLanguage",

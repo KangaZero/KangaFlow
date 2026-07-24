@@ -6,7 +6,6 @@
 
     # Support a particular subset of the Nix systems
     systems = {
-      inputs.nixpkgs.follows = "nixpkgs";
       url = "github:nix-systems/default";
     };
 

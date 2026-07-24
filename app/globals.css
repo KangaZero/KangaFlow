@@ -238,6 +238,36 @@
   }
 }
 
+/*
+ * Thin, theme-aware scrollbars. Colours reference tokens that are redefined per
+ * theme (:root / .dark / .terminal), so light/dark/terminal adapt with no JS and
+ * no per-theme overrides here. Thumb = --border (subtle rail), hover =
+ * --muted-foreground (clearer grab affordance), track = --background (blends in).
+ * scrollbar-width/color cover Firefox; ::-webkit-* cover Chrome/Safari.
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) var(--background);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-sm);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

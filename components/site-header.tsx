@@ -5,13 +5,14 @@ import { House, Languages, Settings, Trophy } from "lucide-react"
 import { motion } from "motion/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { type ReactNode, useState } from "react"
+import { type ComponentType, type ReactNode, useState } from "react"
 
 import { HeaderDate } from "@/components/header-date"
 import { HeaderStatus } from "@/components/header-status"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
+import type { AppPath } from "@/lib/globalStates"
 import { formatShortcut, type ShortcutAction } from "@/lib/shortcuts"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -61,8 +62,42 @@ function PillHover({ children }: { children: ReactNode }) {
   )
 }
 
+// Theme-toggle variant of PillHover: same circle-reveal + roll animation, but the
+// icon that rolls in on hover is the NEXT theme's icon (a preview of what a click
+// will switch to), not an inverted copy of the current one.
+function ThemePillHover({
+  CurrentIcon,
+  NextIcon,
+}: {
+  CurrentIcon: ComponentType
+  NextIcon: ComponentType
+}) {
+  return (
+    <>
+      <span
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 rounded-full bg-primary",
+          CIRCLE_REVEAL
+        )}
+      />
+      <span className="relative z-10 grid place-items-center">
+        <span className="col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-y-[-150%]">
+          <CurrentIcon />
+        </span>
+        <span
+          aria-hidden
+          className="col-start-1 row-start-1 translate-y-[150%] text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-y-0"
+        >
+          <NextIcon />
+        </span>
+      </span>
+    </>
+  )
+}
+
 export function SiteHeader() {
-  const pathname = usePathname()
+  const currentPath = usePathname() as AppPath
   const { locale, setLocale, translate } = useLocale()
   const { setIsSettingsOpen, shortcuts, isHelloEffectAnimationComplete } =
     useGlobalStates()
@@ -80,7 +115,9 @@ export function SiteHeader() {
   // Compare the path WITHOUT its locale segment: the language toggle swaps the
   // URL via history.replaceState (which usePathname doesn't observe), so a
   // locale-agnostic check keeps the active item correct after switching.
-  const rest = pathname.replace(/^\/(?:en|ja)(?=\/|$)/, "").replace(/\/$/, "")
+  const rest = currentPath
+    .replace(/^\/(?:en|ja)(?=\/|$)/, "")
+    .replace(/\/$/, "")
   const home = `/${locale}`
   const isHome = rest === ""
   const isAchievements = rest.startsWith("/achievements")
@@ -156,7 +193,10 @@ export function SiteHeader() {
           <Button
             aria-label={translate("nav.language")}
             className="group relative overflow-hidden"
-            disabled={!isHelloEffectAnimationComplete}
+            disabled={
+              !isHelloEffectAnimationComplete &&
+              (currentPath === "/en/" || currentPath === "/ja/")
+            }
             onClick={() => setLocale(other)}
             size="icon"
             variant="ghost"
@@ -173,7 +213,11 @@ export function SiteHeader() {
           shortcut={shortcutTokens("cycleTheme")}
           side="responsive"
         >
-          <ThemeToggle />
+          <ThemeToggle>
+            {({ CurrentIcon, NextIcon }) => (
+              <ThemePillHover CurrentIcon={CurrentIcon} NextIcon={NextIcon} />
+            )}
+          </ThemeToggle>
         </AnimatedTooltip>
 
         <AnimatedTooltip

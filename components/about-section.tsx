@@ -3,7 +3,13 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import { Mail } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "motion/react"
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import type { IconType } from "react-icons"
@@ -32,6 +38,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { GradientText } from "@/components/ui/gradient-text"
 import type { TranslationKey } from "@/lib/i18n"
 import { person } from "@/lib/person"
 import { cn } from "@/lib/utils"
@@ -40,17 +47,20 @@ import "./about-section.css"
 import { AppleHelloIntro } from "@/components/ui/apple-hello-effect"
 import type { Mutable } from "@/lib/typescript-hooks/mutable"
 import { useGlobalStates } from "@/providers/global-state-provider"
+import { KangaFlowLogo } from "./ui/kangaflow-logo"
 // Section ids + i18n labels — the single source shared with the scroll-spy
 // sidebar (components/section-sidebar.tsx). Order = document order.
 export const ABOUT_SECTIONS = [
   { id: "about-overview", labelKey: "about.overview" },
+  { id: "about-project", labelKey: "about.project" },
   { id: "about-work", labelKey: "about.work" },
   { id: "about-education", labelKey: "about.education" },
 ] as const satisfies readonly { id: string; labelKey: TranslationKey }[]
 
 // Destructured so section ids come from the shared source (not re-typed
 // literals) — also sidesteps useUniqueElementIds, which only flags literals.
-const [overviewSection, workSection, educationSection] = ABOUT_SECTIONS
+const [overviewSection, projectSection, workSection, educationSection] =
+  ABOUT_SECTIONS
 
 // Slug → brand logo + official Simple Icons brand hue (verified against
 // simpleicons.org, not memory). Slugs come from person.ts so the data file stays
@@ -141,6 +151,107 @@ function Avatar() {
         />
       )}
     </div>
+  )
+}
+
+// ---- Scroll-shrink avatar --------------------------------------------------
+// Small-Worlds-style transition: the hero avatar shrinks and glides to a badge
+// pinned at the left-middle of the viewport as you scroll down, and reverses
+// exactly on scroll-up. Every property is a pure function of scrollY, so the
+// return trip is free (no timeline to rewind).
+
+const SHRINK_DISTANCE = 50 // px of scroll over which the transition completes
+const MIN_SCALE = 0.42 // resting size of the pinned badge
+const LOGO_WIDTH = 180
+const LOGO_HEIGHT = 220
+
+const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
+const lerp = (from: number, to: number, t: number) => from + (to - from) * t
+
+type HeroAnchor = { left: number; top: number }
+
+// The fixed, scroll-driven copy. Mounted only once its anchor is measured, so
+// every useTransform starts with correct ranges (function form re-reads the
+// latest anchor/height on resize).
+function FloatingLogo({
+  anchor,
+  viewportWidth,
+}: {
+  anchor: HeroAnchor
+  viewportWidth: number
+}) {
+  const { scrollY } = useScroll()
+  const targetY = 2
+  // Solve for the LEFT edge: the badge grows rightward (top-left origin), so pin
+  // its right edge FLOAT_RIGHT from the viewport edge by subtracting its scaled
+  // width. (For left-floating this whole term collapses to a constant.)
+  const targetX = viewportWidth / 2 + 45
+
+  const progress = (value: number) => clamp01(value / SHRINK_DISTANCE)
+  const x = useTransform(scrollY, (v) =>
+    lerp(anchor.left, targetX, progress(v))
+  )
+  const y = useTransform(scrollY, (v) => lerp(anchor.top, targetY, progress(v)))
+  const scale = useTransform(scrollY, (v) => lerp(1, MIN_SCALE, progress(v)))
+
+  return (
+    <motion.div
+      aria-hidden
+      className="pointer-events-none fixed top-0 left-0 z-30"
+      style={{ scale, transformOrigin: "top left", x, y }}
+    >
+      <KangaFlowLogo />
+    </motion.div>
+  )
+}
+
+// Reserves the logo's footprint in the centered column (so nothing jumps) and
+// hands the visible logo off to a fixed FloatingLogo once measured. Honours
+// prefers-reduced-motion by rendering a plain, static logo.
+function ScrollShrinkLogo({ className }: { className?: string }) {
+  const spacerRef = useRef<HTMLDivElement>(null)
+  const [anchor, setAnchor] = useState<HeroAnchor | null>(null)
+  const [viewportWidth, setViewportWidth] = useState(0)
+  // const [viewportHeight, setViewportHeight] = useState(0)
+  const reduceMotion = useReducedMotion()
+
+  useEffect(() => {
+    if (reduceMotion) return
+    const measure = () => {
+      const el = spacerRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      setAnchor({ left: rect.left, top: rect.top })
+      setViewportWidth(window.innerWidth)
+      // setViewportHeight(window.innerHeight)
+    }
+    measure()
+    window.addEventListener("resize", measure)
+    return () => window.removeEventListener("resize", measure)
+  }, [reduceMotion])
+
+  if (reduceMotion)
+    return (
+      <div className={className}>
+        {" "}
+        <KangaFlowLogo />{" "}
+      </div>
+    )
+
+  return (
+    <>
+      <div
+        className={className}
+        ref={spacerRef}
+        style={{ height: LOGO_HEIGHT, width: LOGO_WIDTH }}
+      >
+        {/* Visible in-flow until measured, then handed off to the fixed copy. */}
+        {anchor ? null : <Avatar />}
+      </div>
+      {anchor ? (
+        <FloatingLogo anchor={anchor} viewportWidth={viewportWidth} />
+      ) : null}
+    </>
   )
 }
 
@@ -345,7 +456,10 @@ export function AboutSection() {
           transition={{ duration: 0.5, ease: "easeInOut" }}
         >
           <Section className="items-center text-center" id={overviewSection.id}>
-            <Avatar />
+            <div className="relative">
+              <Avatar />
+              <ScrollShrinkLogo className="absolute top-20 left-2" />
+            </div>
             <RubyName isJapanese={locale === "ja"} />
             <p className="text-muted-foreground text-sm">
               {person.role} @ {person.workplace}
@@ -421,6 +535,13 @@ export function AboutSection() {
                 )
               })}
             </div>
+          </Section>
+          {/* Project */}
+          <Section
+            id={projectSection.id}
+            title={<GradientText neon text={translate("about.project")} />}
+          >
+            <p>test</p>
           </Section>
           {/* Work */}
           <Section
