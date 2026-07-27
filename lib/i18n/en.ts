@@ -11,6 +11,10 @@ const en = {
     },
     overview: "Overview",
     project: "Project",
+    projectLinks: {
+      repo: "Code",
+      website: "Website",
+    },
     technical: "Technical skills",
     work: "Work",
   },

@@ -23,6 +23,34 @@ export const person = {
   locationCoordinates: [35.660504, 139.724981],
   name: "Samuel Wai Weng Yong",
 
+  // Portfolio projects surfaced in the About "Project" carousel. Descriptions
+  // live here as data (same call as intro/work/studies above); only the link
+  // button labels go through i18n. `kind` maps to an icon + i18n label in
+  // about-section; project names are proper nouns and stay literal.
+  projects: [
+    {
+      description:
+        "Vim motions for your mouse on macOS — a menu-bar daemon that drives the cursor, clicks, scrolls, and gestures straight from hjkl. Modal, count-aware, mark- and register-backed.",
+      links: [
+        { href: "https://kangazero.github.io/neomouse/", kind: "website" },
+        { href: "https://github.com/KangaZero/neomouse", kind: "repo" },
+      ],
+      name: "neomouse",
+    },
+    {
+      description:
+        "A satirical jab at per-token AI billing: flaunt how much AI you burn through and “donate” ever more to the top 0.01%.",
+      links: [
+        {
+          href: "https://kangazero.github.io/tokenmaxxingman/",
+          kind: "website",
+        },
+        { href: "https://github.com/KangaZero/tokenmaxxingman", kind: "repo" },
+      ],
+      name: "tokenmaxxing",
+    },
+  ],
+
   role: "Frontend Developer",
 
   // Romaji + furigana (+ optional kanji) per name part. The About header fades

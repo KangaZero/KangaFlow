@@ -10,6 +10,10 @@ const ja = {
     },
     overview: "概要",
     project: "プロジェクト",
+    projectLinks: {
+      repo: "コード",
+      website: "サイト",
+    },
     technical: "技術スキル",
     work: "職務経歴",
   },

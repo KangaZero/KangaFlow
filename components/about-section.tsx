@@ -2,7 +2,7 @@
 
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { Mail } from "lucide-react"
+import { Coins, ExternalLink, Mail, MousePointer2 } from "lucide-react"
 import {
   AnimatePresence,
   motion,
@@ -38,6 +38,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Carousel, type CarouselItem } from "@/components/ui/carousel"
 import { GradientText } from "@/components/ui/gradient-text"
 import type { TranslationKey } from "@/lib/i18n"
 import { person } from "@/lib/person"
@@ -436,10 +437,54 @@ function FlipTechIcon({
   )
 }
 
+// Per-project glyph shown on the carousel card (keyed by project name).
+const PROJECT_ICONS: Record<string, React.ReactNode> = {
+  neomouse: <MousePointer2 aria-hidden className="size-4" />,
+  tokenmaxxing: <Coins aria-hidden className="size-4" />,
+}
+
+// A project's links, derived from person.ts so the union of kinds stays in sync.
+type ProjectLink = (typeof person.projects)[number]["links"][number]
+
+// Link buttons under a project card: kind → icon + i18n label.
+function ProjectLinks({ links }: { links: readonly ProjectLink[] }) {
+  const { translate } = useLocale()
+  return (
+    <div className="flex flex-wrap gap-2">
+      {links.map((link) => {
+        const Icon = link.kind === "repo" ? FaGithub : ExternalLink
+        const label =
+          link.kind === "repo"
+            ? translate("about.projectLinks.repo")
+            : translate("about.projectLinks.website")
+        return (
+          <Button asChild key={link.kind} size="sm" variant="secondary">
+            <a href={link.href} rel="noreferrer" target="_blank">
+              <Icon aria-hidden />
+              {label}
+            </a>
+          </Button>
+        )
+      })}
+    </div>
+  )
+}
+
 export function AboutSection() {
   const { locale, translate } = useLocale()
   const { isHelloEffectAnimationComplete, setIsHelloEffectAnimationComplete } =
     useGlobalStates()
+
+  // Each project → a carousel card; links render in the footer slot.
+  const projectItems: CarouselItem[] = person.projects.map(
+    (project, index) => ({
+      description: project.description,
+      footer: <ProjectLinks links={project.links} />,
+      icon: PROJECT_ICONS[project.name],
+      id: index,
+      title: project.name,
+    })
+  )
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-16 py-8">
@@ -556,7 +601,14 @@ export function AboutSection() {
               id={projectSection.id}
               title={<GradientText neon text={translate("about.project")} />}
             >
-              <p>test</p>
+              <div className="flex justify-center">
+                <Carousel
+                  baseWidth={480}
+                  items={projectItems}
+                  loop
+                  pauseOnHover
+                />
+              </div>
             </Section>
             {/* Work */}
             <Section

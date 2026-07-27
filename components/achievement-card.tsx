@@ -4,6 +4,7 @@
 import { ShareButton } from "@/components/animate-ui/components/community/share-button"
 import { LocaleTransition } from "@/components/locale-transition"
 import { Badge } from "@/components/ui/badge"
+import { BorderGlow } from "@/components/ui/border-glow"
 import {
   Card,
   CardContent,
@@ -18,6 +19,7 @@ import {
   rarityColorVar,
 } from "@/lib/achievements"
 import { type SharePlatform, shareIntentUrl } from "@/lib/share"
+import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
 
 export function AchievementCard({ achievement }: { achievement: Achievement }) {
@@ -69,11 +71,15 @@ export function AchievementCard({ achievement }: { achievement: Achievement }) {
     void navigator.clipboard?.writeText(url)
   }
 
-  return (
+  // Mythic achievements, once unlocked, get a cursor-reactive glowing border.
+  // The inner card goes transparent so the glow behind it shows through.
+  const mythicGlow = def.rarity === "mythic" && achievement.isUnlocked
+
+  const card = (
     <Card
-      className="h-full"
+      className={cn("h-full", mythicGlow && "bg-transparent ring-0")}
       style={{
-        borderColor: achievement.isUnlocked ? color : undefined,
+        borderColor: achievement.isUnlocked && !mythicGlow ? color : undefined,
         opacity: achievement.isUnlocked ? 1 : 0.65,
       }}
     >
@@ -111,5 +117,24 @@ export function AchievementCard({ achievement }: { achievement: Achievement }) {
         </CardFooter>
       ) : null}
     </Card>
+  )
+
+  if (!mythicGlow) return card
+
+  // Mesh tones derived from the mythic token via relative colour syntax, so the
+  // rarity colour stays the single source of truth.
+  return (
+    <BorderGlow
+      animated
+      className="h-full"
+      colors={[
+        "var(--rarity-mythic)",
+        "oklch(from var(--rarity-mythic) l c calc(h + 25))",
+        "oklch(from var(--rarity-mythic) calc(l + 0.08) c calc(h - 25))",
+      ]}
+      glowColor="var(--rarity-mythic)"
+    >
+      {card}
+    </BorderGlow>
   )
 }
