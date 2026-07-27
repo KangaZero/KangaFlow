@@ -2,6 +2,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import dynamic from "next/dynamic"
+import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import {
   Dialog,
@@ -23,6 +24,7 @@ const TerminalBody = dynamic(
 export function TerminalDialog({ files }: { files: Record<string, string> }) {
   const { translate } = useLocale()
   const { resolvedTheme } = useTheme()
+  const pathname = usePathname()
   const { isTerminalOpen, setIsTerminalOpen, terminalFile } = useGlobalStates()
 
   return (
@@ -39,6 +41,7 @@ export function TerminalDialog({ files }: { files: Record<string, string> }) {
             files={files}
             initialFile={terminalFile}
             onClose={() => setIsTerminalOpen(false)}
+            routePath={pathname}
           />
         ) : null}
       </DialogContent>

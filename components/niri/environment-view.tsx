@@ -4,6 +4,7 @@
 import { X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import dynamic from "next/dynamic"
+import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import {
   type CSSProperties,
@@ -93,16 +94,25 @@ function WindowContent({
   win,
   files,
   dark,
+  routePath,
   onClose,
 }: {
   win: NiriWindow
   files: Record<string, string>
   dark: boolean
+  routePath: string
   onClose: () => void
 }) {
   switch (win.app) {
     case "terminal":
-      return <TerminalBody files={files} initialFile={null} onClose={onClose} />
+      return (
+        <TerminalBody
+          files={files}
+          initialFile={null}
+          onClose={onClose}
+          routePath={routePath}
+        />
+      )
     case "editor":
       return (
         <CodeEditor
@@ -121,9 +131,10 @@ function WindowContent({
 }
 
 export function EnvironmentView() {
-  const { translate } = useLocale()
+  const { translate, locale } = useLocale()
   const { resolvedTheme } = useTheme()
   const dark = resolvedTheme !== "light"
+  const pathname = usePathname()
 
   const [state, dispatch] = useReducer(niriReducer, undefined, initialNiriState)
   const [settings, setSettings] = useState<EnvSettings>(DEFAULT_ENV_SETTINGS)
@@ -210,7 +221,9 @@ export function EnvironmentView() {
     <NoctaliaBar
       activeWindowTitle={focusedWin?.title ?? ""}
       clock={clock}
+      keyboardLayout={locale === "ja" ? "JA" : "US"}
       onLauncher={() => setLauncherOpen(true)}
+      onWorkspace={(id) => dispatch({ id, type: "focusWorkspace" })}
       workspaces={pips}
     />
   )
@@ -250,7 +263,12 @@ export function EnvironmentView() {
                   animate={{ opacity: ci === focusedCol ? 1 : 0.6, scale: 1 }}
                   className="flex flex-col"
                   exit={{ opacity: 0, scale: 0.9 }}
-                  initial={{ opacity: 0, scale: 0.9 }}
+                  // First window (empty workspace) fades in; later ones scale in.
+                  initial={
+                    columns.length === 1
+                      ? { opacity: 0 }
+                      : { opacity: 0, scale: 0.9 }
+                  }
                   key={col.id}
                   layout
                   style={{ gap: GAP, width: widths[ci] }}
@@ -307,6 +325,7 @@ export function EnvironmentView() {
                               dark={dark}
                               files={files}
                               onClose={() => dispatch({ type: "close" })}
+                              routePath={pathname}
                               win={win}
                             />
                           </div>

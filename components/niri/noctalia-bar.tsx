@@ -21,9 +21,18 @@ export function NoctaliaBar(props: {
   workspaces: WorkspacePip[]
   activeWindowTitle: string
   clock: string // preformatted "HH:MM"
+  keyboardLayout: string // e.g. "US" / "JA", synced to the locale
   onLauncher: () => void // distro-logo click opens launcher
+  onWorkspace: (id: number) => void // click a pip to switch workspace
 }): React.JSX.Element {
-  const { workspaces, activeWindowTitle, clock, onLauncher } = props
+  const {
+    workspaces,
+    activeWindowTitle,
+    clock,
+    keyboardLayout,
+    onLauncher,
+    onWorkspace,
+  } = props
 
   return (
     <header
@@ -54,25 +63,28 @@ export function NoctaliaBar(props: {
         <ul className="flex items-center gap-1">
           {workspaces.map((ws) => (
             <li key={ws.id}>
-              <span
+              <button
+                aria-label={`Workspace ${ws.id}`}
                 className={cn(
-                  "flex size-5 items-center justify-center rounded-full text-[0.625rem] tabular-nums leading-none",
+                  "flex size-5 items-center justify-center rounded-full text-[0.625rem] tabular-nums leading-none transition-colors",
                   ws.active
                     ? "bg-primary text-primary-foreground"
                     : ws.occupied
-                      ? "bg-muted text-foreground"
-                      : "border border-border/50 bg-transparent text-muted-foreground"
+                      ? "bg-muted text-foreground hover:bg-muted/70"
+                      : "border border-border/50 bg-transparent text-muted-foreground hover:bg-muted/40"
                 )}
+                onClick={() => onWorkspace(ws.id)}
+                type="button"
               >
                 {ws.id}
-              </span>
+              </button>
             </li>
           ))}
         </ul>
         <span className="text-muted-foreground tabular-nums">{clock}</span>
         <Settings aria-hidden className="size-3.5 text-muted-foreground" />
         <span className="rounded-sm border border-border/50 px-1 py-0.5 font-mono text-[0.625rem] text-muted-foreground leading-none">
-          US
+          {keyboardLayout}
         </span>
       </div>
 

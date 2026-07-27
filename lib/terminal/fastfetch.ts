@@ -10,9 +10,50 @@ export type FastfetchInfo = {
   resolution: string // e.g. "1920x1080"
   uptime: string // preformatted, e.g. "3 mins"
   browser: string // e.g. "Chrome"
-  locale: string // "en" | "ja"
+  locale: "en" | "ja"
   colors: number // e.g. 256
   dark: boolean // true → Mocha accents, false → Latte
+}
+
+// Localised info-row labels so the banner reads in the active language.
+type InfoLabels = {
+  os: string
+  host: string
+  kernel: string
+  shell: string
+  terminal: string
+  theme: string
+  resolution: string
+  locale: string
+  uptime: string
+  editor: string
+}
+
+const LABELS: Record<"en" | "ja", InfoLabels> = {
+  en: {
+    editor: "Editor",
+    host: "Host",
+    kernel: "Kernel",
+    locale: "Locale",
+    os: "OS",
+    resolution: "Resolution",
+    shell: "Shell",
+    terminal: "Terminal",
+    theme: "Theme",
+    uptime: "Uptime",
+  },
+  ja: {
+    editor: "エディタ",
+    host: "ホスト",
+    kernel: "カーネル",
+    locale: "言語",
+    os: "OS",
+    resolution: "解像度",
+    shell: "シェル",
+    terminal: "端末",
+    theme: "テーマ",
+    uptime: "稼働時間",
+  },
 }
 
 // --- ANSI helpers ----------------------------------------------------------
@@ -142,17 +183,18 @@ export function renderFastfetch(info: FastfetchInfo): string[] {
   const title = `${fg(accents.teal)}${user}${RESET}${fg(accents.text)}@${RESET}${fg(accents.blue)}${host}${RESET}`
   const separator = `${fg(accents.pink)}${"-".repeat(user.length + 1 + host.length)}${RESET}`
 
+  const t = LABELS[info.locale]
   const rows: InfoRow[] = [
-    { label: "OS", value: "KangaFlow (Next.js 16)" },
-    { label: "Host", value: "kangazero.github.io" },
-    { label: "Kernel", value: info.browser },
-    { label: "Shell", value: "kanga-zsh" },
-    { label: "Terminal", value: "xterm.js" },
-    { label: "Theme", value: info.themeLabel },
-    { label: "Resolution", value: info.resolution },
-    { label: "Locale", value: info.locale },
-    { label: "Uptime", value: info.uptime },
-    { label: "Editor", value: "nvim" },
+    { label: t.os, value: "KangaFlow (Next.js 16)" },
+    { label: t.host, value: "kangazero.github.io" },
+    { label: t.kernel, value: info.browser },
+    { label: t.shell, value: "kanga-zsh" },
+    { label: t.terminal, value: "xterm.js" },
+    { label: t.theme, value: info.themeLabel },
+    { label: t.resolution, value: info.resolution },
+    { label: t.locale, value: info.locale },
+    { label: t.uptime, value: info.uptime },
+    { label: t.editor, value: "nvim" },
   ]
 
   const infoLines: string[] = [

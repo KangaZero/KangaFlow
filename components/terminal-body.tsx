@@ -39,10 +39,17 @@ import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
 import {
   paletteForTheme,
   TERMINAL_FONT_FAMILY,
-  TERMINAL_PROMPT,
   type TerminalPalette,
   xtermTheme,
 } from "@/lib/terminal/theme"
+import {
+  buildVfs,
+  cwdForRoute,
+  displayCwd,
+  listDir,
+  nodeAt,
+  resolvePath,
+} from "@/lib/terminal/vfs"
 import { isTheme, THEMES } from "@/lib/themes"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -58,6 +65,8 @@ type Session = {
   suggestion: string | null
   // True while the nvim editor overlay has control (xterm ignores input).
   editorOpen: boolean
+  // Current working directory (absolute VFS path) for cd/pwd/ls/cat/nvim.
+  cwd: string
 }
 
 type BarState = { mode: string; tab: string }
@@ -81,6 +90,12 @@ function formatUptime(ms: number): string {
 
 function baseName(path: string): string {
   return path.split("/").at(-1) ?? path
+}
+
+// zsh-like prompt showing the cwd (cyan path, magenta arrow) via ANSI 16-colour
+// codes so it follows the live xterm theme.
+function promptFor(cwd: string): string {
+  return `\x1b[36m${displayCwd(cwd)}\x1b[0m \x1b[35m❯\x1b[0m `
 }
 
 // zjstatus mode segment: kanji label + palette bg, mirroring the user's zellij
@@ -142,21 +157,26 @@ function ZjStatusBar({
 }
 
 const COMMANDS =
-  "help  ff  ls  cat <file>  nvim <file>  theme <name>  clear  whoami  exit"
+  "help  ff  ls  cd <dir>  pwd  cat <file>  nvim <file>  theme <name>  clear  whoami  exit"
 
 export function TerminalBody({
   files,
   initialFile,
   onClose,
+  routePath = "/",
 }: {
   files: Record<string, string>
   initialFile: string | null
   onClose: () => void
+  // Current route pathname → the terminal starts in that page's folder.
+  routePath?: string
 }) {
   const { locale } = useLocale()
   const { resolvedTheme, setTheme } = useTheme()
   // paletteForTheme returns a shared constant → stable identity for deps.
   const palette = paletteForTheme(resolvedTheme)
+  // Virtual filesystem over the source snapshot (pages become folders).
+  const vfs = useMemo(() => buildVfs(Object.keys(files)), [files])
   const fit = useMemo(() => new FitAddon(), [])
   // Stable references: useXTerm effect-depends on these, so fresh literals each
   // render would re-init the terminal every render → setState loop. Theme is set
@@ -187,6 +207,7 @@ export function TerminalBody({
 
   const startedAt = useRef(Date.now())
   const session = useRef<Session>({
+    cwd: cwdForRoute(routePath, vfs),
     editorOpen: false,
     histIndex: 0,
     history: [],
@@ -201,7 +222,7 @@ export function TerminalBody({
     session.current.editorOpen = false
     setBar({ mode: "NORMAL", tab: "zsh" })
     if (instance) {
-      instance.write(`\r\n${TERMINAL_PROMPT}`)
+      instance.write(`\r\n${promptFor(session.current.cwd)}`)
       instance.focus()
     }
   }
@@ -212,7 +233,7 @@ export function TerminalBody({
     const term = instance
     const s = session.current
 
-    const prompt = () => term.write(`\r\n${TERMINAL_PROMPT}`)
+    const prompt = () => term.write(`\r\n${promptFor(s.cwd)}`)
 
     const fastfetch = () => {
       const info: FastfetchInfo = {
@@ -259,11 +280,39 @@ export function TerminalBody({
           term.write("\r\n")
           fastfetch()
           return true
-        case "ls":
-          term.write(`\r\n${Object.keys(files).sort().join("\r\n")}`)
+        case "pwd":
+          term.write(`\r\n${s.cwd}`)
           return true
+        case "cd": {
+          const target = resolvePath(s.cwd, arg || "~")
+          const node = nodeAt(vfs, target)
+          if (!node) {
+            term.write(`\r\ncd: ${arg}: no such file or directory`)
+          } else if (node.type !== "dir") {
+            term.write(`\r\ncd: ${arg}: not a directory`)
+          } else {
+            s.cwd = target
+          }
+          return true
+        }
+        case "ls": {
+          const target = arg ? resolvePath(s.cwd, arg) : s.cwd
+          const entries = listDir(vfs, target)
+          if (!entries) {
+            term.write(`\r\nls: cannot access '${arg}': not a directory`)
+            return true
+          }
+          const rendered = entries
+            .map((e) =>
+              e.type === "dir" ? `\x1b[34m${e.name}/\x1b[0m` : e.name
+            )
+            .join("  ")
+          term.write(`\r\n${rendered}`)
+          return true
+        }
         case "cat": {
-          const file = files[arg]
+          const key = resolvePath(s.cwd, arg).replace(/^\//, "")
+          const file = files[key]
           if (file === undefined) {
             term.write(`\r\ncat: ${arg}: no such file`)
             return true
@@ -273,13 +322,15 @@ export function TerminalBody({
         }
         case "nvim":
         case "vim":
-        case "code":
+        case "code": {
           if (!arg) {
             term.write("\r\nusage: nvim <file>  (try `ls`)")
             return true
           }
+          const key = resolvePath(s.cwd, arg).replace(/^\//, "")
           // If the editor opened it owns the screen; otherwise reprint prompt.
-          return !openEditor(arg)
+          return !openEditor(key)
+        }
         case "theme":
           if (isTheme(arg)) {
             setTheme(arg)
@@ -305,7 +356,7 @@ export function TerminalBody({
     }
 
     const replaceLine = (next: string) => {
-      term.write(`\r${TERMINAL_PROMPT}\x1b[K${next}`)
+      term.write(`\r${promptFor(s.cwd)}\x1b[K${next}`)
       s.line = next
     }
 
@@ -314,7 +365,7 @@ export function TerminalBody({
     const renderLine = () => {
       const suggestion = suggestLine(s.line, Object.keys(files), s.history)
       s.suggestion = suggestion
-      term.write(`\r${TERMINAL_PROMPT}\x1b[K${s.line}`)
+      term.write(`\r${promptFor(s.cwd)}\x1b[K${s.line}`)
       if (suggestion && suggestion.length > s.line.length) {
         const ghost = suggestion.slice(s.line.length)
         term.write(`\x1b[2m${ghost}\x1b[0m\x1b[${ghost.length}D`)
@@ -324,7 +375,7 @@ export function TerminalBody({
     // Redraw without the ghost (before Enter/Ctrl-C so no dim tail lingers).
     const clearGhost = () => {
       s.suggestion = null
-      term.write(`\r${TERMINAL_PROMPT}\x1b[K${s.line}`)
+      term.write(`\r${promptFor(s.cwd)}\x1b[K${s.line}`)
     }
 
     // Fill the current ghost suggestion (Tab / →). Returns whether it applied.
@@ -344,7 +395,7 @@ export function TerminalBody({
       s.menu = { base, candidates, index: 0 }
       s.line = next
       s.suggestion = null
-      term.write(`\r\n${candidates.join("  ")}\r\n${TERMINAL_PROMPT}${next}`)
+      term.write(`\r\n${candidates.join("  ")}\r\n${promptFor(s.cwd)}${next}`)
     }
 
     const cycleMenu = (dir: 1 | -1) => {
