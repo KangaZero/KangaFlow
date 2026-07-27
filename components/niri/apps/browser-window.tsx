@@ -1,33 +1,43 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { ArrowLeft, ArrowRight, RotateCw, Star } from "lucide-react"
+import type { TranslationKey } from "@/lib/i18n"
+import { useLocale } from "@/providers/locale-provider"
 
 // Mock Firefox-ish browser chrome. Purely presentational: the toolbar buttons,
 // address bar, and start-page links are decorative (no navigation, no iframe).
 
-const START_PAGE_LINKS = ["Home", "Achievements", "Timeline"] as const
+// Stable anchor id (never localised — it drives the `#hash`) paired with the
+// i18n key for the visible label. Reuses the existing `nav.*` labels.
+const START_PAGE_LINKS: readonly { id: string; key: TranslationKey }[] = [
+  { id: "home", key: "nav.home" },
+  { id: "achievements", key: "nav.achievements" },
+  { id: "timeline", key: "nav.timeline" },
+]
 
 export function BrowserWindow(): React.JSX.Element {
+  const { translate } = useLocale()
+
   return (
     <div className="flex h-full w-full flex-col bg-background text-foreground">
       <div className="flex items-center gap-2 border-border border-b bg-card px-3 py-2 text-card-foreground">
         <div className="flex items-center gap-1">
           <button
-            aria-label="Back"
+            aria-label={translate("environment.browser.back")}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             type="button"
           >
             <ArrowLeft aria-hidden className="size-4" />
           </button>
           <button
-            aria-label="Forward"
+            aria-label={translate("environment.browser.forward")}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             type="button"
           >
             <ArrowRight aria-hidden className="size-4" />
           </button>
           <button
-            aria-label="Reload"
+            aria-label={translate("environment.browser.reload")}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             type="button"
           >
@@ -38,7 +48,7 @@ export function BrowserWindow(): React.JSX.Element {
           <span className="truncate">kangazero.github.io/KangaFlow</span>
         </div>
         <button
-          aria-label="Bookmark"
+          aria-label={translate("environment.browser.bookmark")}
           className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
           type="button"
         >
@@ -50,16 +60,16 @@ export function BrowserWindow(): React.JSX.Element {
           KangaFlow
         </h1>
         <p className="max-w-md text-muted-foreground text-sm">
-          A web niri desktop portfolio — tile, resize, and explore.
+          {translate("environment.browser.tagline")}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2">
-          {START_PAGE_LINKS.map((label) => (
+          {START_PAGE_LINKS.map((link) => (
             <a
               className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-opacity hover:opacity-90"
-              href={`#${label.toLowerCase()}`}
-              key={label}
+              href={`#${link.id}`}
+              key={link.id}
             >
-              {label}
+              {translate(link.key)}
             </a>
           ))}
         </div>

@@ -105,8 +105,69 @@ const en = {
     },
   },
   environment: {
+    about: {
+      heading: "About Me",
+      tech: "Tech",
+    },
+    apps: {
+      about: {
+        name: "About",
+        subtitle: "who is KangaZero",
+      },
+      browser: {
+        name: "Browser",
+        subtitle: "firefox",
+      },
+      editor: {
+        name: "Editor",
+        subtitle: "nvim on repo source",
+      },
+      terminal: {
+        name: "Terminal",
+        subtitle: "kitty · zsh + nvim",
+      },
+    },
+    bar: {
+      launcher: "Launcher",
+      notifications: "Notifications",
+      workspace: "Workspace",
+    },
+    browser: {
+      back: "Back",
+      bookmark: "Bookmark",
+      forward: "Forward",
+      reload: "Reload",
+      tagline: "A web niri desktop portfolio — tile, resize, and explore.",
+    },
     hint: "Alt+D opens the launcher · Alt+H/J/K/L to navigate",
+    launcher: {
+      applications: "Applications",
+      close: "Close launcher",
+      empty: "No matching apps",
+      search: "Search apps",
+      searchPlaceholder: "Search apps...",
+      title: "Application launcher",
+    },
+    settings: {
+      barBottom: "Bottom",
+      barOpacity: "Bar opacity",
+      barPosition: "Bar position",
+      barTop: "Top",
+      close: "Close settings",
+      font: "Font",
+      fontMono: "Mono",
+      fontSans: "Sans",
+      monitorHidden: "Hidden",
+      monitorShown: "Shown",
+      systemMonitor: "System monitor",
+      title: "Desktop settings",
+      uiScale: "UI scale",
+      wallpaper: "Wallpaper",
+    },
     title: "Environment",
+    window: {
+      close: "Close window",
+    },
   },
   headerCard: {
     basedIn: "Based in",

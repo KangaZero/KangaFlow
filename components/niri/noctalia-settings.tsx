@@ -25,6 +25,7 @@ import {
   type WallpaperId,
 } from "@/components/niri/settings"
 import { cn } from "@/lib/utils"
+import { useLocale } from "@/providers/locale-provider"
 
 // Illustrative-only swatch backgrounds. Keyed by the `WallpaperId` union so a
 // new wallpaper surfaces a missing-key type error here rather than a blank
@@ -47,11 +48,6 @@ const WALLPAPER_LABELS: Record<WallpaperId, string> = {
   catppuccin: "Catppuccin",
   mesh: "Mesh",
   solid: "Solid",
-}
-
-const FONT_LABELS: Record<EnvFont, string> = {
-  mono: "Mono",
-  sans: "Sans",
 }
 
 const percent = (fraction: BarOpacity | UiScale): string =>
@@ -121,6 +117,7 @@ export function NoctaliaSettings(props: {
   onClose: () => void
 }): React.JSX.Element | null {
   const { open, settings, onChange, onClose } = props
+  const { translate } = useLocale()
 
   // Patch a single field and hand the whole object back. The generic key/value
   // pairing keeps every call site type-checked against `EnvSettings`.
@@ -151,14 +148,14 @@ export function NoctaliaSettings(props: {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         {/* Overlay — click anywhere outside the panel to dismiss. */}
         <button
-          aria-label="Close settings"
+          aria-label={translate("environment.settings.close")}
           className="fixed inset-0 cursor-default bg-background/40"
           onClick={onClose}
           type="button"
         />
         <motion.div
           animate={{ opacity: 1, scale: 1 }}
-          aria-label="Desktop settings"
+          aria-label={translate("environment.settings.title")}
           aria-modal="true"
           className="relative z-10 flex max-h-[85vh] w-[min(34rem,92vw)] flex-col gap-6 overflow-y-auto rounded-2xl border border-border bg-card/90 p-6 text-foreground shadow-2xl backdrop-blur-xl"
           exit={{ opacity: 0, scale: 0.96 }}
@@ -168,7 +165,9 @@ export function NoctaliaSettings(props: {
         >
           {/* Wallpaper */}
           <section className="flex flex-col gap-3">
-            <SectionLabel icon={ImageIcon}>Wallpaper</SectionLabel>
+            <SectionLabel icon={ImageIcon}>
+              {translate("environment.settings.wallpaper")}
+            </SectionLabel>
             <div className="flex flex-wrap gap-3">
               {WALLPAPERS.map((w: WallpaperId) => {
                 const selected = settings.wallpaper === w
@@ -202,9 +201,17 @@ export function NoctaliaSettings(props: {
 
           {/* Bar position */}
           <section className="flex flex-col gap-3">
-            <SectionLabel icon={PanelTop}>Bar position</SectionLabel>
+            <SectionLabel icon={PanelTop}>
+              {translate("environment.settings.barPosition")}
+            </SectionLabel>
             <Segmented<BarPosition>
-              format={(position) => (position === "top" ? "Top" : "Bottom")}
+              format={(position) =>
+                translate(
+                  position === "top"
+                    ? "environment.settings.barTop"
+                    : "environment.settings.barBottom"
+                )
+              }
               label="Bar position"
               onSelect={(position) => set("barPosition", position)}
               options={BAR_POSITIONS}
@@ -214,7 +221,9 @@ export function NoctaliaSettings(props: {
 
           {/* Bar opacity */}
           <section className="flex flex-col gap-3">
-            <SectionLabel icon={PanelTop}>Bar opacity</SectionLabel>
+            <SectionLabel icon={PanelTop}>
+              {translate("environment.settings.barOpacity")}
+            </SectionLabel>
             <Segmented<BarOpacity>
               format={percent}
               label="Bar opacity"
@@ -226,9 +235,17 @@ export function NoctaliaSettings(props: {
 
           {/* Font */}
           <section className="flex flex-col gap-3">
-            <SectionLabel icon={Type}>Font</SectionLabel>
+            <SectionLabel icon={Type}>
+              {translate("environment.settings.font")}
+            </SectionLabel>
             <Segmented<EnvFont>
-              format={(font) => FONT_LABELS[font]}
+              format={(font) =>
+                translate(
+                  font === "mono"
+                    ? "environment.settings.fontMono"
+                    : "environment.settings.fontSans"
+                )
+              }
               label="Font"
               onSelect={(font) => set("font", font)}
               options={ENV_FONTS}
@@ -238,7 +255,9 @@ export function NoctaliaSettings(props: {
 
           {/* UI scale */}
           <section className="flex flex-col gap-3">
-            <SectionLabel icon={Maximize}>UI scale</SectionLabel>
+            <SectionLabel icon={Maximize}>
+              {translate("environment.settings.uiScale")}
+            </SectionLabel>
             <Segmented<UiScale>
               format={percent}
               label="UI scale"
@@ -250,7 +269,9 @@ export function NoctaliaSettings(props: {
 
           {/* System monitor */}
           <section className="flex flex-col gap-3">
-            <SectionLabel icon={Monitor}>System monitor</SectionLabel>
+            <SectionLabel icon={Monitor}>
+              {translate("environment.settings.systemMonitor")}
+            </SectionLabel>
             <button
               aria-pressed={settings.showSystemMonitor}
               className={cn(
@@ -265,7 +286,9 @@ export function NoctaliaSettings(props: {
               type="button"
             >
               <Monitor aria-hidden="true" className="size-4" />
-              {settings.showSystemMonitor ? "Shown" : "Hidden"}
+              {settings.showSystemMonitor
+                ? translate("environment.settings.monitorShown")
+                : translate("environment.settings.monitorHidden")}
             </button>
           </section>
         </motion.div>

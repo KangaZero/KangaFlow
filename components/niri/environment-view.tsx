@@ -49,19 +49,13 @@ const CodeEditor = dynamic(
   { ssr: false }
 )
 
-const LAUNCHER_APPS: readonly LauncherApp[] = [
-  { id: "terminal", name: "Terminal", subtitle: "kitty · zsh + nvim" },
-  { id: "editor", name: "Editor", subtitle: "nvim on repo source" },
-  { id: "about", name: "About", subtitle: "who is KangaZero" },
-  { id: "browser", name: "Browser", subtitle: "firefox" },
+// Launcher order (ids only) — display strings come from i18n at render time.
+const LAUNCHER_APP_IDS: readonly AppId[] = [
+  "terminal",
+  "editor",
+  "about",
+  "browser",
 ]
-
-const APP_TITLE: Record<AppId, string> = {
-  about: "About",
-  browser: "Firefox",
-  editor: "nvim",
-  terminal: "kitty",
-}
 
 // Full-bleed wallpaper per settings.wallpaper (illustrative gradients — the only
 // place inline colour is allowed, mirroring a desktop background).
@@ -146,6 +140,30 @@ export function EnvironmentView() {
   const files = useMemo(() => readSourceFiles(), [])
   const stripRef = useRef<HTMLDivElement>(null)
 
+  // Launcher entries, localised. `name`/`subtitle` framing is translated; brand
+  // and binary names (kitty/nvim/firefox/KangaZero) stay literal inside the JA
+  // strings themselves.
+  const launcherApps = useMemo<LauncherApp[]>(
+    () =>
+      LAUNCHER_APP_IDS.map((id) => ({
+        id,
+        name: translate(`environment.apps.${id}.name`),
+        subtitle: translate(`environment.apps.${id}.subtitle`),
+      })),
+    [translate]
+  )
+
+  // Window title-bar text. Proper nouns stay literal; only "About" is prose.
+  const appTitle = useMemo<Record<AppId, string>>(
+    () => ({
+      about: translate("environment.apps.about.name"),
+      browser: "Firefox",
+      editor: "nvim",
+      terminal: "kitty",
+    }),
+    [translate]
+  )
+
   // Ticking clock for the bar.
   useEffect(() => {
     const id = window.setInterval(() => setClock(clockNow()), 15_000)
@@ -192,7 +210,7 @@ export function EnvironmentView() {
   }, [launcherOpen, settingsOpen])
 
   const launch = (app: AppId) => {
-    dispatch({ app, title: APP_TITLE[app], type: "spawn" })
+    dispatch({ app, title: appTitle[app], type: "spawn" })
     setLauncherOpen(false)
   }
 
@@ -312,6 +330,7 @@ export function EnvironmentView() {
                               {win.title}
                             </span>
                             <X
+                              aria-label={translate("environment.window.close")}
                               className="size-3.5 text-muted-foreground"
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -350,7 +369,7 @@ export function EnvironmentView() {
       ) : null}
 
       <NoctaliaLauncher
-        apps={[...LAUNCHER_APPS]}
+        apps={launcherApps}
         onClose={() => setLauncherOpen(false)}
         onLaunch={launch}
         open={launcherOpen}

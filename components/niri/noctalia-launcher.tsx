@@ -12,6 +12,7 @@ import { AnimatePresence, motion } from "motion/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { AppId } from "@/components/niri/types"
 import { cn } from "@/lib/utils"
+import { useLocale } from "@/providers/locale-provider"
 
 export type LauncherApp = { id: AppId; name: string; subtitle: string }
 
@@ -31,6 +32,7 @@ export function NoctaliaLauncher(props: {
   onClose: () => void
 }): React.JSX.Element | null {
   const { open, apps, onLaunch, onClose } = props
+  const { translate } = useLocale()
   const [query, setQuery] = useState("")
   const [highlight, setHighlight] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -116,14 +118,14 @@ export function NoctaliaLauncher(props: {
       <div className="fixed inset-0 z-50 flex items-start justify-center pt-[18vh]">
         {/* Overlay — click anywhere outside the panel to dismiss. */}
         <button
-          aria-label="Close launcher"
+          aria-label={translate("environment.launcher.close")}
           className="fixed inset-0 cursor-default bg-background/40"
           onClick={onClose}
           type="button"
         />
         <motion.div
           animate={{ opacity: 1, scale: 1 }}
-          aria-label="Application launcher"
+          aria-label={translate("environment.launcher.title")}
           aria-modal="true"
           className="relative z-10 w-[min(32rem,90vw)] overflow-hidden rounded-2xl border border-border bg-card/90 text-foreground shadow-2xl backdrop-blur-xl"
           exit={{ opacity: 0, scale: 0.96 }}
@@ -133,11 +135,11 @@ export function NoctaliaLauncher(props: {
         >
           <div className="border-border/60 border-b p-3">
             <input
-              aria-label="Search apps"
+              aria-label={translate("environment.launcher.search")}
               className="w-full bg-transparent px-2 py-1.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
               onChange={handleQueryChange}
               onKeyDown={handleKeyDown}
-              placeholder="Search apps..."
+              placeholder={translate("environment.launcher.searchPlaceholder")}
               ref={inputRef}
               type="text"
               value={query}
@@ -145,13 +147,13 @@ export function NoctaliaLauncher(props: {
           </div>
 
           <div
-            aria-label="Applications"
+            aria-label={translate("environment.launcher.applications")}
             className="max-h-80 overflow-y-auto p-2"
             role="listbox"
           >
             {filtered.length === 0 ? (
               <p className="px-3 py-6 text-center text-muted-foreground text-sm">
-                No matching apps
+                {translate("environment.launcher.empty")}
               </p>
             ) : (
               filtered.map((app, index) => {

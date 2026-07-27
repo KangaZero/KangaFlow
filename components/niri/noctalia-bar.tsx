@@ -6,6 +6,7 @@ import type * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useLocale } from "@/providers/locale-provider"
 
 // A single workspace indicator ("pip"): whether it holds windows and whether it
 // is the focused workspace. Purely presentational — the bar never owns this
@@ -33,6 +34,7 @@ export function NoctaliaBar(props: {
     onLauncher,
     onWorkspace,
   } = props
+  const { translate } = useLocale()
 
   return (
     <header
@@ -45,7 +47,7 @@ export function NoctaliaBar(props: {
       {/* LEFT: launcher logo + active window title */}
       <div className="flex min-w-0 items-center gap-2">
         <Button
-          aria-label="Launcher"
+          aria-label={translate("environment.bar.launcher")}
           className="rounded-full"
           onClick={onLauncher}
           size="icon-sm"
@@ -64,7 +66,7 @@ export function NoctaliaBar(props: {
           {workspaces.map((ws) => (
             <li key={ws.id}>
               <button
-                aria-label={`Workspace ${ws.id}`}
+                aria-label={`${translate("environment.bar.workspace")} ${ws.id}`}
                 className={cn(
                   "flex size-5 items-center justify-center rounded-full text-[0.625rem] tabular-nums leading-none transition-colors",
                   ws.active
@@ -94,7 +96,7 @@ export function NoctaliaBar(props: {
           CPU 12% MEM 43%
         </span>
         <Button
-          aria-label="Notifications"
+          aria-label={translate("environment.bar.notifications")}
           className="rounded-full"
           size="icon-sm"
           variant="ghost"

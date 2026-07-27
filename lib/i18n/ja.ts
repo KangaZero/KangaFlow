@@ -104,8 +104,70 @@ const ja = {
     },
   },
   environment: {
+    about: {
+      heading: "自己紹介",
+      tech: "技術",
+    },
+    apps: {
+      about: {
+        name: "プロフィール",
+        subtitle: "KangaZero とは",
+      },
+      browser: {
+        name: "ブラウザー",
+        subtitle: "firefox",
+      },
+      editor: {
+        name: "エディター",
+        subtitle: "リポジトリのソースを nvim で",
+      },
+      terminal: {
+        name: "ターミナル",
+        subtitle: "kitty · zsh + nvim",
+      },
+    },
+    bar: {
+      launcher: "ランチャー",
+      notifications: "通知",
+      workspace: "ワークスペース",
+    },
+    browser: {
+      back: "戻る",
+      bookmark: "ブックマーク",
+      forward: "進む",
+      reload: "再読み込み",
+      tagline:
+        "ウェブ版 niri デスクトップのポートフォリオ — タイル配置・リサイズして探索しよう。",
+    },
     hint: "Alt+D でランチャー · Alt+H/J/K/L で移動",
+    launcher: {
+      applications: "アプリケーション",
+      close: "ランチャーを閉じる",
+      empty: "一致するアプリがありません",
+      search: "アプリを検索",
+      searchPlaceholder: "アプリを検索...",
+      title: "アプリケーションランチャー",
+    },
+    settings: {
+      barBottom: "下",
+      barOpacity: "バーの不透明度",
+      barPosition: "バーの位置",
+      barTop: "上",
+      close: "設定を閉じる",
+      font: "フォント",
+      fontMono: "等幅",
+      fontSans: "ゴシック",
+      monitorHidden: "非表示",
+      monitorShown: "表示",
+      systemMonitor: "システムモニター",
+      title: "デスクトップ設定",
+      uiScale: "UI スケール",
+      wallpaper: "壁紙",
+    },
     title: "環境",
+    window: {
+      close: "ウィンドウを閉じる",
+    },
   },
   headerCard: {
     basedIn: "現在地",
