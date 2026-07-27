@@ -6,7 +6,7 @@ import type { Shortcut } from "@/lib/shortcuts"
 export const COLUMN_OPTIONS = [1, 2, 3] as const
 export type ColumnCount = (typeof COLUMN_OPTIONS)[number]
 
-type Pages = "achievements/" | "" | "timeline/"
+type Pages = "achievements/" | "" | "timeline/" | "environment/"
 export type AppPath = `/${Locale}/${Pages}`
 
 export type GlobalStatesContextValue = {
@@ -33,5 +33,9 @@ export type GlobalStatesContextValue = {
   setShortcuts: (shortcuts: Shortcut[]) => void
   columnCount: ColumnCount
   setColumnCount: (columns: ColumnCount) => void
+  // Whether the site header/footer stay visible on the /environment page.
+  // Persisted; defaults to false (chrome hidden for the immersive desktop).
+  showChromeInEnvironment: boolean
+  setShowChromeInEnvironment: (show: boolean) => void
   // currentPath: AppPath
 }

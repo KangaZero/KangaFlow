@@ -53,6 +53,9 @@ export function ShortcutDispatcher() {
         case "goTimeline":
           router.push(`/${locale}/timeline`)
           break
+        case "goEnvironment":
+          router.push(`/${locale}/environment`)
+          break
         case "cycleTheme": {
           const current = isTheme(theme) ? theme : DEFAULT_THEME
           setTheme(nextTheme(current))

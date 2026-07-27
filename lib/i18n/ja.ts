@@ -103,6 +103,10 @@ const ja = {
       text: "お探しのページは存在しません。",
     },
   },
+  environment: {
+    hint: "Alt+D でランチャー · Alt+H/J/K/L で移動",
+    title: "環境",
+  },
   headerCard: {
     basedIn: "現在地",
     status: "只今コーディング中",
@@ -150,6 +154,7 @@ const ja = {
   },
   nav: {
     achievements: "実績",
+    environment: "環境",
     home: "ホーム",
     language: "言語",
     settings: "設定",
@@ -159,6 +164,7 @@ const ja = {
     actions: {
       cycleTheme: "テーマ切り替え",
       goAchievements: "実績へ移動",
+      goEnvironment: "環境へ移動",
       goHome: "ホームへ移動",
       goTimeline: "タイムラインへ移動",
       openCommandMenu: "コマンドメニューを開く",
@@ -176,7 +182,10 @@ const ja = {
       noModifier: "入力中の誤爆を防ぐため修飾キーを追加してください。",
     },
     keyLabel: "キー",
+    off: "オフ",
+    on: "オン",
     resetToDefaults: "デフォルトに戻す",
+    showChromeInEnvironment: "環境ページでヘッダーを表示",
     title: "キーボードショートカット",
   },
   terminal: {
