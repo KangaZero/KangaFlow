@@ -11,6 +11,7 @@ export type ShortcutAction =
   | "goHome"
   | "goAchievements"
   | "goTimeline"
+  | "goEnvironment"
   | "cycleTheme"
   | "openCommandMenu"
   | "openMediaPlayer"
@@ -53,6 +54,13 @@ export const DEFAULT_SHORTCUTS: readonly Shortcut[] = [
   {
     action: "goTimeline",
     character: "3",
+    hasAltOrOptionKey: true,
+    hasMetaOrCtrlKey: true,
+    hasShiftKey: false,
+  },
+  {
+    action: "goEnvironment",
+    character: "4",
     hasAltOrOptionKey: true,
     hasMetaOrCtrlKey: true,
     hasShiftKey: false,

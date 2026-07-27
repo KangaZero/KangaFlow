@@ -23,6 +23,12 @@ import {
 
 const DEFAULT_COLUMN_COUNT: ColumnCount = 3
 const COLUMN_STORAGE_KEY = "kangaflow:columnCount"
+const ENV_CHROME_STORAGE_KEY = "kangaflow:envChrome"
+
+function loadEnvChrome(): boolean {
+  if (typeof window === "undefined") return false
+  return window.localStorage.getItem(ENV_CHROME_STORAGE_KEY) === "true"
+}
 
 const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   columnCount: DEFAULT_COLUMN_COUNT,
@@ -40,8 +46,10 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   setIsSettingsOpen: () => {},
   setIsTerminalOpen: () => {},
   setShortcuts: () => {},
+  setShowChromeInEnvironment: () => {},
   setTerminalFile: () => {},
   shortcuts: [...DEFAULT_SHORTCUTS],
+  showChromeInEnvironment: false,
   terminalFile: null,
 }
 
@@ -81,10 +89,12 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   ])
   const [columnCount, setColumnCount] =
     useState<ColumnCount>(DEFAULT_COLUMN_COUNT)
+  const [showChromeInEnvironment, setShowChromeInEnvironment] = useState(false)
 
   useEffect(() => {
     setShortcuts(loadShortcuts())
     setColumnCount(loadColumnCount())
+    setShowChromeInEnvironment(loadEnvChrome())
     hydrated.current = true
   }, [])
 
@@ -97,6 +107,15 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       window.localStorage.setItem(COLUMN_STORAGE_KEY, String(columnCount))
     }
   }, [columnCount])
+
+  useEffect(() => {
+    if (hydrated.current) {
+      window.localStorage.setItem(
+        ENV_CHROME_STORAGE_KEY,
+        String(showChromeInEnvironment)
+      )
+    }
+  }, [showChromeInEnvironment])
 
   const value = useMemo<GlobalStatesContextValue>(
     () => ({
@@ -115,12 +134,15 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       setIsSettingsOpen,
       setIsTerminalOpen,
       setShortcuts,
+      setShowChromeInEnvironment,
       setTerminalFile,
       shortcuts,
+      showChromeInEnvironment,
       terminalFile,
     }),
     [
       columnCount,
+      showChromeInEnvironment,
       isCommandPaletteOpen,
       isHelloEffectAnimationComplete,
       isJavascriptFlipTechIconFlipped,

@@ -56,8 +56,14 @@ function ModifierToggle({
 // duplicate combinations are surfaced (both would fire on the same press).
 export function SettingsDialog() {
   const { translate } = useLocale()
-  const { isSettingsOpen, setIsSettingsOpen, shortcuts, setShortcuts } =
-    useGlobalStates()
+  const {
+    isSettingsOpen,
+    setIsSettingsOpen,
+    shortcuts,
+    setShortcuts,
+    showChromeInEnvironment,
+    setShowChromeInEnvironment,
+  } = useGlobalStates()
 
   const patch = (action: Shortcut["action"], next: Partial<Shortcut>) =>
     setShortcuts(
@@ -183,6 +189,23 @@ export function SettingsDialog() {
             })}
           </ul>
         </LocaleTransition>
+
+        <div className="flex items-center justify-between gap-3 border-border border-t py-3">
+          <p className="font-medium text-sm">
+            {translate("settings.showChromeInEnvironment")}
+          </p>
+          <Button
+            aria-pressed={showChromeInEnvironment}
+            onClick={() => setShowChromeInEnvironment(!showChromeInEnvironment)}
+            size="sm"
+            type="button"
+            variant={showChromeInEnvironment ? "default" : "outline"}
+          >
+            {showChromeInEnvironment
+              ? translate("settings.on")
+              : translate("settings.off")}
+          </Button>
+        </div>
 
         <DialogFooter>
           <Button

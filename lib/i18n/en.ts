@@ -104,6 +104,10 @@ const en = {
       text: "The page you are looking for does not exist.",
     },
   },
+  environment: {
+    hint: "Alt+D opens the launcher · Alt+H/J/K/L to navigate",
+    title: "Environment",
+  },
   headerCard: {
     basedIn: "Based in",
     status: "Currently coding",
@@ -151,6 +155,7 @@ const en = {
   },
   nav: {
     achievements: "Achievements",
+    environment: "Environment",
     home: "Home",
     language: "Language",
     settings: "Settings",
@@ -160,6 +165,7 @@ const en = {
     actions: {
       cycleTheme: "Cycle theme",
       goAchievements: "Go to achievements",
+      goEnvironment: "Go to environment",
       goHome: "Go to home",
       goTimeline: "Go to timeline",
       openCommandMenu: "Open command menu",
@@ -177,7 +183,10 @@ const en = {
       noModifier: "Add a modifier so this doesn't fire while typing.",
     },
     keyLabel: "Key",
+    off: "Off",
+    on: "On",
     resetToDefaults: "Reset to defaults",
+    showChromeInEnvironment: "Show header on the environment page",
     title: "Keyboard shortcuts",
   },
   terminal: {

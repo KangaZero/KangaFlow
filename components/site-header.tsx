@@ -5,6 +5,7 @@ import {
   GalleryVerticalEnd,
   House,
   Languages,
+  Monitor,
   Settings,
   Trophy,
 } from "lucide-react"
@@ -105,8 +106,12 @@ function ThemePillHover({
 export function SiteHeader() {
   const currentPath = usePathname() as AppPath
   const { locale, setLocale, translate } = useLocale()
-  const { setIsSettingsOpen, shortcuts, isHelloEffectAnimationComplete } =
-    useGlobalStates()
+  const {
+    setIsSettingsOpen,
+    shortcuts,
+    isHelloEffectAnimationComplete,
+    showChromeInEnvironment,
+  } = useGlobalStates()
   // Clip the items only while the width sweep plays; drop it afterwards so the
   // (non-portaled, absolutely-positioned) tooltips aren't clipped by the dock.
   const [loaded, setLoaded] = useState(false)
@@ -128,7 +133,12 @@ export function SiteHeader() {
   const isHome = rest === ""
   const isAchievements = rest.startsWith("/achievements")
   const isTimeline = rest.startsWith("/timeline")
+  const isEnvironment = rest.startsWith("/environment")
   const other = locale === "en" ? "ja" : "en"
+
+  // The environment page is an immersive desktop; hide the site chrome there
+  // unless the user has opted to keep it (persisted setting).
+  if (isEnvironment && !showChromeInEnvironment) return null
 
   return (
     <header className="sticky top-0 z-40 flex items-center px-6 py-4">
@@ -206,6 +216,27 @@ export function SiteHeader() {
             <Link href={`${home}/timeline`}>
               <PillHover>
                 <GalleryVerticalEnd />
+              </PillHover>
+            </Link>
+          </Button>
+        </AnimatedTooltip>
+
+        <AnimatedTooltip
+          label={translate("nav.environment")}
+          shortcut={shortcutTokens("goEnvironment")}
+          side="responsive"
+        >
+          <Button
+            aria-current={isEnvironment ? "page" : undefined}
+            aria-label={translate("nav.environment")}
+            asChild
+            className="group relative overflow-hidden"
+            size="icon"
+            variant={isEnvironment ? "secondary" : "ghost"}
+          >
+            <Link href={`${home}/environment`}>
+              <PillHover>
+                <Monitor />
               </PillHover>
             </Link>
           </Button>
