@@ -470,10 +470,26 @@ function ProjectLinks({ links }: { links: readonly ProjectLink[] }) {
   )
 }
 
+// Carousel width keyed off Tailwind's `sm` breakpoint (640px). Discrete values
+// mean the track only re-seats on a breakpoint crossing, not on every resize —
+// so no position-preservation gymnastics are needed.
+function useCarouselWidth() {
+  const [width, setWidth] = useState(480)
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)")
+    const update = () => setWidth(mq.matches ? 480 : 300)
+    update()
+    mq.addEventListener("change", update)
+    return () => mq.removeEventListener("change", update)
+  }, [])
+  return width
+}
+
 export function AboutSection() {
   const { locale, translate } = useLocale()
   const { isHelloEffectAnimationComplete, setIsHelloEffectAnimationComplete } =
     useGlobalStates()
+  const carouselWidth = useCarouselWidth()
 
   // Each project → a carousel card; links render in the footer slot.
   const projectItems: CarouselItem[] = person.projects.map(
@@ -603,7 +619,7 @@ export function AboutSection() {
             >
               <div className="flex justify-center">
                 <Carousel
-                  baseWidth={480}
+                  baseWidth={carouselWidth}
                   items={projectItems}
                   loop
                   pauseOnHover
