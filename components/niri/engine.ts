@@ -30,7 +30,7 @@ const WORKSPACE_MIN = 1
 const WORKSPACE_MAX = 3
 const SPAWN_WIDTH = 1 / 2
 // Hard cap on total open windows across all workspaces.
-const WINDOW_MAX = 10
+const WINDOW_MAX = 20
 
 function totalWindows(state: NiriState): number {
   return state.workspaces.reduce(

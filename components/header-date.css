@@ -125,6 +125,7 @@
   --animate-duration: var(--animate-bounce-in-duration);
   --animate-delay: var(--animated-bounce-in-delay);
 }
+
 .p5Day2 {
   font-size: 2rem;
   margin-left: -0.1rem;
@@ -138,6 +139,7 @@
   --animate-duration: var(--animate-bounce-in-duration);
   --animate-delay: calc(var(--animated-bounce-in-delay) * 6);
 }
+
 .p5DateWeatherIcon {
   margin-left: 0.05rem;
   font-size: 2rem;
@@ -247,6 +249,7 @@
     (var(--animate-bounce-in-duration) * 6)
   );
 }
+
 /* Hover state enhancement */
 .link-wrapper:hover {
   z-index: 9999;
@@ -265,9 +268,11 @@
   0% {
     transform: scale(1) rotate(-7deg);
   }
+
   50% {
     transform: scale(1.5) rotate(-7deg);
   }
+
   100% {
     transform: scale(1.15) rotate(-7deg);
   }
@@ -277,9 +282,11 @@
   0% {
     transform: scale(1) rotate(7deg);
   }
+
   50% {
     transform: scale(1.5) rotate(7deg);
   }
+
   100% {
     transform: scale(1.15) rotate(7deg);
   }
@@ -291,10 +298,12 @@
     transform: scale(1.25, 1) skewX(20deg) translateY(3px) rotateX(40deg)
       rotateY(10deg) rotateZ(-10deg);
   }
+
   50% {
     width: 100%;
     transform: scale(1.25, 1.1) skewX(-15deg) translateY(-2px) translateZ(-30px);
   }
+
   100% {
     width: 100%;
     transform: scale(1.25, 1) skewX(20deg) translateY(3px) rotateX(-40deg)
