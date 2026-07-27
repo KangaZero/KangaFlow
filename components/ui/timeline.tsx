@@ -1,7 +1,7 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { motion, useScroll, useTransform } from "motion/react"
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
 import type * as React from "react"
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
@@ -36,6 +36,7 @@ export function Timeline({ data }: { data: TimelineEntry[] }) {
 
   const heightTransform = useTransform(scrollYProgress, [0, 1], [0, height])
   const opacityTransform = useTransform(scrollYProgress, [0, 0.1], [0, 1])
+  const reduceMotion = useReducedMotion()
 
   return (
     <div className="w-full font-sans md:px-10" ref={containerRef}>
@@ -69,10 +70,14 @@ export function Timeline({ data }: { data: TimelineEntry[] }) {
         >
           <motion.div
             className="absolute inset-x-0 top-0 w-[2px] rounded-full bg-linear-to-t from-primary via-primary to-transparent"
-            style={{
-              height: heightTransform,
-              opacity: opacityTransform,
-            }}
+            // Scroll-LINKED transforms aren't gated by MotionConfig; under
+            // reduced motion draw the beam fully and statically instead of
+            // scrubbing it with scroll.
+            style={
+              reduceMotion
+                ? { height: `${height}px`, opacity: 1 }
+                : { height: heightTransform, opacity: opacityTransform }
+            }
           />
         </div>
       </div>

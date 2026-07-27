@@ -1,4 +1,5 @@
 "use client"
+import { useReducedMotion } from "motion/react"
 import { Mesh, Program, Renderer, Triangle } from "ogl"
 import { useEffect, useRef, useState } from "react"
 import "./LightRays.css"
@@ -129,6 +130,12 @@ const LightRays: React.FC<LightRaysProps> = ({
   const animationIdRef = useRef<number | null>(null)
   const meshRef = useRef<Mesh | null>(null)
   const cleanupFunctionRef = useRef<(() => void) | null>(null)
+  // Read inside the imperative WebGL loop (via a ref so it stays live without
+  // re-running the setup effect): under reduced motion we render a single
+  // static frame and never reschedule, so the rays don't animate.
+  const reduceMotion = useReducedMotion()
+  const reduceMotionRef = useRef(reduceMotion)
+  reduceMotionRef.current = reduceMotion
   const [isVisible, setIsVisible] = useState(false)
   const observerRef = useRef<IntersectionObserver | null>(null)
 
@@ -360,7 +367,9 @@ void main() {
 
         try {
           renderer.render({ scene: mesh })
-          animationIdRef.current = requestAnimationFrame(loop)
+          if (!reduceMotionRef.current) {
+            animationIdRef.current = requestAnimationFrame(loop)
+          }
         } catch (error) {
           console.warn("WebGL rendering error:", error)
           return

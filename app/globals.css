@@ -281,3 +281,34 @@
 .fade-in {
   animation: fadeIn 2s ease-in-out forwards;
 }
+
+/*
+ * Reduced-motion guard. Neutralises every CSS animation/transition in two
+ * cases: (1) the OS "reduce motion" preference, and (2) a manual kill-switch
+ * `data-animations="off"` set by JS on <html>. The universal selector (plus
+ * ::before/::after) covers all declared and utility-class animations (fadeIn,
+ * tw-animate-css/animate.css keyframes, scrollbar hovers, theme transitions).
+ * Durations collapse to ~0 rather than 0 so `forwards` fill modes still settle
+ * on their end state; iteration-count 1 stops infinite loops.
+ */
+/* biome-ignore-start lint/complexity/noImportantStyles: reduced-motion resets must outrank utility-class and inline animation styles (web.dev/animate.css pattern) — !important is required here. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+[data-animations="off"] *,
+[data-animations="off"] *::before,
+[data-animations="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: end reduced-motion override block. */

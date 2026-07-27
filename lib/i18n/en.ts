@@ -175,6 +175,8 @@ const en = {
       toggleSettings: "Toggle settings",
       toggleTerminal: "Toggle terminal",
     },
+    animation: "Animations",
+    animationSystem: "System",
     currentLabel: "Current",
     description: "Rebind keyboard shortcuts. Changes save automatically.",
     errors: {

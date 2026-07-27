@@ -273,6 +273,7 @@ function TrueFocus({
   blurAmount?: number
   animationDuration?: number
 }) {
+  const shouldReduceMotion = useReducedMotion()
   const words = subtitle.split(" ")
   const [currentIndex, setCurrentIndex] = useState(0)
   const [lastActiveIndex, setLastActiveIndex] = useState<number | null>(null)
@@ -337,7 +338,7 @@ function TrueFocus({
           y: rect.y,
         }}
         className="focus-frame"
-        transition={{ duration: animationDuration }}
+        transition={{ duration: shouldReduceMotion ? 0 : animationDuration }}
       >
         <span className="focus-corner top-left" />
         <span className="focus-corner top-right" />

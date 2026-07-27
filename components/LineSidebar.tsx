@@ -1,5 +1,6 @@
 "use client"
 
+import { useReducedMotion } from "motion/react"
 import {
   type CSSProperties,
   useCallback,
@@ -89,6 +90,11 @@ const LineSidebar = ({
   const lastRef = useRef(0)
   const activeRef = useRef<number | null>(defaultActive)
   const smoothingRef = useRef(smoothing)
+  // Kept in a ref so the memoized rAF/pointer callbacks read the live value
+  // without being re-created when the preference changes.
+  const reduceMotion = useReducedMotion()
+  const reduceMotionRef = useRef(reduceMotion)
+  reduceMotionRef.current = reduceMotion
   const [internalActive, setInternalActive] = useState<number | null>(
     defaultActive
   )
@@ -134,6 +140,26 @@ const LineSidebar = ({
   }, [])
 
   const startLoop = useCallback(() => {
+    // Reduced motion: no rAF easing. Settle every item instantly to its rest
+    // (or active) state, so only the functional active highlight shows and the
+    // decorative proximity easing never runs.
+    if (reduceMotionRef.current) {
+      if (rafRef.current != null) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
+      const items = itemRefs.current
+      for (let i = 0; i < items.length; i++) {
+        const el = items[i]
+        if (!el) {
+          continue
+        }
+        const value = activeRef.current === i ? 1 : 0
+        currentRef.current[i] = value
+        el.style.setProperty("--effect", value.toFixed(4))
+      }
+      return
+    }
     if (rafRef.current != null) {
       return
     }
@@ -143,6 +169,10 @@ const LineSidebar = ({
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLUListElement>) => {
+      // Skip the decorative proximity effect entirely under reduced motion.
+      if (reduceMotionRef.current) {
+        return
+      }
       const list = listRef.current
       if (!list) {
         return

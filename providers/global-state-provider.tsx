@@ -1,5 +1,6 @@
 "use client"
 
+import { MotionConfig } from "motion/react"
 import {
   createContext,
   type ReactNode,
@@ -10,6 +11,8 @@ import {
   useState,
 } from "react"
 import {
+  ANIMATION_PREFS,
+  type AnimationPref,
   COLUMN_OPTIONS,
   type ColumnCount,
   type GlobalStatesContextValue,
@@ -30,7 +33,28 @@ function loadEnvChrome(): boolean {
   return window.localStorage.getItem(ENV_CHROME_STORAGE_KEY) === "true"
 }
 
+const ANIMATION_STORAGE_KEY = "kangaflow:animations"
+
+function isAnimationPref(value: string | null): value is AnimationPref {
+  return value != null && (ANIMATION_PREFS as readonly string[]).includes(value)
+}
+
+function loadAnimationPref(): AnimationPref {
+  if (typeof window === "undefined") return "system"
+  const raw = window.localStorage.getItem(ANIMATION_STORAGE_KEY)
+  return isAnimationPref(raw) ? raw : "system"
+}
+
+// Motion's reducedMotion mode from the preference: "user" follows the OS,
+// "never" forces animation on, "always" reduces. Also drives useReducedMotion().
+function reducedMotionMode(pref: AnimationPref): "user" | "always" | "never" {
+  if (pref === "on") return "never"
+  if (pref === "off") return "always"
+  return "user"
+}
+
 const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
+  animationPref: "system",
   columnCount: DEFAULT_COLUMN_COUNT,
   isCommandPaletteOpen: false,
   isHelloEffectAnimationComplete: false,
@@ -38,6 +62,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isMediaPlayerOpen: false,
   isSettingsOpen: false,
   isTerminalOpen: false,
+  setAnimationPref: () => {},
   setColumnCount: () => {},
   setIsCommandPaletteOpen: () => {},
   setIsHelloEffectAnimationComplete: () => {},
@@ -90,11 +115,13 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [columnCount, setColumnCount] =
     useState<ColumnCount>(DEFAULT_COLUMN_COUNT)
   const [showChromeInEnvironment, setShowChromeInEnvironment] = useState(false)
+  const [animationPref, setAnimationPref] = useState<AnimationPref>("system")
 
   useEffect(() => {
     setShortcuts(loadShortcuts())
     setColumnCount(loadColumnCount())
     setShowChromeInEnvironment(loadEnvChrome())
+    setAnimationPref(loadAnimationPref())
     hydrated.current = true
   }, [])
 
@@ -117,8 +144,31 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     }
   }, [showChromeInEnvironment])
 
+  // Persist the animation preference and mirror the *resolved* state onto a
+  // <html data-animations> attribute so the CSS kill-switch (globals.css) can
+  // neutralise CSS transitions/animations too, not just motion/react.
+  useEffect(() => {
+    if (hydrated.current) {
+      window.localStorage.setItem(ANIMATION_STORAGE_KEY, animationPref)
+    }
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const apply = () => {
+      const off =
+        animationPref === "off" || (animationPref === "system" && media.matches)
+      if (off) {
+        document.documentElement.dataset.animations = "off"
+      } else {
+        delete document.documentElement.dataset.animations
+      }
+    }
+    apply()
+    media.addEventListener("change", apply)
+    return () => media.removeEventListener("change", apply)
+  }, [animationPref])
+
   const value = useMemo<GlobalStatesContextValue>(
     () => ({
+      animationPref,
       columnCount,
       isCommandPaletteOpen,
       isHelloEffectAnimationComplete,
@@ -126,6 +176,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isMediaPlayerOpen,
       isSettingsOpen,
       isTerminalOpen,
+      setAnimationPref,
       setColumnCount,
       setIsCommandPaletteOpen,
       setIsHelloEffectAnimationComplete,
@@ -141,6 +192,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       terminalFile,
     }),
     [
+      animationPref,
       columnCount,
       showChromeInEnvironment,
       isCommandPaletteOpen,
@@ -156,7 +208,9 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   return (
     <GlobalStatesContext.Provider value={value}>
-      {children}
+      <MotionConfig reducedMotion={reducedMotionMode(animationPref)}>
+        {children}
+      </MotionConfig>
     </GlobalStatesContext.Provider>
   )
 }

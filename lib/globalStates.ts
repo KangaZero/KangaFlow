@@ -37,5 +37,11 @@ export type GlobalStatesContextValue = {
   // Persisted; defaults to false (chrome hidden for the immersive desktop).
   showChromeInEnvironment: boolean
   setShowChromeInEnvironment: (show: boolean) => void
-  // currentPath: AppPath
+  // Animation preference (persisted). "system" follows prefers-reduced-motion
+  // (the default), "on" forces animations, "off" disables them.
+  animationPref: AnimationPref
+  setAnimationPref: (pref: AnimationPref) => void
 }
+
+export const ANIMATION_PREFS = ["system", "on", "off"] as const
+export type AnimationPref = (typeof ANIMATION_PREFS)[number]

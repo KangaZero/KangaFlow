@@ -1,4 +1,5 @@
 "use client"
+import { useReducedMotion } from "motion/react"
 import { Effect, EffectComposer, EffectPass, RenderPass } from "postprocessing"
 import type React from "react"
 import { useEffect, useRef } from "react"
@@ -386,6 +387,12 @@ const PixelBlast: React.FC<PixelBlastProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null)
   const visibilityRef = useRef({ visible: true })
   const speedRef = useRef(speed)
+  // Read inside the imperative render loop (via a ref so it stays live without
+  // re-running the setup effect): under reduced motion we render a single
+  // static frame and never reschedule, so the effect doesn't animate.
+  const reduceMotion = useReducedMotion()
+  const reduceMotionRef = useRef(reduceMotion)
+  reduceMotionRef.current = reduceMotion
 
   const threeRef = useRef<{
     renderer: THREE.WebGLRenderer
@@ -609,7 +616,9 @@ const PixelBlast: React.FC<PixelBlastProps> = ({
       let raf = 0
       const animate = () => {
         if (autoPauseOffscreen && !visibilityRef.current.visible) {
-          raf = requestAnimationFrame(animate)
+          if (!reduceMotionRef.current) {
+            raf = requestAnimationFrame(animate)
+          }
           return
         }
         uniforms.uTime.value =
@@ -636,7 +645,9 @@ const PixelBlast: React.FC<PixelBlastProps> = ({
           })
           composer.render()
         } else renderer.render(scene, camera)
-        raf = requestAnimationFrame(animate)
+        if (!reduceMotionRef.current) {
+          raf = requestAnimationFrame(animate)
+        }
       }
       raf = requestAnimationFrame(animate)
       threeRef.current = {

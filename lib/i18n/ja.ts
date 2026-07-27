@@ -174,6 +174,8 @@ const ja = {
       toggleSettings: "設定の切り替え",
       toggleTerminal: "ターミナルの切り替え",
     },
+    animation: "アニメーション",
+    animationSystem: "システム",
     currentLabel: "現在",
     description: "ショートカットを再設定できます。変更は自動保存されます。",
     errors: {

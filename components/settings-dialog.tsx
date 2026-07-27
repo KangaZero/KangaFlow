@@ -12,6 +12,7 @@ import {
 import { LocaleTransition } from "@/components/locale-transition"
 import { Button } from "@/components/ui/button"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
+import { ANIMATION_PREFS } from "@/lib/globalStates"
 import {
   DEFAULT_SHORTCUTS,
   formatShortcut,
@@ -63,6 +64,8 @@ export function SettingsDialog() {
     setShortcuts,
     showChromeInEnvironment,
     setShowChromeInEnvironment,
+    animationPref,
+    setAnimationPref,
   } = useGlobalStates()
 
   const patch = (action: Shortcut["action"], next: Partial<Shortcut>) =>
@@ -205,6 +208,30 @@ export function SettingsDialog() {
               ? translate("settings.on")
               : translate("settings.off")}
           </Button>
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-border border-t py-3">
+          <p className="font-medium text-sm">
+            {translate("settings.animation")}
+          </p>
+          <div className="flex items-center gap-1.5">
+            {ANIMATION_PREFS.map((pref) => (
+              <Button
+                aria-pressed={animationPref === pref}
+                key={pref}
+                onClick={() => setAnimationPref(pref)}
+                size="sm"
+                type="button"
+                variant={animationPref === pref ? "default" : "outline"}
+              >
+                {pref === "system"
+                  ? translate("settings.animationSystem")
+                  : pref === "on"
+                    ? translate("settings.on")
+                    : translate("settings.off")}
+              </Button>
+            ))}
+          </div>
         </div>
 
         <DialogFooter>

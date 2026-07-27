@@ -1,6 +1,7 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
+import { useReducedMotion } from "motion/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { person } from "@/lib/person"
@@ -15,7 +16,10 @@ const SCRAMBLE_MS = 1000
 // not-yet-revealed slot shows a random character drawn from the target itself,
 // so English scrambles with latin glyphs and Japanese with kana/kanji. Then it
 // holds for HOLD_MS and advances to the next line.
-function useScrambleCycle(texts: readonly string[]): string {
+function useScrambleCycle(
+  texts: readonly string[],
+  reduceMotion: boolean | null
+): string {
   const [display, setDisplay] = useState(texts[0] ?? "")
   const rafRef = useRef<number | null>(null)
   const timeoutRef = useRef<number | null>(null)
@@ -29,6 +33,13 @@ function useScrambleCycle(texts: readonly string[]): string {
     setDisplay(texts[0] ?? "")
 
     const scrambleTo = (target: string) => {
+      // Reduced motion: swap the line in instantly, skipping the per-frame
+      // glyph churn — the informational rotation stays, the motion goes.
+      if (reduceMotion) {
+        setDisplay(target)
+        timeoutRef.current = window.setTimeout(advance, HOLD_MS)
+        return
+      }
       const pool = [...new Set(target.replace(/\s/g, "").split(""))]
       const start = performance.now()
       const tick = (now: number) => {
@@ -68,7 +79,7 @@ function useScrambleCycle(texts: readonly string[]): string {
         clearTimeout(timeoutRef.current)
       }
     }
-  }, [texts])
+  }, [texts, reduceMotion])
 
   return display
 }
@@ -86,7 +97,8 @@ export function HeaderStatus({ className }: { className?: string }) {
     [translate]
   )
 
-  const display = useScrambleCycle(texts)
+  const reduceMotion = useReducedMotion()
+  const display = useScrambleCycle(texts, reduceMotion)
 
   return (
     <span

@@ -260,14 +260,15 @@ export function EnvironmentView() {
             <AnimatePresence initial={false} mode="popLayout">
               {columns.map((col, ci) => (
                 <motion.div
-                  animate={{ opacity: ci === focusedCol ? 1 : 0.6, scale: 1 }}
+                  animate={{ opacity: ci === focusedCol ? 1 : 0.6, x: 0 }}
                   className="flex flex-col"
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  // First window (empty workspace) fades in; later ones scale in.
+                  exit={{ opacity: 0, x: 80 }}
+                  // First window (empty workspace) fades in; later ones slide in
+                  // from the right, niri-style.
                   initial={
                     columns.length === 1
-                      ? { opacity: 0 }
-                      : { opacity: 0, scale: 0.9 }
+                      ? { opacity: 0, x: 0 }
+                      : { opacity: 0, x: 80 }
                   }
                   key={col.id}
                   layout
@@ -283,8 +284,12 @@ export function EnvironmentView() {
                             "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card text-left shadow-xl",
                             isFocused ? "border-primary" : "border-border"
                           )}
-                          exit={{ opacity: 0, scale: 0.9 }}
-                          initial={{ opacity: 0, scale: 0.9 }}
+                          exit={{ opacity: 0, y: 24 }}
+                          initial={
+                            columns.length === 1
+                              ? { opacity: 0 }
+                              : { opacity: 0, y: 24 }
+                          }
                           key={win.id}
                           layout
                           onPointerDown={() =>
