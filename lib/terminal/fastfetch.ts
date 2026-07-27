@@ -12,6 +12,7 @@ export type FastfetchInfo = {
   browser: string // e.g. "Chrome"
   locale: string // "en" | "ja"
   colors: number // e.g. 256
+  dark: boolean // true → Mocha accents, false → Latte
 }
 
 // --- ANSI helpers ----------------------------------------------------------
@@ -24,12 +25,32 @@ type Rgb = readonly [number, number, number]
 const fg = ([r, g, b]: Rgb): string => `\x1b[38;2;${r};${g};${b}m`
 const bg256 = (index: number): string => `\x1b[48;5;${index}m`
 
-// Catppuccin Mocha accents used for labels and the logo gradient.
-const MAUVE: Rgb = [203, 166, 247] // #cba6f7
-const TEAL: Rgb = [148, 226, 213] // #94e2d5
-const PINK: Rgb = [245, 194, 231] // #f5c2e7
-const BLUE: Rgb = [137, 180, 250] // #89b4fa
-const TEXT: Rgb = [205, 214, 244] // #cdd6f4
+// Accent set for labels, the user@host title, and the logo gradient. Two
+// Catppuccin flavours so the banner matches the active terminal theme: Mocha
+// (dark) and Latte (light).
+type Accents = {
+  mauve: Rgb
+  teal: Rgb
+  pink: Rgb
+  blue: Rgb
+  text: Rgb
+}
+
+const MOCHA: Accents = {
+  blue: [137, 180, 250], // #89b4fa
+  mauve: [203, 166, 247], // #cba6f7
+  pink: [245, 194, 231], // #f5c2e7
+  teal: [148, 226, 213], // #94e2d5
+  text: [205, 214, 244], // #cdd6f4
+}
+
+const LATTE: Accents = {
+  blue: [30, 102, 245], // #1e66f5
+  mauve: [136, 57, 239], // #8839ef
+  pink: [234, 118, 203], // #ea76cb
+  teal: [23, 146, 153], // #179299
+  text: [76, 79, 105], // #4c4f69
+}
 
 // Linearly interpolate between two colours; `t` runs 0 → 1.
 const lerp = (from: Rgb, to: Rgb, t: number): Rgb => [
@@ -40,23 +61,29 @@ const lerp = (from: Rgb, to: Rgb, t: number): Rgb => [
 
 // --- Left column: original "KangaFlow" ASCII mark --------------------------
 
-// A stylised block-glyph "K" with a kangaroo-tail flourish. Original art —
-// each line is plain text; colour is layered on afterwards so widths stay
-// countable for column alignment.
+// KangaFlow ASCII mark. Each line is plain text; colour is layered on afterwards
+// so widths stay countable for column alignment.
 const LOGO_ART: readonly string[] = [
-  "    ▄█▀▀",
-  "   ▟█▘    ▟▙",
-  "  ▟█▛    ▟█▛",
-  " ▟█▛    ▟█▛",
-  "▟█▛    ▟█▛",
-  "██▙   ▟█▛",
-  "██▜█▄▄█▛",
-  "██  ▜██▖",
-  "██   ▜██▖",
-  "██    ▜██▖",
-  "██     ▜██▖",
-  "██      ▜██▖",
-  "▀▀       ▀▀▀",
+  "          ▗▄▄▄       ▗▄▄▄▄    ▄▄▄▖",
+  "          ▜███▙       ▜███▙  ▟███▛",
+  "           ▜███▙       ▜███▙▟███▛",
+  "            ▜███▙       ▜██████▛",
+  "     ▟█████████████████▙ ▜████▛     ▟▙",
+  "    ▟███████████████████▙ ▜███▙    ▟██▙",
+  "           ▄▄▄▄▖           ▜███▙  ▟███▛",
+  "          ▟███▛             ▜██▛ ▟███▛",
+  "         ▟███▛               ▜▛ ▟███▛",
+  "▟███████████▛                  ▟██████████▙",
+  "▜██████████▛                  ▟███████████▛",
+  "      ▟███▛ ▟▙               ▟███▛",
+  "     ▟███▛ ▟██▙             ▟███▛",
+  "    ▟███▛  ▜███▙           ▝▀▀▀▀",
+  "    ▜██▛    ▜███▙ ▜██████████████████▛",
+  "     ▜▛     ▟████▙ ▜████████████████▛",
+  "           ▟██████▙         ▜███▙",
+  "          ▟███▛▜███▙         ▜███▙",
+  "         ▟███▛  ▜███▙         ▜███▙",
+  "         ▝▀▀▀    ▀▀▀▀▘         ▀▀▀▘",
 ]
 
 // Widest plain art line — the column width every left cell is padded to.
@@ -68,10 +95,15 @@ const LOGO_WIDTH = LOGO_ART.reduce(
 const GAP = "   " // spacer between the logo column and the info column
 
 // Colour one art line with a teal → pink vertical gradient, padded to width.
-const paintLogoLine = (line: string, row: number, rows: number): string => {
+const paintLogoLine = (
+  line: string,
+  row: number,
+  rows: number,
+  accents: Accents
+): string => {
   const t = rows > 1 ? row / (rows - 1) : 0
   const padded = line.padEnd(LOGO_WIDTH, " ")
-  return `${fg(lerp(TEAL, PINK, t))}${padded}${RESET}`
+  return `${fg(lerp(accents.teal, accents.pink, t))}${padded}${RESET}`
 }
 
 // --- Right column: fastfetch-style info rows -------------------------------
@@ -79,8 +111,8 @@ const paintLogoLine = (line: string, row: number, rows: number): string => {
 type InfoRow = { label: string; value: string }
 
 // Render one "Label: value" row, label accented, value in default text.
-const paintInfoRow = ({ label, value }: InfoRow): string =>
-  `${fg(MAUVE)}${label}:${RESET} ${fg(TEXT)}${value}${RESET}`
+const paintInfoRow = ({ label, value }: InfoRow, accents: Accents): string =>
+  `${fg(accents.mauve)}${label}:${RESET} ${fg(accents.text)}${value}${RESET}`
 
 // --- Bottom: fastfetch-style colour palette --------------------------------
 
@@ -104,10 +136,11 @@ const paletteRows = (colors: number): string[] => {
 // Join the coloured logo column and the info column line by line, then append
 // a blank spacer and the colour palette. Returns strings xterm.js writes as-is.
 export function renderFastfetch(info: FastfetchInfo): string[] {
+  const accents = info.dark ? MOCHA : LATTE
   const user = "user"
   const host = "kangaflow"
-  const title = `${fg(TEAL)}${user}${RESET}${fg(TEXT)}@${RESET}${fg(BLUE)}${host}${RESET}`
-  const separator = `${fg(PINK)}${"-".repeat(user.length + 1 + host.length)}${RESET}`
+  const title = `${fg(accents.teal)}${user}${RESET}${fg(accents.text)}@${RESET}${fg(accents.blue)}${host}${RESET}`
+  const separator = `${fg(accents.pink)}${"-".repeat(user.length + 1 + host.length)}${RESET}`
 
   const rows: InfoRow[] = [
     { label: "OS", value: "KangaFlow (Next.js 16)" },
@@ -122,7 +155,11 @@ export function renderFastfetch(info: FastfetchInfo): string[] {
     { label: "Editor", value: "nvim" },
   ]
 
-  const infoLines: string[] = [title, separator, ...rows.map(paintInfoRow)]
+  const infoLines: string[] = [
+    title,
+    separator,
+    ...rows.map((row) => paintInfoRow(row, accents)),
+  ]
 
   const rowCount = Math.max(LOGO_ART.length, infoLines.length)
   const lines: string[] = []
@@ -133,7 +170,7 @@ export function renderFastfetch(info: FastfetchInfo): string[] {
     const left =
       artLine === undefined
         ? blankLeft
-        : paintLogoLine(artLine, i, LOGO_ART.length)
+        : paintLogoLine(artLine, i, LOGO_ART.length, accents)
     const right = infoLines[i] ?? ""
     lines.push(`${left}${GAP}${right}`)
   }

@@ -5,6 +5,7 @@ import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
 const info: FastfetchInfo = {
   browser: "Chrome",
   colors: 256,
+  dark: true,
   locale: "en",
   resolution: "1920x1080",
   themeLabel: "terminal (Catppuccin)",
@@ -27,5 +28,11 @@ describe("renderFastfetch", () => {
   it("renders a Theme row", () => {
     const lines = renderFastfetch(info)
     expect(lines.some((line) => line.includes("Theme:"))).toBe(true)
+  })
+
+  it("picks different accent RGBs per flavour (Mocha vs Latte)", () => {
+    const darkFirst = renderFastfetch({ ...info, dark: true })[0]
+    const lightFirst = renderFastfetch({ ...info, dark: false })[0]
+    expect(darkFirst).not.toBe(lightFirst)
   })
 })

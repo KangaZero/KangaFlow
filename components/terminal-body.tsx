@@ -181,6 +181,9 @@ export function TerminalBody({
 
   const [editor, setEditor] = useState<{ content: string } | null>(null)
   const dark = resolvedTheme !== "light"
+  // Live theme for the once-bound data handler (ff reads it on each run).
+  const darkRef = useRef(dark)
+  darkRef.current = dark
 
   const startedAt = useRef(Date.now())
   const session = useRef<Session>({
@@ -215,9 +218,12 @@ export function TerminalBody({
       const info: FastfetchInfo = {
         browser: shortBrowser(navigator.userAgent),
         colors: 256,
+        dark: darkRef.current,
         locale,
         resolution: `${window.screen.width}x${window.screen.height}`,
-        themeLabel: "terminal (Catppuccin)",
+        themeLabel: darkRef.current
+          ? "terminal (Catppuccin Mocha)"
+          : "terminal (Catppuccin Latte)",
         uptime: formatUptime(Date.now() - startedAt.current),
       }
       for (const line of renderFastfetch(info)) term.writeln(line)
