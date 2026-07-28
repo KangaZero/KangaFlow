@@ -29,6 +29,7 @@
 //    separate command runs).
 // ─────────────────────────────────────────────────────────────────────────────
 
+import { CanvasAddon } from "@xterm/addon-canvas"
 import { FitAddon } from "@xterm/addon-fit"
 import type {
   ITerminalAddon,
@@ -574,6 +575,22 @@ export function TerminalBody({
       ? `${mono}, ${nerd}, ${TERMINAL_FONT_FAMILY}`
       : `${nerd}, ${TERMINAL_FONT_FAMILY}`
 
+    // Swap the default DOM renderer for the canvas renderer: it honours
+    // `customGlyphs` (set in `options`), drawing the powerline separators
+    // (U+E0B0–E0D4) as native vector shapes fitted to the cell instead of
+    // falling back to the Nerd Font at the wrong width and clipping. Canvas
+    // (not WebGL) because WebGL blends an opaque background — breaking the
+    // transparent terminal — and has a thin-text bug under allowTransparency.
+    // Must load after open() (fit below relies on the terminal being attached);
+    // fails soft so any load error just keeps the DOM renderer.
+    let canvas: CanvasAddon | undefined
+    try {
+      canvas = new CanvasAddon()
+      term.loadAddon(canvas)
+    } catch {
+      canvas = undefined
+    }
+
     fit.fit()
     fastfetch()
     // Open straight into the editor if a file was requested (page code button),
@@ -590,6 +607,7 @@ export function TerminalBody({
 
     return () => {
       sub.dispose()
+      canvas?.dispose()
       window.removeEventListener("resize", onResize)
     }
   }, [instance])
