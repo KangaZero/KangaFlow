@@ -295,13 +295,25 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
     }
 
     case "fullscreen": {
-      const focusedWin = getFocusedWindow(state)
+      const workspace = getActiveWorkspace(state)
+      const column = workspace.columns[workspace.focused]
+      if (!column) return state
+      const focusedWin = column.windows[column.focused]
       if (!focusedWin) return state
-      return {
-        ...state,
-        fullscreenWinId:
-          state.fullscreenWinId === focusedWin.id ? null : focusedWin.id,
-      }
+      // Read the toggle direction BEFORE flipping fullscreenWinId below.
+      const isFullscreen = state.fullscreenWinId === focusedWin.id
+      return mapActiveWorkspace(
+        {
+          ...state,
+          fullscreenWinId: isFullscreen ? null : focusedWin.id,
+        },
+        (ws) =>
+          mapColumn(ws, ws.focused, (col) => ({
+            ...col,
+            // Enter → full strip width; exit → back to the spawn half-width.
+            width: isFullscreen ? SPAWN_WIDTH : 1,
+          }))
+      )
     }
 
     case "toggleFloat": {
@@ -328,6 +340,31 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
         mapColumn(ws, ws.focused, (col) => ({ ...col, width }))
       )
     }
+    //     case "toggleFullscreen": {
+    //       const workspace = getActiveWorkspace(state)
+    //       const column = workspace.columns[workspace.focused]
+    //       if (!column) return state
+    //       const isFullScreen =
+    //         column.width === 1 && state.fullscreenWinId === column.id
+    //
+    //       mapActiveWorkspace(state, (ws) =>
+    //         mapColumn(ws, ws.focused, (col) => ({
+    //           ...col,
+    //           width: isFullScreen ? 0.5 : 1,
+    //         }))
+    //       )
+    // if (isFullScreen) {
+    //         const focusedWin = getFocusedWindow(state)
+    //         if (!focusedWin) return state
+    //
+    //       }
+    //
+    //       return {
+    //           ...state,
+    //           fullscreenWinId:
+    //             state.fullscreenWinId === focusedWin.id ? null : focusedWin.id,
+    //         }
+    //     }
 
     case "setWidth": {
       const workspace = getActiveWorkspace(state)

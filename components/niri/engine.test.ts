@@ -175,6 +175,25 @@ describe("fullscreen", () => {
     state = niriReducer(state, { type: "fullscreen" })
     expect(state.fullscreenWinId).toBeNull()
   })
+
+  it("widens the focused column to full width and restores on toggle off", () => {
+    let state = initialNiriState()
+    state = niriReducer(state, { app: "terminal", type: "spawn" })
+    expect(getFocusedColumn(state)?.width).toBe(1 / 2)
+    state = niriReducer(state, { type: "fullscreen" })
+    expect(getFocusedColumn(state)?.width).toBe(1)
+    state = niriReducer(state, { type: "fullscreen" })
+    expect(getFocusedColumn(state)?.width).toBe(1 / 2)
+  })
+
+  it("preserves every workspace and window while toggling", () => {
+    let state = initialNiriState()
+    state = niriReducer(state, { app: "terminal", type: "spawn" })
+    state = niriReducer(state, { app: "editor", type: "spawn" })
+    state = niriReducer(state, { type: "fullscreen" })
+    expect(state.workspaces).toHaveLength(3)
+    expect(getActiveWorkspace(state).columns).toHaveLength(2)
+  })
 })
 
 describe("cycleWidth", () => {
