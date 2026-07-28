@@ -13,8 +13,10 @@ import {
 import { AnimatePresence, motion, useDragControls } from "motion/react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
+import { GLASS_SURFACE } from "@/components/niri/glass"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
+import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -144,7 +146,10 @@ export function MediaPlayer() {
         {isMediaPlayerOpen ? (
           <motion.div
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="pointer-events-auto absolute right-4 bottom-4 w-80 overflow-hidden rounded-xl border border-border bg-card/95 text-card-foreground shadow-xl backdrop-blur-md"
+            className={cn(
+              "pointer-events-auto absolute right-4 bottom-4 w-80 overflow-hidden rounded-xl text-card-foreground",
+              GLASS_SURFACE.glass
+            )}
             drag
             dragConstraints={constraintsRef}
             dragControls={dragControls}
