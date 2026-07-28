@@ -21,34 +21,10 @@ import {
   type EnvSettings,
   UI_SCALES,
   type UiScale,
-  WALLPAPERS,
-  type WallpaperId,
 } from "@/components/niri/settings"
+import { WallpaperPicker } from "@/components/niri/wallpaper-picker"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
-
-// Illustrative-only swatch backgrounds. Keyed by the `WallpaperId` union so a
-// new wallpaper surfaces a missing-key type error here rather than a blank
-// swatch. Inline gradients are allowed for these preview tiles.
-const WALLPAPER_SWATCHES: Record<WallpaperId, React.CSSProperties> = {
-  aurora: {
-    backgroundImage:
-      "linear-gradient(135deg, #1a2a6c 0%, #2a9d8f 45%, #b6f0c4 100%)",
-  },
-  catppuccin: { backgroundColor: "#cba6f7" },
-  mesh: {
-    backgroundImage:
-      "conic-gradient(from 180deg at 50% 50%, #f72585, #7209b7, #3a0ca3, #4361ee, #4cc9f0, #f72585)",
-  },
-  solid: { backgroundColor: "#264653" },
-}
-
-const WALLPAPER_LABELS: Record<WallpaperId, string> = {
-  aurora: "Aurora",
-  catppuccin: "Catppuccin",
-  mesh: "Mesh",
-  solid: "Solid",
-}
 
 const percent = (fraction: BarOpacity | UiScale): string =>
   `${Math.round(fraction * 100)}%`
@@ -168,35 +144,10 @@ export function NoctaliaSettings(props: {
             <SectionLabel icon={ImageIcon}>
               {translate("environment.settings.wallpaper")}
             </SectionLabel>
-            <div className="flex flex-wrap gap-3">
-              {WALLPAPERS.map((w: WallpaperId) => {
-                const selected = settings.wallpaper === w
-                return (
-                  <button
-                    aria-label={WALLPAPER_LABELS[w]}
-                    aria-pressed={selected}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 rounded-xl p-1 transition-transform",
-                      selected && "scale-105"
-                    )}
-                    key={w}
-                    onClick={() => set("wallpaper", w)}
-                    type="button"
-                  >
-                    <div
-                      className={cn(
-                        "size-14 rounded-lg border border-border ring-offset-2 ring-offset-card transition-shadow",
-                        selected && "ring-2 ring-primary"
-                      )}
-                      style={WALLPAPER_SWATCHES[w]}
-                    />
-                    <span className="text-muted-foreground text-xs">
-                      {WALLPAPER_LABELS[w]}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+            <WallpaperPicker
+              onChange={(w) => set("wallpaper", w)}
+              value={settings.wallpaper}
+            />
           </section>
 
           {/* Bar position */}

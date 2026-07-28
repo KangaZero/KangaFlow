@@ -167,6 +167,8 @@ const ja = {
       title: "デスクトップ設定",
       uiScale: "UI スケール",
       wallpaper: "壁紙",
+      wallpaperAuto: "テーマ標準",
+      wallpaperHint: "デスクトップの壁紙を選択。",
     },
     title: "環境",
     window: {

@@ -1,18 +1,23 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { Bell, Settings, Squirrel } from "lucide-react"
+import { Bell, Image as ImageIcon, Settings } from "lucide-react"
 import type * as React from "react"
+import { SiNixos } from "react-icons/si"
 
 import { Button } from "@/components/ui/button"
+import type { Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
 
 // A single workspace indicator ("pip"): whether it holds windows and whether it
 // is the focused workspace. Purely presentational — the bar never owns this
 // state, it renders whatever the parent hands down.
-type WorkspacePip = { id: number; occupied: boolean; active: boolean }
-
+type WorkspacePip = {
+  id: number
+  occupied: boolean
+  active: boolean
+}
 // Presentational recreation of the Noctalia v5 floating top bar for the web
 // niri desktop. No timers, no fetching, no internal state — every value is a
 // prop, so the parent (the niri view) stays the single source of truth. All
@@ -22,9 +27,10 @@ export function NoctaliaBar(props: {
   workspaces: WorkspacePip[]
   activeWindowTitle: string
   clock: string // preformatted "HH:MM"
-  keyboardLayout: string // e.g. "US" / "JA", synced to the locale
+  keyboardLayout: Locale // e.g. "US" / "JA", synced to the locale
   onLauncher: () => void // distro-logo click opens launcher
   onWorkspace: (id: number) => void // click a pip to switch workspace
+  onWallpaper: () => void // wallpaper button opens the wallpaper dialog
 }): React.JSX.Element {
   const {
     workspaces,
@@ -33,6 +39,7 @@ export function NoctaliaBar(props: {
     keyboardLayout,
     onLauncher,
     onWorkspace,
+    onWallpaper,
   } = props
   const { translate } = useLocale()
 
@@ -53,9 +60,9 @@ export function NoctaliaBar(props: {
           size="icon-sm"
           variant="ghost"
         >
-          <Squirrel />
+          <SiNixos />
         </Button>
-        <span className="max-w-[145px] truncate text-muted-foreground">
+        <span className="max-w-36.25 truncate text-muted-foreground">
           {activeWindowTitle === "" ? "—" : activeWindowTitle}
         </span>
       </div>
@@ -85,7 +92,7 @@ export function NoctaliaBar(props: {
         </ul>
         <span className="text-muted-foreground tabular-nums">{clock}</span>
         <Settings aria-hidden className="size-3.5 text-muted-foreground" />
-        <span className="rounded-sm border border-border/50 px-1 py-0.5 font-mono text-[0.625rem] text-muted-foreground leading-none">
+        <span className="rounded-sm border border-border/50 px-1 py-0.5 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none">
           {keyboardLayout}
         </span>
       </div>
@@ -95,6 +102,15 @@ export function NoctaliaBar(props: {
         <span className="font-mono text-muted-foreground tabular-nums">
           CPU 12% MEM 43%
         </span>
+        <Button
+          aria-label={translate("environment.settings.wallpaper")}
+          className="rounded-full"
+          onClick={onWallpaper}
+          size="icon-sm"
+          variant="ghost"
+        >
+          <ImageIcon />
+        </Button>
         <Button
           aria-label={translate("environment.bar.notifications")}
           className="rounded-full"

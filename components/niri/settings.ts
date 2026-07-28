@@ -3,7 +3,18 @@
 // is a literal union or a bounded scalar — no bare strings/numbers where a
 // finite set applies. Pure data (no React/DOM).
 
-export const WALLPAPERS = ["aurora", "mesh", "catppuccin", "solid"] as const
+// "auto" follows the active theme's default photo; the rest are pinnable —
+// three photo wallpapers then the illustrative gradients.
+export const WALLPAPERS = [
+  "auto",
+  "cat",
+  "beach",
+  "magma",
+  "aurora",
+  "mesh",
+  "catppuccin",
+  "solid",
+] as const
 export type WallpaperId = (typeof WALLPAPERS)[number]
 
 export const BAR_POSITIONS = ["top", "bottom"] as const
@@ -36,5 +47,5 @@ export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   font: "mono",
   showSystemMonitor: true,
   uiScale: 1,
-  wallpaper: "aurora",
+  wallpaper: "auto",
 }

@@ -167,6 +167,8 @@ const en = {
       title: "Desktop settings",
       uiScale: "UI scale",
       wallpaper: "Wallpaper",
+      wallpaperAuto: "Theme default",
+      wallpaperHint: "Choose a desktop wallpaper.",
     },
     title: "Environment",
     window: {

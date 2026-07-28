@@ -1,19 +1,12 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { X } from "lucide-react"
+import { SquareIcon, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import dynamic from "next/dynamic"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import {
-  type CSSProperties,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from "react"
+import { useEffect, useMemo, useReducer, useRef, useState } from "react"
 import { AboutWindow } from "@/components/niri/apps/about-window"
 import { BrowserWindow } from "@/components/niri/apps/browser-window"
 import {
@@ -31,10 +24,12 @@ import { NoctaliaSettings } from "@/components/niri/noctalia-settings"
 import {
   DEFAULT_ENV_SETTINGS,
   type EnvSettings,
-  type WallpaperId,
 } from "@/components/niri/settings"
 import type { AppId, NiriWindow } from "@/components/niri/types"
+import { wallpaperStyle } from "@/components/niri/wallpaper"
+import { WallpaperDialog } from "@/components/niri/wallpaper-dialog"
 import { readSourceFiles } from "@/lib/terminal/source"
+import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -57,31 +52,17 @@ const LAUNCHER_APP_IDS: readonly AppId[] = [
   "browser",
 ]
 
-// Full-bleed wallpaper per settings.wallpaper (illustrative gradients — the only
-// place inline colour is allowed, mirroring a desktop background).
-const WALLPAPER_STYLE: Record<WallpaperId, CSSProperties> = {
-  aurora: {
-    background:
-      "linear-gradient(135deg,#1e3a5f 0%,#3b2f63 45%,#5b2a53 75%,#1e1e2e 100%)",
-  },
-  catppuccin: {
-    background: "linear-gradient(135deg,#1e1e2e 0%,#302d41 100%)",
-  },
-  mesh: {
-    background:
-      "radial-gradient(at 20% 20%,#89b4fa55,transparent 45%),radial-gradient(at 80% 30%,#f5c2e755,transparent 45%),radial-gradient(at 50% 80%,#94e2d555,transparent 45%),#1e1e2e",
-  },
-  solid: { background: "#181825" },
-}
+const GAP = 6
+const PAD = 6
 
-const GAP = 12
-const PAD = 12
+type Hour = `${number}` & { _brand: "Hour" }
+type Minute = `${number}` & { _brand: "Minute" }
 
-function clockNow(): string {
+function clockNowInHHMM(): `${Hour}:${Minute}` {
   const d = new Date()
-  return `${String(d.getHours()).padStart(2, "0")}:${String(
-    d.getMinutes()
-  ).padStart(2, "0")}`
+  const hours = String(d.getHours()).padStart(2, "0") as Hour
+  const minutes = String(d.getMinutes()).padStart(2, "0") as Minute
+  return `${hours}:${minutes}`
 }
 
 function WindowContent({
@@ -128,13 +109,15 @@ export function EnvironmentView() {
   const { translate, locale } = useLocale()
   const { resolvedTheme } = useTheme()
   const dark = resolvedTheme !== "light"
+  const theme = isTheme(resolvedTheme) ? resolvedTheme : DEFAULT_THEME
   const pathname = usePathname()
 
   const [state, dispatch] = useReducer(niriReducer, undefined, initialNiriState)
   const [settings, setSettings] = useState<EnvSettings>(DEFAULT_ENV_SETTINGS)
   const [launcherOpen, setLauncherOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [clock, setClock] = useState(clockNow)
+  const [wallpaperOpen, setWallpaperOpen] = useState(false)
+  const [clock, setClock] = useState(clockNowInHHMM)
   const [stripWidth, setStripWidth] = useState(0)
 
   const files = useMemo(() => readSourceFiles(), [])
@@ -166,7 +149,7 @@ export function EnvironmentView() {
 
   // Ticking clock for the bar.
   useEffect(() => {
-    const id = window.setInterval(() => setClock(clockNow()), 15_000)
+    const id = window.setInterval(() => setClock(clockNowInHHMM()), 15_000)
     return () => window.clearInterval(id)
   }, [])
 
@@ -197,7 +180,7 @@ export function EnvironmentView() {
         return
       }
       // While a panel is open it owns the keyboard.
-      if (launcherOpen || settingsOpen) return
+      if (launcherOpen || settingsOpen || wallpaperOpen) return
       const action = keyToAction(event)
       if (action) {
         event.preventDefault()
@@ -207,7 +190,7 @@ export function EnvironmentView() {
     }
     window.addEventListener("keydown", onKey, true)
     return () => window.removeEventListener("keydown", onKey, true)
-  }, [launcherOpen, settingsOpen])
+  }, [launcherOpen, settingsOpen, wallpaperOpen])
 
   const launch = (app: AppId) => {
     dispatch({ app, title: appTitle[app], type: "spawn" })
@@ -239,8 +222,9 @@ export function EnvironmentView() {
     <NoctaliaBar
       activeWindowTitle={focusedWin?.title ?? ""}
       clock={clock}
-      keyboardLayout={locale === "ja" ? "JA" : "US"}
+      keyboardLayout={locale}
       onLauncher={() => setLauncherOpen(true)}
+      onWallpaper={() => setWallpaperOpen(true)}
       onWorkspace={(id) => dispatch({ id, type: "focusWorkspace" })}
       workspaces={pips}
     />
@@ -257,7 +241,7 @@ export function EnvironmentView() {
       {/* Wallpaper */}
       <div
         className="absolute inset-0 -z-10"
-        style={WALLPAPER_STYLE[settings.wallpaper]}
+        style={wallpaperStyle(settings.wallpaper, theme)}
       />
 
       {settings.barPosition === "top" ? <div className="p-2">{bar}</div> : null}
@@ -329,9 +313,18 @@ export function EnvironmentView() {
                             <span className="flex-1 truncate font-medium text-xs">
                               {win.title}
                             </span>
+                            <SquareIcon
+                              className="size-3.5 text-muted-foreground hover:scale-110"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                dispatch({
+                                  type: "fullscreen",
+                                })
+                              }}
+                            />
+
                             <X
-                              aria-label={translate("environment.window.close")}
-                              className="size-3.5 text-muted-foreground"
+                              className="size-3.5 text-muted-foreground hover:scale-110"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 dispatch({
@@ -379,6 +372,12 @@ export function EnvironmentView() {
         onClose={() => setSettingsOpen(false)}
         open={settingsOpen}
         settings={settings}
+      />
+      <WallpaperDialog
+        onChange={(w) => setSettings((s) => ({ ...s, wallpaper: w }))}
+        onOpenChange={setWallpaperOpen}
+        open={wallpaperOpen}
+        value={settings.wallpaper}
       />
     </main>
   )
