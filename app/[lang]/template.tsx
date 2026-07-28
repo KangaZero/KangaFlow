@@ -2,6 +2,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import { motion, useReducedMotion } from "motion/react"
+import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect, useMemo, useState } from "react"
 import { BIO, Fish, Jellyfish, mulberry32 } from "@/components/sea-creatures"
@@ -249,13 +250,16 @@ export default function Template({ children }: { children: React.ReactNode }) {
   const reduceMotion = useReducedMotion()
   const { resolvedTheme } = useTheme()
   const theme: Theme = isTheme(resolvedTheme) ? resolvedTheme : DEFAULT_THEME
+  const pathname = usePathname()
+  // The environment page IS the desktop — the curtain would just cover it.
+  const isEnvironment = /\/environment\/?$/.test(pathname ?? "")
 
   // Seed the sea life on the CLIENT only (Date.now() in render would mismatch
   // the prerendered HTML). Re-mounts per navigation → fresh randomness each time.
   const [seed, setSeed] = useState<number | null>(null)
   useEffect(() => setSeed(Date.now()), [])
 
-  if (reduceMotion) return <>{children}</>
+  if (reduceMotion || isEnvironment) return <>{children}</>
 
   return (
     <>
