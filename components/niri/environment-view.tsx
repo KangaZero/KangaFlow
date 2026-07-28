@@ -22,6 +22,7 @@ import {
   niriReducer,
 } from "@/components/niri/engine"
 import { keyToAction } from "@/components/niri/keymap"
+import { NiriHelpDialog } from "@/components/niri/niri-help-dialog"
 import { NoctaliaBar } from "@/components/niri/noctalia-bar"
 import {
   type LauncherApp,
@@ -125,6 +126,7 @@ export function EnvironmentView() {
   const [launcherOpen, setLauncherOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [wallpaperOpen, setWallpaperOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
   const [clock, setClock] = useState(clockNowInHHMM)
   const [stripWidth, setStripWidth] = useState(0)
 
@@ -187,6 +189,13 @@ export function EnvironmentView() {
         setSettingsOpen((v) => !v)
         return
       }
+      // `?` toggles the shortcuts help. Match the produced character (not
+      // Shift+/) so it works regardless of keyboard layout.
+      if (event.key === "?") {
+        event.preventDefault()
+        setHelpOpen((v) => !v)
+        return
+      }
       // In overview: Enter opens the selected (active) workspace, Escape leaves.
       // Both exit the overview onto whatever workspace is currently selected.
       if (state.overview && (event.key === "Enter" || event.key === "Escape")) {
@@ -195,7 +204,7 @@ export function EnvironmentView() {
         return
       }
       // While a panel is open it owns the keyboard.
-      if (launcherOpen || settingsOpen || wallpaperOpen) return
+      if (launcherOpen || settingsOpen || wallpaperOpen || helpOpen) return
       const action = keyToAction(event)
       if (action) {
         event.preventDefault()
@@ -205,7 +214,7 @@ export function EnvironmentView() {
     }
     window.addEventListener("keydown", onKey, true)
     return () => window.removeEventListener("keydown", onKey, true)
-  }, [launcherOpen, settingsOpen, wallpaperOpen, state.overview])
+  }, [launcherOpen, settingsOpen, wallpaperOpen, helpOpen, state.overview])
 
   const launch = (app: AppId) => {
     dispatch({ app, title: appTitle[app], type: "spawn" })
@@ -280,7 +289,7 @@ export function EnvironmentView() {
           // enter. Each tile renders its windows' real content, live.
           <motion.div
             animate={{ opacity: 1 }}
-            className="absolute inset-0 flex flex-col gap-3 overflow-auto bg-background/40 p-4 backdrop-blur-2xl"
+            className="absolute inset-0 flex flex-col gap-3 overflow-auto p-4"
             initial={{ opacity: 0 }}
           >
             {state.workspaces.map((ws) => {
@@ -303,7 +312,7 @@ export function EnvironmentView() {
                 >
                   <button
                     aria-label={wsLabel}
-                    className="absolute inset-0 z-20"
+                    className="absolute inset-0 z-10"
                     onClick={() => {
                       dispatch({ id: ws.id, type: "focusWorkspace" })
                       dispatch({ type: "toggleOverview" })
@@ -319,35 +328,61 @@ export function EnvironmentView() {
                         —
                       </span>
                     ) : (
-                      ws.columns.map((col) => (
+                      ws.columns.map((col, ci) => (
                         <div
                           className="flex min-w-0 flex-col gap-2"
                           key={col.id}
                           style={{ flex: col.width }}
                         >
-                          {col.windows.map((win) => (
-                            <div
-                              className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card"
-                              key={win.id}
-                            >
-                              <div className="flex items-center border-border border-b bg-muted/40 px-2 py-1">
-                                <span className="truncate font-medium text-[10px] text-card-foreground">
-                                  {win.title}
-                                </span>
-                              </div>
-                              {/* Live content; pointer-events-none so the tile's
-                                  overlay button owns the click. */}
-                              <div className="pointer-events-none min-h-0 flex-1 overflow-hidden">
-                                <WindowContent
-                                  dark={dark}
-                                  files={files}
-                                  onClose={() => dispatch({ type: "close" })}
-                                  routePath={pathname}
-                                  win={win}
+                          {col.windows.map((win, wi) => {
+                            const winFocused =
+                              ws.id === state.active &&
+                              ci === ws.focused &&
+                              wi === col.focused
+                            return (
+                              <div
+                                className={cn(
+                                  "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border-2 bg-card transition-colors",
+                                  winFocused
+                                    ? "border-primary"
+                                    : "border-border hover:border-primary/60"
+                                )}
+                                key={win.id}
+                              >
+                                <div className="flex items-center border-border border-b bg-muted/40 px-2 py-1">
+                                  <span className="truncate font-medium text-[10px] text-card-foreground">
+                                    {win.title}
+                                  </span>
+                                </div>
+                                {/* Live content; pointer-events-none so the
+                                    window's overlay button owns the click. */}
+                                <div className="pointer-events-none min-h-0 flex-1 overflow-hidden">
+                                  <WindowContent
+                                    dark={dark}
+                                    files={files}
+                                    onClose={() => dispatch({ type: "close" })}
+                                    routePath={pathname}
+                                    win={win}
+                                  />
+                                </div>
+                                {/* Click a window to focus it, then exit. */}
+                                <button
+                                  aria-label={win.title}
+                                  className="absolute inset-0 z-30"
+                                  onClick={() => {
+                                    dispatch({
+                                      column: ci,
+                                      type: "focusAt",
+                                      window: wi,
+                                      workspace: ws.id,
+                                    })
+                                    dispatch({ type: "toggleOverview" })
+                                  }}
+                                  type="button"
                                 />
                               </div>
-                            </div>
-                          ))}
+                            )
+                          })}
                         </div>
                       ))
                     )}
@@ -488,6 +523,7 @@ export function EnvironmentView() {
         open={wallpaperOpen}
         value={settings.wallpaper}
       />
+      <NiriHelpDialog onOpenChange={setHelpOpen} open={helpOpen} />
     </main>
   )
 }
