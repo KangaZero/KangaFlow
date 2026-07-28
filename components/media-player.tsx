@@ -15,7 +15,6 @@ import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -46,6 +45,9 @@ export function formatTime(totalSeconds: number): string {
   const seconds = safe % 60
   return `${minutes}:${seconds.toString().padStart(2, "0")}`
 }
+
+// Springy press/hover feedback shared by the transport buttons.
+const TAP_SPRING = { damping: 18, stiffness: 500, type: "spring" } as const
 
 // Animated equalizer bars shown while playing — purely decorative "now playing"
 // affordance. Motion loops each bar's height on its own offset.
@@ -91,14 +93,26 @@ export function MediaPlayer() {
 
   const track = PLAYLIST[currentIndex] ?? PLAYLIST[0]
 
-  // TODO(human): simulated playback tick.
-  // While `isPlaying`, advance `currentTimeSec` by 1 every second. When it
-  // reaches `track.duration`, auto-advance to the next track (wrap around) and
-  // keep playing from 0. Remember to clear the interval on cleanup so pausing,
-  // unmounting, or a track change doesn't leave a stray timer running.
+  // Simulated playback tick: advance the clock once per second while playing.
+  // The cleanup stops the timer on pause, unmount, or when `isPlaying` flips —
+  // so intervals never stack or leak. The functional updater avoids reading a
+  // stale `currentTimeSec`.
   useEffect(() => {
     if (!isPlaying) return
+    const id = window.setInterval(() => {
+      setCurrentTimeSec((t) => t + 1)
+    }, 1000)
+    return () => window.clearInterval(id)
   }, [isPlaying])
+
+  // When a playing track runs out, roll straight into the next one (wrapping)
+  // and restart the clock. Kept separate from the tick so the interval's state
+  // updater stays pure — no track-advance side effect inside it.
+  useEffect(() => {
+    if (!isPlaying || currentTimeSec < track.duration) return
+    setCurrentIndex((i) => (i + 1) % PLAYLIST.length)
+    setCurrentTimeSec(0)
+  }, [isPlaying, currentTimeSec, track.duration])
 
   function goToIndex(index: number) {
     const count = PLAYLIST.length
@@ -197,46 +211,77 @@ export function MediaPlayer() {
 
               {/* Transport controls */}
               <div className="flex items-center justify-center gap-2">
-                <Button
-                  aria-label={translate("mediaPlayer.previous")}
-                  onClick={goToPrevious}
-                  size="icon"
-                  variant="ghost"
+                <motion.div
+                  transition={TAP_SPRING}
+                  whileHover={{ scale: 1.15, x: -2 }}
+                  whileTap={{ scale: 0.85 }}
                 >
-                  <SkipBack className="size-5" />
-                </Button>
-                <Button
-                  aria-label={translate(
-                    isPlaying ? "mediaPlayer.pause" : "mediaPlayer.play"
-                  )}
-                  className="size-11 rounded-full"
-                  onClick={() => setIsPlaying((playing) => !playing)}
-                  size="icon"
+                  <Button
+                    aria-label={translate("mediaPlayer.previous")}
+                    onClick={goToPrevious}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <SkipBack className="size-5" />
+                  </Button>
+                </motion.div>
+                <motion.div
+                  transition={TAP_SPRING}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.85 }}
                 >
-                  <AnimatePresence initial={false} mode="wait">
-                    <motion.span
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.6 }}
-                      initial={{ opacity: 0, scale: 0.6 }}
-                      key={isPlaying ? "pause" : "play"}
-                      transition={{ duration: 0.12 }}
-                    >
-                      {isPlaying ? (
-                        <Pause className="size-5" />
-                      ) : (
-                        <Play className="size-5" />
-                      )}
-                    </motion.span>
-                  </AnimatePresence>
-                </Button>
-                <Button
-                  aria-label={translate("mediaPlayer.next")}
-                  onClick={goToNext}
-                  size="icon"
-                  variant="ghost"
+                  <Button
+                    aria-label={translate(
+                      isPlaying ? "mediaPlayer.pause" : "mediaPlayer.play"
+                    )}
+                    className="relative size-11 rounded-full"
+                    onClick={() => setIsPlaying((playing) => !playing)}
+                    size="icon"
+                  >
+                    {/* Radar pulse while playing. */}
+                    {isPlaying ? (
+                      <motion.span
+                        animate={{ opacity: [0.6, 0], scale: [1, 1.6] }}
+                        aria-hidden
+                        className="absolute inset-0 rounded-full border border-primary-foreground/50"
+                        transition={{
+                          duration: 1.4,
+                          ease: "easeOut",
+                          repeat: Number.POSITIVE_INFINITY,
+                        }}
+                      />
+                    ) : null}
+                    <AnimatePresence initial={false} mode="wait">
+                      <motion.span
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.6 }}
+                        initial={{ opacity: 0, scale: 0.6 }}
+                        key={isPlaying ? "pause" : "play"}
+                        transition={{ duration: 0.12 }}
+                      >
+                        {isPlaying ? (
+                          <Pause className="size-5" />
+                        ) : (
+                          <Play className="size-5" />
+                        )}
+                      </motion.span>
+                    </AnimatePresence>
+                  </Button>
+                </motion.div>
+                <motion.div
+                  transition={TAP_SPRING}
+                  whileHover={{ scale: 1.15, x: 2 }}
+                  whileTap={{ scale: 0.85 }}
                 >
-                  <SkipForward className={cn("size-5")} />
-                </Button>
+                  <Button
+                    aria-label={translate("mediaPlayer.next")}
+                    onClick={goToNext}
+                    size="icon"
+                    variant="ghost"
+                  >
+                    <SkipForward className="size-5" />
+                  </Button>
+                </motion.div>
               </div>
             </div>
           </motion.div>
