@@ -253,6 +253,13 @@ export function EnvironmentView() {
     occupied: w.columns.length > 0,
   }))
 
+  // Bar placement: top/bottom lay out horizontally above/below the strip;
+  // left/right lay out vertically beside it.
+  const isVerticalBar =
+    settings.barPosition === "left" || settings.barPosition === "right"
+  const barBefore =
+    settings.barPosition === "top" || settings.barPosition === "left"
+
   const bar = (
     <NoctaliaBar
       activeWindowTitle={focusedWin?.title ?? ""}
@@ -263,6 +270,7 @@ export function EnvironmentView() {
       onWallpaper={() => openPanel("wallpaper")}
       onWorkspace={(id) => dispatch({ id, type: "focusWorkspace" })}
       opacity={settings.barOpacity}
+      orientation={isVerticalBar ? "vertical" : "horizontal"}
       workspaces={pips}
     />
   )
@@ -289,231 +297,242 @@ export function EnvironmentView() {
         style={wallpaperStyle(settings.wallpaper, theme)}
       />
 
-      {settings.barPosition === "top" ? <div className="p-2">{bar}</div> : null}
+      <div
+        className={cn(
+          "flex min-h-0 min-w-0 flex-1",
+          isVerticalBar ? "flex-row" : "flex-col"
+        )}
+      >
+        {barBefore ? <div className="p-2">{bar}</div> : null}
 
-      {/* Scrollable-tiling strip */}
-      <div className="relative flex-1 overflow-hidden" ref={stripRef}>
-        {state.overview ? (
-          // Overview (Alt+Shift+O): all workspaces stacked over a blurred
-          // wallpaper (backdrop-blur reads the desktop wallpaper behind).
-          // Alt+J/K move between them, Alt+Shift+J/K rearrange, click/Enter to
-          // enter. Each tile renders its windows' real content, live.
-          <motion.div
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 flex flex-col gap-3 overflow-auto p-4"
-            initial={{ opacity: 0 }}
-          >
-            {state.workspaces.map((ws) => {
-              const wsLabel = `${translate("environment.bar.workspace")} ${ws.id}`
-              return (
-                // `layout` + a spring FLIP the tiles when Alt+Shift+J/K reorders
-                // the array (stable key = ws.id). A transparent overlay button
-                // owns the click so the live window content can render without
-                // nesting interactive elements inside a <button>.
-                <motion.div
-                  className={cn(
-                    "relative flex min-h-40 flex-1 flex-col gap-2 overflow-hidden rounded-2xl border-2 bg-card/20 p-3",
-                    ws.id === state.active
-                      ? "border-primary"
-                      : "border-border/40 hover:border-border"
-                  )}
-                  key={ws.id}
-                  layout
-                  transition={{ damping: 50, stiffness: 200, type: "spring" }}
-                >
-                  <button
-                    aria-label={wsLabel}
-                    className="absolute inset-0 z-10"
-                    onClick={() => {
-                      dispatch({ id: ws.id, type: "focusWorkspace" })
-                      dispatch({ type: "toggleOverview" })
-                    }}
-                    type="button"
-                  />
-                  <span className="font-medium text-muted-foreground text-xs">
-                    {wsLabel}
-                  </span>
-                  <div className="flex min-h-0 flex-1 gap-2">
-                    {ws.columns.length === 0 ? (
-                      <span className="flex flex-1 items-center justify-center text-muted-foreground/50 text-xs">
-                        —
-                      </span>
-                    ) : (
-                      ws.columns.map((col, ci) => (
-                        <div
-                          className="flex min-w-0 flex-col gap-2"
-                          key={col.id}
-                          style={{ flex: col.width }}
-                        >
-                          {col.windows.map((win, wi) => {
-                            const winFocused =
-                              ws.id === state.active &&
-                              ci === ws.focused &&
-                              wi === col.focused
-                            return (
-                              <div
-                                className={cn(
-                                  "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border-2 bg-card transition-colors",
-                                  winFocused
-                                    ? "border-primary"
-                                    : "border-border hover:border-primary/60"
-                                )}
-                                key={win.id}
-                              >
-                                <div className="flex items-center border-border border-b bg-muted/40 px-2 py-1">
-                                  <span className="truncate font-medium text-[10px] text-card-foreground">
-                                    {win.title}
-                                  </span>
-                                </div>
-                                {/* Live content; pointer-events-none so the
+        {/* Scrollable-tiling strip */}
+        <div
+          className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
+          ref={stripRef}
+        >
+          {state.overview ? (
+            // Overview (Alt+Shift+O): all workspaces stacked over a blurred
+            // wallpaper (backdrop-blur reads the desktop wallpaper behind).
+            // Alt+J/K move between them, Alt+Shift+J/K rearrange, click/Enter to
+            // enter. Each tile renders its windows' real content, live.
+            <motion.div
+              animate={{ opacity: 1 }}
+              className="absolute inset-0 flex flex-col gap-3 overflow-hidden p-4"
+              initial={{ opacity: 0 }}
+            >
+              {state.workspaces.map((ws) => {
+                const wsLabel = `${translate("environment.bar.workspace")} ${ws.id}`
+                return (
+                  // `layout` + a spring FLIP the tiles when Alt+Shift+J/K reorders
+                  // the array (stable key = ws.id). A transparent overlay button
+                  // owns the click so the live window content can render without
+                  // nesting interactive elements inside a <button>.
+                  <motion.div
+                    className={cn(
+                      "relative flex min-h-90 flex-1 flex-col gap-2 overflow-hidden rounded-2xl border-2 bg-card/20 p-3",
+                      ws.id === state.active
+                        ? "border-primary"
+                        : "border-border/40 hover:border-border"
+                    )}
+                    key={ws.id}
+                    layout
+                    transition={{ damping: 50, stiffness: 200, type: "spring" }}
+                  >
+                    <button
+                      aria-label={wsLabel}
+                      className="absolute inset-0 z-10"
+                      onClick={() => {
+                        dispatch({ id: ws.id, type: "focusWorkspace" })
+                        dispatch({ type: "toggleOverview" })
+                      }}
+                      type="button"
+                    />
+                    <span className="font-medium text-muted-foreground text-xs">
+                      {wsLabel}
+                    </span>
+                    <div className="flex min-h-0 flex-1 gap-2">
+                      {ws.columns.length === 0 ? (
+                        <span className="flex flex-1 items-center justify-center text-muted-foreground/50 text-xs">
+                          —
+                        </span>
+                      ) : (
+                        ws.columns.map((col, ci) => (
+                          <div
+                            className="flex min-w-0 flex-col gap-2"
+                            key={col.id}
+                            style={{ flex: col.width }}
+                          >
+                            {col.windows.map((win, wi) => {
+                              const winFocused =
+                                ws.id === state.active &&
+                                ci === ws.focused &&
+                                wi === col.focused
+                              return (
+                                <div
+                                  className={cn(
+                                    "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border-2 bg-card transition-colors",
+                                    winFocused
+                                      ? "border-primary"
+                                      : "border-border hover:border-primary/60"
+                                  )}
+                                  key={win.id}
+                                >
+                                  <div className="flex items-center border-border border-b bg-muted/40 px-2 py-1">
+                                    <span className="truncate font-medium text-[10px] text-card-foreground">
+                                      {win.title}
+                                    </span>
+                                  </div>
+                                  {/* Live content; pointer-events-none so the
                                     window's overlay button owns the click. */}
-                                <div className="pointer-events-none min-h-0 flex-1 overflow-hidden">
-                                  <WindowContent
-                                    dark={dark}
-                                    files={files}
-                                    onClose={() => dispatch({ type: "close" })}
-                                    routePath={pathname}
-                                    win={win}
+                                  <div className="pointer-events-none min-h-0 flex-1 overflow-hidden">
+                                    <WindowContent
+                                      dark={dark}
+                                      files={files}
+                                      onClose={() =>
+                                        dispatch({ type: "close" })
+                                      }
+                                      routePath={pathname}
+                                      win={win}
+                                    />
+                                  </div>
+                                  {/* Click a window to focus it, then exit. */}
+                                  <button
+                                    aria-label={win.title}
+                                    className="absolute inset-0 z-30"
+                                    onClick={() => {
+                                      dispatch({
+                                        column: ci,
+                                        type: "focusAt",
+                                        window: wi,
+                                        workspace: ws.id,
+                                      })
+                                      dispatch({ type: "toggleOverview" })
+                                    }}
+                                    type="button"
                                   />
                                 </div>
-                                {/* Click a window to focus it, then exit. */}
-                                <button
-                                  aria-label={win.title}
-                                  className="absolute inset-0 z-30"
-                                  onClick={() => {
-                                    dispatch({
-                                      column: ci,
-                                      type: "focusAt",
-                                      window: wi,
-                                      workspace: ws.id,
-                                    })
-                                    dispatch({ type: "toggleOverview" })
-                                  }}
-                                  type="button"
-                                />
-                              </div>
-                            )
-                          })}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </motion.div>
-              )
-            })}
-          </motion.div>
-        ) : columns.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-center text-sm text-white/70">
-            {translate("environment.hint")}
-          </div>
-        ) : (
-          <motion.div
-            animate={{ x: offsetX }}
-            className="absolute inset-y-0 flex items-stretch"
-            style={{ gap: GAP, paddingBottom: PAD, paddingTop: PAD }}
-            transition={{ damping: 30, stiffness: 260, type: "spring" }}
-          >
-            <AnimatePresence initial={false} mode="popLayout">
-              {columns.map((col, ci) => (
-                <motion.div
-                  animate={{ opacity: ci === focusedCol ? 1 : 0.6, x: 0 }}
-                  className="flex flex-col"
-                  exit={{ opacity: 0, x: 80 }}
-                  // First window (empty workspace) fades in; later ones slide in
-                  // from the right, niri-style.
-                  initial={
-                    columns.length === 1
-                      ? { opacity: 0, x: 0 }
-                      : { opacity: 0, x: 80 }
-                  }
-                  key={col.id}
-                  layout
-                  style={{ gap: GAP, width: widths[ci] }}
-                  transition={{ damping: 30, stiffness: 260, type: "spring" }}
-                >
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {col.windows.map((win, wi) => {
-                      const isFocused = ci === focusedCol && wi === col.focused
-                      return (
-                        <motion.button
-                          className={cn(
-                            "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card text-left shadow-xl",
-                            isFocused ? "border-primary" : "border-border"
-                          )}
-                          exit={{ opacity: 0, y: 24 }}
-                          initial={
-                            columns.length === 1
-                              ? { opacity: 0 }
-                              : { opacity: 0, y: 24 }
-                          }
-                          key={win.id}
-                          layout
-                          onPointerDown={() =>
-                            dispatch({
-                              column: ci,
-                              type: "focusAt",
-                              window: wi,
-                              workspace: state.active,
-                            })
-                          }
-                          transition={{
-                            damping: 30,
-                            stiffness: 260,
-                            type: "spring",
-                          }}
-                          type="button"
-                        >
-                          <div className="flex items-center gap-2 border-border border-b bg-muted/40 px-3 py-1.5">
-                            <span className="flex-1 truncate font-medium text-xs">
-                              {win.title}
-                            </span>
-                            <SquareIcon
-                              className="size-3.5 text-muted-foreground hover:scale-110"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                dispatch({
-                                  type: "fullscreen",
-                                })
-                              }}
-                            />
+                              )
+                            })}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          ) : columns.length === 0 ? (
+            <div className="flex h-full items-center justify-center text-center text-sm text-white/70">
+              {translate("environment.hint")}
+            </div>
+          ) : (
+            <motion.div
+              animate={{ x: offsetX }}
+              className="absolute inset-y-0 flex items-stretch"
+              style={{ gap: GAP, paddingBottom: PAD, paddingTop: PAD }}
+              transition={{ damping: 30, stiffness: 260, type: "spring" }}
+            >
+              <AnimatePresence initial={false} mode="popLayout">
+                {columns.map((col, ci) => (
+                  <motion.div
+                    animate={{ opacity: ci === focusedCol ? 1 : 0.6, x: 0 }}
+                    className="flex flex-col"
+                    exit={{ opacity: 0, x: 80 }}
+                    // First window (empty workspace) fades in; later ones slide in
+                    // from the right, niri-style.
+                    initial={
+                      columns.length === 1
+                        ? { opacity: 0, x: 0 }
+                        : { opacity: 0, x: 80 }
+                    }
+                    key={col.id}
+                    layout
+                    style={{ gap: GAP, width: widths[ci] }}
+                    transition={{ damping: 30, stiffness: 260, type: "spring" }}
+                  >
+                    <AnimatePresence initial={false} mode="popLayout">
+                      {col.windows.map((win, wi) => {
+                        const isFocused =
+                          ci === focusedCol && wi === col.focused
+                        return (
+                          <motion.button
+                            className={cn(
+                              "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card text-left shadow-xl",
+                              isFocused ? "border-primary" : "border-border"
+                            )}
+                            exit={{ opacity: 0, y: 24 }}
+                            initial={
+                              columns.length === 1
+                                ? { opacity: 0 }
+                                : { opacity: 0, y: 24 }
+                            }
+                            key={win.id}
+                            layout
+                            onPointerDown={() =>
+                              dispatch({
+                                column: ci,
+                                type: "focusAt",
+                                window: wi,
+                                workspace: state.active,
+                              })
+                            }
+                            transition={{
+                              damping: 30,
+                              stiffness: 260,
+                              type: "spring",
+                            }}
+                            type="button"
+                          >
+                            <div className="flex items-center gap-2 border-border border-b bg-muted/40 px-3 py-1.5">
+                              <span className="flex-1 truncate font-medium text-xs">
+                                {win.title}
+                              </span>
+                              <SquareIcon
+                                className="size-3.5 text-muted-foreground hover:scale-110"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  dispatch({
+                                    type: "fullscreen",
+                                  })
+                                }}
+                              />
 
-                            <X
-                              className="size-3.5 text-muted-foreground hover:scale-110"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                dispatch({
-                                  column: ci,
-                                  type: "focusAt",
-                                  window: wi,
-                                  workspace: state.active,
-                                })
-                                dispatch({ type: "close" })
-                              }}
-                            />
-                          </div>
-                          <div className="min-h-0 flex-1 overflow-hidden">
-                            <WindowContent
-                              dark={dark}
-                              files={files}
-                              onClose={() => dispatch({ type: "close" })}
-                              routePath={pathname}
-                              win={win}
-                            />
-                          </div>
-                        </motion.button>
-                      )
-                    })}
-                  </AnimatePresence>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        )}
+                              <X
+                                className="size-3.5 text-muted-foreground hover:scale-110"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  dispatch({
+                                    column: ci,
+                                    type: "focusAt",
+                                    window: wi,
+                                    workspace: state.active,
+                                  })
+                                  dispatch({ type: "close" })
+                                }}
+                              />
+                            </div>
+                            <div className="min-h-0 flex-1 overflow-hidden">
+                              <WindowContent
+                                dark={dark}
+                                files={files}
+                                onClose={() => dispatch({ type: "close" })}
+                                routePath={pathname}
+                                win={win}
+                              />
+                            </div>
+                          </motion.button>
+                        )
+                      })}
+                    </AnimatePresence>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </div>
+
+        {barBefore ? null : <div className="p-2">{bar}</div>}
       </div>
-
-      {settings.barPosition === "bottom" ? (
-        <div className="p-2">{bar}</div>
-      ) : null}
 
       <NoctaliaLauncher
         apps={launcherApps}

@@ -33,6 +33,7 @@ import {
   type UiScale,
 } from "@/components/niri/settings"
 import { WallpaperPicker } from "@/components/niri/wallpaper-picker"
+import { Slider } from "@/components/ui/slider"
 import type { TranslationKey } from "@/lib/i18n"
 import { DEFAULT_THEME, isTheme, THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
@@ -104,6 +105,9 @@ function Segmented<T extends string | number>(props: {
   onSelect: (option: T) => void
 }): React.JSX.Element {
   const { label, options, value, format, onSelect } = props
+  // Unique per instance so the sliding highlight only animates within this
+  // control (only one settings section renders at a time, so labels don't clash).
+  const layoutId = `segmented-${label}`
   return (
     <fieldset
       aria-label={label}
@@ -112,23 +116,65 @@ function Segmented<T extends string | number>(props: {
       {options.map((option) => {
         const selected = option === value
         return (
-          <button
+          <motion.button
             aria-pressed={selected}
-            className={cn(
-              "rounded-lg px-3 py-1.5 font-medium text-sm transition-colors",
-              selected
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-foreground hover:bg-muted/70"
-            )}
+            className="relative rounded-lg px-3 py-1.5 font-medium text-sm"
             key={String(option)}
             onClick={() => onSelect(option)}
             type="button"
+            whileTap={{ scale: 0.94 }}
           >
-            {format(option)}
-          </button>
+            {selected ? (
+              <motion.span
+                aria-hidden
+                className="absolute inset-0 rounded-lg bg-primary shadow-sm"
+                layoutId={layoutId}
+                transition={{ damping: 32, stiffness: 400, type: "spring" }}
+              />
+            ) : null}
+            <span
+              className={cn(
+                "relative z-10 transition-colors",
+                selected ? "text-primary-foreground" : "text-foreground"
+              )}
+            >
+              {format(option)}
+            </span>
+          </motion.button>
         )
       })}
     </fieldset>
+  )
+}
+
+// A slider bound to a discrete option array (drives numeric settings). The
+// slider tracks the option's ARRAY INDEX; the live label shows format(value).
+function OptionSlider<T extends string | number>(props: {
+  label: string
+  options: readonly T[]
+  value: T
+  format: (option: T) => string
+  onSelect: (option: T) => void
+}): React.JSX.Element {
+  const { label, options, value, format, onSelect } = props
+  const index = Math.max(0, options.indexOf(value))
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="ml-auto font-medium text-muted-foreground text-xs tabular-nums">
+        {format(value)}
+      </span>
+      <Slider
+        aria-label={label}
+        max={options.length - 1}
+        min={0}
+        onValueChange={(values) => {
+          const next = options[values[0] ?? 0]
+          if (next !== undefined) onSelect(next)
+        }}
+        step={1}
+        value={[index]}
+      />
+    </div>
   )
 }
 
@@ -301,7 +347,7 @@ export function NoctaliaSettings(props: {
                   icon={Maximize}
                   title={translate("environment.settings.uiScale")}
                 >
-                  <Segmented<UiScale>
+                  <OptionSlider<UiScale>
                     format={percent}
                     label={translate("environment.settings.uiScale")}
                     onSelect={(scale) => set("uiScale", scale)}
@@ -313,7 +359,7 @@ export function NoctaliaSettings(props: {
                   icon={Blend}
                   title={translate("environment.settings.transparency")}
                 >
-                  <Segmented<GlassLevel>
+                  <OptionSlider<GlassLevel>
                     format={(level) =>
                       translate(
                         level === "solid"
@@ -341,7 +387,11 @@ export function NoctaliaSettings(props: {
                       translate(
                         position === "top"
                           ? "environment.settings.barTop"
-                          : "environment.settings.barBottom"
+                          : position === "bottom"
+                            ? "environment.settings.barBottom"
+                            : position === "left"
+                              ? "environment.settings.barLeft"
+                              : "environment.settings.barRight"
                       )
                     }
                     label={translate("environment.settings.barPosition")}
@@ -354,7 +404,7 @@ export function NoctaliaSettings(props: {
                   icon={PanelTop}
                   title={translate("environment.settings.barOpacity")}
                 >
-                  <Segmented<BarOpacity>
+                  <OptionSlider<BarOpacity>
                     format={percent}
                     label={translate("environment.settings.barOpacity")}
                     onSelect={(opacity) => set("barOpacity", opacity)}

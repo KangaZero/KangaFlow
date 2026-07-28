@@ -17,7 +17,7 @@ export const WALLPAPERS = [
 ] as const
 export type WallpaperId = (typeof WALLPAPERS)[number]
 
-export const BAR_POSITIONS = ["top", "bottom"] as const
+export const BAR_POSITIONS = ["top", "bottom", "left", "right"] as const
 export type BarPosition = (typeof BAR_POSITIONS)[number]
 
 export const ENV_FONTS = ["mono", "sans"] as const

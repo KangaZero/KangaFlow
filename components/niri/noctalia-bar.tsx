@@ -34,6 +34,7 @@ export function NoctaliaBar(props: {
   onWallpaper: () => void // wallpaper button opens the wallpaper dialog
   onSettings: () => void // settings button opens the settings window
   opacity: number // bar background opacity (0..1), from settings.barOpacity
+  orientation: "horizontal" | "vertical" // layout axis (vertical = left/right bar)
 }): React.JSX.Element {
   const {
     workspaces,
@@ -45,22 +46,23 @@ export function NoctaliaBar(props: {
     onWallpaper,
     onSettings,
     opacity,
+    orientation,
   } = props
   const { translate } = useLocale()
+  const isV = orientation === "vertical"
 
   return (
     <header
       className={cn(
-        "flex items-center justify-between gap-3",
-        "rounded-xl border border-border px-2 py-1.5 shadow-lg backdrop-blur",
-        "text-foreground text-xs"
+        "flex justify-between gap-3 rounded-xl border border-border px-2 py-1.5 text-foreground text-xs shadow-lg backdrop-blur",
+        isV ? "h-full flex-col items-center" : "items-center"
       )}
       style={{
         backgroundColor: `color-mix(in oklch, var(--card) ${Math.round(opacity * 100)}%, transparent)`,
       }}
     >
       {/* LEFT: launcher logo + active window title */}
-      <div className="flex min-w-0 items-center gap-2">
+      <div className={cn("flex min-w-0 items-center gap-2", isV && "flex-col")}>
         <AnimatedTooltip
           label={translate("environment.bar.launcher")}
           shortcut={["Alt", "D"]}
@@ -76,14 +78,19 @@ export function NoctaliaBar(props: {
             <SiNixos />
           </Button>
         </AnimatedTooltip>
-        <span className="max-w-36.25 truncate text-muted-foreground">
+        <span
+          className={cn(
+            "truncate text-muted-foreground",
+            isV ? "max-w-14 text-center" : "max-w-36.25"
+          )}
+        >
           {activeWindowTitle === "" ? "—" : activeWindowTitle}
         </span>
       </div>
 
       {/* CENTER: workspace pills, clock, settings, keyboard-layout badge */}
-      <div className="flex items-center gap-2">
-        <ul className="flex items-center gap-1">
+      <div className={cn("flex items-center gap-2", isV && "flex-col")}>
+        <ul className={cn("flex items-center gap-1", isV && "flex-col")}>
           {workspaces.map((ws) => (
             <li key={ws.id}>
               <button
@@ -111,8 +118,13 @@ export function NoctaliaBar(props: {
       </div>
 
       {/* RIGHT: faux system monitor + notification bell */}
-      <div className="flex items-center gap-2">
-        <span className="font-mono text-muted-foreground tabular-nums">
+      <div className={cn("flex items-center gap-2", isV && "flex-col")}>
+        <span
+          className={cn(
+            "font-mono text-muted-foreground tabular-nums",
+            isV && "text-center text-[0.625rem] leading-tight"
+          )}
+        >
           CPU 12% MEM 43%
         </span>
         <AnimatedTooltip
