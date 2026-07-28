@@ -179,6 +179,12 @@ export function EnvironmentView() {
         setSettingsOpen((v) => !v)
         return
       }
+      // Escape leaves the overview.
+      if (event.key === "Escape" && state.overview) {
+        event.preventDefault()
+        dispatch({ type: "toggleOverview" })
+        return
+      }
       // While a panel is open it owns the keyboard.
       if (launcherOpen || settingsOpen || wallpaperOpen) return
       const action = keyToAction(event)
@@ -190,7 +196,7 @@ export function EnvironmentView() {
     }
     window.addEventListener("keydown", onKey, true)
     return () => window.removeEventListener("keydown", onKey, true)
-  }, [launcherOpen, settingsOpen, wallpaperOpen])
+  }, [launcherOpen, settingsOpen, wallpaperOpen, state.overview])
 
   const launch = (app: AppId) => {
     dispatch({ app, title: appTitle[app], type: "spawn" })
@@ -248,7 +254,61 @@ export function EnvironmentView() {
 
       {/* Scrollable-tiling strip */}
       <div className="relative flex-1 overflow-hidden" ref={stripRef}>
-        {columns.length === 0 ? (
+        {state.overview ? (
+          // Overview (Alt+Shift+O): all workspaces stacked vertically, niri-
+          // style. Alt+J/K move between them; click one to enter it.
+          <motion.div
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 flex flex-col gap-3 overflow-auto p-4"
+            initial={{ opacity: 0 }}
+          >
+            {state.workspaces.map((ws) => (
+              <button
+                aria-label={`${translate("environment.bar.workspace")} ${ws.id}`}
+                className={cn(
+                  "flex min-h-32 flex-1 flex-col gap-2 rounded-2xl border-2 bg-card/30 p-3 text-left backdrop-blur-sm transition",
+                  ws.id === state.active
+                    ? "border-primary"
+                    : "border-border/40 hover:border-border"
+                )}
+                key={ws.id}
+                onClick={() => {
+                  dispatch({ id: ws.id, type: "focusWorkspace" })
+                  dispatch({ type: "toggleOverview" })
+                }}
+                type="button"
+              >
+                <span className="font-medium text-muted-foreground text-xs">
+                  {`${translate("environment.bar.workspace")} ${ws.id}`}
+                </span>
+                <div className="flex min-h-0 flex-1 gap-2">
+                  {ws.columns.length === 0 ? (
+                    <span className="flex flex-1 items-center justify-center text-muted-foreground/50 text-xs">
+                      —
+                    </span>
+                  ) : (
+                    ws.columns.map((col) => (
+                      <div
+                        className="flex min-w-0 flex-col gap-2"
+                        key={col.id}
+                        style={{ flex: col.width }}
+                      >
+                        {col.windows.map((win) => (
+                          <div
+                            className="flex min-h-10 flex-1 items-center justify-center overflow-hidden rounded-lg border border-border bg-card px-2 text-center text-[10px] text-card-foreground"
+                            key={win.id}
+                          >
+                            {win.title}
+                          </div>
+                        ))}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </button>
+            ))}
+          </motion.div>
+        ) : columns.length === 0 ? (
           <div className="flex h-full items-center justify-center text-center text-sm text-white/70">
             {translate("environment.hint")}
           </div>

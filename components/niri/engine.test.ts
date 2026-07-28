@@ -196,6 +196,28 @@ describe("fullscreen", () => {
   })
 })
 
+describe("overview", () => {
+  it("toggles, and j/k (focusDown/Up) navigate workspaces while it's open", () => {
+    let state = initialNiriState()
+    state = niriReducer(state, { type: "toggleOverview" })
+    expect(state.overview).toBe(true)
+    state = niriReducer(state, { type: "focusDown" })
+    expect(state.active).toBe(2)
+    state = niriReducer(state, { type: "focusDown" })
+    state = niriReducer(state, { type: "focusDown" })
+    expect(state.active).toBe(3) // clamped to WORKSPACE_MAX
+    state = niriReducer(state, { type: "focusUp" })
+    expect(state.active).toBe(2)
+  })
+
+  it("focusDown moves windows, not workspaces, when overview is off", () => {
+    let state = initialNiriState()
+    state = niriReducer(state, { app: "terminal", type: "spawn" })
+    state = niriReducer(state, { type: "focusDown" })
+    expect(state.active).toBe(1)
+  })
+})
+
 describe("cycleWidth", () => {
   it("advances through the presets and wraps", () => {
     let state = initialNiriState()

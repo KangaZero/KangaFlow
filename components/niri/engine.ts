@@ -208,9 +208,18 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
 
     case "focusUp":
     case "focusDown": {
+      const dir = action.type === "focusUp" ? -1 : 1
+      // In overview, up/down navigate between the vertically-stacked workspaces
+      // (niri's overview movement); otherwise they move within the focused
+      // column's window stack.
+      if (state.overview) {
+        return {
+          ...state,
+          active: clamp(state.active + dir, WORKSPACE_MIN, WORKSPACE_MAX),
+        }
+      }
       const column = getFocusedColumn(state)
       if (!column) return state
-      const dir = action.type === "focusUp" ? -1 : 1
       const focused = clamp(column.focused + dir, 0, column.windows.length - 1)
       if (focused === column.focused) return state
       return mapActiveWorkspace(state, (ws) =>
