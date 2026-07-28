@@ -5,7 +5,7 @@ import { Bell, Image as ImageIcon, Settings } from "lucide-react"
 import type * as React from "react"
 import { SiNixos } from "react-icons/si"
 
-import Counter from "@/components/Counter"
+import { Counter } from "@/components/Counter"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/lib/i18n"

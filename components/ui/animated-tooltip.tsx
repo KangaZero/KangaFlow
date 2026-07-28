@@ -28,7 +28,7 @@ export interface AnimatedTooltipProps {
    * above on mobile and below at `sm+` — matching a nav that sits at the bottom
    * on small screens and the top on larger ones.
    */
-  side?: "top" | "bottom" | "responsive"
+  side?: "top" | "bottom" | "right" | "responsive"
   className?: string
 }
 
@@ -40,6 +40,7 @@ const SIDE_STYLES = {
     className: "bottom-full mb-2 sm:top-full sm:bottom-auto sm:mt-2 sm:mb-0",
     y: 8,
   },
+  right: { className: "top-0 left-30", y: 12 },
   top: { className: "bottom-full mb-2", y: 8 },
 } as const
 

@@ -16,8 +16,8 @@ export function PageCodeButton({ file }: { file: string }) {
   const label = translate("terminal.viewCode")
 
   return (
-    <div className="fixed top-20 right-4 z-30">
-      <AnimatedTooltip label={label} side="responsive">
+    <div className="fixed top-30 left-4 z-30">
+      <AnimatedTooltip label={label} side="right">
         <Button
           aria-label={label}
           onClick={() => {

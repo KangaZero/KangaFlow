@@ -190,7 +190,7 @@ function FloatingLogo({
   })
 
   const targetY = 2
-  const targetX = viewportWidth / 2 + 55
+  const targetX = viewportWidth / 2 + 70
 
   return (
     <motion.div
@@ -615,7 +615,13 @@ export function AboutSection() {
             {/* Project */}
             <Section
               id={projectSection.id}
-              title={<GradientText neon text={translate("about.project")} />}
+              title={
+                <GradientText
+                  className="text-3xl sm:text-4xl"
+                  neon
+                  text={translate("about.project")}
+                />
+              }
             >
               <div className="flex justify-center">
                 <Carousel

@@ -54,6 +54,7 @@ export type NiriAction =
   | { type: "focusWorkspace"; id: number }
   | { type: "moveToWorkspace"; id: number }
   | { type: "fullscreen" }
+  | { type: "toggleFullscreen" }
   | { type: "toggleFloat" }
   | { type: "centerColumn" }
   | { type: "cycleWidth" }
