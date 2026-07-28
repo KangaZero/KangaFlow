@@ -6,9 +6,9 @@
 
 import type { StaticImageData } from "next/image"
 import type { CSSProperties } from "react"
-import beach from "@/assets/wallpapers/beach-path.png"
+import beach from "@/assets/wallpapers/beach-path.webp"
 import cat from "@/assets/wallpapers/cat-vibin.png"
-import magma from "@/assets/wallpapers/magma.png"
+import magma from "@/assets/wallpapers/magma.webp"
 import type { WallpaperId } from "@/components/niri/settings"
 import type { Theme } from "@/lib/themes"
 
