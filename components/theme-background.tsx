@@ -8,6 +8,7 @@ import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 
 import { BlueSky } from "@/components/blue-sky"
+import { SwimmingSchool } from "@/components/sea-creatures"
 
 // The WebGL backgrounds pull heavy deps (ogl / three + postprocessing), so they
 // load only when their theme is active — a light-theme visitor never downloads
@@ -25,7 +26,12 @@ const FILL = "h-full w-full"
 function activeBackground(theme: string | undefined) {
   switch (theme) {
     case "dark":
-      return <LightRays className={FILL} />
+      return (
+        <>
+          <LightRays className={FILL} />
+          <SwimmingSchool />
+        </>
+      )
     case "terminal":
       return <PixelBlast className={FILL} color="#a6e3a1" transparent />
     default:
