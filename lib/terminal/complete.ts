@@ -46,6 +46,8 @@ export function completeLine(
   const word = line.slice(wordStart)
   const firstSpace = line.indexOf(" ")
   const command = firstSpace === -1 ? "" : line.slice(0, firstSpace)
+  const parts = line.trim().split(/\s+/)
+  const lastArg = parts.at(-1)
 
   let pool: readonly string[]
   if (wordStart === 0) {
@@ -57,7 +59,12 @@ export function completeLine(
     command === "vim" ||
     command === "code"
   ) {
-    pool = files
+    //This is to prevent being able to continously autocomplete when adding a new argument
+    if (lastArg && files.includes(lastArg)) {
+      pool = []
+    } else {
+      pool = files
+    }
   } else if (command === "theme") {
     pool = THEMES
   } else {

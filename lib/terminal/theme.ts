@@ -8,6 +8,12 @@
 
 export type TerminalPalette = {
   base: string
+  // DOM backing painted *behind* the transparent xterm canvas (a CSS colour on
+  // the mount element). Under allowTransparency the canvas clearRects and never
+  // fills the theme background, so contrast has to come from here: dark → none
+  // (light text reads over the dark wallpaper); light → a low-alpha scrim so
+  // dark text + the fastfetch accents stay legible over the busy photo.
+  scrim: string
   text: string
   mauve: string
   pink: string
@@ -36,6 +42,7 @@ export const MOCHA: TerminalPalette = {
   overlay: "#6c7086",
   pink: "#f5c2e7",
   red: "#f38ba8",
+  scrim: "transparent", // light text over the dark wallpaper needs no backing
   teal: "#94e2d5",
   text: "#cdd6f4",
   white: "#bac2de",
@@ -54,6 +61,7 @@ export const LATTE: TerminalPalette = {
   overlay: "#9ca0b0",
   pink: "#ea76cb",
   red: "#d20f39",
+  scrim: "rgba(239,241,245,0.7)", // base #eff1f5 @ 70% — dark text + fastfetch accents stay legible over the photo
   teal: "#179299",
   text: "#4c4f69",
   white: "#acb0be",
@@ -69,8 +77,9 @@ export function paletteForTheme(theme: string | undefined): TerminalPalette {
 // Build an xterm ITheme-compatible object from a palette.
 export function xtermTheme(p: TerminalPalette) {
   return {
-    // Transparent canvas (paired with allowTransparency) so the window frame /
-    // wallpaper shows through — the ANSI-coloured prompt segments stay solid.
+    // Always transparent (paired with allowTransparency) so the wallpaper shows
+    // through; the canvas clearRects and never fills this. Readability contrast
+    // comes from the DOM scrim behind the canvas — see TerminalPalette.scrim.
     background: "rgba(0,0,0,0)",
     black: p.black,
     blue: p.blue,

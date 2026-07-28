@@ -326,9 +326,7 @@ export function TerminalBody({
         dark: darkRef.current,
         locale,
         resolution: `${window.screen.width}x${window.screen.height}`,
-        themeLabel: darkRef.current
-          ? "terminal (Catppuccin Mocha)"
-          : "terminal (Catppuccin Latte)",
+        themeLabel: darkRef.current ? "Catppuccin Mocha" : "Catppuccin Latte",
         uptime: formatUptime(Date.now() - startedAt.current),
       }
       for (const line of renderFastfetch(info)) term.writeln(line)
@@ -615,7 +613,13 @@ export function TerminalBody({
   return (
     <>
       <div className="relative h-full w-full flex-1">
-        <div className="h-full w-full rounded-t-md" ref={ref} />
+        {/* Scrim behind the transparent xterm canvas: readability backing that
+            still lets the wallpaper through (light theme only; dark = none). */}
+        <div
+          className="h-full w-full rounded-t-md"
+          ref={ref}
+          style={{ background: palette.scrim }}
+        />
         {editor ? (
           <div className="absolute inset-0">
             <CodeEditor

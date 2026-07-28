@@ -23,6 +23,14 @@ describe("completeLine", () => {
     expect(result.wordStart).toBe("nvim ".length)
   })
 
+  it("stops re-completing once the argument is already a full filename", () => {
+    // Guard: when the last token is a known file, the pool is emptied so Tab on
+    // a completed `nvim app/page.tsx` no longer re-lists every file.
+    expect(completeLine("nvim app/page.tsx", FILES).candidates).toEqual([])
+    // Same once a trailing space starts the next argument.
+    expect(completeLine("nvim app/page.tsx ", FILES).candidates).toEqual([])
+  })
+
   it("completes theme names for the theme command", () => {
     expect(completeLine("theme te", FILES).candidates).toEqual(["terminal"])
   })

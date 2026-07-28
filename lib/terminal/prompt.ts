@@ -18,21 +18,21 @@ const bg = ([r, g, b]: Rgb): string => `\x1b[48;2;${r};${g};${b}m`
 // Nerd Font glyphs (subset shipped in assets/fonts/symbols-nerd.woff2).
 const PL_RIGHT = "" //  left-powerline segment tail
 const PL_LEFT = "" //  right-block head
-const CPU_MEM = ""
-const GIT = ""
-const SHELL = ""
-const CLOCK = ""
-const PATH_ICON = ""
+const CPU_MEM = " "
+const GIT = " "
+const SHELL = "  "
+const CLOCK = " "
+const PATH_ICON = " "
 
 export type OsId = "macos" | "windows" | "linux" | "android" | "ios" | "nixos"
 
 const OS_ICON: Record<OsId, string> = {
-  android: "",
-  ios: "",
-  linux: "",
-  macos: "",
-  nixos: "",
-  windows: "",
+  android: " ",
+  ios: " ",
+  linux: " ",
+  macos: " ",
+  nixos: " ",
+  windows: " ",
 }
 
 // The static git segment the user asked for (repo name, not live git).
@@ -124,9 +124,10 @@ export function buildPrompt(ctx: PromptCtx): {
   return { block: `${line1}\r\n${line2}\r\n${inputPrefix}`, inputPrefix }
 }
 
+//TODO Make this more robust and more options like freeBSD, plan9?? etc
 // Detect the visitor's OS from the User-Agent (Client Hints when available).
 export function detectOs(): OsId {
-  if (typeof navigator === "undefined") return "linux"
+  if (typeof navigator === "undefined") return "nixos"
   const nav = navigator as Navigator & {
     userAgentData?: { platform?: string }
   }
