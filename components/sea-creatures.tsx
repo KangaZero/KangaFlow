@@ -28,6 +28,16 @@ export function mulberry32(seed: number): () => number {
   }
 }
 
+// Four tentacles as cubic Béziers. Only the control points move between these
+// snapshots (anchors + tips are fixed) so motion can interpolate `d` — pushing
+// the controls to opposite sides top-vs-bottom draws a travelling S-curve.
+const TENTACLES_RELAXED =
+  "M6 15 C5 19 7 23 6 28 M10 16 C9 20 11 24 10 28 M14 16 C13 20 15 24 14 28 M18 15 C17 19 19 23 18 28"
+const TENTACLES_S_A =
+  "M6 15 C9 19 3 23 7 28 M10 16 C13 20 7 24 11 28 M14 16 C17 20 11 24 15 28 M18 15 C21 19 15 23 19 28"
+const TENTACLES_S_B =
+  "M6 15 C3 19 9 23 5 28 M10 16 C7 20 13 24 9 28 M14 16 C11 20 17 24 13 28 M18 15 C15 19 21 23 17 28"
+
 export function Jellyfish() {
   return (
     <svg
@@ -52,19 +62,18 @@ export function Jellyfish() {
           repeat: Number.POSITIVE_INFINITY,
         }}
       />
-      {/* Tentacles: womble up/down (scaleY) with a light sway, hanging from the
-          bell seam (transform-box: fill-box re-bases the origin to this path). */}
+      {/* Tentacles: undulate through an S-curve by morphing the path `d`. */}
       <motion.path
-        animate={{ rotate: [0, 2.5, -2.5, 0], scaleY: [1, 1.22, 0.9, 1] }}
-        d="M7 15C6.7 19 6 22 5 27M11 16C10.8 20 10.7 24 10 28M14 16C14.2 20 14.4 24 15 28M17 15C17.3 19 18 22 19 27"
+        animate={{ d: [TENTACLES_RELAXED, TENTACLES_S_A, TENTACLES_S_B] }}
+        d={TENTACLES_RELAXED}
         stroke={BIO}
         strokeLinecap="round"
         strokeOpacity="0.45"
-        style={{ transformBox: "fill-box", transformOrigin: "center top" }}
         transition={{
-          duration: 3.4,
+          duration: 3,
           ease: "easeInOut",
           repeat: Number.POSITIVE_INFINITY,
+          repeatType: "mirror",
         }}
       />
     </svg>
