@@ -30,17 +30,14 @@ import {
   NoctaliaLauncher,
 } from "@/components/niri/noctalia-launcher"
 import { NoctaliaSettings } from "@/components/niri/noctalia-settings"
-import {
-  ACCENT_COLORS,
-  DEFAULT_ENV_SETTINGS,
-  type EnvSettings,
-} from "@/components/niri/settings"
+import { ACCENT_COLORS } from "@/components/niri/settings"
 import type { AppId, NiriWindow } from "@/components/niri/types"
 import { wallpaperStyle } from "@/components/niri/wallpaper"
 import { WallpaperDialog } from "@/components/niri/wallpaper-dialog"
 import { readSourceFiles } from "@/lib/terminal/source"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
+import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
 // xterm / CodeMirror reach for `document` at import, so the two heavy app
@@ -126,7 +123,8 @@ export function EnvironmentView() {
   const pathname = usePathname()
 
   const [state, dispatch] = useReducer(niriReducer, undefined, initialNiriState)
-  const [settings, setSettings] = useState<EnvSettings>(DEFAULT_ENV_SETTINGS)
+  const { envSettings: settings, setEnvSettings: setSettings } =
+    useGlobalStates()
   // Only one overlay panel opens at a time; opening while another is up is a
   // no-op (early return), matching a real compositor's modal panels.
   const [panel, setPanel] = useState<EnvPanel | null>(null)
@@ -531,7 +529,7 @@ export function EnvironmentView() {
       />
       <WallpaperDialog
         glass={settings.glass}
-        onChange={(w) => setSettings((s) => ({ ...s, wallpaper: w }))}
+        onChange={(w) => setSettings({ ...settings, wallpaper: w })}
         onOpenChange={(o) => setPanel(o ? "wallpaper" : null)}
         open={panel === "wallpaper"}
         value={settings.wallpaper}

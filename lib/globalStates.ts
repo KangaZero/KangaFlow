@@ -1,3 +1,4 @@
+import type { EnvSettings } from "@/components/niri/settings"
 import type { Locale } from "@/lib/i18n"
 import type { Shortcut } from "@/lib/shortcuts"
 
@@ -41,6 +42,11 @@ export type GlobalStatesContextValue = {
   // (the default), "on" forces animations, "off" disables them.
   animationPref: AnimationPref
   setAnimationPref: (pref: AnimationPref) => void
+  // Niri environment desktop settings (wallpaper, accent, transparency, bar,
+  // font, UI scale). Persisted so the whole site — including the media player's
+  // glass surface — can share the chosen look.
+  envSettings: EnvSettings
+  setEnvSettings: (settings: EnvSettings) => void
 }
 
 export const ANIMATION_PREFS = ["system", "on", "off"] as const

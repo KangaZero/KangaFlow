@@ -76,7 +76,8 @@ function EqualizerBars() {
 
 export function MediaPlayer() {
   const { translate } = useLocale()
-  const { isMediaPlayerOpen, setIsMediaPlayerOpen } = useGlobalStates()
+  const { isMediaPlayerOpen, setIsMediaPlayerOpen, envSettings } =
+    useGlobalStates()
 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -148,7 +149,7 @@ export function MediaPlayer() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className={cn(
               "pointer-events-auto absolute right-4 bottom-4 w-80 overflow-hidden rounded-xl text-card-foreground",
-              GLASS_SURFACE.glass
+              GLASS_SURFACE[envSettings.glass]
             )}
             drag
             dragConstraints={constraintsRef}

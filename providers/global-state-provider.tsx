@@ -11,6 +11,17 @@ import {
   useState,
 } from "react"
 import {
+  ACCENTS,
+  BAR_OPACITIES,
+  BAR_POSITIONS,
+  DEFAULT_ENV_SETTINGS,
+  ENV_FONTS,
+  type EnvSettings,
+  GLASS_LEVELS,
+  UI_SCALES,
+  WALLPAPERS,
+} from "@/components/niri/settings"
+import {
   ANIMATION_PREFS,
   type AnimationPref,
   COLUMN_OPTIONS,
@@ -53,9 +64,60 @@ function reducedMotionMode(pref: AnimationPref): "user" | "always" | "never" {
   return "user"
 }
 
+const ENV_SETTINGS_STORAGE_KEY = "kangaflow:envSettings"
+
+// Keep a stored literal only if it's still a valid option, else fall back — so
+// old/garbage values can never break a control or the glass surface.
+function pickLiteral<T>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return (allowed as readonly unknown[]).includes(value)
+    ? (value as T)
+    : fallback
+}
+
+function loadEnvSettings(): EnvSettings {
+  if (typeof window === "undefined") return DEFAULT_ENV_SETTINGS
+  try {
+    const raw: unknown = JSON.parse(
+      window.localStorage.getItem(ENV_SETTINGS_STORAGE_KEY) ?? "{}"
+    )
+    const o = (raw && typeof raw === "object" ? raw : {}) as Record<
+      string,
+      unknown
+    >
+    return {
+      accent: pickLiteral(o.accent, ACCENTS, DEFAULT_ENV_SETTINGS.accent),
+      barOpacity: pickLiteral(
+        o.barOpacity,
+        BAR_OPACITIES,
+        DEFAULT_ENV_SETTINGS.barOpacity
+      ),
+      barPosition: pickLiteral(
+        o.barPosition,
+        BAR_POSITIONS,
+        DEFAULT_ENV_SETTINGS.barPosition
+      ),
+      font: pickLiteral(o.font, ENV_FONTS, DEFAULT_ENV_SETTINGS.font),
+      glass: pickLiteral(o.glass, GLASS_LEVELS, DEFAULT_ENV_SETTINGS.glass),
+      showSystemMonitor:
+        typeof o.showSystemMonitor === "boolean"
+          ? o.showSystemMonitor
+          : DEFAULT_ENV_SETTINGS.showSystemMonitor,
+      uiScale: pickLiteral(o.uiScale, UI_SCALES, DEFAULT_ENV_SETTINGS.uiScale),
+      wallpaper: pickLiteral(
+        o.wallpaper,
+        WALLPAPERS,
+        DEFAULT_ENV_SETTINGS.wallpaper
+      ),
+    }
+  } catch {
+    return DEFAULT_ENV_SETTINGS
+  }
+}
+
 const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   animationPref: "system",
   columnCount: DEFAULT_COLUMN_COUNT,
+  envSettings: DEFAULT_ENV_SETTINGS,
   isCommandPaletteOpen: false,
   isHelloEffectAnimationComplete: false,
   isJavascriptFlipTechIconFlipped: false,
@@ -64,6 +126,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isTerminalOpen: false,
   setAnimationPref: () => {},
   setColumnCount: () => {},
+  setEnvSettings: () => {},
   setIsCommandPaletteOpen: () => {},
   setIsHelloEffectAnimationComplete: () => {},
   setIsJavascriptFlipTechIconFlipped: () => {},
@@ -116,14 +179,26 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     useState<ColumnCount>(DEFAULT_COLUMN_COUNT)
   const [showChromeInEnvironment, setShowChromeInEnvironment] = useState(false)
   const [animationPref, setAnimationPref] = useState<AnimationPref>("system")
+  const [envSettings, setEnvSettings] =
+    useState<EnvSettings>(DEFAULT_ENV_SETTINGS)
 
   useEffect(() => {
     setShortcuts(loadShortcuts())
     setColumnCount(loadColumnCount())
     setShowChromeInEnvironment(loadEnvChrome())
     setAnimationPref(loadAnimationPref())
+    setEnvSettings(loadEnvSettings())
     hydrated.current = true
   }, [])
+
+  useEffect(() => {
+    if (hydrated.current) {
+      window.localStorage.setItem(
+        ENV_SETTINGS_STORAGE_KEY,
+        JSON.stringify(envSettings)
+      )
+    }
+  }, [envSettings])
 
   useEffect(() => {
     if (hydrated.current) saveShortcuts(shortcuts)
@@ -170,6 +245,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     () => ({
       animationPref,
       columnCount,
+      envSettings,
       isCommandPaletteOpen,
       isHelloEffectAnimationComplete,
       isJavascriptFlipTechIconFlipped,
@@ -178,6 +254,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isTerminalOpen,
       setAnimationPref,
       setColumnCount,
+      setEnvSettings,
       setIsCommandPaletteOpen,
       setIsHelloEffectAnimationComplete,
       setIsJavascriptFlipTechIconFlipped,
@@ -194,6 +271,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     [
       animationPref,
       columnCount,
+      envSettings,
       showChromeInEnvironment,
       isCommandPaletteOpen,
       isHelloEffectAnimationComplete,
