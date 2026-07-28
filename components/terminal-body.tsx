@@ -172,8 +172,30 @@ function ZjStatusBar({
   )
 }
 
-const COMMANDS =
-  "help  ff  ls  cd <dir>  pwd  cat <file>  nvim <file>  theme <name>  clear  whoami  exit"
+// `help` output: aligned command + description. ANSI 16-colour so it maps to
+// the active xterm theme palette (magenta command, dim grey description).
+const HELP: readonly (readonly [cmd: string, desc: string])[] = [
+  ["help", "show this help"],
+  ["ff", "system info (fastfetch)"],
+  ["ls", "list the current directory"],
+  ["cd <dir>", "change directory"],
+  ["pwd", "print the working directory"],
+  ["cat <file>", "print a file"],
+  ["nvim <file>", "edit a file in vim"],
+  ["theme <name>", "switch theme (light | dark | terminal)"],
+  ["clear", "clear the screen"],
+  ["whoami", "print the current user"],
+  ["exit", "close the terminal"],
+]
+
+function helpText(): string {
+  const pad = HELP.reduce((n, [cmd]) => Math.max(n, cmd.length), 0)
+  const rows = HELP.map(
+    ([cmd, desc]) =>
+      `  \x1b[1;35m${cmd.padEnd(pad)}\x1b[0m  \x1b[90m${desc}\x1b[0m`
+  )
+  return `\r\n\x1b[1mCommands\x1b[0m\r\n${rows.join("\r\n")}`
+}
 
 export function TerminalBody({
   files,
@@ -329,7 +351,7 @@ export function TerminalBody({
           return true
         case "h":
         case "help":
-          term.write(`\r\ncommands: ${COMMANDS}`)
+          term.write(helpText())
           return true
         case "ff":
         case "fastfetch":
