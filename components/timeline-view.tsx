@@ -8,6 +8,10 @@ import myPageImg from "@/assets/timeline/02-my-page.png"
 import kangaWorksImg from "@/assets/timeline/03-kanga-works-2023.png"
 import portfolioImg from "@/assets/timeline/04-must-finish-2025.png"
 import kangaFlowImg from "@/assets/timeline/05-kangaflow.png"
+import {
+  ScrollProgress,
+  ScrollProgressProvider,
+} from "@/components/animate-ui/primitives/animate/scroll-progress"
 import { LocaleTransition } from "@/components/locale-transition"
 import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card"
 import { Badge } from "@/components/ui/badge"
@@ -138,6 +142,13 @@ export function TimelineView() {
 
   return (
     <main className="min-h-svh w-full pb-28 sm:pb-0">
+      {/* Reading-progress bar: fills as you scroll the page. */}
+      <ScrollProgressProvider global>
+        <ScrollProgress
+          className="fixed inset-x-0 top-0 z-50 h-1 origin-left bg-primary"
+          mode="scaleX"
+        />
+      </ScrollProgressProvider>
       <header className="mx-auto max-w-7xl px-6 pt-16 pb-2 md:px-10">
         <LocaleTransition>
           <h1 className="font-heading font-semibold text-3xl sm:text-4xl">
