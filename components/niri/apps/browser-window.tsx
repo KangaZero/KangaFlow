@@ -1,9 +1,35 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { ArrowLeft, ArrowRight, RotateCw, Star } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
+
+// Bookmarks persist across sessions (localStorage).
+const STORAGE_KEY = "kangaflow:niri-bookmarks"
+
+function loadBookmarks(): string[] {
+  if (typeof window === "undefined") return []
+  try {
+    const parsed: unknown = JSON.parse(
+      window.localStorage.getItem(STORAGE_KEY) ?? "[]"
+    )
+    return Array.isArray(parsed)
+      ? parsed.filter((u): u is string => typeof u === "string")
+      : []
+  } catch {
+    return []
+  }
+}
+
+// Short label for a bookmark chip.
+function hostOf(raw: string): string {
+  try {
+    return new URL(raw).hostname
+  } catch {
+    return raw
+  }
+}
 
 // A real (sandboxed) browser tab. Loads pages in an <iframe sandbox> — the
 // portfolio's live site frames fine; note many external sites send
@@ -40,10 +66,23 @@ export function BrowserWindow(): React.JSX.Element {
   const [index, setIndex] = useState(0)
   const [address, setAddress] = useState(currentHome)
   const [reloadKey, setReloadKey] = useState(0)
+  const [bookmarks, setBookmarks] = useState<string[]>(loadBookmarks)
 
   const url = history[index] ?? FALLBACK_URL
   const canBack = index > 0
   const canForward = index < history.length - 1
+  const isBookmarked = bookmarks.includes(url)
+
+  // Persist favourites whenever they change.
+  useEffect(() => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks))
+  }, [bookmarks])
+
+  const toggleBookmark = (): void => {
+    setBookmarks((bm) =>
+      bm.includes(url) ? bm.filter((u) => u !== url) : [...bm, url]
+    )
+  }
 
   const navigate = (to: string): void => {
     const next = normalizeUrl(to)
@@ -109,12 +148,39 @@ export function BrowserWindow(): React.JSX.Element {
         </form>
         <button
           aria-label={translate("environment.browser.bookmark")}
-          className={cn(TOOLBAR_BUTTON, "hover:text-yellow-500")}
+          aria-pressed={isBookmarked}
+          className={cn(
+            TOOLBAR_BUTTON,
+            isBookmarked ? "text-yellow-500" : "hover:text-yellow-500"
+          )}
+          onClick={toggleBookmark}
           type="button"
         >
-          <Star aria-hidden className="size-4" />
+          <Star
+            aria-hidden
+            className={cn("size-4", isBookmarked && "fill-current")}
+          />
         </button>
       </div>
+      {bookmarks.length > 0 ? (
+        <div className="flex items-center gap-1 overflow-x-auto border-border border-b bg-card px-3 py-1.5">
+          {bookmarks.map((bm) => (
+            <button
+              className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-accent-foreground"
+              key={bm}
+              onClick={() => navigate(bm)}
+              title={bm}
+              type="button"
+            >
+              <Star
+                aria-hidden
+                className="size-3 fill-current text-yellow-500"
+              />
+              <span className="max-w-32 truncate">{hostOf(bm)}</span>
+            </button>
+          ))}
+        </div>
+      ) : null}
       <iframe
         className="min-h-0 w-full flex-1 border-0 bg-background"
         key={reloadKey}

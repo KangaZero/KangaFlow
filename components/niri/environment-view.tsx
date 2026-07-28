@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import {
   type CSSProperties,
+  useCallback,
   useEffect,
   useMemo,
   useReducer,
@@ -63,6 +64,9 @@ const LAUNCHER_APP_IDS: readonly AppId[] = [
 
 const GAP = 6
 const PAD = 6
+
+// The mutually-exclusive overlay panels — at most one open at a time.
+type EnvPanel = "launcher" | "settings" | "wallpaper" | "help"
 
 type Hour = `${number}` & { _brand: "Hour" }
 type Minute = `${number}` & { _brand: "Minute" }
@@ -123,10 +127,19 @@ export function EnvironmentView() {
 
   const [state, dispatch] = useReducer(niriReducer, undefined, initialNiriState)
   const [settings, setSettings] = useState<EnvSettings>(DEFAULT_ENV_SETTINGS)
-  const [launcherOpen, setLauncherOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [wallpaperOpen, setWallpaperOpen] = useState(false)
-  const [helpOpen, setHelpOpen] = useState(false)
+  // Only one overlay panel opens at a time; opening while another is up is a
+  // no-op (early return), matching a real compositor's modal panels.
+  const [panel, setPanel] = useState<EnvPanel | null>(null)
+  const openPanel = useCallback(
+    (p: EnvPanel) => setPanel((cur) => (cur === null ? p : cur)),
+    []
+  )
+  const togglePanel = useCallback(
+    (p: EnvPanel) =>
+      setPanel((cur) => (cur === p ? null : cur === null ? p : cur)),
+    []
+  )
+  const closePanel = useCallback(() => setPanel(null), [])
   const [clock, setClock] = useState(clockNowInHHMM)
   const [stripWidth, setStripWidth] = useState(0)
 
@@ -181,19 +194,19 @@ export function EnvironmentView() {
       const key = event.key.toLowerCase()
       if (event.altKey && !event.shiftKey && key === "d") {
         event.preventDefault()
-        setLauncherOpen((v) => !v)
+        togglePanel("launcher")
         return
       }
       if (event.altKey && event.shiftKey && event.key === ",") {
         event.preventDefault()
-        setSettingsOpen((v) => !v)
+        togglePanel("settings")
         return
       }
       // `?` toggles the shortcuts help. Match the produced character (not
       // Shift+/) so it works regardless of keyboard layout.
       if (event.key === "?") {
         event.preventDefault()
-        setHelpOpen((v) => !v)
+        togglePanel("help")
         return
       }
       // In overview: Enter opens the selected (active) workspace, Escape leaves.
@@ -204,7 +217,7 @@ export function EnvironmentView() {
         return
       }
       // While a panel is open it owns the keyboard.
-      if (launcherOpen || settingsOpen || wallpaperOpen || helpOpen) return
+      if (panel !== null) return
       const action = keyToAction(event)
       if (action) {
         event.preventDefault()
@@ -214,11 +227,11 @@ export function EnvironmentView() {
     }
     window.addEventListener("keydown", onKey, true)
     return () => window.removeEventListener("keydown", onKey, true)
-  }, [launcherOpen, settingsOpen, wallpaperOpen, helpOpen, state.overview])
+  }, [panel, state.overview, togglePanel])
 
   const launch = (app: AppId) => {
     dispatch({ app, title: appTitle[app], type: "spawn" })
-    setLauncherOpen(false)
+    closePanel()
   }
 
   const workspace = state.workspaces.find((w) => w.id === state.active)
@@ -247,9 +260,9 @@ export function EnvironmentView() {
       activeWindowTitle={focusedWin?.title ?? ""}
       clock={clock}
       keyboardLayout={locale}
-      onLauncher={() => setLauncherOpen(true)}
-      onSettings={() => setSettingsOpen(true)}
-      onWallpaper={() => setWallpaperOpen(true)}
+      onLauncher={() => openPanel("launcher")}
+      onSettings={() => openPanel("settings")}
+      onWallpaper={() => openPanel("wallpaper")}
       onWorkspace={(id) => dispatch({ id, type: "focusWorkspace" })}
       opacity={settings.barOpacity}
       workspaces={pips}
@@ -506,24 +519,27 @@ export function EnvironmentView() {
 
       <NoctaliaLauncher
         apps={launcherApps}
-        onClose={() => setLauncherOpen(false)}
+        onClose={closePanel}
         onLaunch={launch}
-        open={launcherOpen}
+        open={panel === "launcher"}
       />
       <NoctaliaSettings
         onChange={setSettings}
-        onClose={() => setSettingsOpen(false)}
-        open={settingsOpen}
+        onClose={closePanel}
+        open={panel === "settings"}
         settings={settings}
       />
       <WallpaperDialog
         glass={settings.glass}
         onChange={(w) => setSettings((s) => ({ ...s, wallpaper: w }))}
-        onOpenChange={setWallpaperOpen}
-        open={wallpaperOpen}
+        onOpenChange={(o) => setPanel(o ? "wallpaper" : null)}
+        open={panel === "wallpaper"}
         value={settings.wallpaper}
       />
-      <NiriHelpDialog onOpenChange={setHelpOpen} open={helpOpen} />
+      <NiriHelpDialog
+        onOpenChange={(o) => setPanel(o ? "help" : null)}
+        open={panel === "help"}
+      />
     </main>
   )
 }
