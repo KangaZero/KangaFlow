@@ -136,6 +136,7 @@ const ja = {
       workspace: "ワークスペース",
     },
     browser: {
+      address: "アドレスバー",
       back: "戻る",
       bookmark: "ブックマーク",
       forward: "進む",

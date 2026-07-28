@@ -137,6 +137,7 @@ const en = {
       workspace: "Workspace",
     },
     browser: {
+      address: "Address bar",
       back: "Back",
       bookmark: "Bookmark",
       forward: "Forward",
