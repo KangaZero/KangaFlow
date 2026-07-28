@@ -52,9 +52,14 @@ export const ACCENT_COLORS: Record<Exclude<AccentId, "default">, string> = {
   violet: "oklch(0.6 0.22 300)",
 }
 
+// Surface translucency (Noctalia's transparency_mode) for the glass panels.
+export const GLASS_LEVELS = ["solid", "soft", "glass"] as const
+export type GlassLevel = (typeof GLASS_LEVELS)[number]
+
 export type EnvSettings = {
   wallpaper: WallpaperId
   accent: AccentId
+  glass: GlassLevel
   barPosition: BarPosition
   barOpacity: BarOpacity
   font: EnvFont
@@ -67,6 +72,7 @@ export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   barOpacity: 0.7,
   barPosition: "top",
   font: "mono",
+  glass: "glass",
   showSystemMonitor: true,
   uiScale: 1,
   wallpaper: "auto",

@@ -456,6 +456,7 @@ export function EnvironmentView() {
         settings={settings}
       />
       <WallpaperDialog
+        glass={settings.glass}
         onChange={(w) => setSettings((s) => ({ ...s, wallpaper: w }))}
         onOpenChange={setWallpaperOpen}
         open={wallpaperOpen}

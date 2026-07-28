@@ -2,6 +2,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import {
+  Blend,
   Image as ImageIcon,
   LayoutGrid,
   type LucideIcon,
@@ -14,6 +15,7 @@ import {
 import { AnimatePresence, motion } from "motion/react"
 import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
+import { GLASS_SURFACE } from "@/components/niri/glass"
 import {
   ACCENT_COLORS,
   ACCENTS,
@@ -25,6 +27,8 @@ import {
   ENV_FONTS,
   type EnvFont,
   type EnvSettings,
+  GLASS_LEVELS,
+  type GlassLevel,
   UI_SCALES,
   type UiScale,
 } from "@/components/niri/settings"
@@ -213,7 +217,10 @@ export function NoctaliaSettings(props: {
           animate={{ opacity: 1, scale: 1 }}
           aria-label={translate("environment.settings.title")}
           aria-modal="true"
-          className="relative z-10 flex h-[min(32rem,88vh)] w-[min(52rem,94vw)] overflow-hidden rounded-2xl border border-border bg-card/90 text-foreground shadow-2xl backdrop-blur-xl"
+          className={cn(
+            "relative z-10 flex h-[min(32rem,88vh)] w-[min(52rem,94vw)] overflow-hidden rounded-2xl text-foreground",
+            GLASS_SURFACE[settings.glass]
+          )}
           exit={{ opacity: 0, scale: 0.96 }}
           initial={{ opacity: 0, scale: 0.96 }}
           role="dialog"
@@ -300,6 +307,26 @@ export function NoctaliaSettings(props: {
                     onSelect={(scale) => set("uiScale", scale)}
                     options={UI_SCALES}
                     value={settings.uiScale}
+                  />
+                </SettingCard>
+                <SettingCard
+                  icon={Blend}
+                  title={translate("environment.settings.transparency")}
+                >
+                  <Segmented<GlassLevel>
+                    format={(level) =>
+                      translate(
+                        level === "solid"
+                          ? "environment.settings.transparencySolid"
+                          : level === "soft"
+                            ? "environment.settings.transparencySoft"
+                            : "environment.settings.transparencyGlass"
+                      )
+                    }
+                    label={translate("environment.settings.transparency")}
+                    onSelect={(level) => set("glass", level)}
+                    options={GLASS_LEVELS}
+                    value={settings.glass}
                   />
                 </SettingCard>
               </>
