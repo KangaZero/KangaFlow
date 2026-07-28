@@ -30,12 +30,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { FitAddon } from "@xterm/addon-fit"
+import type {
+  ITerminalAddon,
+  ITerminalInitOnlyOptions,
+  ITerminalOptions,
+} from "@xterm/xterm"
+import localFont from "next/font/local"
 import { useTheme } from "next-themes"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useXTerm } from "react-xtermjs"
 import { CodeEditor } from "@/components/code-editor"
 import { completeLine, suggestLine } from "@/lib/terminal/complete"
 import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
+import { buildPrompt, detectOs } from "@/lib/terminal/prompt"
 import {
   paletteForTheme,
   TERMINAL_FONT_FAMILY,
@@ -53,12 +60,27 @@ import {
 import { isTheme, THEMES } from "@/lib/themes"
 import { useLocale } from "@/providers/locale-provider"
 
+// Subset Symbols Nerd Font supplying the oh-my-posh prompt glyphs (powerline
+// separators + OS/git/shell/clock/path icons). ~2.6KB; JetBrains Mono renders
+// the text and this fills the Private-Use-Area glyphs it lacks.
+const nerdSymbols = localFont({
+  display: "swap",
+  src: "../assets/fonts/symbols-nerd.woff2",
+  style: "normal",
+  weight: "400",
+})
+
 // Mutable per-session shell state, kept in a ref so the xterm data handler
 // (bound once to the instance) always sees the latest without re-subscribing.
 type Session = {
   line: string
   history: string[]
   histIndex: number
+  // Last command's exit code (drives the ❯ colour) + the current prompt's last
+  // line, reused for in-place line-editing reprints (the decorative lines above
+  // are printed once per prompt, not on every keystroke).
+  exitCode: number
+  promptPrefix: string
   // Active zsh-style completion menu (null when not cycling candidates).
   menu: { base: string; candidates: string[]; index: number } | null
   // Current ghost-text suggestion (full predicted line), or null.
@@ -90,12 +112,6 @@ function formatUptime(ms: number): string {
 
 function baseName(path: string): string {
   return path.split("/").at(-1) ?? path
-}
-
-// zsh-like prompt showing the cwd (cyan path, magenta arrow) via ANSI 16-colour
-// codes so it follows the live xterm theme.
-function promptFor(cwd: string): string {
-  return `\x1b[36m${displayCwd(cwd)}\x1b[0m \x1b[35m❯\x1b[0m `
 }
 
 // zjstatus mode segment: kanji label + palette bg, mirroring the user's zellij
@@ -181,9 +197,10 @@ export function TerminalBody({
   // Stable references: useXTerm effect-depends on these, so fresh literals each
   // render would re-init the terminal every render → setState loop. Theme is set
   // once here and then updated live via the effect below.
-  const addons = useMemo(() => [fit], [fit])
-  const options = useMemo(
+  const addons: ITerminalAddon[] = useMemo(() => [fit], [fit])
+  const options: ITerminalOptions & ITerminalInitOnlyOptions = useMemo(
     () => ({
+      allowTransparency: true,
       cursorBlink: true,
       fontFamily: TERMINAL_FONT_FAMILY,
       fontSize: 13,
@@ -209,12 +226,48 @@ export function TerminalBody({
   const session = useRef<Session>({
     cwd: cwdForRoute(routePath, vfs),
     editorOpen: false,
+    exitCode: 0,
     histIndex: 0,
     history: [],
     line: "",
     menu: null,
+    promptPrefix: "",
     suggestion: null,
   })
+
+  // Machine facts for the prompt, read once (stable per session). The browser
+  // exposes core count + approximate RAM (Chrome-only) but NOT CPU usage.
+  const machine = useMemo(
+    () => ({
+      cores:
+        typeof navigator === "undefined"
+          ? 4
+          : (navigator.hardwareConcurrency ?? 4),
+      os: detectOs(),
+      ramGB:
+        typeof navigator === "undefined"
+          ? 8
+          : ((navigator as Navigator & { deviceMemory?: number })
+              .deviceMemory ?? 8),
+    }),
+    []
+  )
+
+  // Build a fresh prompt block and remember its last line for line-editing
+  // reprints. `cols` right-aligns the git block.
+  const makePrompt = (cwd: string, exitCode: number, cols: number): string => {
+    const { block, inputPrefix } = buildPrompt({
+      cols,
+      cores: machine.cores,
+      cwd: displayCwd(cwd),
+      exitCode,
+      now: new Date(),
+      os: machine.os,
+      ramGB: machine.ramGB,
+    })
+    session.current.promptPrefix = inputPrefix
+    return block
+  }
 
   // Return from the nvim editor overlay to the shell prompt.
   const closeEditor = () => {
@@ -222,7 +275,9 @@ export function TerminalBody({
     session.current.editorOpen = false
     setBar({ mode: "NORMAL", tab: "zsh" })
     if (instance) {
-      instance.write(`\r\n${promptFor(session.current.cwd)}`)
+      instance.write(
+        `\r\n${makePrompt(session.current.cwd, session.current.exitCode, instance.cols)}`
+      )
       instance.focus()
     }
   }
@@ -233,7 +288,8 @@ export function TerminalBody({
     const term = instance
     const s = session.current
 
-    const prompt = () => term.write(`\r\n${promptFor(s.cwd)}`)
+    const prompt = () =>
+      term.write(`\r\n${makePrompt(s.cwd, s.exitCode, term.cols)}`)
 
     const fastfetch = () => {
       const info: FastfetchInfo = {
@@ -267,6 +323,7 @@ export function TerminalBody({
     const runCommand = (raw: string): boolean => {
       const [cmd, ...args] = raw.split(/\s+/)
       const arg = args.join(" ")
+      s.exitCode = 0
       switch (cmd) {
         case "":
           return true
@@ -321,8 +378,7 @@ export function TerminalBody({
           return true
         }
         case "nvim":
-        case "vim":
-        case "code": {
+        case "vim": {
           if (!arg) {
             term.write("\r\nusage: nvim <file>  (try `ls`)")
             return true
@@ -331,6 +387,11 @@ export function TerminalBody({
           // If the editor opened it owns the screen; otherwise reprint prompt.
           return !openEditor(key)
         }
+        case "code":
+          term.write(
+            "\r\nsorry but vscode is not allowed only nvim/vim available! The correct option"
+          )
+          return true
         case "theme":
           if (isTheme(arg)) {
             setTheme(arg)
@@ -350,13 +411,14 @@ export function TerminalBody({
           onClose()
           return false
         default:
+          s.exitCode = 1
           term.write(`\r\nzsh: command not found: ${cmd}`)
           return true
       }
     }
 
     const replaceLine = (next: string) => {
-      term.write(`\r${promptFor(s.cwd)}\x1b[K${next}`)
+      term.write(`\r${s.promptPrefix}\x1b[K${next}`)
       s.line = next
     }
 
@@ -365,7 +427,7 @@ export function TerminalBody({
     const renderLine = () => {
       const suggestion = suggestLine(s.line, Object.keys(files), s.history)
       s.suggestion = suggestion
-      term.write(`\r${promptFor(s.cwd)}\x1b[K${s.line}`)
+      term.write(`\r${s.promptPrefix}\x1b[K${s.line}`)
       if (suggestion && suggestion.length > s.line.length) {
         const ghost = suggestion.slice(s.line.length)
         term.write(`\x1b[2m${ghost}\x1b[0m\x1b[${ghost.length}D`)
@@ -375,7 +437,7 @@ export function TerminalBody({
     // Redraw without the ghost (before Enter/Ctrl-C so no dim tail lingers).
     const clearGhost = () => {
       s.suggestion = null
-      term.write(`\r${promptFor(s.cwd)}\x1b[K${s.line}`)
+      term.write(`\r${s.promptPrefix}\x1b[K${s.line}`)
     }
 
     // Fill the current ghost suggestion (Tab / →). Returns whether it applied.
@@ -395,7 +457,9 @@ export function TerminalBody({
       s.menu = { base, candidates, index: 0 }
       s.line = next
       s.suggestion = null
-      term.write(`\r\n${candidates.join("  ")}\r\n${promptFor(s.cwd)}${next}`)
+      term.write(
+        `\r\n${candidates.join("  ")}\r\n${makePrompt(s.cwd, s.exitCode, term.cols)}${next}`
+      )
     }
 
     const cycleMenu = (dir: 1 | -1) => {
@@ -478,7 +542,10 @@ export function TerminalBody({
     const mono = getComputedStyle(document.documentElement)
       .getPropertyValue("--font-mono")
       .trim()
-    if (mono) term.options.fontFamily = `${mono}, ${TERMINAL_FONT_FAMILY}`
+    const nerd = nerdSymbols.style.fontFamily
+    term.options.fontFamily = mono
+      ? `${mono}, ${nerd}, ${TERMINAL_FONT_FAMILY}`
+      : `${nerd}, ${TERMINAL_FONT_FAMILY}`
 
     fit.fit()
     fastfetch()
@@ -502,8 +569,8 @@ export function TerminalBody({
 
   return (
     <>
-      <div className="relative min-h-0 w-full flex-1 overflow-hidden">
-        <div className="h-full w-full overflow-hidden rounded-t-md" ref={ref} />
+      <div className="relative h-full w-full flex-1">
+        <div className="h-full w-full rounded-t-md" ref={ref} />
         {editor ? (
           <div className="absolute inset-0">
             <CodeEditor
