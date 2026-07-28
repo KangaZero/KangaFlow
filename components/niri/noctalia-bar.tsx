@@ -81,7 +81,7 @@ export function NoctaliaBar(props: {
         <span
           className={cn(
             "truncate text-muted-foreground",
-            isV ? "max-w-14 text-center" : "max-w-36.25"
+            isV ? "max-h-36.25 [writing-mode:vertical-rl]" : "max-w-36.25"
           )}
         >
           {activeWindowTitle === "" ? "—" : activeWindowTitle}
@@ -111,8 +111,20 @@ export function NoctaliaBar(props: {
             </li>
           ))}
         </ul>
-        <span className="text-muted-foreground tabular-nums">{clock}</span>
-        <span className="rounded-sm border border-border/50 px-1 py-0.5 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none">
+        <span
+          className={cn(
+            "text-muted-foreground tabular-nums",
+            isV && "[writing-mode:vertical-rl]"
+          )}
+        >
+          {clock}
+        </span>
+        <span
+          className={cn(
+            "rounded-sm border border-border/50 px-1 py-0.5 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none",
+            isV && "[writing-mode:vertical-rl]"
+          )}
+        >
           {keyboardLayout}
         </span>
       </div>
@@ -122,7 +134,7 @@ export function NoctaliaBar(props: {
         <span
           className={cn(
             "font-mono text-muted-foreground tabular-nums",
-            isV && "text-center text-[0.625rem] leading-tight"
+            isV && "text-[0.625rem] [writing-mode:vertical-rl]"
           )}
         >
           CPU 12% MEM 43%

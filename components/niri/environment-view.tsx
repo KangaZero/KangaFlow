@@ -143,6 +143,7 @@ export function EnvironmentView() {
 
   const files = useMemo(() => readSourceFiles(), [])
   const stripRef = useRef<HTMLDivElement>(null)
+  const activeTileRef = useRef<HTMLDivElement>(null)
 
   // Launcher entries, localised. `name`/`subtitle` framing is translated; brand
   // and binary names (kitty/nvim/firefox/KangaZero) stay literal inside the JA
@@ -183,6 +184,17 @@ export function EnvironmentView() {
     setStripWidth(el.clientWidth)
     return () => ro.disconnect()
   }, [])
+
+  // Auto-scroll the overview so the active workspace tile stays in view as
+  // Alt+J/K moves focus (the container is overflow-hidden — scrolled here).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: state.active is an intentional trigger (the ref is stable) so the scroll re-runs on focus change.
+  useEffect(() => {
+    if (!state.overview) return
+    activeTileRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    })
+  }, [state.overview, state.active])
 
   // Compositor-level key capture: panel toggles always work; otherwise niri
   // tiling binds are intercepted (preventDefault + stopPropagation) before the
@@ -336,6 +348,7 @@ export function EnvironmentView() {
                     )}
                     key={ws.id}
                     layout
+                    ref={ws.id === state.active ? activeTileRef : undefined}
                     transition={{ damping: 50, stiffness: 200, type: "spring" }}
                   >
                     <button
