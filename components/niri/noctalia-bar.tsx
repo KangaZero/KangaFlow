@@ -31,6 +31,7 @@ export function NoctaliaBar(props: {
   onLauncher: () => void // distro-logo click opens launcher
   onWorkspace: (id: number) => void // click a pip to switch workspace
   onWallpaper: () => void // wallpaper button opens the wallpaper dialog
+  onSettings: () => void // settings button opens the settings window
 }): React.JSX.Element {
   const {
     workspaces,
@@ -40,6 +41,7 @@ export function NoctaliaBar(props: {
     onLauncher,
     onWorkspace,
     onWallpaper,
+    onSettings,
   } = props
   const { translate } = useLocale()
 
@@ -91,7 +93,6 @@ export function NoctaliaBar(props: {
           ))}
         </ul>
         <span className="text-muted-foreground tabular-nums">{clock}</span>
-        <Settings aria-hidden className="size-3.5 text-muted-foreground" />
         <span className="rounded-sm border border-border/50 px-1 py-0.5 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none">
           {keyboardLayout}
         </span>
@@ -110,6 +111,15 @@ export function NoctaliaBar(props: {
           variant="ghost"
         >
           <ImageIcon />
+        </Button>
+        <Button
+          aria-label={translate("environment.settings.title")}
+          className="rounded-full"
+          onClick={onSettings}
+          size="icon-sm"
+          variant="ghost"
+        >
+          <Settings />
         </Button>
         <Button
           aria-label={translate("environment.bar.notifications")}

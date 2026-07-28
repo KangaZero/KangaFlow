@@ -6,7 +6,14 @@ import { AnimatePresence, motion } from "motion/react"
 import dynamic from "next/dynamic"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { useEffect, useMemo, useReducer, useRef, useState } from "react"
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react"
 import { AboutWindow } from "@/components/niri/apps/about-window"
 import { BrowserWindow } from "@/components/niri/apps/browser-window"
 import {
@@ -22,6 +29,7 @@ import {
 } from "@/components/niri/noctalia-launcher"
 import { NoctaliaSettings } from "@/components/niri/noctalia-settings"
 import {
+  ACCENT_COLORS,
   DEFAULT_ENV_SETTINGS,
   type EnvSettings,
 } from "@/components/niri/settings"
@@ -179,8 +187,9 @@ export function EnvironmentView() {
         setSettingsOpen((v) => !v)
         return
       }
-      // Escape leaves the overview.
-      if (event.key === "Escape" && state.overview) {
+      // In overview: Enter opens the selected (active) workspace, Escape leaves.
+      // Both exit the overview onto whatever workspace is currently selected.
+      if (state.overview && (event.key === "Enter" || event.key === "Escape")) {
         event.preventDefault()
         dispatch({ type: "toggleOverview" })
         return
@@ -230,6 +239,7 @@ export function EnvironmentView() {
       clock={clock}
       keyboardLayout={locale}
       onLauncher={() => setLauncherOpen(true)}
+      onSettings={() => setSettingsOpen(true)}
       onWallpaper={() => setWallpaperOpen(true)}
       onWorkspace={(id) => dispatch({ id, type: "focusWorkspace" })}
       workspaces={pips}
@@ -242,7 +252,15 @@ export function EnvironmentView() {
         "relative flex h-svh w-full flex-col overflow-hidden",
         settings.font === "mono" ? "font-mono" : "font-sans"
       )}
-      style={{ zoom: settings.uiScale }}
+      style={
+        {
+          zoom: settings.uiScale,
+          // Accent overrides the desktop's --primary token (default = theme).
+          ...(settings.accent === "default"
+            ? {}
+            : { "--primary": ACCENT_COLORS[settings.accent] }),
+        } as CSSProperties
+      }
     >
       {/* Wallpaper */}
       <div
@@ -263,7 +281,9 @@ export function EnvironmentView() {
             initial={{ opacity: 0 }}
           >
             {state.workspaces.map((ws) => (
-              <button
+              // `layout` + a spring make the tiles FLIP when Alt+Shift+J/K
+              // reorders the workspaces array (stable key = ws.id).
+              <motion.button
                 aria-label={`${translate("environment.bar.workspace")} ${ws.id}`}
                 className={cn(
                   "flex min-h-32 flex-1 flex-col gap-2 rounded-2xl border-2 bg-card/30 p-3 text-left backdrop-blur-sm transition",
@@ -272,10 +292,12 @@ export function EnvironmentView() {
                     : "border-border/40 hover:border-border"
                 )}
                 key={ws.id}
+                layout
                 onClick={() => {
                   dispatch({ id: ws.id, type: "focusWorkspace" })
                   dispatch({ type: "toggleOverview" })
                 }}
+                transition={{ damping: 50, stiffness: 200, type: "spring" }}
                 type="button"
               >
                 <span className="font-medium text-muted-foreground text-xs">
@@ -305,7 +327,7 @@ export function EnvironmentView() {
                     ))
                   )}
                 </div>
-              </button>
+              </motion.button>
             ))}
           </motion.div>
         ) : columns.length === 0 ? (

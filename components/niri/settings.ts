@@ -32,8 +32,29 @@ export type UiScale = (typeof UI_SCALES)[number]
 export const BAR_OPACITIES = [0, 0.4, 0.7, 1] as const
 export type BarOpacity = (typeof BAR_OPACITIES)[number]
 
+// Desktop accent — "default" keeps the theme's own `--primary`; the rest
+// override it with an oklch hue (applied on the environment root).
+export const ACCENTS = [
+  "default",
+  "rose",
+  "amber",
+  "emerald",
+  "sky",
+  "violet",
+] as const
+export type AccentId = (typeof ACCENTS)[number]
+
+export const ACCENT_COLORS: Record<Exclude<AccentId, "default">, string> = {
+  amber: "oklch(0.77 0.16 70)",
+  emerald: "oklch(0.7 0.15 160)",
+  rose: "oklch(0.65 0.22 15)",
+  sky: "oklch(0.7 0.15 235)",
+  violet: "oklch(0.6 0.22 300)",
+}
+
 export type EnvSettings = {
   wallpaper: WallpaperId
+  accent: AccentId
   barPosition: BarPosition
   barOpacity: BarOpacity
   font: EnvFont
@@ -42,6 +63,7 @@ export type EnvSettings = {
 }
 
 export const DEFAULT_ENV_SETTINGS: EnvSettings = {
+  accent: "default",
   barOpacity: 0.7,
   barPosition: "top",
   font: "mono",

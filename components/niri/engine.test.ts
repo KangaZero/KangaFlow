@@ -216,6 +216,28 @@ describe("overview", () => {
     state = niriReducer(state, { type: "focusDown" })
     expect(state.active).toBe(1)
   })
+
+  it("Alt+Shift+J/K rearrange workspaces in overview (active follows)", () => {
+    let state = initialNiriState()
+    state = niriReducer(state, { app: "terminal", type: "spawn" })
+    state = niriReducer(state, { type: "toggleOverview" })
+    // Order starts [1,2,3], active 1 at index 0; moveDown swaps 1 with 2.
+    state = niriReducer(state, { type: "moveDown" })
+    expect(state.workspaces.map((w) => w.id)).toEqual([2, 1, 3])
+    expect(state.active).toBe(1)
+    // The active workspace kept its window through the swap.
+    expect(state.workspaces.find((w) => w.id === 1)?.columns).toHaveLength(1)
+    // moveUp puts it back.
+    state = niriReducer(state, { type: "moveUp" })
+    expect(state.workspaces.map((w) => w.id)).toEqual([1, 2, 3])
+  })
+
+  it("moveDown does not reorder workspaces when overview is off", () => {
+    let state = initialNiriState()
+    state = niriReducer(state, { app: "terminal", type: "spawn" })
+    state = niriReducer(state, { type: "moveDown" })
+    expect(state.workspaces.map((w) => w.id)).toEqual([1, 2, 3])
+  })
 })
 
 describe("cycleWidth", () => {

@@ -210,13 +210,13 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
     case "focusDown": {
       const dir = action.type === "focusUp" ? -1 : 1
       // In overview, up/down navigate between the vertically-stacked workspaces
-      // (niri's overview movement); otherwise they move within the focused
-      // column's window stack.
+      // BY POSITION (ids may not match order after rearranging); otherwise they
+      // move within the focused column's window stack.
       if (state.overview) {
-        return {
-          ...state,
-          active: clamp(state.active + dir, WORKSPACE_MIN, WORKSPACE_MAX),
-        }
+        const index = state.workspaces.findIndex((w) => w.id === state.active)
+        const next =
+          state.workspaces[clampIndex(index + dir, state.workspaces.length)]
+        return next ? { ...state, active: next.id } : state
       }
       const column = getFocusedColumn(state)
       if (!column) return state
@@ -251,9 +251,28 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
 
     case "moveUp":
     case "moveDown": {
+      const dir = action.type === "moveUp" ? -1 : 1
+      // In overview, rearrange the stack: swap the active workspace with its
+      // neighbour. The active id follows it, so selection stays on it and the
+      // view's `layout` animation flips the two tiles.
+      if (state.overview) {
+        const index = state.workspaces.findIndex((w) => w.id === state.active)
+        const target = index + dir
+        if (index < 0 || target < 0 || target >= state.workspaces.length) {
+          return state
+        }
+        const a = state.workspaces[index]
+        const b = state.workspaces[target]
+        if (!(a && b)) return state
+        const workspaces = state.workspaces.map((w, i) => {
+          if (i === index) return b
+          if (i === target) return a
+          return w
+        })
+        return { ...state, workspaces }
+      }
       const column = getFocusedColumn(state)
       if (!column) return state
-      const dir = action.type === "moveUp" ? -1 : 1
       const target = column.focused + dir
       if (target < 0 || target >= column.windows.length) return state
       const current = column.windows[column.focused]
