@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react"
 import * as React from "react"
 
 import { AchievementCard } from "@/components/achievement-card"
+import { AchievementsProgress } from "@/components/achievements-progress"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -100,6 +101,8 @@ export function AchievementsView() {
           </motion.span>
         ))}
       </motion.h1>
+
+      <AchievementsProgress className="max-w-sm" />
 
       <div className="flex flex-wrap items-center gap-2">
         <Input

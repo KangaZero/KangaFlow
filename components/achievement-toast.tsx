@@ -4,6 +4,7 @@
 import { X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import * as React from "react"
+import { AchievementsProgress } from "@/components/achievements-progress"
 import { Button } from "@/components/ui/button"
 import {
   type Achievement,
@@ -26,29 +27,32 @@ function ToastCard({ achievement }: { achievement: Achievement }) {
   return (
     <motion.div
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="pointer-events-auto flex items-center gap-3 rounded-xl border bg-popover p-3 pr-2 shadow-lg"
+      className="pointer-events-auto flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-xl border bg-popover p-3 shadow-lg"
       exit={{ opacity: 0, scale: 0.9, y: -80 }}
       initial={{ opacity: 0, scale: 0.9, y: -80 }}
       style={{ borderColor: color }}
       transition={{ damping: 24, stiffness: 300, type: "spring" }}
     >
-      <Icon style={{ color }} />
-      <span className="flex flex-col">
-        <span className="font-medium text-sm">
-          {translate("achievements.toast.unlocked")}
+      <div className="flex items-center gap-3">
+        <Icon style={{ color }} />
+        <span className="flex flex-1 flex-col">
+          <span className="font-medium text-sm">
+            {translate("achievements.toast.unlocked")}
+          </span>
+          <span className="text-muted-foreground text-xs">
+            {translate(`achievements.items.${achievement.id}.title`)}
+          </span>
         </span>
-        <span className="text-muted-foreground text-xs">
-          {translate(`achievements.items.${achievement.id}.title`)}
-        </span>
-      </span>
-      <Button
-        aria-label={translate("achievements.toast.dismiss")}
-        onClick={dismissCurrent}
-        size="icon-sm"
-        variant="ghost"
-      >
-        <X />
-      </Button>
+        <Button
+          aria-label={translate("achievements.toast.dismiss")}
+          onClick={dismissCurrent}
+          size="icon-sm"
+          variant="ghost"
+        >
+          <X />
+        </Button>
+      </div>
+      <AchievementsProgress />
     </motion.div>
   )
 }
