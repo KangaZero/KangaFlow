@@ -38,17 +38,34 @@ export function Jellyfish() {
       viewBox="0 0 24 30"
     >
       <title>Jellyfish</title>
-      <path
+      {/* Bell: gentle propulsion pulse, pivoting from the tentacle seam. */}
+      <motion.path
+        animate={{ scaleY: [1, 0.9, 1] }}
         d="M2 13A10 9 0 0 1 22 13L22 14Q17 18 12 14Q7 18 2 14Z"
         fill="rgba(57,230,207,0.10)"
         stroke={BIO}
         strokeOpacity="0.65"
+        style={{ transformBox: "fill-box", transformOrigin: "center bottom" }}
+        transition={{
+          duration: 3,
+          ease: "easeInOut",
+          repeat: Number.POSITIVE_INFINITY,
+        }}
       />
-      <path
+      {/* Tentacles: womble up/down (scaleY) with a light sway, hanging from the
+          bell seam (transform-box: fill-box re-bases the origin to this path). */}
+      <motion.path
+        animate={{ rotate: [0, 2.5, -2.5, 0], scaleY: [1, 1.22, 0.9, 1] }}
         d="M7 15C6.7 19 6 22 5 27M11 16C10.8 20 10.7 24 10 28M14 16C14.2 20 14.4 24 15 28M17 15C17.3 19 18 22 19 27"
         stroke={BIO}
         strokeLinecap="round"
         strokeOpacity="0.45"
+        style={{ transformBox: "fill-box", transformOrigin: "center top" }}
+        transition={{
+          duration: 3.4,
+          ease: "easeInOut",
+          repeat: Number.POSITIVE_INFINITY,
+        }}
       />
     </svg>
   )
