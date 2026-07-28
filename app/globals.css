@@ -311,4 +311,16 @@
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+
+/* Custom overrides */
+/* xterm */
+/* This is enable a semi-transparent bg (Wow very informative m8) */
+.xterm-viewport {
+  background-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* To not show the scrollbars rendered by xterm */
+/* .xterm-scrollable-element { */
+/*   scrollbar-width: none !important; */
+/* } */
 /* biome-ignore-end lint/complexity/noImportantStyles: end reduced-motion override block. */
