@@ -5,6 +5,7 @@ import { Bell, Image as ImageIcon, Settings } from "lucide-react"
 import type * as React from "react"
 import { SiNixos } from "react-icons/si"
 
+import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
@@ -32,6 +33,7 @@ export function NoctaliaBar(props: {
   onWorkspace: (id: number) => void // click a pip to switch workspace
   onWallpaper: () => void // wallpaper button opens the wallpaper dialog
   onSettings: () => void // settings button opens the settings window
+  opacity: number // bar background opacity (0..1), from settings.barOpacity
 }): React.JSX.Element {
   const {
     workspaces,
@@ -42,6 +44,7 @@ export function NoctaliaBar(props: {
     onWorkspace,
     onWallpaper,
     onSettings,
+    opacity,
   } = props
   const { translate } = useLocale()
 
@@ -49,21 +52,30 @@ export function NoctaliaBar(props: {
     <header
       className={cn(
         "flex items-center justify-between gap-3",
-        "rounded-xl border border-border bg-card/80 px-2 py-1.5 shadow-lg backdrop-blur",
+        "rounded-xl border border-border px-2 py-1.5 shadow-lg backdrop-blur",
         "text-foreground text-xs"
       )}
+      style={{
+        backgroundColor: `color-mix(in oklch, var(--card) ${Math.round(opacity * 100)}%, transparent)`,
+      }}
     >
       {/* LEFT: launcher logo + active window title */}
       <div className="flex min-w-0 items-center gap-2">
-        <Button
-          aria-label={translate("environment.bar.launcher")}
-          className="rounded-full"
-          onClick={onLauncher}
-          size="icon-sm"
-          variant="ghost"
+        <AnimatedTooltip
+          label={translate("environment.bar.launcher")}
+          shortcut={["Alt", "D"]}
+          side="responsive"
         >
-          <SiNixos />
-        </Button>
+          <Button
+            aria-label={translate("environment.bar.launcher")}
+            className="rounded-full"
+            onClick={onLauncher}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <SiNixos />
+          </Button>
+        </AnimatedTooltip>
         <span className="max-w-36.25 truncate text-muted-foreground">
           {activeWindowTitle === "" ? "—" : activeWindowTitle}
         </span>
@@ -103,32 +115,48 @@ export function NoctaliaBar(props: {
         <span className="font-mono text-muted-foreground tabular-nums">
           CPU 12% MEM 43%
         </span>
-        <Button
-          aria-label={translate("environment.settings.wallpaper")}
-          className="rounded-full"
-          onClick={onWallpaper}
-          size="icon-sm"
-          variant="ghost"
+        <AnimatedTooltip
+          label={translate("environment.settings.wallpaper")}
+          side="responsive"
         >
-          <ImageIcon />
-        </Button>
-        <Button
-          aria-label={translate("environment.settings.title")}
-          className="rounded-full"
-          onClick={onSettings}
-          size="icon-sm"
-          variant="ghost"
+          <Button
+            aria-label={translate("environment.settings.wallpaper")}
+            className="rounded-full"
+            onClick={onWallpaper}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <ImageIcon />
+          </Button>
+        </AnimatedTooltip>
+        <AnimatedTooltip
+          label={translate("environment.settings.title")}
+          shortcut={["Alt", "Shift", ","]}
+          side="responsive"
         >
-          <Settings />
-        </Button>
-        <Button
-          aria-label={translate("environment.bar.notifications")}
-          className="rounded-full"
-          size="icon-sm"
-          variant="ghost"
+          <Button
+            aria-label={translate("environment.settings.title")}
+            className="rounded-full"
+            onClick={onSettings}
+            size="icon-sm"
+            variant="ghost"
+          >
+            <Settings />
+          </Button>
+        </AnimatedTooltip>
+        <AnimatedTooltip
+          label={translate("environment.bar.notifications")}
+          side="responsive"
         >
-          <Bell />
-        </Button>
+          <Button
+            aria-label={translate("environment.bar.notifications")}
+            className="rounded-full"
+            size="icon-sm"
+            variant="ghost"
+          >
+            <Bell />
+          </Button>
+        </AnimatedTooltip>
       </div>
     </header>
   )

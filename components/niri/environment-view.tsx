@@ -242,6 +242,7 @@ export function EnvironmentView() {
       onSettings={() => setSettingsOpen(true)}
       onWallpaper={() => setWallpaperOpen(true)}
       onWorkspace={(id) => dispatch({ id, type: "focusWorkspace" })}
+      opacity={settings.barOpacity}
       workspaces={pips}
     />
   )
@@ -273,62 +274,87 @@ export function EnvironmentView() {
       {/* Scrollable-tiling strip */}
       <div className="relative flex-1 overflow-hidden" ref={stripRef}>
         {state.overview ? (
-          // Overview (Alt+Shift+O): all workspaces stacked vertically, niri-
-          // style. Alt+J/K move between them; click one to enter it.
+          // Overview (Alt+Shift+O): all workspaces stacked over a blurred
+          // wallpaper (backdrop-blur reads the desktop wallpaper behind).
+          // Alt+J/K move between them, Alt+Shift+J/K rearrange, click/Enter to
+          // enter. Each tile renders its windows' real content, live.
           <motion.div
             animate={{ opacity: 1 }}
-            className="absolute inset-0 flex flex-col gap-3 overflow-auto p-4"
+            className="absolute inset-0 flex flex-col gap-3 overflow-auto bg-background/40 p-4 backdrop-blur-2xl"
             initial={{ opacity: 0 }}
           >
-            {state.workspaces.map((ws) => (
-              // `layout` + a spring make the tiles FLIP when Alt+Shift+J/K
-              // reorders the workspaces array (stable key = ws.id).
-              <motion.button
-                aria-label={`${translate("environment.bar.workspace")} ${ws.id}`}
-                className={cn(
-                  "flex min-h-32 flex-1 flex-col gap-2 rounded-2xl border-2 bg-card/30 p-3 text-left backdrop-blur-sm transition",
-                  ws.id === state.active
-                    ? "border-primary"
-                    : "border-border/40 hover:border-border"
-                )}
-                key={ws.id}
-                layout
-                onClick={() => {
-                  dispatch({ id: ws.id, type: "focusWorkspace" })
-                  dispatch({ type: "toggleOverview" })
-                }}
-                transition={{ damping: 50, stiffness: 200, type: "spring" }}
-                type="button"
-              >
-                <span className="font-medium text-muted-foreground text-xs">
-                  {`${translate("environment.bar.workspace")} ${ws.id}`}
-                </span>
-                <div className="flex min-h-0 flex-1 gap-2">
-                  {ws.columns.length === 0 ? (
-                    <span className="flex flex-1 items-center justify-center text-muted-foreground/50 text-xs">
-                      —
-                    </span>
-                  ) : (
-                    ws.columns.map((col) => (
-                      <div
-                        className="flex min-w-0 flex-col gap-2"
-                        key={col.id}
-                        style={{ flex: col.width }}
-                      >
-                        {col.windows.map((win) => (
-                          <div
-                            className="flex min-h-10 flex-1 items-center justify-center overflow-hidden rounded-lg border border-border bg-card px-2 text-center text-[10px] text-card-foreground"
-                            key={win.id}
-                          >
-                            {win.title}
-                          </div>
-                        ))}
-                      </div>
-                    ))
+            {state.workspaces.map((ws) => {
+              const wsLabel = `${translate("environment.bar.workspace")} ${ws.id}`
+              return (
+                // `layout` + a spring FLIP the tiles when Alt+Shift+J/K reorders
+                // the array (stable key = ws.id). A transparent overlay button
+                // owns the click so the live window content can render without
+                // nesting interactive elements inside a <button>.
+                <motion.div
+                  className={cn(
+                    "relative flex min-h-40 flex-1 flex-col gap-2 overflow-hidden rounded-2xl border-2 bg-card/20 p-3",
+                    ws.id === state.active
+                      ? "border-primary"
+                      : "border-border/40 hover:border-border"
                   )}
-                </div>
-              </motion.button>
-            ))}
+                  key={ws.id}
+                  layout
+                  transition={{ damping: 50, stiffness: 200, type: "spring" }}
+                >
+                  <button
+                    aria-label={wsLabel}
+                    className="absolute inset-0 z-20"
+                    onClick={() => {
+                      dispatch({ id: ws.id, type: "focusWorkspace" })
+                      dispatch({ type: "toggleOverview" })
+                    }}
+                    type="button"
+                  />
+                  <span className="font-medium text-muted-foreground text-xs">
+                    {wsLabel}
+                  </span>
+                  <div className="flex min-h-0 flex-1 gap-2">
+                    {ws.columns.length === 0 ? (
+                      <span className="flex flex-1 items-center justify-center text-muted-foreground/50 text-xs">
+                        —
+                      </span>
+                    ) : (
+                      ws.columns.map((col) => (
+                        <div
+                          className="flex min-w-0 flex-col gap-2"
+                          key={col.id}
+                          style={{ flex: col.width }}
+                        >
+                          {col.windows.map((win) => (
+                            <div
+                              className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-border bg-card"
+                              key={win.id}
+                            >
+                              <div className="flex items-center border-border border-b bg-muted/40 px-2 py-1">
+                                <span className="truncate font-medium text-[10px] text-card-foreground">
+                                  {win.title}
+                                </span>
+                              </div>
+                              {/* Live content; pointer-events-none so the tile's
+                                  overlay button owns the click. */}
+                              <div className="pointer-events-none min-h-0 flex-1 overflow-hidden">
+                                <WindowContent
+                                  dark={dark}
+                                  files={files}
+                                  onClose={() => dispatch({ type: "close" })}
+                                  routePath={pathname}
+                                  win={win}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </motion.div>
+              )
+            })}
           </motion.div>
         ) : columns.length === 0 ? (
           <div className="flex h-full items-center justify-center text-center text-sm text-white/70">
