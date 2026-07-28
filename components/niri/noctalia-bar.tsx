@@ -5,6 +5,7 @@ import { Bell, Image as ImageIcon, Settings } from "lucide-react"
 import type * as React from "react"
 import { SiNixos } from "react-icons/si"
 
+import Counter from "@/components/Counter"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/lib/i18n"
@@ -19,6 +20,38 @@ type WorkspacePip = {
   occupied: boolean
   active: boolean
 }
+// Clock built on the react-bits Counter — "HH:MM" split into two fixed-2-digit
+// rolling counters. Falls back to plain text if the format is unexpected.
+function BarClock({ time }: { time: string }): React.JSX.Element {
+  const [h, m] = time.split(":")
+  const hours = Number(h)
+  const minutes = Number(m)
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return <span className="text-muted-foreground tabular-nums">{time}</span>
+  }
+  return (
+    <span className="flex items-center text-muted-foreground tabular-nums">
+      <Counter
+        fontSize={13}
+        gap={0}
+        gradientHeight={0}
+        horizontalPadding={0}
+        places={[10, 1]}
+        value={hours}
+      />
+      <span>:</span>
+      <Counter
+        fontSize={13}
+        gap={0}
+        gradientHeight={0}
+        horizontalPadding={0}
+        places={[10, 1]}
+        value={minutes}
+      />
+    </span>
+  )
+}
+
 // Presentational recreation of the Noctalia v5 floating top bar for the web
 // niri desktop. No timers, no fetching, no internal state — every value is a
 // prop, so the parent (the niri view) stays the single source of truth. All
@@ -111,14 +144,7 @@ export function NoctaliaBar(props: {
             </li>
           ))}
         </ul>
-        <span
-          className={cn(
-            "text-muted-foreground tabular-nums",
-            isV && "[writing-mode:vertical-rl]"
-          )}
-        >
-          {clock}
-        </span>
+        <BarClock time={clock} />
         <span
           className={cn(
             "rounded-sm border border-border/50 px-1 py-0.5 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none",
