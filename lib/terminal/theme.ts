@@ -69,7 +69,9 @@ export function paletteForTheme(theme: string | undefined): TerminalPalette {
 // Build an xterm ITheme-compatible object from a palette.
 export function xtermTheme(p: TerminalPalette) {
   return {
-    background: p.base,
+    // Transparent canvas (paired with allowTransparency) so the window frame /
+    // wallpaper shows through — the ANSI-coloured prompt segments stay solid.
+    background: "rgba(0,0,0,0)",
     black: p.black,
     blue: p.blue,
     brightBlack: p.brightBlack,

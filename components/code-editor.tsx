@@ -71,6 +71,12 @@ export function CodeEditor({
           "&": { height: "100%" },
         }),
         ...(dark ? [oneDark] : []),
+        // Transparent surfaces (after the theme so it wins) — lets the niri
+        // window frame / wallpaper show through.
+        EditorView.theme({
+          ".cm-gutters": { backgroundColor: "transparent" },
+          "&": { backgroundColor: "transparent" },
+        }),
       ],
     })
     const view = new EditorView({ parent: host, state })

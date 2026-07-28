@@ -2,7 +2,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import { SquareIcon, X } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import dynamic from "next/dynamic"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
@@ -121,6 +121,7 @@ export function EnvironmentView() {
   const dark = resolvedTheme !== "light"
   const theme = isTheme(resolvedTheme) ? resolvedTheme : DEFAULT_THEME
   const pathname = usePathname()
+  const reduceMotion = useReducedMotion()
 
   const [state, dispatch] = useReducer(niriReducer, undefined, initialNiriState)
   const { envSettings: settings, setEnvSettings: setSettings } =
@@ -143,6 +144,7 @@ export function EnvironmentView() {
 
   const files = useMemo(() => readSourceFiles(), [])
   const stripRef = useRef<HTMLDivElement>(null)
+  const overviewRef = useRef<HTMLDivElement>(null)
   const activeTileRef = useRef<HTMLDivElement>(null)
 
   // Launcher entries, localised. `name`/`subtitle` framing is translated; brand
@@ -185,14 +187,19 @@ export function EnvironmentView() {
     return () => ro.disconnect()
   }, [])
 
-  // Auto-scroll the overview so the active workspace tile stays in view as
-  // Alt+J/K moves focus (the container is overflow-hidden — scrolled here).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: state.active is an intentional trigger (the ref is stable) so the scroll re-runs on focus change.
+  // Auto-scroll the overview so the active workspace tile stays centred as
+  // Alt+J/K moves focus. Set scrollTop on the container directly (not
+  // scrollIntoView) so it works on the overflow-hidden box and uses layout
+  // offsets (offsetTop) that the tiles' FLIP transforms don't perturb.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: state.active is an intentional trigger (refs are stable) so the scroll re-runs on focus change.
   useEffect(() => {
     if (!state.overview) return
-    activeTileRef.current?.scrollIntoView({
+    const container = overviewRef.current
+    const tile = activeTileRef.current
+    if (!(container && tile)) return
+    container.scrollTo({
       behavior: "smooth",
-      block: "center",
+      top: tile.offsetTop - (container.clientHeight - tile.clientHeight) / 2,
     })
   }, [state.overview, state.active])
 
@@ -319,7 +326,7 @@ export function EnvironmentView() {
 
         {/* Scrollable-tiling strip */}
         <div
-          className="relative min-h-0 min-w-0 flex-1 overflow-hidden"
+          className="overflow-show relative min-h-0 min-w-0 flex-1"
           ref={stripRef}
         >
           {state.overview ? (
@@ -329,8 +336,9 @@ export function EnvironmentView() {
             // enter. Each tile renders its windows' real content, live.
             <motion.div
               animate={{ opacity: 1 }}
-              className="absolute inset-0 flex flex-col gap-3 overflow-hidden p-4"
+              className="absolute inset-0 flex flex-col gap-3 p-4"
               initial={{ opacity: 0 }}
+              ref={overviewRef}
             >
               {state.workspaces.map((ws) => {
                 const wsLabel = `${translate("environment.bar.workspace")} ${ws.id}`
@@ -341,7 +349,7 @@ export function EnvironmentView() {
                   // nesting interactive elements inside a <button>.
                   <motion.div
                     className={cn(
-                      "relative flex min-h-90 flex-1 flex-col gap-2 overflow-hidden rounded-2xl border-2 bg-card/20 p-3",
+                      "relative flex min-h-90 flex-1 flex-col gap-2 rounded-2xl border-2 bg-card/20 p-3",
                       ws.id === state.active
                         ? "border-primary"
                         : "border-border/40 hover:border-border"
@@ -467,13 +475,26 @@ export function EnvironmentView() {
                       {col.windows.map((win, wi) => {
                         const isFocused =
                           ci === focusedCol && wi === col.focused
+                        // Terminal/editor windows are translucent so the
+                        // wallpaper shows through their transparent content.
+                        const glassy =
+                          win.app === "terminal" || win.app === "editor"
                         return (
                           <motion.button
                             className={cn(
-                              "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border bg-card text-left shadow-xl",
+                              "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border text-left shadow-xl",
+                              glassy
+                                ? "bg-card/30 backdrop-blur-md"
+                                : "bg-card",
                               isFocused ? "border-primary" : "border-border"
                             )}
-                            exit={{ opacity: 0, y: 24 }}
+                            // Close animation: shrink to nothing at the centre
+                            // (opacity-only when the user prefers reduced motion).
+                            exit={
+                              reduceMotion
+                                ? { opacity: 0 }
+                                : { opacity: 0, scale: 0 }
+                            }
                             initial={
                               columns.length === 1
                                 ? { opacity: 0 }
