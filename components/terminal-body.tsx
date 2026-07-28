@@ -60,9 +60,10 @@ import {
 import { isTheme, THEMES } from "@/lib/themes"
 import { useLocale } from "@/providers/locale-provider"
 
-// Subset Symbols Nerd Font supplying the oh-my-posh prompt glyphs (powerline
-// separators + OS/git/shell/clock/path icons). ~2.6KB; JetBrains Mono renders
-// the text and this fills the Private-Use-Area glyphs it lacks.
+// Subset Symbols Nerd Font supplying the oh-my-posh prompt icons (OS / git /
+// shell / clock / path — 12 PUA codepoints, ~2.1KB). JetBrains Mono renders the
+// text; xterm's `customGlyphs` draws the powerline separators; this fills only
+// the true Private-Use-Area icon glyphs.
 const nerdSymbols = localFont({
   display: "swap",
   src: "../assets/fonts/symbols-nerd.woff2",
@@ -224,6 +225,10 @@ export function TerminalBody({
     () => ({
       allowTransparency: true,
       cursorBlink: true,
+      // xterm draws box-drawing + powerline separators (U+E0B0–E0D4) itself as
+      // vector shapes fitted to the cell, so they never fall back to the Nerd
+      // Font at the wrong width and clip. Only the true icons need the font.
+      customGlyphs: true,
       fontFamily: TERMINAL_FONT_FAMILY,
       fontSize: 13,
     }),
