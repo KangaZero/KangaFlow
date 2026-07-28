@@ -259,7 +259,21 @@ export default function Template({ children }: { children: React.ReactNode }) {
   const [seed, setSeed] = useState<number | null>(null)
   useEffect(() => setSeed(Date.now()), [])
 
-  if (reduceMotion || isEnvironment) return <>{children}</>
+  if (reduceMotion) return <>{children}</>
+
+  // The environment page is the desktop — the door curtain would just cover it,
+  // so use a simple fade-in instead.
+  if (isEnvironment) {
+    return (
+      <motion.div
+        animate={{ opacity: 1 }}
+        initial={{ opacity: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        {children}
+      </motion.div>
+    )
+  }
 
   return (
     <>
