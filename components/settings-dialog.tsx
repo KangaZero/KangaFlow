@@ -1,6 +1,8 @@
 "use client"
+
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
+import { LiquidButton } from "@/components/animate-ui/components/buttons/liquid"
 import {
   Dialog,
   DialogContent,
@@ -9,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/animate-ui/components/radix/dialog"
+import { Switch } from "@/components/animate-ui/components/radix/switch"
 import { LocaleTransition } from "@/components/locale-transition"
 import { Button } from "@/components/ui/button"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
@@ -37,17 +40,17 @@ function ModifierToggle({
   pressed: boolean
 }) {
   return (
-    <Button
+    <LiquidButton
       aria-label={ariaLabel}
       aria-pressed={pressed}
       className="min-w-9 font-mono"
+      defaultPressed={pressed}
       onClick={onToggle}
       size="sm"
       type="button"
-      variant={pressed ? "default" : "outline"}
     >
       {label}
-    </Button>
+    </LiquidButton>
   )
 }
 
@@ -197,17 +200,11 @@ export function SettingsDialog() {
           <p className="font-medium text-sm">
             {translate("settings.showChromeInEnvironment")}
           </p>
-          <Button
+          <Switch
             aria-pressed={showChromeInEnvironment}
+            checked={showChromeInEnvironment}
             onClick={() => setShowChromeInEnvironment(!showChromeInEnvironment)}
-            size="sm"
-            type="button"
-            variant={showChromeInEnvironment ? "default" : "outline"}
-          >
-            {showChromeInEnvironment
-              ? translate("settings.on")
-              : translate("settings.off")}
-          </Button>
+          />
         </div>
 
         <div className="flex items-center justify-between gap-3 border-border border-t py-3">

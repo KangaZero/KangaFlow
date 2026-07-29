@@ -1,6 +1,7 @@
 "use client"
 
 import { MotionConfig } from "motion/react"
+import { usePathname } from "next/navigation"
 import {
   createContext,
   type ReactNode,
@@ -24,6 +25,7 @@ import {
 import {
   ANIMATION_PREFS,
   type AnimationPref,
+  type AppPath,
   COLUMN_OPTIONS,
   type ColumnCount,
   type GlobalStatesContextValue,
@@ -166,7 +168,15 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [isMediaPlayerOpen, setIsMediaPlayerOpen] = useState(false)
   const [isTerminalOpen, setIsTerminalOpen] = useState(false)
   const [terminalFile, setTerminalFile] = useState<string | null>(null)
+  const currentPath = usePathname() as AppPath
 
+  useEffect(() => {
+    const rest = currentPath
+      .replace(/^\/(?:en|ja)(?=\/|$)/, "")
+      .replace(/\/$/, "")
+    const isHome = rest === ""
+    if (!isHome) return setIsHelloEffectAnimationComplete(true)
+  }, [currentPath])
   // Persisted settings start at their SSR-safe defaults, then hydrate from
   // localStorage after mount (reading storage during render would mismatch the
   // server-rendered HTML). `hydrated` gates the persist effects so the initial

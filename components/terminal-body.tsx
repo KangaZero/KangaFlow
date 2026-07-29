@@ -1,7 +1,7 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-// ─── KNOWN ISSUES / TODO(human) ─────────────────────────────────────────────
+// ─── KNOWN ISSUES / TODO ────────────────────────────────────────────────────
 // The in-browser terminal works but is rough. Outstanding bugs to fix:
 //
 // 1. Completion over-triggers. Tab/→ can still act when the argument is already
@@ -29,7 +29,6 @@
 //    separate command runs).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { CanvasAddon } from "@xterm/addon-canvas"
 import { FitAddon } from "@xterm/addon-fit"
 import type {
   ITerminalAddon,
@@ -226,10 +225,6 @@ export function TerminalBody({
     () => ({
       allowTransparency: true,
       cursorBlink: true,
-      // xterm draws box-drawing + powerline separators (U+E0B0–E0D4) itself as
-      // vector shapes fitted to the cell, so they never fall back to the Nerd
-      // Font at the wrong width and clip. Only the true icons need the font.
-      customGlyphs: true,
       fontFamily: TERMINAL_FONT_FAMILY,
       fontSize: 13,
     }),
@@ -563,8 +558,13 @@ export function TerminalBody({
       }
     }
 
-    // xterm's canvas renderer can't resolve CSS var(), so read the concrete
-    // next/font family name from --font-mono (JetBrains Mono) and apply it.
+    // The CSS var --font-mono is a next/font placeholder that xterm can't
+    // resolve, so read the concrete family name and apply it. The Symbols Nerd
+    // Font supplies the prompt's icon glyphs (OS/git/clock/path); JetBrains
+    // Mono renders the text. We render with the default DOM renderer — it
+    // composites over the transparent wallpaper backing correctly (WebGL/canvas
+    // don't), and the prompt uses block-style separators so it needs no
+    // canvas-only `customGlyphs` vector drawing.
     const mono = getComputedStyle(document.documentElement)
       .getPropertyValue("--font-mono")
       .trim()
@@ -572,22 +572,6 @@ export function TerminalBody({
     term.options.fontFamily = mono
       ? `${mono}, ${nerd}, ${TERMINAL_FONT_FAMILY}`
       : `${nerd}, ${TERMINAL_FONT_FAMILY}`
-
-    // Swap the default DOM renderer for the canvas renderer: it honours
-    // `customGlyphs` (set in `options`), drawing the powerline separators
-    // (U+E0B0–E0D4) as native vector shapes fitted to the cell instead of
-    // falling back to the Nerd Font at the wrong width and clipping. Canvas
-    // (not WebGL) because WebGL blends an opaque background — breaking the
-    // transparent terminal — and has a thin-text bug under allowTransparency.
-    // Must load after open() (fit below relies on the terminal being attached);
-    // fails soft so any load error just keeps the DOM renderer.
-    let canvas: CanvasAddon | undefined
-    try {
-      canvas = new CanvasAddon()
-      term.loadAddon(canvas)
-    } catch {
-      canvas = undefined
-    }
 
     fit.fit()
     fastfetch()
@@ -605,7 +589,6 @@ export function TerminalBody({
 
     return () => {
       sub.dispose()
-      canvas?.dispose()
       window.removeEventListener("resize", onResize)
     }
   }, [instance])

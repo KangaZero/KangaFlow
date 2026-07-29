@@ -16,8 +16,6 @@ const fg = ([r, g, b]: Rgb): string => `\x1b[38;2;${r};${g};${b}m`
 const bg = ([r, g, b]: Rgb): string => `\x1b[48;2;${r};${g};${b}m`
 
 // Nerd Font glyphs (subset shipped in assets/fonts/symbols-nerd.woff2).
-const PL_RIGHT = "" //  left-powerline segment tail
-const PL_LEFT = "" //  right-block head
 const CPU_MEM = " "
 const GIT = " "
 const SHELL = "  "
@@ -40,19 +38,17 @@ const REPO = "KangaZero/KangaFlow"
 
 type Cell = { text: string; fg: Rgb; bg: Rgb }
 
-// A left-aligned powerline chain: each cell's background flows into the next via
-// a  drawn in the previous background over the next one; the last closes onto
-// the default background.
+// A left-aligned block chain: each segment is a background-coloured run of
+// space-padded text, so the colour change between adjacent segments *is* the
+// seam — no separator glyph. Spaces are always one cell wide in any font,
+// unlike the box/block glyphs the latin font subset drops (which rendered at
+// ~70% on the DOM renderer). The last segment resets onto the transparent bg.
 function powerlineLeft(cells: readonly Cell[]): string {
   let out = ""
-  cells.forEach((c, i) => {
+  for (const c of cells) {
     out += bg(c.bg) + fg(c.fg) + c.text
-    const next = cells[i + 1]
-    out += next
-      ? bg(next.bg) + fg(c.bg) + PL_RIGHT
-      : `${RESET}${fg(c.bg)}${PL_RIGHT}${RESET}`
-  })
-  return out
+  }
+  return out + RESET
 }
 
 // biome-ignore lint/suspicious/noControlCharactersInRegex: matching the ANSI ESC (\x1b) is the intent.
@@ -83,7 +79,7 @@ export type PromptCtx = {
 }
 
 // Build the full multi-line prompt. `block` is printed once per new prompt;
-// `inputPrefix` is the last line ("╰─❯ ") reused for in-place line-editing
+// `inputPrefix` is the last line ("» ") reused for in-place line-editing
 // reprints (\r + prefix), so the decorative lines above aren't redrawn.
 export function buildPrompt(ctx: PromptCtx): {
   block: string
@@ -99,27 +95,25 @@ export function buildPrompt(ctx: PromptCtx): {
     { bg: BORDER, fg: BLACK, text: " 0ms " },
   ])
 
-  // Line 1 right: static repo git segment (right-block, points left).
-  const git = `${fg(PURPLE)}${PL_LEFT}${bg(PURPLE)}${fg(BLACK)} ${GIT} ${REPO}  main ${RESET}`
+  // Line 1 right: static repo git segment as a right-aligned colour block.
+  const git = `${bg(PURPLE)}${fg(BLACK)} ${GIT} ${REPO}  main ${RESET}`
 
   const pad = ctx.cols
     ? Math.max(1, ctx.cols - visibleLen(line1Left) - visibleLen(git))
     : 3
   const line1 = `${line1Left}${" ".repeat(pad)}${git}`
 
-  // Line 2: framed powerline — user · shell · time · path.
-  const line2 =
-    `${fg(PURPLE)}╭─${RESET}` +
-    powerlineLeft([
-      { bg: PURPLE, fg: BLACK, text: " KangaZero " },
-      { bg: BORDER, fg: BLACK, text: ` ${SHELL} zsh ` },
-      { bg: PURPLE, fg: BLACK, text: ` ${CLOCK} ${formatClock(ctx.now)} ` },
-      { bg: BORDER, fg: BLACK, text: ` ${PATH_ICON} ${ctx.cwd} ` },
-    ])
+  // Line 2: colour-block chain — user · shell · time · path.
+  const line2 = powerlineLeft([
+    { bg: PURPLE, fg: BLACK, text: " KangaZero " },
+    { bg: BORDER, fg: BLACK, text: ` ${SHELL} zsh ` },
+    { bg: PURPLE, fg: BLACK, text: ` ${CLOCK} ${formatClock(ctx.now)} ` },
+    { bg: BORDER, fg: BLACK, text: ` ${PATH_ICON} ${ctx.cwd} ` },
+  ])
 
-  // Line 3: the input line — ❯ turns red on a non-zero exit.
+  // Line 3: the input line — » turns red on a non-zero exit.
   const arrow = (ctx.exitCode ?? 0) > 0 ? RED : PURPLE
-  const inputPrefix = `${fg(PURPLE)}╰─${fg(arrow)}❯${RESET} `
+  const inputPrefix = `${fg(arrow)}»${RESET} `
 
   return { block: `${line1}\r\n${line2}\r\n${inputPrefix}`, inputPrefix }
 }
