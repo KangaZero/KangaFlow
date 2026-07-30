@@ -118,7 +118,8 @@ export function MediaPlayer() {
   const hasAudio = Boolean(track.src)
   const duration = audioDuration ?? track.duration
 
-  // Wire up audio element events once on mount.
+  // Wire up audio element events. Runs once after the portal renders (mounted = true).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mounted gates the portal render; setters are stable
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
@@ -142,11 +143,11 @@ export function MediaPlayer() {
       audio.removeEventListener("loadedmetadata", onLoadedMetadata)
       audio.removeEventListener("error", onError)
     }
-  }, [])
+  }, [mounted])
 
-  // Load the new source only when the track actually changes — NOT on play/pause.
-  // isPlaying is read via ref to avoid retriggering load() on every toggle.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: isPlayingRef is a stable ref, not reactive state
+  // Load the new source when the track changes or after the portal first renders.
+  // isPlaying is read via ref to avoid retriggering load() on every play/pause toggle.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: mounted + track.src cover all source changes; isPlayingRef/setters are stable
   useEffect(() => {
     const audio = audioRef.current
     if (!audio || !track.src) return
@@ -155,7 +156,7 @@ export function MediaPlayer() {
     audio.src = track.src
     audio.load()
     if (isPlayingRef.current) void audio.play().catch(() => setIsPlaying(false))
-  }, [currentIndex, track.src])
+  }, [mounted, currentIndex, track.src])
 
   // Sync play/pause — never calls load(), so it's safe to run on every toggle.
   useEffect(() => {
@@ -209,6 +210,9 @@ export function MediaPlayer() {
       className="pointer-events-none fixed inset-0 z-50"
       ref={constraintsRef}
     >
+      {/* Always in DOM so effects can initialise src before the player UI opens. */}
+      {/* biome-ignore lint/a11y/useMediaCaption: music player — no caption track applicable */}
+      <audio className="hidden" ref={audioRef} />
       <AnimatePresence>
         {isMediaPlayerOpen ? (
           <motion.div
@@ -249,10 +253,6 @@ export function MediaPlayer() {
                 <X className="size-4" />
               </Button>
             </div>
-
-            {/* Hidden audio element — drives real playback when track.src is set. */}
-            {/* biome-ignore lint/a11y/useMediaCaption: music player — no caption track applicable */}
-            <audio ref={audioRef} />
 
             <div className="flex flex-col gap-3 p-4">
               {/* Track meta */}
