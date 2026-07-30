@@ -17,12 +17,14 @@ import { Button } from "@/components/ui/button"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { ANIMATION_PREFS } from "@/lib/globalStates"
 import {
+  BARE_KEY_ACTIONS,
   DEFAULT_SHORTCUTS,
   formatShortcut,
   IS_MAC,
   type Shortcut,
   shortcutSignature,
 } from "@/lib/shortcuts"
+import { THEMES } from "@/lib/themes"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -69,6 +71,8 @@ export function SettingsDialog() {
     setShowChromeInEnvironment,
     animationPref,
     setAnimationPref,
+    theme,
+    toggleTheme,
   } = useGlobalStates()
 
   const patch = (action: Shortcut["action"], next: Partial<Shortcut>) =>
@@ -106,7 +110,11 @@ export function SettingsDialog() {
                 `settings.actions.${s.action}` as "settings.actions.goHome"
               )
               const empty = s.character === ""
-              const noModifier = !(s.hasMetaOrCtrlKey || s.hasAltOrOptionKey)
+              // Bare keys are normally flagged (they'd fire mid-typing), but a
+              // few actions (Vimium-style hints) are bare by design.
+              const noModifier =
+                !(s.hasMetaOrCtrlKey || s.hasAltOrOptionKey) &&
+                !BARE_KEY_ACTIONS.has(s.action)
               const duplicate =
                 !empty && (counts.get(shortcutSignature(s)) ?? 0) > 1
               const invalid = empty || noModifier || duplicate
@@ -205,6 +213,24 @@ export function SettingsDialog() {
             checked={showChromeInEnvironment}
             onClick={() => setShowChromeInEnvironment(!showChromeInEnvironment)}
           />
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-border border-t py-3">
+          <p className="font-medium text-sm">{translate("theme.label")}</p>
+          <div className="flex items-center gap-1.5">
+            {THEMES.map((t) => (
+              <Button
+                aria-pressed={theme === t}
+                key={t}
+                onClick={() => void toggleTheme(t)}
+                size="sm"
+                type="button"
+                variant={theme === t ? "default" : "outline"}
+              >
+                {translate(`theme.${t}`)}
+              </Button>
+            ))}
+          </div>
         </div>
 
         <div className="flex items-center justify-between gap-3 border-border border-t py-3">

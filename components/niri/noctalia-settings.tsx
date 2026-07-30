@@ -2,6 +2,8 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import {
+  AppWindow,
+  ArrowLeft,
   Blend,
   Image as ImageIcon,
   LayoutGrid,
@@ -10,11 +12,17 @@ import {
   Monitor,
   Palette,
   PanelTop,
+  SlidersHorizontal,
   Type,
 } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
-import { useTheme } from "next-themes"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { useEffect, useState } from "react"
+import {
+  Accordion,
+  AccordionItem,
+  AccordionPanel,
+  AccordionTrigger,
+} from "@/components/animate-ui/components/base/accordion"
 import { GLASS_SURFACE } from "@/components/niri/glass"
 import {
   ACCENT_COLORS,
@@ -24,6 +32,8 @@ import {
   BAR_POSITIONS,
   type BarOpacity,
   type BarPosition,
+  BORDER_RADIUS_MAX,
+  BORDER_RADIUS_MIN,
   ENV_FONTS,
   type EnvFont,
   type EnvSettings,
@@ -35,15 +45,16 @@ import {
 import { WallpaperPicker } from "@/components/niri/wallpaper-picker"
 import { Slider } from "@/components/ui/slider"
 import type { TranslationKey } from "@/lib/i18n"
-import { DEFAULT_THEME, isTheme, THEMES, type Theme } from "@/lib/themes"
+import { THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
+import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
 const percent = (fraction: BarOpacity | UiScale): string =>
   `${Math.round(fraction * 100)}%`
 
 // Sidebar sections, Noctalia v5-style (icon + label; content pane on the right).
-type SectionId = "appearance" | "bar" | "wallpaper" | "widgets"
+type SectionId = "appearance" | "bar" | "launcher" | "wallpaper" | "widgets"
 const SECTIONS: readonly {
   id: SectionId
   icon: LucideIcon
@@ -55,6 +66,11 @@ const SECTIONS: readonly {
     labelKey: "environment.settings.appearance",
   },
   { icon: PanelTop, id: "bar", labelKey: "environment.settings.sectionBar" },
+  {
+    icon: AppWindow,
+    id: "launcher",
+    labelKey: "environment.settings.sectionLauncher",
+  },
   {
     icon: ImageIcon,
     id: "wallpaper",
@@ -178,6 +194,37 @@ function OptionSlider<T extends string | number>(props: {
   )
 }
 
+// A free-range numeric slider (min → max, step of 1 by default).
+function NumericSlider(props: {
+  label: string
+  min: number
+  max: number
+  step?: number
+  value: number
+  format: (n: number) => string
+  onSelect: (n: number) => void
+}): React.JSX.Element {
+  const { label, min, max, step = 1, value, format, onSelect } = props
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="ml-auto font-medium text-muted-foreground text-xs tabular-nums">
+        {format(value)}
+      </span>
+      <Slider
+        aria-label={label}
+        max={max}
+        min={min}
+        onValueChange={(values) => {
+          const next = values[0]
+          if (next !== undefined) onSelect(next)
+        }}
+        step={step}
+        value={[value]}
+      />
+    </div>
+  )
+}
+
 // Accent swatch row. "default" previews the theme's own `--primary`.
 function AccentRow(props: {
   value: AccentId
@@ -218,12 +265,9 @@ export function NoctaliaSettings(props: {
 }): React.JSX.Element | null {
   const { open, settings, onChange, onClose } = props
   const { translate } = useLocale()
-  const { resolvedTheme, setTheme } = useTheme()
+  const { theme: activeTheme, toggleTheme } = useGlobalStates()
   const [section, setSection] = useState<SectionId>("appearance")
-
-  const activeTheme: Theme = isTheme(resolvedTheme)
-    ? resolvedTheme
-    : DEFAULT_THEME
+  const shouldReduceMotion = useReducedMotion()
 
   // Patch a single field and hand the whole object back. The generic key/value
   // pairing keeps every call site type-checked against `EnvSettings`.
@@ -264,19 +308,34 @@ export function NoctaliaSettings(props: {
           aria-label={translate("environment.settings.title")}
           aria-modal="true"
           className={cn(
-            "relative z-10 flex h-[min(32rem,88vh)] w-[min(52rem,94vw)] overflow-hidden rounded-2xl text-foreground",
+            "relative z-10 flex h-[min(32rem,88vh)] w-[min(52rem,94vw)] overflow-hidden text-foreground",
             GLASS_SURFACE[settings.glass]
           )}
           exit={{ opacity: 0, scale: 0.96 }}
           initial={{ opacity: 0, scale: 0.96 }}
           role="dialog"
+          style={{ borderRadius: `${settings.windowRadius}px` }}
           transition={{ duration: 0.16, ease: "easeOut" }}
         >
           {/* Sidebar */}
           <nav className="flex w-48 shrink-0 flex-col gap-1 border-border/60 border-r bg-muted/20 p-3">
-            <h2 className="px-3 py-2 font-semibold text-sm">
-              {translate("environment.settings.title")}
-            </h2>
+            <span className="flex items-center">
+              <h2 className="px-3 py-2 font-semibold text-sm">
+                {translate("environment.settings.title")}
+              </h2>
+              <motion.span
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.96, x: -100 }}
+                initial={{ opacity: 0.5, scale: 1, x: 50 }}
+                role="button"
+                transition={{
+                  duration: shouldReduceMotion ? 0 : 0.16,
+                  ease: "easeIn",
+                }}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </motion.span>
+            </span>
             {SECTIONS.map((s) => {
               const active = s.id === section
               const Icon = s.icon
@@ -311,7 +370,7 @@ export function NoctaliaSettings(props: {
                   <Segmented<Theme>
                     format={(t) => translate(`theme.${t}`)}
                     label={translate("environment.settings.theme")}
-                    onSelect={(t) => setTheme(t)}
+                    onSelect={(t) => void toggleTheme(t, 250)}
                     options={THEMES}
                     value={activeTheme}
                   />
@@ -375,7 +434,40 @@ export function NoctaliaSettings(props: {
                     value={settings.glass}
                   />
                 </SettingCard>
+                <SettingCard
+                  icon={SlidersHorizontal}
+                  title={translate("environment.settings.corners")}
+                >
+                  <SectionLabel icon={SlidersHorizontal}>
+                    {translate("environment.settings.windowRadius")}
+                  </SectionLabel>
+                  <NumericSlider
+                    format={(r) => `${r}px`}
+                    label={translate("environment.settings.windowRadius")}
+                    max={BORDER_RADIUS_MAX}
+                    min={BORDER_RADIUS_MIN}
+                    onSelect={(r) => set("windowRadius", r)}
+                    value={settings.windowRadius}
+                  />
+                </SettingCard>
               </>
+            ) : section === "launcher" ? (
+              <SettingCard
+                icon={AppWindow}
+                title={translate("environment.settings.sectionLauncher")}
+              >
+                <SectionLabel icon={SlidersHorizontal}>
+                  {translate("environment.settings.launcherRadius")}
+                </SectionLabel>
+                <NumericSlider
+                  format={(r) => `${r}px`}
+                  label={translate("environment.settings.launcherRadius")}
+                  max={BORDER_RADIUS_MAX}
+                  min={BORDER_RADIUS_MIN}
+                  onSelect={(r) => set("launcherRadius", r)}
+                  value={settings.launcherRadius}
+                />
+              </SettingCard>
             ) : section === "bar" ? (
               <>
                 <SettingCard
@@ -412,6 +504,23 @@ export function NoctaliaSettings(props: {
                     value={settings.barOpacity}
                   />
                 </SettingCard>
+                <SettingCard
+                  icon={SlidersHorizontal}
+                  title={translate("environment.settings.corners")}
+                >
+                  <SectionLabel icon={SlidersHorizontal}>
+                    {translate("environment.settings.barRadius")}
+                  </SectionLabel>
+                  <NumericSlider
+                    format={(r) => `${r}px`}
+                    label={translate("environment.settings.barRadius")}
+                    max={BORDER_RADIUS_MAX}
+                    min={BORDER_RADIUS_MIN}
+                    onSelect={(r) => set("barRadius", r)}
+                    value={settings.barRadius}
+                  />
+                </SettingCard>
+
                 <SettingCard
                   icon={Monitor}
                   title={translate("environment.settings.systemMonitor")}

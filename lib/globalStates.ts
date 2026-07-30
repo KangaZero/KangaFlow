@@ -1,6 +1,7 @@
 import type { EnvSettings } from "@/components/niri/settings"
 import type { Locale } from "@/lib/i18n"
 import type { Shortcut } from "@/lib/shortcuts"
+import type { Theme } from "@/lib/themes"
 
 // Achievements grid density — lifted to global state so the "toggle columns"
 // keyboard shortcut can cycle it and the choice persists (localStorage).
@@ -47,6 +48,11 @@ export type GlobalStatesContextValue = {
   // glass surface — can share the chosen look.
   envSettings: EnvSettings
   setEnvSettings: (settings: EnvSettings) => void
+  // Active site theme (resolved from next-themes) and the animated toggle
+  // function. Centralised here so any consumer avoids duplicating the
+  // useTheme + useThemeTransition pairing.
+  theme: Theme
+  toggleTheme: (theme: Theme, duration?: number) => Promise<void>
 }
 
 export const ANIMATION_PREFS = ["system", "on", "off"] as const

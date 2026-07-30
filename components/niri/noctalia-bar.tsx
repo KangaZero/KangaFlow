@@ -6,6 +6,7 @@ import type * as React from "react"
 import { SiNixos } from "react-icons/si"
 
 import { Counter } from "@/components/Counter"
+import type { BorderRadius } from "@/components/niri/settings"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/lib/i18n"
@@ -22,7 +23,13 @@ type WorkspacePip = {
 }
 // Clock built on the react-bits Counter — "HH:MM" split into two fixed-2-digit
 // rolling counters. Falls back to plain text if the format is unexpected.
-function BarClock({ time }: { time: string }): React.JSX.Element {
+function BarClock({
+  time,
+  vertical = false,
+}: {
+  time: string
+  vertical?: boolean
+}): React.JSX.Element {
   const [h, m] = time.split(":")
   const hours = Number(h)
   const minutes = Number(m)
@@ -30,7 +37,12 @@ function BarClock({ time }: { time: string }): React.JSX.Element {
     return <span className="text-muted-foreground tabular-nums">{time}</span>
   }
   return (
-    <span className="flex items-center text-muted-foreground tabular-nums">
+    <span
+      className={cn(
+        "flex items-center text-muted-foreground tabular-nums",
+        vertical && "flex-col"
+      )}
+    >
       <Counter
         fontSize={13}
         gap={0}
@@ -38,6 +50,7 @@ function BarClock({ time }: { time: string }): React.JSX.Element {
         horizontalPadding={0}
         places={[10, 1]}
         value={hours}
+        vertical={vertical}
       />
       <span>:</span>
       <Counter
@@ -47,6 +60,7 @@ function BarClock({ time }: { time: string }): React.JSX.Element {
         horizontalPadding={0}
         places={[10, 1]}
         value={minutes}
+        vertical={vertical}
       />
     </span>
   )
@@ -67,6 +81,7 @@ export function NoctaliaBar(props: {
   onWallpaper: () => void // wallpaper button opens the wallpaper dialog
   onSettings: () => void // settings button opens the settings window
   opacity: number // bar background opacity (0..1), from settings.barOpacity
+  barRadius: BorderRadius // bar corner radius in px, from settings.barRadius
   orientation: "horizontal" | "vertical" // layout axis (vertical = left/right bar)
 }): React.JSX.Element {
   const {
@@ -79,6 +94,7 @@ export function NoctaliaBar(props: {
     onWallpaper,
     onSettings,
     opacity,
+    barRadius,
     orientation,
   } = props
   const { translate } = useLocale()
@@ -87,11 +103,12 @@ export function NoctaliaBar(props: {
   return (
     <header
       className={cn(
-        "flex justify-between gap-3 rounded-xl border border-border px-2 py-1.5 text-foreground text-xs shadow-lg backdrop-blur",
+        "flex justify-between gap-3 border border-border px-2 py-1.5 text-foreground text-xs shadow-lg backdrop-blur",
         isV ? "h-full flex-col items-center" : "items-center"
       )}
       style={{
         backgroundColor: `color-mix(in oklch, var(--card) ${Math.round(opacity * 100)}%, transparent)`,
+        borderRadius: `${barRadius}px`,
       }}
     >
       {/* LEFT: launcher logo + active window title */}
@@ -144,7 +161,7 @@ export function NoctaliaBar(props: {
             </li>
           ))}
         </ul>
-        <BarClock time={clock} />
+        <BarClock time={clock} vertical={isV} />
         <span
           className={cn(
             "rounded-sm border border-border/50 px-1 py-0.5 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none",

@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import type { BorderRadius } from "@/components/niri/settings"
 import type { AppId } from "@/components/niri/types"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
@@ -30,8 +31,9 @@ export function NoctaliaLauncher(props: {
   apps: LauncherApp[]
   onLaunch: (id: AppId) => void
   onClose: () => void
+  launcherRadius: BorderRadius
 }): React.JSX.Element | null {
-  const { open, apps, onLaunch, onClose } = props
+  const { open, apps, onLaunch, onClose, launcherRadius } = props
   const { translate } = useLocale()
   const [query, setQuery] = useState("")
   const [highlight, setHighlight] = useState(0)
@@ -127,10 +129,11 @@ export function NoctaliaLauncher(props: {
           animate={{ opacity: 1, scale: 1 }}
           aria-label={translate("environment.launcher.title")}
           aria-modal="true"
-          className="relative z-10 w-[min(32rem,90vw)] overflow-hidden rounded-2xl border border-border bg-card/90 text-foreground shadow-2xl backdrop-blur-xl"
+          className="relative z-10 w-[min(32rem,90vw)] overflow-hidden border border-border bg-card/90 text-foreground shadow-2xl backdrop-blur-xl"
           exit={{ opacity: 0, scale: 0.96 }}
           initial={{ opacity: 0, scale: 0.96 }}
           role="dialog"
+          style={{ borderRadius: `${launcherRadius}px` }}
           transition={{ duration: 0.16, ease: "easeOut" }}
         >
           <div className="border-border/60 border-b p-3">

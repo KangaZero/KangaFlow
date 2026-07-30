@@ -282,6 +282,7 @@ export function EnvironmentView() {
   const bar = (
     <NoctaliaBar
       activeWindowTitle={focusedWin?.title ?? ""}
+      barRadius={settings.barRadius}
       clock={clock}
       keyboardLayout={locale}
       onLauncher={() => openPanel("launcher")}
@@ -570,6 +571,7 @@ export function EnvironmentView() {
 
       <NoctaliaLauncher
         apps={launcherApps}
+        launcherRadius={settings.launcherRadius}
         onClose={closePanel}
         onLaunch={launch}
         open={panel === "launcher"}
@@ -586,6 +588,7 @@ export function EnvironmentView() {
         onOpenChange={(o) => setPanel(o ? "wallpaper" : null)}
         open={panel === "wallpaper"}
         value={settings.wallpaper}
+        windowRadius={settings.windowRadius}
       />
       <NiriHelpDialog
         onOpenChange={(o) => setPanel(o ? "help" : null)}

@@ -9,7 +9,11 @@ import {
   DialogTitle,
 } from "@/components/animate-ui/components/radix/dialog"
 import { GLASS_SURFACE } from "@/components/niri/glass"
-import type { GlassLevel, WallpaperId } from "@/components/niri/settings"
+import type {
+  BorderRadius,
+  GlassLevel,
+  WallpaperId,
+} from "@/components/niri/settings"
 import { WallpaperPicker } from "@/components/niri/wallpaper-picker"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
@@ -22,17 +26,22 @@ export function WallpaperDialog({
   value,
   onChange,
   glass,
+  windowRadius,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   value: WallpaperId
   onChange: (wallpaper: WallpaperId) => void
   glass: GlassLevel
+  windowRadius: BorderRadius
 }) {
   const { translate } = useLocale()
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className={cn("sm:max-w-lg", GLASS_SURFACE[glass])}>
+      <DialogContent
+        className={cn("sm:max-w-lg", GLASS_SURFACE[glass])}
+        style={{ borderRadius: `${windowRadius}px` }}
+      >
         <DialogHeader>
           <DialogTitle>
             {translate("environment.settings.wallpaper")}

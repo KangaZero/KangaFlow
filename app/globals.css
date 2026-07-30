@@ -324,3 +324,11 @@
 /*   scrollbar-width: none !important; */
 /* } */
 /* biome-ignore-end lint/complexity/noImportantStyles: end reduced-motion override block. */
+
+/* Suppress the browser's default cross-fade so our clip-path wipe is the only
+   animation playing during a theme View Transition. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}

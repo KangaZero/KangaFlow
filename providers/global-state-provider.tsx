@@ -2,6 +2,7 @@
 
 import { MotionConfig } from "motion/react"
 import { usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
 import {
   createContext,
   type ReactNode,
@@ -15,6 +16,8 @@ import {
   ACCENTS,
   BAR_OPACITIES,
   BAR_POSITIONS,
+  BORDER_RADIUS_MAX,
+  BORDER_RADIUS_MIN,
   DEFAULT_ENV_SETTINGS,
   ENV_FONTS,
   type EnvSettings,
@@ -36,6 +39,8 @@ import {
   type Shortcut,
   saveShortcuts,
 } from "@/lib/shortcuts"
+import { useThemeTransition } from "@/lib/theme-transition"
+import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 
 const DEFAULT_COLUMN_COUNT: ColumnCount = 3
 const COLUMN_STORAGE_KEY = "kangaflow:columnCount"
@@ -76,6 +81,13 @@ function pickLiteral<T>(value: unknown, allowed: readonly T[], fallback: T): T {
     : fallback
 }
 
+function clampRadius(value: unknown, fallback: number): number {
+  const n = Number(value)
+  return Number.isFinite(n)
+    ? Math.min(BORDER_RADIUS_MAX, Math.max(BORDER_RADIUS_MIN, Math.round(n)))
+    : fallback
+}
+
 function loadEnvSettings(): EnvSettings {
   if (typeof window === "undefined") return DEFAULT_ENV_SETTINGS
   try {
@@ -98,8 +110,13 @@ function loadEnvSettings(): EnvSettings {
         BAR_POSITIONS,
         DEFAULT_ENV_SETTINGS.barPosition
       ),
+      barRadius: clampRadius(o.barRadius, DEFAULT_ENV_SETTINGS.barRadius),
       font: pickLiteral(o.font, ENV_FONTS, DEFAULT_ENV_SETTINGS.font),
       glass: pickLiteral(o.glass, GLASS_LEVELS, DEFAULT_ENV_SETTINGS.glass),
+      launcherRadius: clampRadius(
+        o.launcherRadius,
+        DEFAULT_ENV_SETTINGS.launcherRadius
+      ),
       showSystemMonitor:
         typeof o.showSystemMonitor === "boolean"
           ? o.showSystemMonitor
@@ -109,6 +126,10 @@ function loadEnvSettings(): EnvSettings {
         o.wallpaper,
         WALLPAPERS,
         DEFAULT_ENV_SETTINGS.wallpaper
+      ),
+      windowRadius: clampRadius(
+        o.windowRadius,
+        DEFAULT_ENV_SETTINGS.windowRadius
       ),
     }
   } catch {
@@ -141,6 +162,8 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   shortcuts: [...DEFAULT_SHORTCUTS],
   showChromeInEnvironment: false,
   terminalFile: null,
+  theme: DEFAULT_THEME,
+  toggleTheme: async () => {},
 }
 
 const GlobalStatesContext = createContext<GlobalStatesContextValue>(
@@ -159,6 +182,10 @@ function loadColumnCount(): ColumnCount {
 }
 
 function GlobalStatesProvider({ children }: { children: ReactNode }) {
+  const { resolvedTheme, setTheme } = useTheme()
+  const theme = isTheme(resolvedTheme) ? resolvedTheme : DEFAULT_THEME
+  const toggleTheme = useThemeTransition(setTheme)
+
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
   const [isHelloEffectAnimationComplete, setIsHelloEffectAnimationComplete] =
     useState(false)
@@ -277,6 +304,8 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       shortcuts,
       showChromeInEnvironment,
       terminalFile,
+      theme,
+      toggleTheme,
     }),
     [
       animationPref,
@@ -291,6 +320,8 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isTerminalOpen,
       shortcuts,
       terminalFile,
+      theme,
+      toggleTheme,
     ]
   )
 

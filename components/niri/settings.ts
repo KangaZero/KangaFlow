@@ -56,6 +56,11 @@ export const ACCENT_COLORS: Record<Exclude<AccentId, "default">, string> = {
 export const GLASS_LEVELS = ["solid", "soft", "glass"] as const
 export type GlassLevel = (typeof GLASS_LEVELS)[number]
 
+// Border-radius in px (0 = square). Stored as a plain number; clamped 0–64 on load.
+export type BorderRadius = number
+export const BORDER_RADIUS_MIN = 0
+export const BORDER_RADIUS_MAX = 64
+
 export type EnvSettings = {
   wallpaper: WallpaperId
   accent: AccentId
@@ -65,15 +70,21 @@ export type EnvSettings = {
   font: EnvFont
   uiScale: UiScale
   showSystemMonitor: boolean
+  windowRadius: BorderRadius
+  barRadius: BorderRadius
+  launcherRadius: BorderRadius
 }
 
 export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   accent: "default",
   barOpacity: 0.7,
   barPosition: "top",
+  barRadius: 12,
   font: "mono",
   glass: "glass",
+  launcherRadius: 16,
   showSystemMonitor: true,
   uiScale: 1,
   wallpaper: "auto",
+  windowRadius: 16,
 }
