@@ -30,7 +30,7 @@ import {
   NoctaliaLauncher,
 } from "@/components/niri/noctalia-launcher"
 import { NoctaliaSettings } from "@/components/niri/noctalia-settings"
-import { ACCENT_COLORS } from "@/components/niri/settings"
+import { ACCENT_COLORS, type BarPosition } from "@/components/niri/settings"
 import type { AppId, NiriWindow } from "@/components/niri/types"
 import { wallpaperStyle } from "@/components/niri/wallpaper"
 import { WallpaperDialog } from "@/components/niri/wallpaper-dialog"
@@ -73,6 +73,67 @@ function clockNowInHHMM(): `${Hour}:${Minute}` {
   const hours = String(d.getHours()).padStart(2, "0") as Hour
   const minutes = String(d.getMinutes()).padStart(2, "0") as Minute
   return `${hours}:${minutes}`
+}
+
+// Fixed-position overlay that reveals on hover with a slide animation.
+// Respects barPosition for slide direction; uses a short hide debounce so
+// quick cursor movements across the edge don't flicker the bar.
+function AutoHideBar({
+  position,
+  children,
+}: {
+  position: BarPosition
+  children: React.ReactNode
+}): React.JSX.Element {
+  const [revealed, setRevealed] = useState(false)
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const shouldReduceMotion = useReducedMotion()
+  const isH = position === "top" || position === "bottom"
+
+  const reveal = () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current)
+    setRevealed(true)
+  }
+  const scheduleHide = () => {
+    hideTimer.current = setTimeout(() => setRevealed(false), 400)
+  }
+  useEffect(
+    () => () => {
+      if (hideTimer.current) clearTimeout(hideTimer.current)
+    },
+    []
+  )
+
+  const hidden = isH
+    ? { y: position === "top" ? "-100%" : "100%" }
+    : { x: position === "left" ? "-100%" : "100%" }
+  const visible = isH ? { y: 0 } : { x: 0 }
+
+  return (
+    <div
+      className={cn(
+        "fixed z-30 overflow-hidden",
+        position === "top" && "inset-x-0 top-0",
+        position === "bottom" && "inset-x-0 bottom-0",
+        position === "left" && "inset-y-0 left-0",
+        position === "right" && "inset-y-0 right-0"
+      )}
+      onPointerEnter={reveal}
+      onPointerLeave={scheduleHide}
+    >
+      <motion.div
+        animate={revealed ? visible : hidden}
+        initial={hidden}
+        transition={
+          shouldReduceMotion
+            ? { duration: 0 }
+            : { damping: 30, stiffness: 320, type: "spring" }
+        }
+      >
+        <div className="p-2">{children}</div>
+      </motion.div>
+    </div>
+  )
 }
 
 function WindowContent({
@@ -323,7 +384,9 @@ export function EnvironmentView() {
           isVerticalBar ? "flex-row" : "flex-col"
         )}
       >
-        {barBefore ? <div className="p-2">{bar}</div> : null}
+        {barBefore && !settings.autoHideBar ? (
+          <div className="p-2">{bar}</div>
+        ) : null}
 
         {/* Scrollable-tiling strip */}
         <div
@@ -443,7 +506,7 @@ export function EnvironmentView() {
                 )
               })}
             </motion.div>
-          ) : columns.length === 0 ? (
+          ) : columns.length === 0 && settings.showStartingHint ? (
             <div className="flex h-full items-center justify-center text-center text-sm text-white/70">
               {translate("environment.hint")}
             </div>
@@ -566,14 +629,22 @@ export function EnvironmentView() {
           )}
         </div>
 
-        {barBefore ? null : <div className="p-2">{bar}</div>}
+        {!barBefore && !settings.autoHideBar ? (
+          <div className="p-2">{bar}</div>
+        ) : null}
       </div>
+
+      {settings.autoHideBar ? (
+        <AutoHideBar position={settings.barPosition}>{bar}</AutoHideBar>
+      ) : null}
 
       <NoctaliaLauncher
         apps={launcherApps}
         launcherRadius={settings.launcherRadius}
         onClose={closePanel}
         onLaunch={launch}
+        onOpenSettings={() => openPanel("settings")}
+        onOpenWallpaper={() => openPanel("wallpaper")}
         open={panel === "launcher"}
       />
       <NoctaliaSettings

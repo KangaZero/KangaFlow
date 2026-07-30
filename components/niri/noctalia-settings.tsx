@@ -5,6 +5,8 @@ import {
   AppWindow,
   ArrowLeft,
   Blend,
+  ChevronDown,
+  HelpCircle,
   Image as ImageIcon,
   LayoutGrid,
   type LucideIcon,
@@ -37,6 +39,12 @@ import {
   type UiScale,
 } from "@/components/niri/settings"
 import { WallpaperPicker } from "@/components/niri/wallpaper-picker"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Slider } from "@/components/ui/slider"
 import type { TranslationKey } from "@/lib/i18n"
 import { THEMES, type Theme } from "@/lib/themes"
@@ -261,6 +269,7 @@ export function NoctaliaSettings(props: {
   const { translate } = useLocale()
   const { theme: activeTheme, toggleTheme } = useGlobalStates()
   const [section, setSection] = useState<SectionId>("appearance")
+  const [sidebarOpen, setSidebarOpen] = useState(true)
   const shouldReduceMotion = useReducedMotion()
 
   // Patch a single field and hand the whole object back. The generic key/value
@@ -285,278 +294,407 @@ export function NoctaliaSettings(props: {
     return () => window.removeEventListener("keydown", onKeyDown)
   }, [open, onClose])
 
-  if (!open) return null
-
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Overlay — click anywhere outside the panel to dismiss. */}
-        <button
-          aria-label={translate("environment.settings.close")}
-          className="fixed inset-0 cursor-default bg-background/40"
-          onClick={onClose}
-          type="button"
-        />
-        <motion.div
-          animate={{ opacity: 1, scale: 1 }}
-          aria-label={translate("environment.settings.title")}
-          aria-modal="true"
-          className={cn(
-            "relative z-10 flex h-[min(32rem,88vh)] w-[min(52rem,94vw)] overflow-hidden text-foreground",
-            GLASS_SURFACE[settings.glass]
-          )}
-          exit={{ opacity: 0, scale: 0.96 }}
-          initial={{ opacity: 0, scale: 0.96 }}
-          role="dialog"
-          style={{ borderRadius: `${settings.windowRadius}px` }}
-          transition={{ duration: 0.16, ease: "easeOut" }}
-        >
-          {/* Sidebar */}
-          <nav className="flex w-48 shrink-0 flex-col gap-1 border-border/60 border-r bg-muted/20 p-3">
-            <span className="flex items-center">
-              <h2 className="px-3 py-2 font-semibold text-sm">
+      {open ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Overlay — click anywhere outside the panel to dismiss. */}
+          <button
+            aria-label={translate("environment.settings.close")}
+            className="fixed inset-0 cursor-default bg-background/40"
+            onClick={onClose}
+            type="button"
+          />
+          <motion.div
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            aria-label={translate("environment.settings.title")}
+            aria-modal="true"
+            className={cn(
+              "relative z-10 flex h-[min(32rem,88vh)] w-[min(52rem,94vw)] flex-col overflow-hidden text-foreground",
+              GLASS_SURFACE[settings.glass]
+            )}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            role="dialog"
+            style={{ borderRadius: `${settings.windowRadius}px` }}
+            transition={{ duration: 0.16, ease: "easeOut" }}
+          >
+            {/* Header — always visible; mobile shows dropdown + close, desktop shows title + sidebar toggle */}
+            <div className="flex shrink-0 items-center gap-2 border-border/60 border-b px-4 py-2.5">
+              {/* Mobile: section dropdown picker */}
+              <div className="flex flex-1 items-center md:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 font-medium text-sm hover:bg-muted/60"
+                      type="button"
+                    >
+                      {(() => {
+                        const s =
+                          SECTIONS.find((x) => x.id === section) ?? SECTIONS[0]
+                        if (!s) return null
+                        const Icon = s.icon
+                        return (
+                          <>
+                            <Icon aria-hidden className="size-4" />
+                            {translate(s.labelKey)}
+                            <ChevronDown className="size-3.5 text-muted-foreground" />
+                          </>
+                        )
+                      })()}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {SECTIONS.map((s) => {
+                      const Icon = s.icon
+                      return (
+                        <DropdownMenuItem
+                          key={s.id}
+                          onClick={() => setSection(s.id)}
+                        >
+                          <Icon aria-hidden className="mr-2 size-4" />
+                          {translate(s.labelKey)}
+                        </DropdownMenuItem>
+                      )
+                    })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Desktop: settings title */}
+              <h2 className="hidden flex-1 px-1 font-semibold text-sm md:block">
                 {translate("environment.settings.title")}
               </h2>
-              <motion.span
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.96, x: -100 }}
-                initial={{ opacity: 0.5, scale: 1, x: 50 }}
-                role="button"
-                transition={{
-                  duration: shouldReduceMotion ? 0 : 0.16,
-                  ease: "easeIn",
-                }}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </motion.span>
-            </span>
-            {SECTIONS.map((s) => {
-              const active = s.id === section
-              const Icon = s.icon
-              return (
-                <button
-                  aria-current={active}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left font-medium text-sm transition-colors",
-                    active
-                      ? "bg-primary/15 text-primary"
-                      : "text-muted-foreground hover:bg-muted/60"
-                  )}
-                  key={s.id}
-                  onClick={() => setSection(s.id)}
-                  type="button"
-                >
-                  <Icon aria-hidden className="size-4" />
-                  {translate(s.labelKey)}
-                </button>
-              )
-            })}
-          </nav>
 
-          {/* Content pane */}
-          <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-5">
-            {section === "appearance" ? (
-              <>
-                <SettingCard
-                  icon={Palette}
-                  title={translate("environment.settings.theme")}
-                >
-                  <Segmented<Theme>
-                    format={(t) => translate(`theme.${t}`)}
-                    label={translate("environment.settings.theme")}
-                    onSelect={(t) => void toggleTheme(t, 250)}
-                    options={THEMES}
-                    value={activeTheme}
-                  />
-                </SettingCard>
-                <SettingCard
-                  icon={Palette}
-                  title={translate("environment.settings.accent")}
-                >
-                  <AccentRow
-                    onSelect={(accent) => set("accent", accent)}
-                    value={settings.accent}
-                  />
-                </SettingCard>
-                <SettingCard
-                  icon={Type}
-                  title={translate("environment.settings.font")}
-                >
-                  <Segmented<EnvFont>
-                    format={(font) =>
-                      translate(
-                        font === "mono"
-                          ? "environment.settings.fontMono"
-                          : "environment.settings.fontSans"
-                      )
-                    }
-                    label={translate("environment.settings.font")}
-                    onSelect={(font) => set("font", font)}
-                    options={ENV_FONTS}
-                    value={settings.font}
-                  />
-                </SettingCard>
-                <SettingCard
-                  icon={Maximize}
-                  title={translate("environment.settings.uiScale")}
-                >
-                  <OptionSlider<UiScale>
-                    format={percent}
-                    label={translate("environment.settings.uiScale")}
-                    onSelect={(scale) => set("uiScale", scale)}
-                    options={UI_SCALES}
-                    value={settings.uiScale}
-                  />
-                </SettingCard>
-                <SettingCard
-                  icon={Blend}
-                  title={translate("environment.settings.transparency")}
-                >
-                  <OptionSlider<GlassLevel>
-                    format={(level) =>
-                      translate(
-                        level === "solid"
-                          ? "environment.settings.transparencySolid"
-                          : level === "soft"
-                            ? "environment.settings.transparencySoft"
-                            : "environment.settings.transparencyGlass"
-                      )
-                    }
-                    label={translate("environment.settings.transparency")}
-                    onSelect={(level) => set("glass", level)}
-                    options={GLASS_LEVELS}
-                    value={settings.glass}
-                  />
-                </SettingCard>
-                <SettingCard
-                  icon={SlidersHorizontal}
-                  title={translate("environment.settings.corners")}
-                >
-                  <SectionLabel icon={SlidersHorizontal}>
-                    {translate("environment.settings.windowRadius")}
-                  </SectionLabel>
-                  <NumericSlider
-                    format={(r) => `${r}px`}
-                    label={translate("environment.settings.windowRadius")}
-                    max={BORDER_RADIUS_MAX}
-                    min={BORDER_RADIUS_MIN}
-                    onSelect={(r) => set("windowRadius", r)}
-                    value={settings.windowRadius}
-                  />
-                </SettingCard>
-              </>
-            ) : section === "launcher" ? (
-              <SettingCard
-                icon={AppWindow}
-                title={translate("environment.settings.sectionLauncher")}
+              {/* Mobile: ArrowLeft closes the dialog */}
+              <button
+                aria-label={translate("environment.settings.close")}
+                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground md:hidden"
+                onClick={onClose}
+                type="button"
               >
-                <SectionLabel icon={SlidersHorizontal}>
-                  {translate("environment.settings.launcherRadius")}
-                </SectionLabel>
-                <NumericSlider
-                  format={(r) => `${r}px`}
-                  label={translate("environment.settings.launcherRadius")}
-                  max={BORDER_RADIUS_MAX}
-                  min={BORDER_RADIUS_MIN}
-                  onSelect={(r) => set("launcherRadius", r)}
-                  value={settings.launcherRadius}
-                />
-              </SettingCard>
-            ) : section === "bar" ? (
-              <>
-                <SettingCard
-                  icon={PanelTop}
-                  title={translate("environment.settings.barPosition")}
-                >
-                  <Segmented<BarPosition>
-                    format={(position) =>
-                      translate(
-                        position === "top"
-                          ? "environment.settings.barTop"
-                          : position === "bottom"
-                            ? "environment.settings.barBottom"
-                            : position === "left"
-                              ? "environment.settings.barLeft"
-                              : "environment.settings.barRight"
-                      )
-                    }
-                    label={translate("environment.settings.barPosition")}
-                    onSelect={(position) => set("barPosition", position)}
-                    options={BAR_POSITIONS}
-                    value={settings.barPosition}
-                  />
-                </SettingCard>
-                <SettingCard
-                  icon={PanelTop}
-                  title={translate("environment.settings.barOpacity")}
-                >
-                  <OptionSlider<BarOpacity>
-                    format={percent}
-                    label={translate("environment.settings.barOpacity")}
-                    onSelect={(opacity) => set("barOpacity", opacity)}
-                    options={BAR_OPACITIES}
-                    value={settings.barOpacity}
-                  />
-                </SettingCard>
-                <SettingCard
-                  icon={SlidersHorizontal}
-                  title={translate("environment.settings.corners")}
-                >
-                  <SectionLabel icon={SlidersHorizontal}>
-                    {translate("environment.settings.barRadius")}
-                  </SectionLabel>
-                  <NumericSlider
-                    format={(r) => `${r}px`}
-                    label={translate("environment.settings.barRadius")}
-                    max={BORDER_RADIUS_MAX}
-                    min={BORDER_RADIUS_MIN}
-                    onSelect={(r) => set("barRadius", r)}
-                    value={settings.barRadius}
-                  />
-                </SettingCard>
+                <ArrowLeft className="size-5" />
+              </button>
 
-                <SettingCard
-                  icon={Monitor}
-                  title={translate("environment.settings.systemMonitor")}
+              {/* Desktop: ArrowLeft toggles sidebar open/closed */}
+              <button
+                aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                className="hidden rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground md:inline-flex"
+                onClick={() => setSidebarOpen((prev) => !prev)}
+                type="button"
+              >
+                <motion.span
+                  animate={{ rotate: sidebarOpen ? 0 : 180 }}
+                  style={{ display: "inline-flex" }}
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : { damping: 30, stiffness: 300, type: "spring" }
+                  }
                 >
-                  <button
-                    aria-pressed={settings.showSystemMonitor}
-                    className={cn(
-                      "inline-flex w-fit items-center gap-2 rounded-xl border border-border px-3 py-1.5 font-medium text-sm transition-colors",
-                      settings.showSystemMonitor
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted/40 text-foreground hover:bg-muted/70"
-                    )}
-                    onClick={() =>
-                      set("showSystemMonitor", !settings.showSystemMonitor)
+                  <ArrowLeft className="size-5" />
+                </motion.span>
+              </button>
+            </div>
+
+            {/* Body: sidebar nav + content pane */}
+            <div className="flex min-h-0 flex-1">
+              {/* Sidebar nav — desktop only, collapsible via ArrowLeft */}
+              <AnimatePresence initial={false}>
+                {sidebarOpen ? (
+                  <motion.nav
+                    animate={{ opacity: 1, width: 176 }}
+                    className="hidden shrink-0 flex-col gap-1 overflow-hidden border-border/60 border-r bg-muted/20 py-3 md:flex"
+                    exit={{ opacity: 0, width: 0 }}
+                    initial={{ opacity: 0, width: 0 }}
+                    key="sidebar"
+                    transition={
+                      shouldReduceMotion
+                        ? { duration: 0 }
+                        : { damping: 30, stiffness: 300, type: "spring" }
                     }
-                    type="button"
                   >
-                    <Monitor aria-hidden="true" className="size-4" />
-                    {settings.showSystemMonitor
-                      ? translate("environment.settings.monitorShown")
-                      : translate("environment.settings.monitorHidden")}
-                  </button>
-                </SettingCard>
-              </>
-            ) : section === "wallpaper" ? (
-              <SettingCard
-                icon={ImageIcon}
-                title={translate("environment.settings.wallpaper")}
-              >
-                <WallpaperPicker
-                  onChange={(w) => set("wallpaper", w)}
-                  value={settings.wallpaper}
-                />
-              </SettingCard>
-            ) : (
-              <div className="flex flex-1 items-center justify-center text-center text-muted-foreground text-sm">
-                {translate("environment.settings.widgetsSoon")}
+                    <div className="flex flex-col gap-1 px-3">
+                      {SECTIONS.map((s) => {
+                        const active = s.id === section
+                        const Icon = s.icon
+                        return (
+                          <button
+                            aria-current={active}
+                            className={cn(
+                              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left font-medium text-sm transition-colors",
+                              active
+                                ? "bg-primary/15 text-primary"
+                                : "text-muted-foreground hover:bg-muted/60"
+                            )}
+                            key={s.id}
+                            onClick={() => setSection(s.id)}
+                            type="button"
+                          >
+                            <Icon aria-hidden className="size-4 shrink-0" />
+                            <span className="truncate">
+                              {translate(s.labelKey)}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </motion.nav>
+                ) : null}
+              </AnimatePresence>
+
+              {/* Content pane */}
+              <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-5">
+                {section === "appearance" ? (
+                  <>
+                    <SettingCard
+                      icon={Palette}
+                      title={translate("environment.settings.theme")}
+                    >
+                      <Segmented<Theme>
+                        format={(t) => translate(`theme.${t}`)}
+                        label={translate("environment.settings.theme")}
+                        onSelect={(t) => void toggleTheme(t, 250)}
+                        options={THEMES}
+                        value={activeTheme}
+                      />
+                    </SettingCard>
+                    <SettingCard
+                      icon={Palette}
+                      title={translate("environment.settings.accent")}
+                    >
+                      <AccentRow
+                        onSelect={(accent) => set("accent", accent)}
+                        value={settings.accent}
+                      />
+                    </SettingCard>
+                    <SettingCard
+                      icon={Type}
+                      title={translate("environment.settings.font")}
+                    >
+                      <Segmented<EnvFont>
+                        format={(font) =>
+                          translate(
+                            font === "mono"
+                              ? "environment.settings.fontMono"
+                              : "environment.settings.fontSans"
+                          )
+                        }
+                        label={translate("environment.settings.font")}
+                        onSelect={(font) => set("font", font)}
+                        options={ENV_FONTS}
+                        value={settings.font}
+                      />
+                    </SettingCard>
+                    <SettingCard
+                      icon={Maximize}
+                      title={translate("environment.settings.uiScale")}
+                    >
+                      <OptionSlider<UiScale>
+                        format={percent}
+                        label={translate("environment.settings.uiScale")}
+                        onSelect={(scale) => set("uiScale", scale)}
+                        options={UI_SCALES}
+                        value={settings.uiScale}
+                      />
+                    </SettingCard>
+                    <SettingCard
+                      icon={Blend}
+                      title={translate("environment.settings.transparency")}
+                    >
+                      <OptionSlider<GlassLevel>
+                        format={(level) =>
+                          translate(
+                            level === "solid"
+                              ? "environment.settings.transparencySolid"
+                              : level === "soft"
+                                ? "environment.settings.transparencySoft"
+                                : "environment.settings.transparencyGlass"
+                          )
+                        }
+                        label={translate("environment.settings.transparency")}
+                        onSelect={(level) => set("glass", level)}
+                        options={GLASS_LEVELS}
+                        value={settings.glass}
+                      />
+                    </SettingCard>
+                    <SettingCard
+                      icon={SlidersHorizontal}
+                      title={translate("environment.settings.corners")}
+                    >
+                      <SectionLabel icon={SlidersHorizontal}>
+                        {translate("environment.settings.windowRadius")}
+                      </SectionLabel>
+                      <NumericSlider
+                        format={(r) => `${r}px`}
+                        label={translate("environment.settings.windowRadius")}
+                        max={BORDER_RADIUS_MAX}
+                        min={BORDER_RADIUS_MIN}
+                        onSelect={(r) => set("windowRadius", r)}
+                        value={settings.windowRadius}
+                      />
+                    </SettingCard>
+                    <SettingCard
+                      icon={HelpCircle}
+                      title={translate("environment.settings.showHint")}
+                    >
+                      <button
+                        aria-pressed={settings.showStartingHint}
+                        className={cn(
+                          "inline-flex w-fit items-center gap-2 rounded-xl border border-border px-3 py-1.5 font-medium text-sm transition-colors",
+                          settings.showStartingHint
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted/40 text-foreground hover:bg-muted/70"
+                        )}
+                        onClick={() =>
+                          set("showStartingHint", !settings.showStartingHint)
+                        }
+                        type="button"
+                      >
+                        <HelpCircle aria-hidden="true" className="size-4" />
+                        {settings.showStartingHint
+                          ? translate("settings.on")
+                          : translate("settings.off")}
+                      </button>
+                    </SettingCard>
+                  </>
+                ) : section === "launcher" ? (
+                  <SettingCard
+                    icon={AppWindow}
+                    title={translate("environment.settings.sectionLauncher")}
+                  >
+                    <SectionLabel icon={SlidersHorizontal}>
+                      {translate("environment.settings.launcherRadius")}
+                    </SectionLabel>
+                    <NumericSlider
+                      format={(r) => `${r}px`}
+                      label={translate("environment.settings.launcherRadius")}
+                      max={BORDER_RADIUS_MAX}
+                      min={BORDER_RADIUS_MIN}
+                      onSelect={(r) => set("launcherRadius", r)}
+                      value={settings.launcherRadius}
+                    />
+                  </SettingCard>
+                ) : section === "bar" ? (
+                  <>
+                    <SettingCard
+                      icon={PanelTop}
+                      title={translate("environment.settings.barPosition")}
+                    >
+                      <Segmented<BarPosition>
+                        format={(position) =>
+                          translate(
+                            position === "top"
+                              ? "environment.settings.barTop"
+                              : position === "bottom"
+                                ? "environment.settings.barBottom"
+                                : position === "left"
+                                  ? "environment.settings.barLeft"
+                                  : "environment.settings.barRight"
+                          )
+                        }
+                        label={translate("environment.settings.barPosition")}
+                        onSelect={(position) => set("barPosition", position)}
+                        options={BAR_POSITIONS}
+                        value={settings.barPosition}
+                      />
+                    </SettingCard>
+                    <SettingCard
+                      icon={PanelTop}
+                      title={translate("environment.settings.barOpacity")}
+                    >
+                      <OptionSlider<BarOpacity>
+                        format={percent}
+                        label={translate("environment.settings.barOpacity")}
+                        onSelect={(opacity) => set("barOpacity", opacity)}
+                        options={BAR_OPACITIES}
+                        value={settings.barOpacity}
+                      />
+                    </SettingCard>
+                    <SettingCard
+                      icon={SlidersHorizontal}
+                      title={translate("environment.settings.corners")}
+                    >
+                      <SectionLabel icon={SlidersHorizontal}>
+                        {translate("environment.settings.barRadius")}
+                      </SectionLabel>
+                      <NumericSlider
+                        format={(r) => `${r}px`}
+                        label={translate("environment.settings.barRadius")}
+                        max={BORDER_RADIUS_MAX}
+                        min={BORDER_RADIUS_MIN}
+                        onSelect={(r) => set("barRadius", r)}
+                        value={settings.barRadius}
+                      />
+                    </SettingCard>
+
+                    <SettingCard
+                      icon={Monitor}
+                      title={translate("environment.settings.systemMonitor")}
+                    >
+                      <button
+                        aria-pressed={settings.showSystemMonitor}
+                        className={cn(
+                          "inline-flex w-fit items-center gap-2 rounded-xl border border-border px-3 py-1.5 font-medium text-sm transition-colors",
+                          settings.showSystemMonitor
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted/40 text-foreground hover:bg-muted/70"
+                        )}
+                        onClick={() =>
+                          set("showSystemMonitor", !settings.showSystemMonitor)
+                        }
+                        type="button"
+                      >
+                        <Monitor aria-hidden="true" className="size-4" />
+                        {settings.showSystemMonitor
+                          ? translate("environment.settings.monitorShown")
+                          : translate("environment.settings.monitorHidden")}
+                      </button>
+                    </SettingCard>
+                    <SettingCard
+                      icon={PanelTop}
+                      title={translate("environment.settings.autoHideBar")}
+                    >
+                      <button
+                        aria-pressed={settings.autoHideBar}
+                        className={cn(
+                          "inline-flex w-fit items-center gap-2 rounded-xl border border-border px-3 py-1.5 font-medium text-sm transition-colors",
+                          settings.autoHideBar
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted/40 text-foreground hover:bg-muted/70"
+                        )}
+                        onClick={() =>
+                          set("autoHideBar", !settings.autoHideBar)
+                        }
+                        type="button"
+                      >
+                        <PanelTop aria-hidden="true" className="size-4" />
+                        {settings.autoHideBar
+                          ? translate("settings.on")
+                          : translate("settings.off")}
+                      </button>
+                    </SettingCard>
+                  </>
+                ) : section === "wallpaper" ? (
+                  <SettingCard
+                    icon={ImageIcon}
+                    title={translate("environment.settings.wallpaper")}
+                  >
+                    <WallpaperPicker
+                      onChange={(w) => set("wallpaper", w)}
+                      value={settings.wallpaper}
+                    />
+                  </SettingCard>
+                ) : (
+                  <div className="flex flex-1 items-center justify-center text-center text-muted-foreground text-sm">
+                    {translate("environment.settings.widgetsSoon")}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </motion.div>
-      </div>
+            </div>
+          </motion.div>
+        </div>
+      ) : null}
     </AnimatePresence>
   )
 }

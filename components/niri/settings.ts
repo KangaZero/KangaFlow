@@ -71,6 +71,7 @@ export type EnvSettings = {
   barOpacity: BarOpacity
   font: EnvFont
   uiScale: UiScale
+  autoHideBar: boolean
   showStartingHint: boolean
   showSystemMonitor: boolean
   windowRadius: BorderRadius
@@ -80,6 +81,7 @@ export type EnvSettings = {
 
 export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   accent: "default",
+  autoHideBar: false,
   barOpacity: 0.7,
   barPosition: "top",
   barRadius: 12,

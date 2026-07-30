@@ -20,24 +20,40 @@ import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
-// A single playlist entry. `src` is the seam for real audio: today the panel is
-// driven by a simulated clock, but once you drop MP3s into `assets/tracks/` and
-// import them here, an <audio> element can replace the tick with no UI changes.
-type Track = {
+// Full track descriptor. `src` drives the <audio> element; if absent the player
+// falls back to a simulated clock so the UI works before files are downloaded.
+// Drop MP3s into public/tracks/ then fill in `src: "/KangaFlow/tracks/file.mp3"`.
+export type Track = {
   title: string
   artist: string
-  duration: number // seconds
-  src?: string
+  duration: number // seconds — used as slider range fallback before metadata loads
+  src?: string // URL served by Next.js static export, e.g. "/KangaFlow/tracks/..."
+  album?: string
+  year?: number
+  genre?: string
+  coverSrc?: string // URL to album-art image (square, 200×200+ recommended)
+  accentColor?: string // dominant hex/oklch colour for optional player tint
 }
 
-// Demo playlist — replace with imported tracks when real audio is wired. Typed
-// as a non-empty tuple (`as const satisfies`) so `PLAYLIST[0]` is always a
-// defined `Track` under noUncheckedIndexedAccess — no null-guard needed.
-const PLAYLIST = [
-  { artist: "Kavinsky", duration: 258, title: "Nightcall" },
-  { artist: "Carpenter Brut", duration: 244, title: "Turbo Killer" },
-  { artist: "The Midnight", duration: 312, title: "Sunset" },
-] as const satisfies readonly [Track, ...Track[]]
+// Non-empty tuple so PLAYLIST[0] is always Track (satisfies noUncheckedIndexedAccess).
+// Fill in `src`, `coverSrc`, and other metadata after downloading each file:
+//   nix run nixpkgs#yt-dlp -- -x --audio-format mp3 --audio-quality 0 \
+//     -o "public/tracks/%(title)s.%(ext)s" "<youtube-url>"
+const PLAYLIST: readonly [Track, ...Track[]] = [
+  {
+    artist: "Unknown",
+    duration: 0,
+    title: "Track 1",
+    // src: "/KangaFlow/tracks/track1.mp3",
+    // album: "", year: 0, genre: "", coverSrc: "/KangaFlow/tracks/covers/track1.jpg",
+  },
+  {
+    artist: "Unknown",
+    duration: 0,
+    title: "Track 2",
+    // src: "/KangaFlow/tracks/track2.mp3",
+  },
+]
 
 // Format a whole-second count as m:ss (e.g. 258 → "4:18"). Pure + exported so it
 // can be unit-tested independently of the component.
@@ -82,40 +98,82 @@ export function MediaPlayer() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTimeSec, setCurrentTimeSec] = useState(0)
+  // Actual duration from audio metadata; overrides the static Track.duration when loaded.
+  const [audioDuration, setAudioDuration] = useState<number | null>(null)
 
-  // Portal target only exists in the browser; gate render until mounted to avoid
-  // an SSR/hydration mismatch on the static export. (All hooks must run before
-  // the `!mounted` early return below — Rules of Hooks.)
   const [mounted, setMounted] = useState(false)
-
-  // Constrain dragging to the viewport, and start drags only from the header.
   const constraintsRef = useRef<HTMLDivElement>(null)
   const dragControls = useDragControls()
+  const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => setMounted(true), [])
 
   const track = PLAYLIST[currentIndex] ?? PLAYLIST[0]
+  const hasAudio = Boolean(track.src)
+  const duration = audioDuration ?? track.duration
 
-  // Simulated playback tick: advance the clock once per second while playing.
-  // The cleanup stops the timer on pause, unmount, or when `isPlaying` flips —
-  // so intervals never stack or leak. The functional updater avoids reading a
-  // stale `currentTimeSec`.
+  // Wire up audio element events once on mount.
   useEffect(() => {
-    if (!isPlaying) return
-    const id = window.setInterval(() => {
-      setCurrentTimeSec((t) => t + 1)
-    }, 1000)
+    const audio = audioRef.current
+    if (!audio) return
+    const onTimeUpdate = () => setCurrentTimeSec(Math.floor(audio.currentTime))
+    const onEnded = () => {
+      setCurrentIndex((i) => (i + 1) % PLAYLIST.length)
+      setCurrentTimeSec(0)
+    }
+    const onLoadedMetadata = () =>
+      setAudioDuration(
+        Number.isFinite(audio.duration) ? Math.floor(audio.duration) : null
+      )
+    const onError = () => setAudioDuration(null)
+    audio.addEventListener("timeupdate", onTimeUpdate)
+    audio.addEventListener("ended", onEnded)
+    audio.addEventListener("loadedmetadata", onLoadedMetadata)
+    audio.addEventListener("error", onError)
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate)
+      audio.removeEventListener("ended", onEnded)
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata)
+      audio.removeEventListener("error", onError)
+    }
+  }, [])
+
+  // Load the new track when currentIndex changes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: track.src is derived from currentIndex; setters are stable
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    setAudioDuration(null)
+    setCurrentTimeSec(0)
+    audio.src = track.src ?? ""
+    if (track.src) audio.load()
+    if (isPlaying && track.src) void audio.play().catch(() => {})
+  }, [currentIndex, track.src, isPlaying])
+
+  // Sync play/pause with audio element.
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio || !hasAudio) return
+    if (isPlaying) {
+      void audio.play().catch(() => setIsPlaying(false))
+    } else {
+      audio.pause()
+    }
+  }, [isPlaying, hasAudio])
+
+  // Fallback simulated tick — only active when there is no real audio src.
+  useEffect(() => {
+    if (hasAudio || !isPlaying) return
+    const id = window.setInterval(() => setCurrentTimeSec((t) => t + 1), 1000)
     return () => window.clearInterval(id)
-  }, [isPlaying])
+  }, [hasAudio, isPlaying])
 
-  // When a playing track runs out, roll straight into the next one (wrapping)
-  // and restart the clock. Kept separate from the tick so the interval's state
-  // updater stays pure — no track-advance side effect inside it.
+  // Auto-advance fallback (simulated mode only).
   useEffect(() => {
-    if (!isPlaying || currentTimeSec < track.duration) return
+    if (hasAudio || !isPlaying || currentTimeSec < duration) return
     setCurrentIndex((i) => (i + 1) % PLAYLIST.length)
     setCurrentTimeSec(0)
-  }, [isPlaying, currentTimeSec, track.duration])
+  }, [hasAudio, isPlaying, currentTimeSec, duration])
 
   function goToIndex(index: number) {
     const count = PLAYLIST.length
@@ -128,9 +186,10 @@ export function MediaPlayer() {
   }
 
   function goToPrevious() {
-    // Restart the current track if we're past a few seconds, else step back.
     if (currentTimeSec > 3) {
       setCurrentTimeSec(0)
+      const audio = audioRef.current
+      if (audio) audio.currentTime = 0
       return
     }
     goToIndex(currentIndex - 1)
@@ -184,11 +243,31 @@ export function MediaPlayer() {
               </Button>
             </div>
 
+            {/* Hidden audio element — drives real playback when track.src is set. */}
+            {/* biome-ignore lint/a11y/useMediaCaption: music player — no caption track applicable */}
+            <audio ref={audioRef} />
+
             <div className="flex flex-col gap-3 p-4">
               {/* Track meta */}
               <div className="flex items-center gap-3">
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-                  {isPlaying ? <EqualizerBars /> : <Music className="size-5" />}
+                <div className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary/10 text-primary">
+                  {track.coverSrc ? (
+                    // biome-ignore lint/performance/noImgElement: static export — next/image optimization unavailable
+                    <img
+                      alt={`${track.title} cover`}
+                      className="size-full object-cover"
+                      src={track.coverSrc}
+                    />
+                  ) : isPlaying ? (
+                    <EqualizerBars />
+                  ) : (
+                    <Music className="size-5" />
+                  )}
+                  {isPlaying && track.coverSrc ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                      <EqualizerBars />
+                    </div>
+                  ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-sm">
@@ -196,6 +275,7 @@ export function MediaPlayer() {
                   </p>
                   <p className="truncate text-muted-foreground text-xs">
                     {track.artist}
+                    {track.album ? ` · ${track.album}` : ""}
                   </p>
                 </div>
               </div>
@@ -204,14 +284,18 @@ export function MediaPlayer() {
               <div className="flex flex-col gap-1.5">
                 <Slider
                   aria-label={translate("mediaPlayer.seek")}
-                  max={track.duration}
-                  onValueChange={(value) => setCurrentTimeSec(value[0] ?? 0)}
+                  max={duration || 1}
+                  onValueChange={(value) => {
+                    const t = value[0] ?? 0
+                    setCurrentTimeSec(t)
+                    if (audioRef.current) audioRef.current.currentTime = t
+                  }}
                   step={1}
-                  value={[Math.min(currentTimeSec, track.duration)]}
+                  value={[Math.min(currentTimeSec, duration || 1)]}
                 />
                 <div className="flex justify-between font-mono text-[10px] text-muted-foreground tabular-nums">
                   <span>{formatTime(currentTimeSec)}</span>
-                  <span>{formatTime(track.duration)}</span>
+                  <span>{formatTime(duration)}</span>
                 </div>
               </div>
 

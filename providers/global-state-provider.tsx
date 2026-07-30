@@ -100,6 +100,10 @@ function loadEnvSettings(): EnvSettings {
     >
     return {
       accent: pickLiteral(o.accent, ACCENTS, DEFAULT_ENV_SETTINGS.accent),
+      autoHideBar:
+        typeof o.autoHideBar === "boolean"
+          ? o.autoHideBar
+          : DEFAULT_ENV_SETTINGS.autoHideBar,
       barOpacity: pickLiteral(
         o.barOpacity,
         BAR_OPACITIES,
