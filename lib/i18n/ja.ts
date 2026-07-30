@@ -170,10 +170,13 @@ const ja = {
       applications: "アプリケーション",
       close: "ランチャーを閉じる",
       empty: "一致するアプリがありません",
+      pin: "ピン留め",
+      pinned: "ピン留め済み",
       search: "アプリを検索",
       searchPlaceholder: "アプリを検索...",
       system: "システム",
       title: "アプリケーションランチャー",
+      unpin: "ピン解除",
     },
     settings: {
       accent: "アクセント",

@@ -8,11 +8,12 @@ import {
   Languages,
   type LucideIcon,
   Music,
+  Pin,
   Settings,
   SquareTerminal,
   User,
 } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, LayoutGroup, motion } from "motion/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { BorderRadius } from "@/components/niri/settings"
 import type { AppId } from "@/components/niri/types"
@@ -33,10 +34,9 @@ type SystemAction = {
   onSelect: () => void
 }
 
-// Searchable result — either an app or a system action.
 type SearchResult =
-  | { kind: "app"; app: LauncherApp; index: number }
-  | { kind: "action"; action: SystemAction; index: number }
+  | { kind: "app"; app: LauncherApp; resultId: string; index: number }
+  | { kind: "action"; action: SystemAction; resultId: string; index: number }
 
 const APP_ICONS: Record<AppId, LucideIcon> = {
   about: User,
@@ -49,6 +49,20 @@ const THEME_ICONS: Record<Theme, LucideIcon> = {
   dark: SquareTerminal,
   light: Globe,
   terminal: FileCode2,
+}
+
+const PINS_STORAGE_KEY = "kangaflow:launcherPins"
+
+function loadPins(): ReadonlySet<string> {
+  if (typeof window === "undefined") return new Set()
+  try {
+    const raw: unknown = JSON.parse(
+      window.localStorage.getItem(PINS_STORAGE_KEY) ?? "[]"
+    )
+    return new Set(Array.isArray(raw) ? (raw as string[]) : [])
+  } catch {
+    return new Set()
+  }
 }
 
 export function NoctaliaLauncher(props: {
@@ -75,9 +89,21 @@ export function NoctaliaLauncher(props: {
 
   const [query, setQuery] = useState("")
   const [highlight, setHighlight] = useState(0)
+  const [pinnedIds, setPinnedIds] = useState<ReadonlySet<string>>(loadPins)
   const inputRef = useRef<HTMLInputElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const needle = query.trim().toLowerCase()
+
+  const togglePin = (resultId: string): void => {
+    setPinnedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(resultId)) next.delete(resultId)
+      else next.add(resultId)
+      window.localStorage.setItem(PINS_STORAGE_KEY, JSON.stringify([...next]))
+      return next
+    })
+  }
 
   const filteredApps = useMemo(() => {
     if (needle === "") return apps
@@ -172,20 +198,24 @@ export function NoctaliaLauncher(props: {
     )
   }, [systemActions, needle])
 
-  // Flat list of all results for unified keyboard navigation.
+  // Flat list in render order: pinned first, then unpinned apps, then unpinned actions.
+  // The index field mirrors position in this list so keyboard nav and scroll tracking agree.
   const allResults: SearchResult[] = useMemo(() => {
-    const appResults: SearchResult[] = filteredApps.map((app, i) => ({
+    const appEntries = filteredApps.map((app) => ({
       app,
-      index: i,
-      kind: "app",
+      kind: "app" as const,
+      resultId: `app:${app.id}`,
     }))
-    const actionResults: SearchResult[] = filteredActions.map((action, i) => ({
+    const actionEntries = filteredActions.map((action) => ({
       action,
-      index: appResults.length + i,
-      kind: "action",
+      kind: "action" as const,
+      resultId: `action:${action.id}`,
     }))
-    return [...appResults, ...actionResults]
-  }, [filteredApps, filteredActions])
+    const all = [...appEntries, ...actionEntries]
+    const pinned = all.filter((r) => pinnedIds.has(r.resultId))
+    const unpinned = all.filter((r) => !pinnedIds.has(r.resultId))
+    return [...pinned, ...unpinned].map((r, i) => ({ ...r, index: i }))
+  }, [filteredApps, filteredActions, pinnedIds])
 
   useEffect(() => {
     if (open) setQuery("")
@@ -201,6 +231,13 @@ export function NoctaliaLauncher(props: {
   useEffect(() => {
     if (open) inputRef.current?.focus()
   }, [open])
+
+  // Keep the highlighted row scrolled into view on arrow-key navigation.
+  useEffect(() => {
+    scrollContainerRef.current
+      ?.querySelector<HTMLElement>(`[data-idx="${highlight}"]`)
+      ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  }, [highlight])
 
   const dispatch = (result: SearchResult): void => {
     if (result.kind === "app") {
@@ -252,7 +289,110 @@ export function NoctaliaLauncher(props: {
     setHighlight(0)
   }
 
-  const showEmpty = filteredApps.length === 0 && filteredActions.length === 0
+  const pinnedResults = allResults.filter((r) => pinnedIds.has(r.resultId))
+  const unpinnedAppResults = allResults.filter(
+    (r) => r.kind === "app" && !pinnedIds.has(r.resultId)
+  )
+  const unpinnedActionResults = allResults.filter(
+    (r) => r.kind === "action" && !pinnedIds.has(r.resultId)
+  )
+  const showEmpty = allResults.length === 0
+
+  const renderRow = (result: SearchResult): React.JSX.Element => {
+    const selected = result.index === highlight
+    const isPinned = pinnedIds.has(result.resultId)
+    const isActive =
+      result.kind === "action" && result.action.active === true && !selected
+
+    const Icon =
+      result.kind === "app" ? APP_ICONS[result.app.id] : result.action.icon
+    const label = result.kind === "app" ? result.app.name : result.action.label
+    const sublabel =
+      result.kind === "app" ? result.app.subtitle : result.action.sublabel
+
+    const handleClick = (): void => {
+      if (result.kind === "app") {
+        onLaunch(result.app.id)
+        onClose()
+      } else {
+        result.action.onSelect()
+      }
+    }
+
+    return (
+      <motion.div
+        className={cn(
+          "group flex items-center rounded-xl transition-colors",
+          selected
+            ? "bg-primary text-primary-foreground"
+            : "text-foreground hover:bg-muted/60"
+        )}
+        data-idx={result.index}
+        key={result.resultId}
+        layout
+        layoutId={result.resultId}
+        transition={{ damping: 20, mass: 0.8, stiffness: 320, type: "spring" }}
+      >
+        <button
+          aria-selected={selected}
+          className="flex flex-1 items-center gap-3 px-3 py-2.5 text-left"
+          onClick={handleClick}
+          onMouseMove={() => setHighlight(result.index)}
+          role="option"
+          type="button"
+        >
+          <div
+            className={cn(
+              "flex size-5 shrink-0 items-center justify-center",
+              isActive && "text-primary"
+            )}
+          >
+            <Icon
+              aria-hidden="true"
+              className={result.kind === "app" ? "size-5" : "size-4"}
+            />
+          </div>
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate font-medium text-sm">{label}</span>
+            <span
+              className={cn(
+                "truncate text-xs",
+                selected
+                  ? "text-primary-foreground/80"
+                  : "text-muted-foreground"
+              )}
+            >
+              {sublabel}
+            </span>
+          </span>
+          {isActive ? (
+            <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+          ) : null}
+        </button>
+        <button
+          aria-label={
+            isPinned
+              ? translate("environment.launcher.unpin")
+              : translate("environment.launcher.pin")
+          }
+          className={cn(
+            "mr-1 flex size-7 shrink-0 items-center justify-center rounded-lg transition-opacity",
+            selected
+              ? "text-primary-foreground/70 hover:text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground",
+            isPinned ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          )}
+          onClick={(e) => {
+            e.stopPropagation()
+            togglePin(result.resultId)
+          }}
+          type="button"
+        >
+          <Pin className={cn("size-3.5", isPinned && "fill-current")} />
+        </button>
+      </motion.div>
+    )
+  }
 
   return (
     <AnimatePresence>
@@ -290,71 +430,45 @@ export function NoctaliaLauncher(props: {
               />
             </div>
 
-            <div className="max-h-[28rem] overflow-y-auto p-2">
+            <div
+              className="max-h-[28rem] overflow-y-auto p-2"
+              ref={scrollContainerRef}
+            >
               {showEmpty ? (
                 <p className="px-3 py-6 text-center text-muted-foreground text-sm">
                   {translate("environment.launcher.empty")}
                 </p>
               ) : (
-                <>
-                  {filteredApps.length > 0 ? (
+                <LayoutGroup>
+                  {pinnedResults.length > 0 ? (
                     <div>
                       <p className="px-3 py-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                        {translate("environment.launcher.applications")}
+                        {translate("environment.launcher.pinned")}
                       </p>
-                      {filteredApps.map((app) => {
-                        const Icon = APP_ICONS[app.id]
-                        const flatIndex = allResults.findIndex(
-                          (r) => r.kind === "app" && r.app.id === app.id
-                        )
-                        const selected = flatIndex === highlight
-                        return (
-                          <button
-                            aria-selected={selected}
-                            className={cn(
-                              "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                              selected
-                                ? "bg-primary text-primary-foreground"
-                                : "text-foreground hover:bg-muted/60"
-                            )}
-                            key={app.id}
-                            onClick={() => {
-                              onLaunch(app.id)
-                              onClose()
-                            }}
-                            onMouseMove={() => setHighlight(flatIndex)}
-                            role="option"
-                            type="button"
-                          >
-                            <Icon
-                              aria-hidden="true"
-                              className="size-5 shrink-0"
-                            />
-                            <span className="flex min-w-0 flex-col">
-                              <span className="truncate font-medium text-sm">
-                                {app.name}
-                              </span>
-                              <span
-                                className={cn(
-                                  "truncate text-xs",
-                                  selected
-                                    ? "text-primary-foreground/80"
-                                    : "text-muted-foreground"
-                                )}
-                              >
-                                {app.subtitle}
-                              </span>
-                            </span>
-                          </button>
-                        )
-                      })}
+                      {pinnedResults.map(renderRow)}
                     </div>
                   ) : null}
 
-                  {filteredActions.length > 0 ? (
+                  {unpinnedAppResults.length > 0 ? (
                     <div
                       className={
-                        filteredApps.length > 0
+                        pinnedResults.length > 0
+                          ? "mt-1 border-border/40 border-t pt-1"
+                          : ""
+                      }
+                    >
+                      <p className="px-3 py-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                        {translate("environment.launcher.applications")}
+                      </p>
+                      {unpinnedAppResults.map(renderRow)}
+                    </div>
+                  ) : null}
+
+                  {unpinnedActionResults.length > 0 ? (
+                    <div
+                      className={
+                        pinnedResults.length > 0 ||
+                        unpinnedAppResults.length > 0
                           ? "mt-1 border-border/40 border-t pt-1"
                           : ""
                       }
@@ -362,60 +476,10 @@ export function NoctaliaLauncher(props: {
                       <p className="px-3 py-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wide">
                         {translate("environment.launcher.system")}
                       </p>
-                      {filteredActions.map((action) => {
-                        const Icon = action.icon
-                        const flatIndex = allResults.findIndex(
-                          (r) =>
-                            r.kind === "action" && r.action.id === action.id
-                        )
-                        const selected = flatIndex === highlight
-                        return (
-                          <button
-                            aria-selected={selected}
-                            className={cn(
-                              "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                              selected
-                                ? "bg-primary text-primary-foreground"
-                                : "text-foreground hover:bg-muted/60"
-                            )}
-                            key={action.id}
-                            onClick={action.onSelect}
-                            onMouseMove={() => setHighlight(flatIndex)}
-                            role="option"
-                            type="button"
-                          >
-                            <div
-                              className={cn(
-                                "flex size-5 shrink-0 items-center justify-center",
-                                action.active && !selected && "text-primary"
-                              )}
-                            >
-                              <Icon aria-hidden="true" className="size-4" />
-                            </div>
-                            <span className="flex min-w-0 flex-col">
-                              <span className="truncate font-medium text-sm">
-                                {action.label}
-                              </span>
-                              <span
-                                className={cn(
-                                  "truncate text-xs",
-                                  selected
-                                    ? "text-primary-foreground/80"
-                                    : "text-muted-foreground"
-                                )}
-                              >
-                                {action.sublabel}
-                              </span>
-                            </span>
-                            {action.active && !selected ? (
-                              <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                            ) : null}
-                          </button>
-                        )
-                      })}
+                      {unpinnedActionResults.map(renderRow)}
                     </div>
                   ) : null}
-                </>
+                </LayoutGroup>
               )}
             </div>
           </motion.div>

@@ -170,10 +170,13 @@ const en = {
       applications: "Applications",
       close: "Close launcher",
       empty: "No matching apps",
+      pin: "Pin",
+      pinned: "Pinned",
       search: "Search apps",
       searchPlaceholder: "Search apps...",
       system: "System",
       title: "Application launcher",
+      unpin: "Unpin",
     },
     settings: {
       accent: "Accent",
