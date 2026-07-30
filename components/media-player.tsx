@@ -43,14 +43,14 @@ const PLAYLIST: readonly [Track, ...Track[]] = [
     artist: "Wizet / Nexon",
     duration: 377,
     genre: "Game OST",
-    src: "/KangaFlow/tracks/maplestory-intro.mp3",
+    src: "/tracks/maplestory-intro.mp3",
     title: "MapleStory — Intro Theme",
   },
   {
     artist: "Sergei Bortkiewicz",
     duration: 375,
     genre: "Classical",
-    src: "/KangaFlow/tracks/bortkiewicz-op24-1.mp3",
+    src: "/tracks/bortkiewicz-op24-1.mp3",
     title: "Nocturne (Diana), Op. 24/1",
   },
 ]
