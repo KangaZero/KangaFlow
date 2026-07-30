@@ -345,8 +345,11 @@ export function MediaPlayer() {
                 >
                   <AnimatedTooltip
                     label={
-                      PLAYLIST[(currentIndex - 1) % PLAYLIST.length]?.title ??
-                      (PLAYLIST[PLAYLIST.length - 1] as Track).title
+                      (
+                        PLAYLIST[
+                          (currentIndex - 1 + PLAYLIST.length) % PLAYLIST.length
+                        ] as Track
+                      ).title
                     }
                     side="top"
                   >
