@@ -36,22 +36,22 @@ export type Track = {
 }
 
 // Non-empty tuple so PLAYLIST[0] is always Track (satisfies noUncheckedIndexedAccess).
-// Fill in `src`, `coverSrc`, and other metadata after downloading each file:
-//   nix run nixpkgs#yt-dlp -- -x --audio-format mp3 --audio-quality 0 \
-//     -o "public/tracks/%(title)s.%(ext)s" "<youtube-url>"
+// Add more tracks: nix run nixpkgs#yt-dlp -- -x --audio-format mp3 --audio-quality 0 \
+//   -o "public/tracks/%(id)s.%(ext)s" "<youtube-url>"
 const PLAYLIST: readonly [Track, ...Track[]] = [
   {
-    artist: "Unknown",
-    duration: 0,
-    title: "Track 1",
-    // src: "/KangaFlow/tracks/track1.mp3",
-    // album: "", year: 0, genre: "", coverSrc: "/KangaFlow/tracks/covers/track1.jpg",
+    artist: "Wizet / Nexon",
+    duration: 377,
+    genre: "Game OST",
+    src: "/KangaFlow/tracks/0qj4hgJeSe4.mp3",
+    title: "MapleStory — Intro Theme",
   },
   {
-    artist: "Unknown",
-    duration: 0,
-    title: "Track 2",
-    // src: "/KangaFlow/tracks/track2.mp3",
+    artist: "Sergei Bortkiewicz",
+    duration: 375,
+    genre: "Classical",
+    src: "/KangaFlow/tracks/0o0g-j8FjdY.mp3",
+    title: "Nocturne (Diana), Op. 24/1",
   },
 ]
 
