@@ -19,6 +19,7 @@ import {
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { GLASS_SURFACE } from "@/components/niri/glass"
+import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
@@ -342,14 +343,22 @@ export function MediaPlayer() {
                   whileHover={{ scale: 1.15, x: -2 }}
                   whileTap={{ scale: 0.85 }}
                 >
-                  <Button
-                    aria-label={translate("mediaPlayer.previous")}
-                    onClick={goToPrevious}
-                    size="icon"
-                    variant="ghost"
+                  <AnimatedTooltip
+                    label={
+                      PLAYLIST[(currentIndex - 1) % PLAYLIST.length]?.title ??
+                      (PLAYLIST[PLAYLIST.length - 1] as Track).title
+                    }
+                    side="top"
                   >
-                    <SkipBack className="size-5" />
-                  </Button>
+                    <Button
+                      aria-label={translate("mediaPlayer.previous")}
+                      onClick={goToPrevious}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      <SkipBack className="size-5" />
+                    </Button>
+                  </AnimatedTooltip>
                 </motion.div>
                 <motion.div
                   transition={TAP_SPRING}
@@ -406,14 +415,22 @@ export function MediaPlayer() {
                   whileHover={{ scale: 1.15, x: 2 }}
                   whileTap={{ scale: 0.85 }}
                 >
-                  <Button
-                    aria-label={translate("mediaPlayer.next")}
-                    onClick={goToNext}
-                    size="icon"
-                    variant="ghost"
+                  <AnimatedTooltip
+                    label={
+                      PLAYLIST[(currentIndex + 1) % PLAYLIST.length]?.title ??
+                      PLAYLIST[0].title
+                    }
+                    side="top"
                   >
-                    <SkipForward className="size-5" />
-                  </Button>
+                    <Button
+                      aria-label={translate("mediaPlayer.next")}
+                      onClick={goToNext}
+                      size="icon"
+                      variant="ghost"
+                    >
+                      <SkipForward className="size-5" />
+                    </Button>
+                  </AnimatedTooltip>
                 </motion.div>
               </div>
             </div>
