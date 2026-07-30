@@ -101,6 +101,8 @@ interface CounterProps {
   value: number
   fontSize?: number
   padding?: number
+  /** Stack the digits top-to-bottom (for a vertical/left-right bar). */
+  vertical?: boolean
   /**
    * An array of place values that determines which digit positions
    * should be displayed. For decimal places, use "." to represent
@@ -127,6 +129,7 @@ export function Counter({
   value,
   fontSize = 100,
   padding = 0,
+  vertical = false,
   places = [...value.toString()].map((ch, i, a) => {
     if (ch === ".") {
       return "."
@@ -165,10 +168,13 @@ export function Counter({
   }
 
   const defaultCounterStyle: React.CSSProperties = {
+    alignItems: "center",
     borderRadius,
     color: textColor,
     direction: "ltr",
     display: "flex",
+    // Vertical bar → stack digits top-to-bottom; each still rolls in place.
+    flexDirection: vertical ? "column" : "row",
     fontSize,
     fontWeight,
     gap,

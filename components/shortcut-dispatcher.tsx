@@ -3,8 +3,8 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect } from "react"
-
 import { type AppPath, COLUMN_OPTIONS } from "@/lib/globalStates"
+import { enterHints, isHintActive } from "@/lib/hint-store"
 import { matchesShortcut } from "@/lib/shortcuts"
 import { DEFAULT_THEME, isTheme, nextTheme } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -37,6 +37,9 @@ export function ShortcutDispatcher() {
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.defaultPrevented || event.repeat) return
+      // Hint mode owns the keyboard while active (its capture-phase listener
+      // handles keys); don't also run shortcuts.
+      if (isHintActive()) return
       if (isTypingTarget(event.target)) return
 
       const hit = shortcuts.find((shortcut) => matchesShortcut(event, shortcut))
@@ -90,6 +93,9 @@ export function ShortcutDispatcher() {
           setIsTerminalOpen(!isTerminalOpen)
           break
         }
+        case "toggleHints":
+          enterHints()
+          break
       }
     }
 

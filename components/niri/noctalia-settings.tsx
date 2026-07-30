@@ -17,12 +17,6 @@ import {
 } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { useEffect, useState } from "react"
-import {
-  Accordion,
-  AccordionItem,
-  AccordionPanel,
-  AccordionTrigger,
-} from "@/components/animate-ui/components/base/accordion"
 import { GLASS_SURFACE } from "@/components/niri/glass"
 import {
   ACCENT_COLORS,

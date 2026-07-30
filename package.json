@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@base-ui-components/react": "1.0.0-rc.0",
     "@codemirror/lang-javascript": "^6.2.5",
     "@codemirror/state": "^6.7.1",
     "@codemirror/theme-one-dark": "^6.1.3",

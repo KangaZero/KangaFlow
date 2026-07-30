@@ -25,11 +25,13 @@ export type EnvFont = (typeof ENV_FONTS)[number]
 
 // Discrete UI-scale steps (Noctalia exposes a scale slider; we bound it to a
 // small exact set so layout stays predictable).
-export const UI_SCALES = [0.9, 1, 1.1, 1.25] as const
+export const UI_SCALES = [1, 1.1, 1.2, 1.3, 1.4, 1.5] as const
 export type UiScale = (typeof UI_SCALES)[number]
 
 // Bar background opacity presets (Noctalia's backgroundOpacity), exact steps.
-export const BAR_OPACITIES = [0, 0.4, 0.7, 1] as const
+export const BAR_OPACITIES = [
+  0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1,
+] as const
 export type BarOpacity = (typeof BAR_OPACITIES)[number]
 
 // Desktop accent — "default" keeps the theme's own `--primary`; the rest
@@ -69,6 +71,7 @@ export type EnvSettings = {
   barOpacity: BarOpacity
   font: EnvFont
   uiScale: UiScale
+  showStartingHint: boolean
   showSystemMonitor: boolean
   windowRadius: BorderRadius
   barRadius: BorderRadius
@@ -83,6 +86,7 @@ export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   font: "mono",
   glass: "glass",
   launcherRadius: 16,
+  showStartingHint: true,
   showSystemMonitor: true,
   uiScale: 1,
   wallpaper: "auto",

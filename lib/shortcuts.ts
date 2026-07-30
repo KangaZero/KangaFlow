@@ -19,6 +19,7 @@ export type ShortcutAction =
   | "toggleColumns"
   | "toggleSettings"
   | "toggleTerminal"
+  | "toggleHints"
 
 export type Shortcut = {
   action: ShortcutAction
@@ -114,7 +115,23 @@ export const DEFAULT_SHORTCUTS: readonly Shortcut[] = [
     hasMetaOrCtrlKey: true,
     hasShiftKey: false,
   },
+  {
+    // Vimium-style link hints — bare "f" (see BARE_KEY_ACTIONS).
+    action: "toggleHints",
+    character: "f",
+    hasAltOrOptionKey: false,
+    hasMetaOrCtrlKey: false,
+    hasShiftKey: false,
+  },
 ]
+
+// Actions allowed to bind to a bare key (no modifier). Vimium-style triggers are
+// bare by design; the dispatcher already ignores shortcuts while a text field is
+// focused (isTypingTarget), so a bare key can't fire mid-typing. Used to relax
+// the Settings "needs a modifier" validation for these actions only.
+export const BARE_KEY_ACTIONS: ReadonlySet<ShortcutAction> = new Set([
+  "toggleHints",
+])
 
 // Display tokens for a shortcut, ready to render one-per-<Kbd>. macOS uses glyph
 // stacking (⌘⇧K); other platforms use spelled-out names (Ctrl + Shift + K).

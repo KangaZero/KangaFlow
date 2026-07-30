@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 
 import { AchievementToast } from "@/components/achievement-toast"
 import { CommandMenu } from "@/components/command-menu"
+import { HintOverlay } from "@/components/hint-overlay"
 import { MediaPlayer } from "@/components/media-player"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { ShortcutDispatcher } from "@/components/shortcut-dispatcher"
@@ -51,6 +52,7 @@ export default async function LangLayout({
             <MediaPlayer />
             <TerminalDialog files={sourceFiles} />
             <ShortcutDispatcher />
+            <HintOverlay />
             <AchievementToast />
           </div>
         </AchievementsProvider>
