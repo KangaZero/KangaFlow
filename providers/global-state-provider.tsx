@@ -117,6 +117,10 @@ function loadEnvSettings(): EnvSettings {
         o.launcherRadius,
         DEFAULT_ENV_SETTINGS.launcherRadius
       ),
+      showStartingHint:
+        typeof o.showStartingHint === "boolean"
+          ? o.showStartingHint
+          : DEFAULT_ENV_SETTINGS.showStartingHint,
       showSystemMonitor:
         typeof o.showSystemMonitor === "boolean"
           ? o.showSystemMonitor

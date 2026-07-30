@@ -100,7 +100,7 @@ function AccordionPanel({
       {keepRendered ? (
         <AccordionPrimitive.Panel
           hidden={false}
-          hiddenUntilFound={hiddenUntilFound}
+          {...(hiddenUntilFound !== undefined ? { hiddenUntilFound } : {})}
           keepMounted
           render={
             <motion.div
@@ -128,7 +128,7 @@ function AccordionPanel({
         isOpen && (
           <AccordionPrimitive.Panel
             hidden={false}
-            hiddenUntilFound={hiddenUntilFound}
+            {...(hiddenUntilFound !== undefined ? { hiddenUntilFound } : {})}
             keepMounted
             render={
               <motion.div
