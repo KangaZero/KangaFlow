@@ -43,14 +43,14 @@ const PLAYLIST: readonly [Track, ...Track[]] = [
     artist: "Wizet / Nexon",
     duration: 377,
     genre: "Game OST",
-    src: "/KangaFlow/tracks/0qj4hgJeSe4.mp3",
+    src: "/KangaFlow/tracks/maplestory-intro.mp3",
     title: "MapleStory — Intro Theme",
   },
   {
     artist: "Sergei Bortkiewicz",
     duration: 375,
     genre: "Classical",
-    src: "/KangaFlow/tracks/0o0g-j8FjdY.mp3",
+    src: "/KangaFlow/tracks/bortkiewicz-op24-1.mp3",
     title: "Nocturne (Diana), Op. 24/1",
   },
 ]
@@ -105,6 +105,12 @@ export function MediaPlayer() {
   const constraintsRef = useRef<HTMLDivElement>(null)
   const dragControls = useDragControls()
   const audioRef = useRef<HTMLAudioElement>(null)
+  // Ref so the source-change effect can read play-intent without being in its deps.
+  const isPlayingRef = useRef(false)
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying
+  }, [isPlaying])
 
   useEffect(() => setMounted(true), [])
 
@@ -138,19 +144,20 @@ export function MediaPlayer() {
     }
   }, [])
 
-  // Load the new track when currentIndex changes.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: track.src is derived from currentIndex; setters are stable
+  // Load the new source only when the track actually changes — NOT on play/pause.
+  // isPlaying is read via ref to avoid retriggering load() on every toggle.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: isPlayingRef is a stable ref, not reactive state
   useEffect(() => {
     const audio = audioRef.current
-    if (!audio) return
+    if (!audio || !track.src) return
     setAudioDuration(null)
     setCurrentTimeSec(0)
-    audio.src = track.src ?? ""
-    if (track.src) audio.load()
-    if (isPlaying && track.src) void audio.play().catch(() => {})
-  }, [currentIndex, track.src, isPlaying])
+    audio.src = track.src
+    audio.load()
+    if (isPlayingRef.current) void audio.play().catch(() => setIsPlaying(false))
+  }, [currentIndex, track.src])
 
-  // Sync play/pause with audio element.
+  // Sync play/pause — never calls load(), so it's safe to run on every toggle.
   useEffect(() => {
     const audio = audioRef.current
     if (!audio || !hasAudio) return
