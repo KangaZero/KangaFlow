@@ -10,7 +10,12 @@ import {
   SkipForward,
   X,
 } from "lucide-react"
-import { AnimatePresence, motion, useDragControls } from "motion/react"
+import {
+  AnimatePresence,
+  motion,
+  useDragControls,
+  useReducedMotion,
+} from "motion/react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { GLASS_SURFACE } from "@/components/niri/glass"
@@ -107,14 +112,38 @@ export function MediaPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null)
   // Ref so the source-change effect can read play-intent without being in its deps.
   const isPlayingRef = useRef(false)
+  const track = PLAYLIST[currentIndex] ?? PLAYLIST[0]
+  const shouldReduceMotion = useReducedMotion()
 
   useEffect(() => {
     isPlayingRef.current = isPlaying
   }, [isPlaying])
 
+  // Mirror current track in the browser tab title while playing; restore on pause/unmount.
+  useEffect(() => {
+    if (!isPlaying) return
+    const prev = document.title
+    // Two trailing spaces create a visible gap between loop repetitions.
+    const playTitle = `♪ ${track.title} · ${track.artist}  `
+    if (shouldReduceMotion) {
+      document.title = playTitle.trim()
+      return () => {
+        document.title = prev
+      }
+    }
+    let offset = 0
+    const id = window.setInterval(() => {
+      document.title = playTitle.slice(offset) + playTitle.slice(0, offset)
+      offset = (offset + 1) % playTitle.length
+    }, 300)
+    return () => {
+      window.clearInterval(id)
+      document.title = prev
+    }
+  }, [isPlaying, track.title, track.artist, shouldReduceMotion])
+
   useEffect(() => setMounted(true), [])
 
-  const track = PLAYLIST[currentIndex] ?? PLAYLIST[0]
   const hasAudio = Boolean(track.src)
   const duration = audioDuration ?? track.duration
 
@@ -233,7 +262,7 @@ export function MediaPlayer() {
           >
             {/* Drag handle / title bar */}
             <div
-              className="flex cursor-grab items-center gap-2 border-border border-b bg-muted/40 px-3 py-2 active:cursor-grabbing"
+              className="flex cursor-grab items-center gap-2 border-border border-b bg-muted/40 px-3 py-2"
               onPointerDown={(event) => dragControls.start(event)}
             >
               <GripVertical
@@ -335,19 +364,26 @@ export function MediaPlayer() {
                     onClick={() => setIsPlaying((playing) => !playing)}
                     size="icon"
                   >
-                    {/* Radar pulse while playing. */}
-                    {isPlaying ? (
-                      <motion.span
-                        animate={{ opacity: [0.6, 0], scale: [1, 1.6] }}
-                        aria-hidden
-                        className="absolute inset-0 rounded-full border border-primary-foreground/50"
-                        transition={{
-                          duration: 1.4,
-                          ease: "easeOut",
-                          repeat: Number.POSITIVE_INFINITY,
-                        }}
-                      />
-                    ) : null}
+                    {/* Breathing sonar: 3 rings expand+fade with staggered delays */}
+                    {isPlaying
+                      ? [0.5].map((delay) => (
+                          <motion.span
+                            animate={{
+                              opacity: [0.55, 0, 0.2],
+                              scale: [1, 1.8, 1],
+                            }}
+                            aria-hidden
+                            className="absolute inset-0 rounded-full border border-primary-foreground/40"
+                            key={delay}
+                            transition={{
+                              delay,
+                              duration: 4,
+                              ease: "easeOut",
+                              repeat: Number.POSITIVE_INFINITY,
+                            }}
+                          />
+                        ))
+                      : null}
                     <AnimatePresence initial={false} mode="wait">
                       <motion.span
                         animate={{ opacity: 1, scale: 1 }}
