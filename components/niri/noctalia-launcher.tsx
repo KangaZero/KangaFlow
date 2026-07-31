@@ -16,7 +16,12 @@ import {
   SquareTerminal,
   User,
 } from "lucide-react"
-import { AnimatePresence, LayoutGroup, motion } from "motion/react"
+import {
+  AnimatePresence,
+  LayoutGroup,
+  motion,
+  useReducedMotion,
+} from "motion/react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { BorderRadius } from "@/components/niri/settings"
 import type { AppId } from "@/components/niri/types"
@@ -106,6 +111,7 @@ export function NoctaliaLauncher(props: {
   const [pinnedIds, setPinnedIds] = useState<ReadonlySet<string>>(loadPins)
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const shouldReduceMotion = useReducedMotion()
 
   const needle = query.trim().toLowerCase()
 
@@ -286,11 +292,15 @@ export function NoctaliaLauncher(props: {
   }, [open])
 
   // Keep the highlighted row scrolled into view on arrow-key navigation.
+  // Instant under reduced motion (raw scroll animation outside framer/CSS).
   useEffect(() => {
     scrollContainerRef.current
       ?.querySelector<HTMLElement>(`[data-idx="${highlight}"]`)
-      ?.scrollIntoView({ behavior: "smooth", block: "nearest" })
-  }, [highlight])
+      ?.scrollIntoView({
+        behavior: shouldReduceMotion ? "auto" : "smooth",
+        block: "nearest",
+      })
+  }, [highlight, shouldReduceMotion])
 
   const dispatch = (result: SearchResult): void => {
     if (result.kind === "app") {

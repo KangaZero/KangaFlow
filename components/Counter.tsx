@@ -1,4 +1,11 @@
-import { type MotionValue, motion, useSpring, useTransform } from "motion/react"
+import {
+  type MotionValue,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+  useTransform,
+} from "motion/react"
 import type React from "react"
 import { useEffect } from "react"
 
@@ -59,11 +66,18 @@ function Digit({ place, value, height, digitStyle }: DigitProps) {
   // rendered below without the digit stack.
   const valueRoundedToPlace =
     place === "." ? 0 : getValueRoundedToPlace(value, place)
-  const animatedValue = useSpring(valueRoundedToPlace)
+  // The spring drives the rolling animation; `useSpring` isn't governed by
+  // MotionConfig.reducedMotion (that only covers declarative `animate` props),
+  // so under reduced motion we feed the column a plain, instant MotionValue.
+  const reduceMotion = useReducedMotion()
+  const spring = useSpring(valueRoundedToPlace)
+  const instant = useMotionValue(valueRoundedToPlace)
+  const animatedValue = reduceMotion ? instant : spring
 
   useEffect(() => {
-    animatedValue.set(valueRoundedToPlace)
-  }, [animatedValue, valueRoundedToPlace])
+    spring.set(valueRoundedToPlace)
+    instant.set(valueRoundedToPlace)
+  }, [spring, instant, valueRoundedToPlace])
 
   // Decimal point digit
   if (place === ".") {

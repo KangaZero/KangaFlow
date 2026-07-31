@@ -2,16 +2,20 @@
 
 ## Accessibility (a11y)
 
-### Reduced motion audit
-`MotionConfig` in `global-state-provider.tsx` covers all `motion.*` animations globally.
-CSS animations are suppressed via `[data-animations="off"]` in `globals.css`.
-JS-side effects that animate outside framer-motion need individual `useReducedMotion()` checks.
+### Reduced motion audit — done
+`MotionConfig` in `global-state-provider.tsx` covers declarative `motion.*`
+transform/layout animations globally. CSS animations/transitions are suppressed
+via the `prefers-reduced-motion` media query **and** the `[data-animations="off"]`
+kill-switch in `globals.css`. Two things escape both and needed explicit
+`useReducedMotion()` checks: raw JS scroll animations, and `useSpring`
+MotionValues (which `MotionConfig.reducedMotion` does **not** govern).
 
-- [ ] `components/media-player.tsx` — scrolling tab-title interval: **done** (guarded by `shouldReduceMotion`)
-- [ ] `components/niri/environment-view.tsx` — `AutoHideBar` spring slide: verify `MotionConfig` covers it
-- [ ] `components/niri/noctalia-settings.tsx` — sidebar width animation: verify `MotionConfig` covers it
-- [ ] `components/niri/noctalia-bar.tsx` — any JS-driven animation outside framer
-- [ ] `components/niri/noctalia-launcher.tsx` — any JS-driven animation outside framer
+- [x] `components/media-player.tsx` — scrolling tab-title interval: guarded by `shouldReduceMotion`
+- [x] `components/niri/environment-view.tsx` — `AutoHideBar` slide covered (MotionConfig transform + explicit `shouldReduceMotion` guard); overview `scrollTo` now uses `behavior: auto` under reduced motion
+- [x] `components/niri/noctalia-settings.tsx` — sidebar width/opacity animation: explicit `shouldReduceMotion` guard on the transition
+- [x] `components/niri/noctalia-bar.tsx` — no raw-JS animation; tooltips are `motion.*`, hovers are CSS (covered by the media-query reset); clock `Counter` fixed (below)
+- [x] `components/niri/noctalia-launcher.tsx` — highlighted-row `scrollIntoView` now uses `behavior: auto` under reduced motion
+- [x] `components/Counter.tsx` — rolling-digit `useSpring` now feeds an instant `MotionValue` under reduced motion (used by the bar clock + alarm widget)
 
 ### ARIA / keyboard / focus
 - [ ] Audit all `role="option"` buttons for required listbox parent (`role="listbox"`)

@@ -271,10 +271,12 @@ export function EnvironmentView() {
     if (!state.overview) return
     if (!(container && tile)) return
     container.scrollTo({
-      behavior: "smooth",
+      // Instant jump under reduced motion — a raw scroll animation the global
+      // MotionConfig / CSS guards can't reach.
+      behavior: reduceMotion ? "auto" : "smooth",
       top: tile.offsetTop - (container.clientHeight - tile.clientHeight) / 2,
     })
-  }, [state.overview, state.active])
+  }, [state.overview, state.active, reduceMotion])
 
   // Compositor-level key capture: panel toggles always work; otherwise niri
   // tiling binds are intercepted (preventDefault + stopPropagation) before the
