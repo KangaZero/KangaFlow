@@ -14,18 +14,15 @@
 //    mode — Radix Dialog's onEscapeKeyDown closes it before CodeMirror sees Esc.
 //    Fix in code-editor.tsx / terminal-dialog.tsx: preventDefault + stop
 //    propagation on Esc while the editor overlay is open so vim handles it.
-// 3. Sizing. fit() runs once before the open animation settles, so cols/rows can
-//    be wrong on first open (and after the editor closes). Use a ResizeObserver
-//    on the container instead of the one-shot fit + window listener.
-// 4. Ghost/menu redraw glitches: opening or cycling the completion menu doesn't
+// 3. Ghost/menu redraw glitches: opening or cycling the completion menu doesn't
 //    always clear a previously drawn ghost, so stale dim text can linger.
-// 5. `clear` leaves the fresh prompt on row 2 (2J+H then prints \r\n+prompt);
+// 4. `clear` leaves the fresh prompt on row 2 (2J+H then prints \r\n+prompt);
 //    it should home the cursor and print the prompt at the top.
-// 6. No in-line cursor editing: ← / Home / End / mid-line insert are unhandled
+// 5. No in-line cursor editing: ← / Home / End / mid-line insert are unhandled
 //    (append-only), and → is overloaded solely to accept the ghost.
-// 7. Editor is ephemeral: `:w` is a silent no-op and edits are discarded on
+// 6. Editor is ephemeral: `:w` is a silent no-op and edits are discarded on
 //    close (by design) — should signal this or disable write.
-// 8. Multi-line paste is appended as a single line (newlines aren't split into
+// 7. Multi-line paste is appended as a single line (newlines aren't split into
 //    separate command runs).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -583,13 +580,33 @@ export function TerminalBody({
     const sub = term.onData((data) => {
       if (!s.editorOpen) onShellData(data)
     })
-    const onResize = () => fit.fit()
-    window.addEventListener("resize", onResize)
+    // Refit whenever the CONTAINER changes size, not just the window. A plain
+    // window "resize" listener misses tiling column-width changes and floating-
+    // window drag-resize (the box changes but the viewport doesn't). rAF-coalesce
+    // so a drag that fires many resize ticks only refits once per frame; skip
+    // zero-size boxes (mid-close/animation) so fit() doesn't compute bad dims.
+    const container = ref.current
+    let refitRaf = 0
+    const refit = (): void => {
+      cancelAnimationFrame(refitRaf)
+      refitRaf = requestAnimationFrame(() => {
+        if (
+          container &&
+          container.clientWidth > 0 &&
+          container.clientHeight > 0
+        ) {
+          fit.fit()
+        }
+      })
+    }
+    const observer = new ResizeObserver(refit)
+    if (container) observer.observe(container)
     term.focus()
 
     return () => {
       sub.dispose()
-      window.removeEventListener("resize", onResize)
+      cancelAnimationFrame(refitRaf)
+      observer.disconnect()
     }
   }, [instance])
 

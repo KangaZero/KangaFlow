@@ -6,6 +6,15 @@
 @custom-variant dark (&:is(.dark *));
 @custom-variant terminal (&:is(.terminal *));
 
+/* Hide the scrollbar while keeping the element scrollable (Firefox +
+   WebKit/Blink). Applied to floating widget windows. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @theme inline {
   --font-heading: var(--font-mono);
   --font-mono: var(--font-mono);

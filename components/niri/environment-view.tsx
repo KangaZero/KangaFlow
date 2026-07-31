@@ -34,13 +34,14 @@ import { ACCENT_COLORS, type BarPosition } from "@/components/niri/settings"
 import type { AppId, NiriWindow } from "@/components/niri/types"
 import { wallpaperStyle } from "@/components/niri/wallpaper"
 import { WallpaperDialog } from "@/components/niri/wallpaper-dialog"
+import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { readSourceFiles } from "@/lib/terminal/source"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
-import { useBringToFront } from "@/providers/z-order-provider"
+import { useBringToFront, useCloseActive } from "@/providers/z-order-provider"
 
 // xterm / CodeMirror reach for `document` at import, so the two heavy app
 // windows load client-only (mirrors terminal-dialog's boundary).
@@ -211,6 +212,7 @@ export function EnvironmentView() {
   // uiScale ≠ 1 — at the default scale the strip competes with the floats in the
   // root context, so this raise takes effect (see lib/z-order.ts).
   const bringToFront = useBringToFront()
+  const closeActive = useCloseActive()
   const [stripZ, setStripZ] = useState<number>(Z_LAYERS.window)
 
   const files = useMemo(() => readSourceFiles(), [])
@@ -310,12 +312,16 @@ export function EnvironmentView() {
       if (action) {
         event.preventDefault()
         event.stopPropagation()
+        // Unified close: Alt+Shift+Q closes the most-recently-focused window
+        // (widget float or floated niri window); if none is registered, fall
+        // through to the tiled-window close.
+        if (action.type === "close" && closeActive()) return
         dispatch(action)
       }
     }
     window.addEventListener("keydown", onKey, true)
     return () => window.removeEventListener("keydown", onKey, true)
-  }, [panel, state.overview, togglePanel])
+  }, [panel, state.overview, togglePanel, closeActive])
 
   const launch = (app: AppId) => {
     dispatch({ app, title: appTitle[app], type: "spawn" })
@@ -326,15 +332,30 @@ export function EnvironmentView() {
   const columns = workspace?.columns ?? []
   const focusedCol = workspace?.focused ?? 0
 
-  // Column pixel widths + the x offset that centres the focused column.
-  const widths = columns.map((c) => Math.max(240, c.width * stripWidth))
+  // Split the strip (tiled) from floated columns. Tiled entries keep their
+  // original index (needed for focusAt + focus highlight); floated ones render
+  // as draggable overlays instead of taking strip space.
+  const tiled = columns
+    .map((col, index) => ({ col, index }))
+    .filter((entry) => !entry.col.floating)
+  const floating = columns
+    .map((col, index) => ({ col, index }))
+    .filter((entry) => entry.col.floating)
+
+  // Column pixel widths + the x offset that centres the focused tiled column.
+  const widths = tiled.map(({ col }) => Math.max(240, col.width * stripWidth))
   let cursor = PAD
   const centers = widths.map((w) => {
     const center = cursor + w / 2
     cursor += w + GAP
     return center
   })
-  const offsetX = stripWidth / 2 - (centers[focusedCol] ?? stripWidth / 2)
+  // Focused column's position within the tiled subset (−1 when a floated column
+  // holds focus — then keep the strip centred on its first column).
+  const focusedTiledPos = tiled.findIndex(({ index }) => index === focusedCol)
+  const offsetX =
+    stripWidth / 2 -
+    (centers[focusedTiledPos === -1 ? 0 : focusedTiledPos] ?? stripWidth / 2)
 
   const focusedWin = getFocusedWindow(state)
   const pips = state.workspaces.map((w) => ({
@@ -535,7 +556,7 @@ export function EnvironmentView() {
               transition={{ damping: 30, stiffness: 260, type: "spring" }}
             >
               <AnimatePresence initial={false} mode="popLayout">
-                {columns.map((col, ci) => (
+                {tiled.map(({ col, index: ci }, ti) => (
                   <motion.div
                     animate={{ opacity: ci === focusedCol ? 1 : 0.6, x: 0 }}
                     className="flex flex-col"
@@ -543,13 +564,13 @@ export function EnvironmentView() {
                     // First window (empty workspace) fades in; later ones slide in
                     // from the right, niri-style.
                     initial={
-                      columns.length === 1
+                      tiled.length === 1
                         ? { opacity: 0, x: 0 }
                         : { opacity: 0, x: 80 }
                     }
                     key={col.id}
                     layout
-                    style={{ gap: GAP, width: widths[ci] }}
+                    style={{ gap: GAP, width: widths[ti] }}
                     transition={{
                       damping: 30,
                       duration: 100,
@@ -582,7 +603,7 @@ export function EnvironmentView() {
                                 : { opacity: 0, scale: 0 }
                             }
                             initial={
-                              columns.length === 1
+                              tiled.length === 1
                                 ? { opacity: 0 }
                                 : { opacity: 0, y: 24 }
                             }
@@ -590,8 +611,11 @@ export function EnvironmentView() {
                             layout
                             onPointerDown={() => {
                               // Clicking a tiled window raises the tiled layer
-                              // above any floating widget, then focuses it.
-                              setStripZ(bringToFront())
+                              // above any floating widget, focuses it, and makes
+                              // it the target of the unified close shortcut.
+                              setStripZ(
+                                bringToFront(() => dispatch({ type: "close" }))
+                              )
                               dispatch({
                                 column: ci,
                                 type: "focusAt",
@@ -662,6 +686,49 @@ export function EnvironmentView() {
       {settings.autoHideBar ? (
         <AutoHideBar position={settings.barPosition}>{bar}</AutoHideBar>
       ) : null}
+
+      {/* Floated niri columns (Alt+T) render as draggable, click-to-front
+          windows sharing the widgets' z-order band. Focusing one (click/open)
+          makes Alt+T re-tile it and Alt+Shift+Q close it. */}
+      {floating.map(({ col, index: colIndex }, idx) => {
+        const win = col.windows[col.focused] ?? col.windows[0]
+        if (!win) return null
+        const focusThis = (): void =>
+          dispatch({
+            column: colIndex,
+            type: "focusAt",
+            window: col.focused,
+            workspace: state.active,
+          })
+        const closeThis = (): void => {
+          focusThis()
+          dispatch({ type: "close" })
+        }
+        return (
+          <DraggableWindow
+            defaultHeight={340}
+            defaultWidth={480}
+            isOpen
+            key={col.id}
+            onClose={closeThis}
+            onFocus={focusThis}
+            positionClassName={cn(
+              "top-16",
+              idx % 2 === 0 ? "left-16" : "right-16"
+            )}
+            storageKey={`niri-float-${col.id}`}
+            title={win.title}
+          >
+            <WindowContent
+              dark={dark}
+              files={files}
+              onClose={closeThis}
+              routePath={pathname}
+              win={win}
+            />
+          </DraggableWindow>
+        )
+      })}
 
       <NoctaliaLauncher
         apps={launcherApps}

@@ -66,6 +66,9 @@ export type DraggableWindowProps = {
   // Configured default drag offset ("apply current"); used only when the window
   // has no remembered position yet.
   defaultOffset?: { x: number; y: number } | null
+  // Fired when the window gains focus (open / pointer-down). Lets a caller sync
+  // external focus state — e.g. a floated niri column marking itself focused.
+  onFocus?: () => void
   children: React.ReactNode
 }
 
@@ -84,10 +87,22 @@ export function DraggableWindow({
   positionClassName = "bottom-4 right-4",
   anchor,
   defaultOffset = null,
+  onFocus,
   children,
 }: DraggableWindowProps): React.JSX.Element | null {
   const { envSettings } = useGlobalStates()
   const bringToFront = useBringToFront()
+  // Latest handlers read through refs so the focus effect can stay off them
+  // (their identity changes each render; depending on them would re-raise every
+  // render).
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+  const onFocusRef = useRef(onFocus)
+  onFocusRef.current = onFocus
+  const focus = (): void => {
+    onFocusRef.current?.()
+    setZ(bringToFront(() => onCloseRef.current()))
+  }
   const [mounted, setMounted] = useState(false)
   // Per-window stacking value from the shared click-to-front counter; bumped
   // when the window opens and on every pointer-down so the active widget rises
@@ -111,10 +126,12 @@ export function DraggableWindow({
   const startPosRef = useRef({ x: 0, y: 0 })
 
   useEffect(() => setMounted(true), [])
-  // Opening (or re-opening) a widget brings it to the front of the stack.
+  // Opening (or re-opening) a widget brings it to the front and registers it as
+  // the close target for the unified close shortcut.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `focus` closes over stable refs; depending on it (recreated each render) would re-raise every render.
   useEffect(() => {
-    if (isOpen) setZ(bringToFront())
-  }, [isOpen, bringToFront])
+    if (isOpen) focus()
+  }, [isOpen])
   if (!mounted) return null
 
   return createPortal(
@@ -145,7 +162,7 @@ export function DraggableWindow({
             }
             // Capture phase so any interaction anywhere in the window (title-bar
             // drag, content click, resize) raises it before those handlers run.
-            onPointerDownCapture={() => setZ(bringToFront())}
+            onPointerDownCapture={focus}
             style={{
               borderRadius: envSettings.windowRadius,
               height: size.height,
@@ -181,8 +198,11 @@ export function DraggableWindow({
               </Button>
             </div>
 
-            {/* Content — scrollable, fills remaining height */}
-            <div className="min-h-0 flex-1 overflow-auto">{children}</div>
+            {/* Content — scrollable, fills remaining height. scrollbar-none
+                hides the bar while keeping scroll (applies to every widget). */}
+            <div className="scrollbar-none min-h-0 flex-1 overflow-auto">
+              {children}
+            </div>
 
             {/* Resize handle — bottom-right corner, uses pointer capture */}
             <div
