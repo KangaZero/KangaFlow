@@ -13,20 +13,33 @@ export type NoteColor =
   | "violet"
 
 // bg = card/window tint · dot = the colour pip in pickers and list rows.
+// Each theme gets its own `bg` variant: light pastel (:root), deep translucent
+// (dark), and a mid tint tuned for the terminal theme's Catppuccin surface
+// (`terminal:` custom variant in globals.css). Dots stay saturated — they read
+// on every surface — so they need no per-theme variant.
 export const NOTE_COLORS: Record<NoteColor, { bg: string; dot: string }> = {
-  amber: { bg: "bg-amber-100/70 dark:bg-amber-900/30", dot: "bg-amber-500" },
+  amber: {
+    bg: "bg-amber-100/70 dark:bg-amber-900/30 terminal:bg-amber-500/15",
+    dot: "bg-amber-500",
+  },
   emerald: {
-    bg: "bg-emerald-100/70 dark:bg-emerald-900/30",
+    bg: "bg-emerald-100/70 dark:bg-emerald-900/30 terminal:bg-emerald-500/15",
     dot: "bg-emerald-500",
   },
-  rose: { bg: "bg-rose-100/70 dark:bg-rose-900/30", dot: "bg-rose-500" },
-  sky: { bg: "bg-sky-100/70 dark:bg-sky-900/30", dot: "bg-sky-500" },
+  rose: {
+    bg: "bg-rose-100/70 dark:bg-rose-900/30 terminal:bg-rose-500/15",
+    dot: "bg-rose-500",
+  },
+  sky: {
+    bg: "bg-sky-100/70 dark:bg-sky-900/30 terminal:bg-sky-500/15",
+    dot: "bg-sky-500",
+  },
   violet: {
-    bg: "bg-violet-100/70 dark:bg-violet-900/30",
+    bg: "bg-violet-100/70 dark:bg-violet-900/30 terminal:bg-violet-500/15",
     dot: "bg-violet-500",
   },
   yellow: {
-    bg: "bg-yellow-100/80 dark:bg-yellow-900/30",
+    bg: "bg-yellow-100/80 dark:bg-yellow-900/30 terminal:bg-yellow-500/15",
     dot: "bg-yellow-400",
   },
 }

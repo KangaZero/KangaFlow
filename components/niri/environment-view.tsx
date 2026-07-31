@@ -37,8 +37,10 @@ import { WallpaperDialog } from "@/components/niri/wallpaper-dialog"
 import { readSourceFiles } from "@/lib/terminal/source"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
+import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
+import { useBringToFront } from "@/providers/z-order-provider"
 
 // xterm / CodeMirror reach for `document` at import, so the two heavy app
 // windows load client-only (mirrors terminal-dialog's boundary).
@@ -203,6 +205,14 @@ export function EnvironmentView() {
   const [clock, setClock] = useState(clockNowInHHMM)
   const [stripWidth, setStripWidth] = useState(0)
 
+  // Shared click-to-front counter (same one the floating widgets use). Focusing
+  // a tiled window bumps the whole tiled layer above the floats; clicking a
+  // float bumps it back above the strip. `main` is a stacking context only at
+  // uiScale ≠ 1 — at the default scale the strip competes with the floats in the
+  // root context, so this raise takes effect (see lib/z-order.ts).
+  const bringToFront = useBringToFront()
+  const [stripZ, setStripZ] = useState<number>(Z_LAYERS.window)
+
   const files = useMemo(() => readSourceFiles(), [])
   const stripRef = useRef<HTMLDivElement>(null)
   const overviewRef = useRef<HTMLDivElement>(null)
@@ -364,7 +374,10 @@ export function EnvironmentView() {
       )}
       style={
         {
-          zoom: settings.uiScale,
+          // Omit `zoom` entirely at 1× so `main` never becomes a stacking
+          // context at the default scale — that would trap the tiled strip and
+          // panels below the body-level floats (defeating the z-order system).
+          ...(settings.uiScale === 1 ? {} : { zoom: settings.uiScale }),
           // Accent overrides the desktop's --primary token (default = theme).
           ...(settings.accent === "default"
             ? {}
@@ -389,9 +402,13 @@ export function EnvironmentView() {
         ) : null}
 
         {/* Scrollable-tiling strip */}
+        {/* pointer-events-none so the raised strip doesn't swallow clicks over
+            its empty areas — only the actual windows (and overview) re-enable
+            them, letting floats beneath stay clickable in the gaps. */}
         <div
-          className="overflow-show relative min-h-0 min-w-0 flex-1"
+          className="overflow-show pointer-events-none relative min-h-0 min-w-0 flex-1"
           ref={stripRef}
+          style={{ zIndex: stripZ }}
         >
           {state.overview ? (
             // Overview (Alt+Shift+O): all workspaces stacked over a blurred
@@ -400,7 +417,7 @@ export function EnvironmentView() {
             // enter. Each tile renders its windows' real content, live.
             <motion.div
               animate={{ opacity: 1 }}
-              className="absolute inset-0 flex flex-col gap-3 p-4"
+              className="pointer-events-auto absolute inset-0 flex flex-col gap-3 p-4"
               initial={{ opacity: 0 }}
               ref={overviewRef}
             >
@@ -533,7 +550,12 @@ export function EnvironmentView() {
                     key={col.id}
                     layout
                     style={{ gap: GAP, width: widths[ci] }}
-                    transition={{ damping: 30, stiffness: 260, type: "spring" }}
+                    transition={{
+                      damping: 30,
+                      duration: 100,
+                      stiffness: 260,
+                      type: "spring",
+                    }}
                   >
                     <AnimatePresence initial={false} mode="popLayout">
                       {col.windows.map((win, wi) => {
@@ -546,7 +568,7 @@ export function EnvironmentView() {
                         return (
                           <motion.button
                             className={cn(
-                              "flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border text-left shadow-xl",
+                              "pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border text-left shadow-xl",
                               glassy
                                 ? "bg-card/30 backdrop-blur-md"
                                 : "bg-card",
@@ -566,14 +588,17 @@ export function EnvironmentView() {
                             }
                             key={win.id}
                             layout
-                            onPointerDown={() =>
+                            onPointerDown={() => {
+                              // Clicking a tiled window raises the tiled layer
+                              // above any floating widget, then focuses it.
+                              setStripZ(bringToFront())
                               dispatch({
                                 column: ci,
                                 type: "focusAt",
                                 window: wi,
                                 workspace: state.active,
                               })
-                            }
+                            }}
                             transition={{
                               damping: 30,
                               stiffness: 260,

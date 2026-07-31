@@ -18,7 +18,9 @@ import {
 } from "@/components/niri/settings"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
+import { useBringToFront } from "@/providers/z-order-provider"
 
 type StoredState = {
   position?: { x: number; y: number }
@@ -85,7 +87,12 @@ export function DraggableWindow({
   children,
 }: DraggableWindowProps): React.JSX.Element | null {
   const { envSettings } = useGlobalStates()
+  const bringToFront = useBringToFront()
   const [mounted, setMounted] = useState(false)
+  // Per-window stacking value from the shared click-to-front counter; bumped
+  // when the window opens and on every pointer-down so the active widget rises
+  // above its peers.
+  const [z, setZ] = useState<number>(Z_LAYERS.window)
   const constraintsRef = useRef<HTMLDivElement>(null)
   const dragControls = useDragControls()
 
@@ -104,12 +111,17 @@ export function DraggableWindow({
   const startPosRef = useRef({ x: 0, y: 0 })
 
   useEffect(() => setMounted(true), [])
+  // Opening (or re-opening) a widget brings it to the front of the stack.
+  useEffect(() => {
+    if (isOpen) setZ(bringToFront())
+  }, [isOpen, bringToFront])
   if (!mounted) return null
 
   return createPortal(
     <div
-      className="pointer-events-none fixed inset-0 z-50"
+      className="pointer-events-none fixed inset-0"
       ref={constraintsRef}
+      style={{ zIndex: z }}
     >
       <AnimatePresence>
         {isOpen ? (
@@ -131,6 +143,9 @@ export function DraggableWindow({
             onDragEnd={() =>
               saveState(storageKey, { position: { x: x.get(), y: y.get() } })
             }
+            // Capture phase so any interaction anywhere in the window (title-bar
+            // drag, content click, resize) raises it before those handlers run.
+            onPointerDownCapture={() => setZ(bringToFront())}
             style={{
               borderRadius: envSettings.windowRadius,
               height: size.height,

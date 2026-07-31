@@ -1,11 +1,11 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { Bell, Image as ImageIcon, Settings } from "lucide-react"
+import { Image as ImageIcon, Settings } from "lucide-react"
 import type * as React from "react"
 import { SiNixos } from "react-icons/si"
-
 import { Counter } from "@/components/Counter"
+import { NotificationCenter } from "@/components/niri/notification-center"
 import type { BorderRadius } from "@/components/niri/settings"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
@@ -211,19 +211,7 @@ export function NoctaliaBar(props: {
             <Settings />
           </Button>
         </AnimatedTooltip>
-        <AnimatedTooltip
-          label={translate("environment.bar.notifications")}
-          side="responsive"
-        >
-          <Button
-            aria-label={translate("environment.bar.notifications")}
-            className="rounded-full"
-            size="icon-sm"
-            variant="ghost"
-          >
-            <Bell />
-          </Button>
-        </AnimatedTooltip>
+        <NotificationCenter orientation={orientation} />
       </div>
     </header>
   )

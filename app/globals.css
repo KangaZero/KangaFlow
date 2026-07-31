@@ -246,6 +246,7 @@
  * scrollbar-width/color cover Firefox; ::-webkit-* cover Chrome/Safari.
  */
 * {
+  overscroll-behavior: none;
   scrollbar-width: thin;
   scrollbar-color: var(--border) var(--background);
 }

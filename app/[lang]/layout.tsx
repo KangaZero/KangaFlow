@@ -17,6 +17,8 @@ import { readSourceFiles } from "@/lib/terminal/source"
 import { AchievementsProvider } from "@/providers/achievements-provider"
 import { GlobalStatesProvider } from "@/providers/global-state-provider"
 import { LocaleProvider } from "@/providers/locale-provider"
+import { NotificationsProvider } from "@/providers/notifications-provider"
+import { ZOrderProvider } from "@/providers/z-order-provider"
 
 // Pre-render exactly /en and /ja; reject anything else (required for a static
 // export — no server exists to resolve unknown params at request time).
@@ -45,23 +47,27 @@ export default async function LangLayout({
   return (
     <LocaleProvider locale={lang}>
       <GlobalStatesProvider>
-        <AchievementsProvider>
-          <div className="relative min-h-screen pb-28 sm:pb-0">
-            <ThemeBackground />
-            <SiteHeader />
-            {children}
-            <CommandMenu />
-            <SettingsDialog />
-            <MediaPlayer />
-            <NotesWidget />
-            <AlarmWidget />
-            <CalendarWidget />
-            <TerminalDialog files={sourceFiles} />
-            <ShortcutDispatcher />
-            <HintOverlay />
-            <AchievementToast />
-          </div>
-        </AchievementsProvider>
+        <ZOrderProvider>
+          <NotificationsProvider>
+            <AchievementsProvider>
+              <div className="relative min-h-screen pb-28 sm:pb-0">
+                <ThemeBackground />
+                <SiteHeader />
+                {children}
+                <CommandMenu />
+                <SettingsDialog />
+                <MediaPlayer />
+                <NotesWidget />
+                <AlarmWidget />
+                <CalendarWidget />
+                <TerminalDialog files={sourceFiles} />
+                <ShortcutDispatcher />
+                <HintOverlay />
+                <AchievementToast />
+              </div>
+            </AchievementsProvider>
+          </NotificationsProvider>
+        </ZOrderProvider>
       </GlobalStatesProvider>
     </LocaleProvider>
   )

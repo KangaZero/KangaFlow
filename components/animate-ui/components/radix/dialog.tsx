@@ -22,6 +22,7 @@ import {
   type DialogTriggerProps as DialogTriggerPrimitiveProps,
 } from "@/components/animate-ui/primitives/radix/dialog"
 import { cn } from "@/lib/utils"
+import { Z_LAYERS } from "@/lib/z-order"
 
 type DialogProps = DialogPrimitiveProps
 
@@ -43,10 +44,11 @@ function DialogClose(props: DialogCloseProps) {
 
 type DialogOverlayProps = DialogOverlayPrimitiveProps
 
-function DialogOverlay({ className, ...props }: DialogOverlayProps) {
+function DialogOverlay({ className, style, ...props }: DialogOverlayProps) {
   return (
     <DialogOverlayPrimitive
-      className={cn("fixed inset-0 z-50 bg-black/50", className)}
+      className={cn("fixed inset-0 bg-black/50", className)}
+      style={{ zIndex: Z_LAYERS.dialog, ...style }}
       {...props}
     />
   )
@@ -59,6 +61,7 @@ type DialogContentProps = DialogContentPrimitiveProps & {
 function DialogContent({
   className,
   children,
+  style,
   showCloseButton = true,
   ...props
 }: DialogContentProps) {
@@ -67,9 +70,10 @@ function DialogContent({
       <DialogOverlay />
       <DialogContentPrimitive
         className={cn(
-          "fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg sm:max-w-lg",
+          "fixed top-[50%] left-[50%] grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border bg-background p-6 shadow-lg sm:max-w-lg",
           className
         )}
+        style={{ zIndex: Z_LAYERS.dialog, ...style }}
         {...props}
       >
         {children}

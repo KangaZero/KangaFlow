@@ -3,13 +3,17 @@
 
 import {
   AlarmClock,
+  Check,
+  Flag,
   Hourglass,
   Pause,
+  Pencil,
   Play,
   Plus,
   RotateCcw,
   Timer as TimerIcon,
   Trash2,
+  X,
 } from "lucide-react"
 import { AnimatePresence, LayoutGroup, motion } from "motion/react"
 import { useEffect, useRef, useState } from "react"
@@ -20,6 +24,8 @@ import { Button } from "@/components/ui/button"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
+import { useLocale } from "@/providers/locale-provider"
+import { useNotifications } from "@/providers/notifications-provider"
 
 const TAP_SPRING = { damping: 18, stiffness: 500, type: "spring" } as const
 const LIST_SPRING = { damping: 22, stiffness: 340, type: "spring" } as const
@@ -158,6 +164,17 @@ function saveAlarms(alarms: Alarm[]): void {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(alarms))
 }
 
+// mm:ss(.cc) label for the stopwatch display, laps, and the "stopped at"
+// notification. Centiseconds are dropped for the notification (withCentis=false).
+function formatStopwatch(ms: number, withCentis = true): string {
+  const total = Math.floor(ms / 1000)
+  const mm = String(Math.floor(total / 60)).padStart(2, "0")
+  const ss = String(total % 60).padStart(2, "0")
+  if (!withCentis) return `${mm}:${ss}`
+  const cc = String(Math.floor((ms % 1000) / 10)).padStart(2, "0")
+  return `${mm}:${ss}.${cc}`
+}
+
 function nowParts(): { h: number; m: number; s: number } {
   const d = new Date()
   return { h: d.getHours(), m: d.getMinutes(), s: d.getSeconds() }
@@ -177,14 +194,17 @@ function useClockParts(): { h: number; m: number; s: number } {
 type Stopwatch = {
   elapsed: number
   running: boolean
+  laps: number[]
   start: () => void
   pause: () => void
+  lap: () => void
   reset: () => void
 }
 
 function useStopwatch(): Stopwatch {
   const [elapsed, setElapsed] = useState(0)
   const [running, setRunning] = useState(false)
+  const [laps, setLaps] = useState<number[]>([])
   const baseRef = useRef(0) // accumulated ms from previous runs
   const startRef = useRef(0) // performance.now() at the current run's start
   const rafRef = useRef<number | null>(null)
@@ -202,8 +222,15 @@ function useStopwatch(): Stopwatch {
     }
   }, [running])
 
+  // Live elapsed at the instant of the call (avoids the up-to-one-frame lag of
+  // the `elapsed` state when capturing a lap while running).
+  const liveElapsed = (): number =>
+    running ? baseRef.current + (performance.now() - startRef.current) : elapsed
+
   return {
     elapsed,
+    lap: (): void => setLaps((prev) => [...prev, liveElapsed()]),
+    laps,
     pause: (): void => {
       if (!running) return
       baseRef.current += performance.now() - startRef.current
@@ -212,6 +239,7 @@ function useStopwatch(): Stopwatch {
     reset: (): void => {
       baseRef.current = 0
       setElapsed(0)
+      setLaps([])
       setRunning(false)
     },
     running,
@@ -281,12 +309,15 @@ function useTimer(onExpire: () => void): CountdownTimer {
 
 export function AlarmWidget(): React.JSX.Element {
   const { isAlarmOpen, setIsAlarmOpen, envSettings } = useGlobalStates()
+  const { translate } = useLocale()
+  const { notify, remind } = useNotifications()
   const wd = envSettings.widgetDefaults.alarm
   const [mode, setMode] = useState<Mode>("alarm")
 
   const [alarms, setAlarms] = useState<Alarm[]>(loadAlarms)
   const [newTime, setNewTime] = useState("08:00")
   const [newLabel, setNewLabel] = useState("")
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [firing, setFiring] = useState<string | null>(null)
   const bellRef = useRef<BellIconHandle>(null)
 
@@ -296,6 +327,7 @@ export function AlarmWidget(): React.JSX.Element {
   const ringBell = (): void => {
     bellRef.current?.startAnimation()
     window.setTimeout(() => bellRef.current?.stopAnimation(), 5000)
+    notify(translate("notifications.timerDone"), "alarm", "timer")
   }
   const timer = useTimer(ringBell)
 
@@ -304,15 +336,33 @@ export function AlarmWidget(): React.JSX.Element {
     saveAlarms(next)
   }
 
-  const addAlarm = (): void => {
-    const alarm: Alarm = {
-      enabled: true,
-      id: crypto.randomUUID(),
-      label: newLabel.trim() || "Alarm",
-      time: newTime,
-    }
-    updateAlarms([...alarms, alarm])
+  const resetForm = (): void => {
+    setEditingId(null)
     setNewLabel("")
+  }
+
+  // Add a new alarm, or commit an in-place edit when `editingId` is set.
+  const addAlarm = (): void => {
+    const label = newLabel.trim() || translate("widgets.alarm.defaultLabel")
+    if (editingId != null) {
+      updateAlarms(
+        alarms.map((a) =>
+          a.id === editingId ? { ...a, label, time: newTime } : a
+        )
+      )
+    } else {
+      updateAlarms([
+        ...alarms,
+        { enabled: true, id: crypto.randomUUID(), label, time: newTime },
+      ])
+    }
+    resetForm()
+  }
+
+  const startEdit = (alarm: Alarm): void => {
+    setEditingId(alarm.id)
+    setNewTime(alarm.time)
+    setNewLabel(alarm.label)
   }
 
   const toggleAlarm = (id: string): void =>
@@ -320,8 +370,29 @@ export function AlarmWidget(): React.JSX.Element {
       alarms.map((a) => (a.id === id ? { ...a, enabled: !a.enabled } : a))
     )
 
-  const deleteAlarm = (id: string): void =>
+  const deleteAlarm = (id: string): void => {
     updateAlarms(alarms.filter((a) => a.id !== id))
+    if (id === editingId) resetForm()
+  }
+
+  // Pause the stopwatch and announce the split; starting has no notification.
+  const toggleStopwatch = (): void => {
+    if (stopwatch.running) {
+      stopwatch.pause()
+      if (stopwatch.elapsed > 0) {
+        notify(
+          translate("notifications.stopwatchStopped").replace(
+            "{time}",
+            formatStopwatch(stopwatch.elapsed, false)
+          ),
+          "alarm",
+          "stopwatch"
+        )
+      }
+    } else {
+      stopwatch.start()
+    }
+  }
 
   // Fire a matching alarm once per minute (HH:MM equality, seconds ignored).
   const currentHHMM = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
@@ -330,12 +401,13 @@ export function AlarmWidget(): React.JSX.Element {
     if (!active || firing === active.id) return
     setFiring(active.id)
     bellRef.current?.startAnimation()
+    notify(active.label, "alarm", "alarm")
     const id = window.setTimeout(() => {
       setFiring(null)
       bellRef.current?.stopAnimation()
     }, 5000)
     return () => window.clearTimeout(id)
-  }, [currentHHMM, alarms, firing])
+  }, [currentHHMM, alarms, firing, notify])
 
   // Derived display values for stopwatch / timer.
   const swTotal = Math.floor(stopwatch.elapsed / 1000)
@@ -364,7 +436,7 @@ export function AlarmWidget(): React.JSX.Element {
         {/* ALARM ───────────────────────────────────────────────── */}
         {mode === "alarm" ? (
           <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-center gap-3">
               <ClockDisplay
                 fontSize={38}
                 segments={[
@@ -393,6 +465,7 @@ export function AlarmWidget(): React.JSX.Element {
                       alarm.id === firing
                         ? "border-primary/40 bg-primary/10"
                         : "border-border bg-muted/30",
+                      alarm.id === editingId && "ring-2 ring-ring",
                       !alarm.enabled && "opacity-50"
                     )}
                     exit={{ opacity: 0, x: -8 }}
@@ -413,7 +486,17 @@ export function AlarmWidget(): React.JSX.Element {
                       </span>
                     </button>
                     <motion.button
-                      aria-label={`Delete ${alarm.label}`}
+                      aria-label={translate("widgets.alarm.edit")}
+                      className="rounded p-1 text-muted-foreground hover:text-foreground"
+                      onClick={() => startEdit(alarm)}
+                      transition={TAP_SPRING}
+                      type="button"
+                      whileTap={{ scale: 0.8 }}
+                    >
+                      <Pencil className="size-3.5" />
+                    </motion.button>
+                    <motion.button
+                      aria-label={translate("widgets.alarm.delete")}
                       className="rounded p-1 text-muted-foreground hover:text-destructive"
                       onClick={() => deleteAlarm(alarm.id)}
                       transition={TAP_SPRING}
@@ -440,20 +523,77 @@ export function AlarmWidget(): React.JSX.Element {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") addAlarm()
                 }}
-                placeholder="Label (optional)"
+                placeholder={translate("widgets.alarm.labelPlaceholder")}
                 type="text"
                 value={newLabel}
               />
-              <motion.div
-                transition={TAP_SPRING}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.96 }}
-              >
-                <Button className="w-full gap-1.5" onClick={addAlarm} size="sm">
-                  <Plus className="size-4" />
-                  Add alarm
-                </Button>
-              </motion.div>
+              <div className="flex gap-1.5">
+                {editingId != null ? (
+                  <Button
+                    className="gap-1.5"
+                    onClick={resetForm}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <X className="size-4" />
+                    {translate("widgets.alarm.cancel")}
+                  </Button>
+                ) : null}
+                <motion.div
+                  className="flex-1"
+                  transition={TAP_SPRING}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.96 }}
+                >
+                  <Button
+                    className="w-full gap-1.5"
+                    onClick={addAlarm}
+                    size="sm"
+                  >
+                    {editingId != null ? (
+                      <Check className="size-4" />
+                    ) : (
+                      <Plus className="size-4" />
+                    )}
+                    {editingId != null
+                      ? translate("widgets.alarm.save")
+                      : translate("widgets.alarm.add")}
+                  </Button>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Remind me in N minutes — schedules a one-shot reminder. */}
+            <div className="flex flex-wrap items-center gap-1.5 border-border border-t pt-2">
+              <span className="text-muted-foreground text-xs">
+                {translate("notifications.remindMe")}
+              </span>
+              {(
+                [
+                  { key: "notifications.remindIn5", minutes: 5 },
+                  { key: "notifications.remindIn10", minutes: 10 },
+                  { key: "notifications.remindIn15", minutes: 15 },
+                  { key: "notifications.remindIn30", minutes: 30 },
+                ] as const
+              ).map((opt) => (
+                <motion.button
+                  className="rounded-md border border-border bg-muted/40 px-2 py-1 text-xs transition-colors hover:bg-muted"
+                  key={opt.minutes}
+                  onClick={() =>
+                    remind(
+                      opt.minutes,
+                      translate("notifications.reminder"),
+                      "alarm",
+                      "alarm"
+                    )
+                  }
+                  transition={TAP_SPRING}
+                  type="button"
+                  whileTap={{ scale: 0.92 }}
+                >
+                  {translate(opt.key)}
+                </motion.button>
+              ))}
             </div>
           </div>
         ) : null}
@@ -474,13 +614,7 @@ export function AlarmWidget(): React.JSX.Element {
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
               >
-                <Button
-                  className="gap-1.5"
-                  onClick={
-                    stopwatch.running ? stopwatch.pause : stopwatch.start
-                  }
-                  size="sm"
-                >
+                <Button className="gap-1.5" onClick={toggleStopwatch} size="sm">
                   {stopwatch.running ? (
                     <Pause className="size-4" />
                   ) : (
@@ -494,18 +628,52 @@ export function AlarmWidget(): React.JSX.Element {
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
               >
+                {/* While running the secondary action captures a lap; when
+                    stopped it resets (both disabled at zero elapsed). */}
                 <Button
                   className="gap-1.5"
                   disabled={stopwatch.elapsed === 0}
-                  onClick={stopwatch.reset}
+                  onClick={stopwatch.running ? stopwatch.lap : stopwatch.reset}
                   size="sm"
                   variant="outline"
                 >
-                  <RotateCcw className="size-4" />
-                  Reset
+                  {stopwatch.running ? (
+                    <>
+                      <Flag className="size-4" />
+                      {translate("widgets.alarm.lap")}
+                    </>
+                  ) : (
+                    <>
+                      <RotateCcw className="size-4" />
+                      Reset
+                    </>
+                  )}
                 </Button>
               </motion.div>
             </div>
+
+            {stopwatch.laps.length > 0 ? (
+              <div className="max-h-32 w-full space-y-1 overflow-y-auto px-1">
+                <AnimatePresence initial={false}>
+                  {stopwatch.laps.map((lapMs, i) => (
+                    <motion.div
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center justify-between rounded-md bg-muted/30 px-2.5 py-1 font-mono text-xs tabular-nums"
+                      exit={{ opacity: 0 }}
+                      initial={{ opacity: 0, y: -6 }}
+                      // biome-ignore lint/suspicious/noArrayIndexKey: laps are append-only and never reordered, so the index is a stable identity.
+                      key={i}
+                      transition={LIST_SPRING}
+                    >
+                      <span className="text-muted-foreground">
+                        {translate("widgets.alarm.lap")} {i + 1}
+                      </span>
+                      <span>{formatStopwatch(lapMs)}</span>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            ) : null}
           </div>
         ) : null}
 

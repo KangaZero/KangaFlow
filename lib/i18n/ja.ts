@@ -283,6 +283,20 @@ const ja = {
     settings: "設定",
     timeline: "タイムライン",
   },
+  notifications: {
+    clearAll: "すべて消去",
+    dismiss: "閉じる",
+    empty: "通知はありません",
+    reminder: "リマインダー",
+    remindIn5: "5分",
+    remindIn10: "10分",
+    remindIn15: "15分",
+    remindIn30: "30分",
+    remindMe: "リマインド",
+    stopwatchStopped: "ストップウォッチを{time}で停止しました",
+    timerDone: "タイマー終了",
+    title: "通知",
+  },
   settings: {
     actions: {
       cycleTheme: "テーマ切り替え",
@@ -378,6 +392,14 @@ const ja = {
   },
   widgets: {
     alarm: {
+      add: "アラームを追加",
+      cancel: "キャンセル",
+      defaultLabel: "アラーム",
+      delete: "アラームを削除",
+      edit: "編集",
+      labelPlaceholder: "ラベル（任意）",
+      lap: "ラップ",
+      save: "保存",
       sublabel: "アラームの設定と管理",
       title: "アラーム",
     },

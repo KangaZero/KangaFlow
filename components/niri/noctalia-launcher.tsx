@@ -23,6 +23,7 @@ import type { AppId } from "@/components/niri/types"
 import { LOCALES, type Locale } from "@/lib/i18n"
 import { THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
+import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -449,7 +450,10 @@ export function NoctaliaLauncher(props: {
   return (
     <AnimatePresence>
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[18vh]">
+        <div
+          className="fixed inset-0 flex items-start justify-center pt-[18vh]"
+          style={{ zIndex: Z_LAYERS.panel }}
+        >
           <button
             aria-label={translate("environment.launcher.close")}
             className="fixed inset-0 cursor-default bg-background/40"

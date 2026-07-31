@@ -60,6 +60,7 @@ import { Slider } from "@/components/ui/slider"
 import type { TranslationKey } from "@/lib/i18n"
 import { THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
+import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -371,7 +372,10 @@ export function NoctaliaSettings(props: {
   return (
     <AnimatePresence>
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+          className="fixed inset-0 flex items-center justify-center p-4"
+          style={{ zIndex: Z_LAYERS.panel }}
+        >
           {/* Overlay — click anywhere outside the panel to dismiss. */}
           <button
             aria-label={translate("environment.settings.close")}

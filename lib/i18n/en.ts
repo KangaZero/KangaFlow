@@ -283,6 +283,20 @@ const en = {
     settings: "Settings",
     timeline: "Timeline",
   },
+  notifications: {
+    clearAll: "Clear all",
+    dismiss: "Dismiss",
+    empty: "No notifications",
+    reminder: "Reminder",
+    remindIn5: "5 min",
+    remindIn10: "10 min",
+    remindIn15: "15 min",
+    remindIn30: "30 min",
+    remindMe: "Remind me",
+    stopwatchStopped: "Stopwatch stopped at {time}",
+    timerDone: "Timer finished",
+    title: "Notifications",
+  },
   settings: {
     actions: {
       cycleTheme: "Cycle theme",
@@ -385,6 +399,14 @@ const en = {
   },
   widgets: {
     alarm: {
+      add: "Add alarm",
+      cancel: "Cancel",
+      defaultLabel: "Alarm",
+      delete: "Delete alarm",
+      edit: "Edit",
+      labelPlaceholder: "Label (optional)",
+      lap: "Lap",
+      save: "Save",
       sublabel: "Set and manage alarms",
       title: "Alarm",
     },
