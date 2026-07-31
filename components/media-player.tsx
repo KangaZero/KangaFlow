@@ -8,21 +8,14 @@ import {
   Play,
   SkipBack,
   SkipForward,
-  X,
 } from "lucide-react"
-import {
-  AnimatePresence,
-  motion,
-  useDragControls,
-  useReducedMotion,
-} from "motion/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { GLASS_SURFACE } from "@/components/niri/glass"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { cn } from "@/lib/utils"
+import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -73,8 +66,7 @@ export function formatTime(totalSeconds: number): string {
 // Springy press/hover feedback shared by the transport buttons.
 const TAP_SPRING = { damping: 18, stiffness: 500, type: "spring" } as const
 
-// Animated equalizer bars shown while playing — purely decorative "now playing"
-// affordance. Motion loops each bar's height on its own offset.
+// Animated equalizer bars shown while playing — purely decorative "now playing" affordance.
 function EqualizerBars() {
   return (
     <div aria-hidden className="flex items-end gap-0.5">
@@ -98,20 +90,15 @@ function EqualizerBars() {
 
 export function MediaPlayer() {
   const { translate } = useLocale()
-  const { isMediaPlayerOpen, setIsMediaPlayerOpen, envSettings } =
-    useGlobalStates()
+  const { isMediaPlayerOpen, setIsMediaPlayerOpen } = useGlobalStates()
 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTimeSec, setCurrentTimeSec] = useState(0)
-  // Actual duration from audio metadata; overrides the static Track.duration when loaded.
   const [audioDuration, setAudioDuration] = useState<number | null>(null)
-
   const [mounted, setMounted] = useState(false)
-  const constraintsRef = useRef<HTMLDivElement>(null)
-  const dragControls = useDragControls()
+
   const audioRef = useRef<HTMLAudioElement>(null)
-  // Ref so the source-change effect can read play-intent without being in its deps.
   const isPlayingRef = useRef(false)
   const track = PLAYLIST[currentIndex] ?? PLAYLIST[0]
   const shouldReduceMotion = useReducedMotion()
@@ -120,11 +107,10 @@ export function MediaPlayer() {
     isPlayingRef.current = isPlaying
   }, [isPlaying])
 
-  // Mirror current track in the browser tab title while playing; restore on pause/unmount.
+  // Scrolling browser-tab title while playing; static when reducedMotion is on.
   useEffect(() => {
     if (!isPlaying) return
     const prev = document.title
-    // Two trailing spaces create a visible gap between loop repetitions.
     const playTitle = `♪ ${track.title} · ${track.artist}  `
     if (shouldReduceMotion) {
       document.title = playTitle.trim()
@@ -148,7 +134,6 @@ export function MediaPlayer() {
   const hasAudio = Boolean(track.src)
   const duration = audioDuration ?? track.duration
 
-  // Wire up audio element events. Runs once after the portal renders (mounted = true).
   // biome-ignore lint/correctness/useExhaustiveDependencies: mounted gates the portal render; setters are stable
   useEffect(() => {
     const audio = audioRef.current
@@ -175,8 +160,6 @@ export function MediaPlayer() {
     }
   }, [mounted])
 
-  // Load the new source when the track changes or after the portal first renders.
-  // isPlaying is read via ref to avoid retriggering load() on every play/pause toggle.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mounted + track.src cover all source changes; isPlayingRef/setters are stable
   useEffect(() => {
     const audio = audioRef.current
@@ -188,7 +171,6 @@ export function MediaPlayer() {
     if (isPlayingRef.current) void audio.play().catch(() => setIsPlaying(false))
   }, [mounted, currentIndex, track.src])
 
-  // Sync play/pause — never calls load(), so it's safe to run on every toggle.
   useEffect(() => {
     const audio = audioRef.current
     if (!audio || !hasAudio) return
@@ -199,31 +181,27 @@ export function MediaPlayer() {
     }
   }, [isPlaying, hasAudio])
 
-  // Fallback simulated tick — only active when there is no real audio src.
   useEffect(() => {
     if (hasAudio || !isPlaying) return
     const id = window.setInterval(() => setCurrentTimeSec((t) => t + 1), 1000)
     return () => window.clearInterval(id)
   }, [hasAudio, isPlaying])
 
-  // Auto-advance fallback (simulated mode only).
   useEffect(() => {
     if (hasAudio || !isPlaying || currentTimeSec < duration) return
     setCurrentIndex((i) => (i + 1) % PLAYLIST.length)
     setCurrentTimeSec(0)
   }, [hasAudio, isPlaying, currentTimeSec, duration])
 
-  function goToIndex(index: number) {
+  const goToIndex = (index: number): void => {
     const count = PLAYLIST.length
     setCurrentIndex(((index % count) + count) % count)
     setCurrentTimeSec(0)
   }
 
-  function goToNext() {
-    goToIndex(currentIndex + 1)
-  }
+  const goToNext = (): void => goToIndex(currentIndex + 1)
 
-  function goToPrevious() {
+  const goToPrevious = (): void => {
     if (currentTimeSec > 3) {
       setCurrentTimeSec(0)
       const audio = audioRef.current
@@ -233,214 +211,180 @@ export function MediaPlayer() {
     goToIndex(currentIndex - 1)
   }
 
-  if (!mounted) return null
+  return (
+    <>
+      {/* Audio always in DOM after mount so effects can set src before UI opens. */}
+      {mounted
+        ? createPortal(
+            // biome-ignore lint/a11y/useMediaCaption: music player — no caption track applicable
+            <audio className="hidden" ref={audioRef} />,
+            document.body
+          )
+        : null}
 
-  return createPortal(
-    <div
-      className="pointer-events-none fixed inset-0 z-50"
-      ref={constraintsRef}
-    >
-      {/* Always in DOM so effects can initialise src before the player UI opens. */}
-      {/* biome-ignore lint/a11y/useMediaCaption: music player — no caption track applicable */}
-      <audio className="hidden" ref={audioRef} />
-      <AnimatePresence>
-        {isMediaPlayerOpen ? (
-          <motion.div
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className={cn(
-              "pointer-events-auto absolute right-4 bottom-4 w-80 overflow-hidden rounded-xl text-card-foreground",
-              GLASS_SURFACE[envSettings.glass]
-            )}
-            drag
-            dragConstraints={constraintsRef}
-            dragControls={dragControls}
-            dragElastic={0.08}
-            dragListener={false}
-            dragMomentum={false}
-            exit={{ opacity: 0, scale: 0.95, y: 24 }}
-            initial={{ opacity: 0, scale: 0.95, y: 24 }}
-            transition={{ damping: 26, stiffness: 320, type: "spring" }}
-          >
-            {/* Drag handle / title bar */}
-            <div
-              className="flex cursor-grab items-center gap-2 border-border border-b bg-muted/40 px-3 py-2"
-              onPointerDown={(event) => dragControls.start(event)}
-            >
-              <GripVertical
-                aria-hidden
-                className="size-4 text-muted-foreground"
-              />
-              <span className="flex-1 font-medium text-muted-foreground text-xs">
-                {translate("mediaPlayer.nowPlaying")}
-              </span>
-              <Button
-                aria-label={translate("mediaPlayer.close")}
-                className="size-6"
-                onClick={() => setIsMediaPlayerOpen(false)}
-                size="icon"
-                variant="ghost"
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-3 p-4">
-              {/* Track meta */}
-              <div className="flex items-center gap-3">
-                <div className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary/10 text-primary">
-                  {track.coverSrc ? (
-                    // biome-ignore lint/performance/noImgElement: static export — next/image optimization unavailable
-                    <img
-                      alt={`${track.title} cover`}
-                      className="size-full object-cover"
-                      src={track.coverSrc}
-                    />
-                  ) : isPlaying ? (
-                    <EqualizerBars />
-                  ) : (
-                    <Music className="size-5" />
-                  )}
-                  {isPlaying && track.coverSrc ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      <EqualizerBars />
-                    </div>
-                  ) : null}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-sm">
-                    {track.title}
-                  </p>
-                  <p className="truncate text-muted-foreground text-xs">
-                    {track.artist}
-                    {track.album ? ` · ${track.album}` : ""}
-                  </p>
-                </div>
-              </div>
-
-              {/* Scrubber */}
-              <div className="flex flex-col gap-1.5">
-                <Slider
-                  aria-label={translate("mediaPlayer.seek")}
-                  max={duration || 1}
-                  onValueChange={(value) => {
-                    const t = value[0] ?? 0
-                    setCurrentTimeSec(t)
-                    if (audioRef.current) audioRef.current.currentTime = t
-                  }}
-                  step={1}
-                  value={[Math.min(currentTimeSec, duration || 1)]}
+      <DraggableWindow
+        defaultHeight={224}
+        defaultWidth={320}
+        icon={<GripVertical aria-hidden className="size-3.5" />}
+        isOpen={isMediaPlayerOpen}
+        minHeight={180}
+        minWidth={280}
+        onClose={() => setIsMediaPlayerOpen(false)}
+        positionClassName="bottom-4 right-4"
+        storageKey="media-player"
+        title={translate("mediaPlayer.nowPlaying")}
+      >
+        <div className="flex flex-col gap-3 p-4">
+          {/* Track meta */}
+          <div className="flex items-center gap-3">
+            <div className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary/10 text-primary">
+              {track.coverSrc ? (
+                // biome-ignore lint/performance/noImgElement: static export — next/image optimization unavailable
+                <img
+                  alt={`${track.title} cover`}
+                  className="size-full object-cover"
+                  src={track.coverSrc}
                 />
-                <div className="flex justify-between font-mono text-[10px] text-muted-foreground tabular-nums">
-                  <span>{formatTime(currentTimeSec)}</span>
-                  <span>{formatTime(duration)}</span>
+              ) : isPlaying ? (
+                <EqualizerBars />
+              ) : (
+                <Music className="size-5" />
+              )}
+              {isPlaying && track.coverSrc ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                  <EqualizerBars />
                 </div>
-              </div>
-
-              {/* Transport controls */}
-              <div className="flex items-center justify-center gap-2">
-                <motion.div
-                  transition={TAP_SPRING}
-                  whileHover={{ scale: 1.15, x: -2 }}
-                  whileTap={{ scale: 0.85 }}
-                >
-                  <AnimatedTooltip
-                    label={
-                      (
-                        PLAYLIST[
-                          (currentIndex - 1 + PLAYLIST.length) % PLAYLIST.length
-                        ] as Track
-                      ).title
-                    }
-                    side="top"
-                  >
-                    <Button
-                      aria-label={translate("mediaPlayer.previous")}
-                      onClick={goToPrevious}
-                      size="icon"
-                      variant="ghost"
-                    >
-                      <SkipBack className="size-5" />
-                    </Button>
-                  </AnimatedTooltip>
-                </motion.div>
-                <motion.div
-                  transition={TAP_SPRING}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.85 }}
-                >
-                  <Button
-                    aria-label={translate(
-                      isPlaying ? "mediaPlayer.pause" : "mediaPlayer.play"
-                    )}
-                    className="relative size-11 rounded-full"
-                    onClick={() => setIsPlaying((playing) => !playing)}
-                    size="icon"
-                  >
-                    {/* Breathing sonar: 3 rings expand+fade with staggered delays */}
-                    {isPlaying
-                      ? [0.5].map((delay) => (
-                          <motion.span
-                            animate={{
-                              opacity: [0.55, 0, 0.2],
-                              scale: [1, 1.8, 1],
-                            }}
-                            aria-hidden
-                            className="absolute inset-0 rounded-full border border-primary-foreground/40"
-                            key={delay}
-                            transition={{
-                              delay,
-                              duration: 4,
-                              ease: "easeOut",
-                              repeat: Number.POSITIVE_INFINITY,
-                            }}
-                          />
-                        ))
-                      : null}
-                    <AnimatePresence initial={false} mode="wait">
-                      <motion.span
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        initial={{ opacity: 0, scale: 0.6 }}
-                        key={isPlaying ? "pause" : "play"}
-                        transition={{ duration: 0.12 }}
-                      >
-                        {isPlaying ? (
-                          <Pause className="size-5" />
-                        ) : (
-                          <Play className="size-5" />
-                        )}
-                      </motion.span>
-                    </AnimatePresence>
-                  </Button>
-                </motion.div>
-                <motion.div
-                  transition={TAP_SPRING}
-                  whileHover={{ scale: 1.15, x: 2 }}
-                  whileTap={{ scale: 0.85 }}
-                >
-                  <AnimatedTooltip
-                    label={
-                      PLAYLIST[(currentIndex + 1) % PLAYLIST.length]?.title ??
-                      PLAYLIST[0].title
-                    }
-                    side="top"
-                  >
-                    <Button
-                      aria-label={translate("mediaPlayer.next")}
-                      onClick={goToNext}
-                      size="icon"
-                      variant="ghost"
-                    >
-                      <SkipForward className="size-5" />
-                    </Button>
-                  </AnimatedTooltip>
-                </motion.div>
-              </div>
+              ) : null}
             </div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-    </div>,
-    document.body
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold text-sm">{track.title}</p>
+              <p className="truncate text-muted-foreground text-xs">
+                {track.artist}
+                {track.album ? ` · ${track.album}` : ""}
+              </p>
+            </div>
+          </div>
+
+          {/* Scrubber */}
+          <div className="flex flex-col gap-1.5">
+            <Slider
+              aria-label={translate("mediaPlayer.seek")}
+              max={duration || 1}
+              onValueChange={(value) => {
+                const t = value[0] ?? 0
+                setCurrentTimeSec(t)
+                if (audioRef.current) audioRef.current.currentTime = t
+              }}
+              step={1}
+              value={[Math.min(currentTimeSec, duration || 1)]}
+            />
+            <div className="flex justify-between font-mono text-[10px] text-muted-foreground tabular-nums">
+              <span>{formatTime(currentTimeSec)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+
+          {/* Transport controls */}
+          <div className="flex items-center justify-center gap-2">
+            <motion.div
+              transition={TAP_SPRING}
+              whileHover={{ scale: 1.15, x: -2 }}
+              whileTap={{ scale: 0.85 }}
+            >
+              <AnimatedTooltip
+                label={
+                  (
+                    PLAYLIST[
+                      (currentIndex - 1 + PLAYLIST.length) % PLAYLIST.length
+                    ] as Track
+                  ).title
+                }
+                side="top"
+              >
+                <Button
+                  aria-label={translate("mediaPlayer.previous")}
+                  onClick={goToPrevious}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <SkipBack className="size-5" />
+                </Button>
+              </AnimatedTooltip>
+            </motion.div>
+
+            <motion.div
+              transition={TAP_SPRING}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.85 }}
+            >
+              <Button
+                aria-label={translate(
+                  isPlaying ? "mediaPlayer.pause" : "mediaPlayer.play"
+                )}
+                className="relative size-11 rounded-full"
+                onClick={() => setIsPlaying((p) => !p)}
+                size="icon"
+              >
+                {/* Breathing sonar: 3 rings expand+fade with staggered delays */}
+                {isPlaying
+                  ? [0, 0.5, 1.0].map((delay) => (
+                      <motion.span
+                        animate={{ opacity: [0.55, 0], scale: [1, 1.8] }}
+                        aria-hidden
+                        className="absolute inset-0 rounded-full border border-primary-foreground/40"
+                        key={delay}
+                        transition={{
+                          delay,
+                          duration: 1.5,
+                          ease: "easeOut",
+                          repeat: Number.POSITIVE_INFINITY,
+                        }}
+                      />
+                    ))
+                  : null}
+                <AnimatePresence initial={false} mode="wait">
+                  <motion.span
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.6 }}
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    key={isPlaying ? "pause" : "play"}
+                    transition={{ duration: 0.12 }}
+                  >
+                    {isPlaying ? (
+                      <Pause className="size-5" />
+                    ) : (
+                      <Play className="size-5" />
+                    )}
+                  </motion.span>
+                </AnimatePresence>
+              </Button>
+            </motion.div>
+
+            <motion.div
+              transition={TAP_SPRING}
+              whileHover={{ scale: 1.15, x: 2 }}
+              whileTap={{ scale: 0.85 }}
+            >
+              <AnimatedTooltip
+                label={
+                  PLAYLIST[(currentIndex + 1) % PLAYLIST.length]?.title ??
+                  PLAYLIST[0].title
+                }
+                side="top"
+              >
+                <Button
+                  aria-label={translate("mediaPlayer.next")}
+                  onClick={goToNext}
+                  size="icon"
+                  variant="ghost"
+                >
+                  <SkipForward className="size-5" />
+                </Button>
+              </AnimatedTooltip>
+            </motion.div>
+          </div>
+        </div>
+      </DraggableWindow>
+    </>
   )
 }

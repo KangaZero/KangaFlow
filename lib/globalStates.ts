@@ -24,6 +24,13 @@ export type GlobalStatesContextValue = {
   // Media-player floating panel open state (ephemeral — not persisted).
   isMediaPlayerOpen: boolean
   setIsMediaPlayerOpen: (state: boolean) => void
+  // Widget floating panels — notes, alarm, calendar (ephemeral).
+  isNotesOpen: boolean
+  setIsNotesOpen: (state: boolean) => void
+  isAlarmOpen: boolean
+  setIsAlarmOpen: (state: boolean) => void
+  isCalendarOpen: boolean
+  setIsCalendarOpen: (state: boolean) => void
   // Terminal dialog open state + the file to open in `nvim` (null = plain shell).
   // Ephemeral; only reachable under the terminal theme.
   isTerminalOpen: boolean

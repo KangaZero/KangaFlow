@@ -418,7 +418,7 @@ export function NoctaliaLauncher(props: {
             <div className="border-border/60 border-b p-3">
               <input
                 aria-label={translate("environment.launcher.search")}
-                className="w-full bg-transparent px-2 py-1.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+                className="wwfull bg-transparent px-2 py-1.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
                 onChange={handleQueryChange}
                 onKeyDown={handleKeyDown}
                 placeholder={translate(
@@ -431,7 +431,7 @@ export function NoctaliaLauncher(props: {
             </div>
 
             <div
-              className="max-h-[28rem] overflow-y-auto p-2"
+              className="no-scrollbar! max-h-112 overflow-y-auto p-2"
               ref={scrollContainerRef}
             >
               {showEmpty ? (
