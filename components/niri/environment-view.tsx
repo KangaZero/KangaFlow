@@ -266,9 +266,9 @@ export function EnvironmentView() {
   // offsets (offsetTop) that the tiles' FLIP transforms don't perturb.
   // biome-ignore lint/correctness/useExhaustiveDependencies: state.active is an intentional trigger (refs are stable) so the scroll re-runs on focus change.
   useEffect(() => {
-    if (!state.overview) return
     const container = overviewRef.current
     const tile = activeTileRef.current
+    if (!state.overview) return
     if (!(container && tile)) return
     container.scrollTo({
       behavior: "smooth",
@@ -363,6 +363,29 @@ export function EnvironmentView() {
     id: w.id,
     occupied: w.columns.length > 0,
   }))
+
+  // On any focus change (keyboard nav or click), mirror what a pointer-down on a
+  // tiled window does — raise the tiled layer above the floats and register the
+  // niri close — then move DOM focus onto the window. Skipped when the focus is a
+  // floated column (its DraggableWindow owns its own z / focus).
+  useEffect(() => {
+    const focusedColumn = columns[focusedCol]
+    if (!(focusedWin && focusedColumn) || focusedColumn.floating) return
+    setStripZ(bringToFront(() => dispatch({ type: "close" })))
+    const el = document.querySelector<HTMLElement>(
+      `[data-win-id="${focusedWin.id}"]`
+    )
+    if (!el) return
+    // Route focus to the app's real input surface when it has one: xterm's
+    // hidden helper textarea (what Terminal.focus() targets) or CodeMirror's
+    // editable — focusing the wrapper button alone wouldn't send keystrokes
+    // into them. Plain windows just focus the wrapper. preventScroll: the strip
+    // does its own transform-based centering, so keep the browser out of it.
+    const inner = el.querySelector<HTMLElement>(
+      ".xterm-helper-textarea, .cm-content"
+    )
+    ;(inner ?? el).focus({ preventScroll: true })
+  }, [focusedWin, columns, focusedCol, bringToFront])
 
   // Bar placement: top/bottom lay out horizontally above/below the strip;
   // left/right lay out vertically beside it.
@@ -595,6 +618,7 @@ export function EnvironmentView() {
                                 : "bg-card",
                               isFocused ? "border-primary" : "border-border"
                             )}
+                            data-win-id={win.id}
                             // Close animation: shrink to nothing at the centre
                             // (opacity-only when the user prefers reduced motion).
                             exit={
