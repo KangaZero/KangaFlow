@@ -7,7 +7,6 @@ import {
   type RefObject,
   useCallback,
   useImperativeHandle,
-  useRef,
 } from "react"
 
 import { cn } from "@/lib/utils"
@@ -35,35 +34,26 @@ const BellIcon = ({
   ...props
 }: BellIconProps & { ref?: RefObject<BellIconHandle | null> }) => {
   const controls = useAnimation()
-  const isControlledRef = useRef(false)
 
-  useImperativeHandle(ref, () => {
-    isControlledRef.current = true
-
-    return {
-      startAnimation: () => controls.start("animate"),
-      stopAnimation: () => controls.start("normal"),
-    }
-  })
+  // Imperative control (e.g. the alarm ringing the bell) and hover both drive
+  // the same animation; hover always plays it and still forwards the event.
+  useImperativeHandle(ref, () => ({
+    startAnimation: () => controls.start("animate"),
+    stopAnimation: () => controls.start("normal"),
+  }))
 
   const handleMouseEnter = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (isControlledRef.current) {
-        onMouseEnter?.(e)
-      } else {
-        controls.start("animate")
-      }
+      controls.start("animate")
+      onMouseEnter?.(e)
     },
     [controls, onMouseEnter]
   )
 
   const handleMouseLeave = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      if (isControlledRef.current) {
-        onMouseLeave?.(e)
-      } else {
-        controls.start("normal")
-      }
+      controls.start("normal")
+      onMouseLeave?.(e)
     },
     [controls, onMouseLeave]
   )
