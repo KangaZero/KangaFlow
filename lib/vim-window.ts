@@ -58,31 +58,27 @@ export function vimWindowAction(
     return { action: { edge: "right", type: "snap" }, pendingG: false }
   }
 
-  // Move (Shift + h/j/k/l — Shift makes event.key uppercase).
+  // Move (Shift + h/j/k/l, or Shift + arrow keys for accessibility — Shift makes
+  // letters uppercase but leaves arrow key names unchanged).
   if (shift && !alt) {
-    switch (key.toLowerCase()) {
-      case "h":
-        return {
-          action: { dx: -MOVE_STEP, dy: 0, type: "move" },
-          pendingG: false,
-        }
-      case "l":
-        return {
-          action: { dx: MOVE_STEP, dy: 0, type: "move" },
-          pendingG: false,
-        }
-      case "k":
-        return {
-          action: { dx: 0, dy: -MOVE_STEP, type: "move" },
-          pendingG: false,
-        }
-      case "j":
-        return {
-          action: { dx: 0, dy: MOVE_STEP, type: "move" },
-          pendingG: false,
-        }
-      default:
-        break
+    const lower = key.toLowerCase()
+    if (lower === "h" || key === "ArrowLeft") {
+      return {
+        action: { dx: -MOVE_STEP, dy: 0, type: "move" },
+        pendingG: false,
+      }
+    }
+    if (lower === "l" || key === "ArrowRight") {
+      return { action: { dx: MOVE_STEP, dy: 0, type: "move" }, pendingG: false }
+    }
+    if (lower === "k" || key === "ArrowUp") {
+      return {
+        action: { dx: 0, dy: -MOVE_STEP, type: "move" },
+        pendingG: false,
+      }
+    }
+    if (lower === "j" || key === "ArrowDown") {
+      return { action: { dx: 0, dy: MOVE_STEP, type: "move" }, pendingG: false }
     }
   }
 

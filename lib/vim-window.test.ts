@@ -45,6 +45,17 @@ describe("vimWindowAction()", () => {
     expect(vimWindowAction("h", "KeyH", mods(), false).action).toBeNull()
   })
 
+  it("moves with Shift+arrow keys too (accessibility)", () => {
+    expect(
+      vimWindowAction("ArrowLeft", "ArrowLeft", mods({ shift: true }), false)
+        .action
+    ).toEqual({ dx: -MOVE_STEP, dy: 0, type: "move" })
+    expect(
+      vimWindowAction("ArrowDown", "ArrowDown", mods({ shift: true }), false)
+        .action
+    ).toEqual({ dx: 0, dy: MOVE_STEP, type: "move" })
+  })
+
   it("snaps: gg → top (two-key), G → bottom, 0 → left, $ → right", () => {
     const first = vimWindowAction("g", "KeyG", mods(), false)
     expect(first.action).toBeNull()
