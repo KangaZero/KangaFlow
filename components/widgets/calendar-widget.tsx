@@ -100,10 +100,18 @@ export function CalendarWidget(): React.JSX.Element {
       storageKey="calendar-widget"
       title="Calendar"
     >
-      <div className="flex flex-col gap-0">
-        {/* Month picker */}
+      <div className="flex h-full flex-col gap-0">
+        {/* Month picker — fill the window width. Overriding classNames.root
+            drops the base `w-fit`; a larger --cell-size lets the flex grid
+            expand to the full 340px instead of collapsing to ~192px. */}
         <Calendar
-          className="rounded-none border-0"
+          className="w-full rounded-none border-0 p-2 [--cell-size:--spacing(9)]"
+          classNames={{
+            month: "flex w-full flex-col gap-3",
+            month_grid: "w-full border-collapse",
+            months: "w-full",
+            root: "w-full",
+          }}
           mode="single"
           modifiers={hasEventModifier}
           modifiersClassNames={{
