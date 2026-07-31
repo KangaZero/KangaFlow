@@ -373,6 +373,20 @@ const en = {
     loading: "Fetching weather…",
     unavailable: "Weather unavailable",
   },
+  widgets: {
+    alarm: {
+      sublabel: "Set and manage alarms",
+      title: "Alarm",
+    },
+    calendar: {
+      sublabel: "Calendar and events",
+      title: "Calendar",
+    },
+    notes: {
+      sublabel: "Quick sticky notes",
+      title: "Notes",
+    },
+  },
 } as const
 
 export default en

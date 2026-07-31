@@ -366,6 +366,20 @@ const ja = {
     loading: "天気を取得中…",
     unavailable: "天気を取得できません",
   },
+  widgets: {
+    alarm: {
+      sublabel: "アラームの設定と管理",
+      title: "アラーム",
+    },
+    calendar: {
+      sublabel: "カレンダーとイベント",
+      title: "カレンダー",
+    },
+    notes: {
+      sublabel: "クイックメモ",
+      title: "メモ",
+    },
+  },
 } as const
 
 export default ja

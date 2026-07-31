@@ -9,6 +9,9 @@ import { ShortcutDispatcher } from "@/components/shortcut-dispatcher"
 import { SiteHeader } from "@/components/site-header"
 import { TerminalDialog } from "@/components/terminal-dialog"
 import { ThemeBackground } from "@/components/theme-background"
+import { AlarmWidget } from "@/components/widgets/alarm-widget"
+import { CalendarWidget } from "@/components/widgets/calendar-widget"
+import { NotesWidget } from "@/components/widgets/notes-widget"
 import { isLocale, LOCALES } from "@/lib/i18n"
 import { readSourceFiles } from "@/lib/terminal/source"
 import { AchievementsProvider } from "@/providers/achievements-provider"
@@ -50,6 +53,9 @@ export default async function LangLayout({
             <CommandMenu />
             <SettingsDialog />
             <MediaPlayer />
+            <NotesWidget />
+            <AlarmWidget />
+            <CalendarWidget />
             <TerminalDialog files={sourceFiles} />
             <ShortcutDispatcher />
             <HintOverlay />

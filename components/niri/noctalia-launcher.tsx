@@ -2,12 +2,15 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import {
+  AlarmClock,
+  CalendarDays,
   FileCode2,
   Globe,
   Image as ImageIcon,
   Languages,
   type LucideIcon,
   Music,
+  NotebookPen,
   Pin,
   Settings,
   SquareTerminal,
@@ -84,8 +87,18 @@ export function NoctaliaLauncher(props: {
     onOpenWallpaper,
   } = props
   const { locale, setLocale, translate } = useLocale()
-  const { theme, toggleTheme, isMediaPlayerOpen, setIsMediaPlayerOpen } =
-    useGlobalStates()
+  const {
+    theme,
+    toggleTheme,
+    isMediaPlayerOpen,
+    setIsMediaPlayerOpen,
+    isNotesOpen,
+    setIsNotesOpen,
+    isAlarmOpen,
+    setIsAlarmOpen,
+    isCalendarOpen,
+    setIsCalendarOpen,
+  } = useGlobalStates()
 
   const [query, setQuery] = useState("")
   const [highlight, setHighlight] = useState(0)
@@ -174,14 +187,53 @@ export function NoctaliaLauncher(props: {
         },
         sublabel: translate("settings.actions.openMediaPlayer"),
       },
+      {
+        active: isNotesOpen,
+        icon: NotebookPen,
+        id: "notes-widget",
+        label: translate("widgets.notes.title"),
+        onSelect: () => {
+          setIsNotesOpen(!isNotesOpen)
+          onClose()
+        },
+        sublabel: translate("widgets.notes.sublabel"),
+      },
+      {
+        active: isAlarmOpen,
+        icon: AlarmClock,
+        id: "alarm-widget",
+        label: translate("widgets.alarm.title"),
+        onSelect: () => {
+          setIsAlarmOpen(!isAlarmOpen)
+          onClose()
+        },
+        sublabel: translate("widgets.alarm.sublabel"),
+      },
+      {
+        active: isCalendarOpen,
+        icon: CalendarDays,
+        id: "calendar-widget",
+        label: translate("widgets.calendar.title"),
+        onSelect: () => {
+          setIsCalendarOpen(!isCalendarOpen)
+          onClose()
+        },
+        sublabel: translate("widgets.calendar.sublabel"),
+      },
     ],
     [
       theme,
       locale,
       isMediaPlayerOpen,
+      isNotesOpen,
+      isAlarmOpen,
+      isCalendarOpen,
       toggleTheme,
       setLocale,
       setIsMediaPlayerOpen,
+      setIsNotesOpen,
+      setIsAlarmOpen,
+      setIsCalendarOpen,
       onClose,
       onOpenSettings,
       onOpenWallpaper,
