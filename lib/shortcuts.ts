@@ -165,7 +165,14 @@ export function matchesShortcut(
   shortcut: Shortcut
 ): boolean {
   if (!shortcut.character) return false
-  if (event.key.toLowerCase() !== shortcut.character.toLowerCase()) return false
+  const char = shortcut.character.toLowerCase()
+  const keyMatches =
+    event.key.toLowerCase() === char ||
+    // Digit shortcuts also match the physical number-row key, so layouts that
+    // shift the digit row (AZERTY, etc.) still trigger them (event.key would be
+    // "&"/"é"/… there). Mirrors the niri workspace-key code fallback.
+    (/^\d$/.test(char) && event.code === `Digit${char}`)
+  if (!keyMatches) return false
 
   const metaOrCtrl = IS_MAC ? event.metaKey : event.ctrlKey
   const otherModifier = IS_MAC ? event.ctrlKey : event.metaKey

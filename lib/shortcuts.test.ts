@@ -94,6 +94,30 @@ describe("matchesShortcut", () => {
     ).toBe(false)
   })
 
+  it("matches a digit shortcut by physical code when the layout shifts the row", () => {
+    const goHome: Shortcut = {
+      action: "goHome",
+      character: "1",
+      hasAltOrOptionKey: false,
+      hasMetaOrCtrlKey: false,
+      hasShiftKey: false,
+    }
+    // AZERTY-style: the number-row key yields "&" unshifted, but code is Digit1.
+    expect(
+      matchesShortcut(
+        new KeyboardEvent("keydown", { code: "Digit1", key: "&" }),
+        goHome
+      )
+    ).toBe(true)
+    // Plain US "1" still matches via the character.
+    expect(
+      matchesShortcut(
+        new KeyboardEvent("keydown", { code: "Digit1", key: "1" }),
+        goHome
+      )
+    ).toBe(true)
+  })
+
   it("never matches a disabled (empty-character) binding", () => {
     const e = new KeyboardEvent("keydown", { key: "" })
     expect(matchesShortcut(e, { ...bareD, character: "" })).toBe(false)
