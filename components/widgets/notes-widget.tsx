@@ -1,13 +1,14 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { Pin, Plus, Trash2 } from "lucide-react"
+import { Pin, Plus, Search, Trash2 } from "lucide-react"
 import { AnimatePresence, LayoutGroup, motion } from "motion/react"
 import { useEffect, useState } from "react"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { NoteEditorWindow } from "@/components/widgets/note-editor-window"
 import {
   createNote,
+  formatNoteDate,
   loadNotes,
   loadOpenIds,
   NOTE_COLORS,
@@ -33,6 +34,7 @@ export function NotesWidget(): React.JSX.Element {
   const wd = envSettings.widgetDefaults.notes
   const [notes, setNotes] = useState<Note[]>(loadNotes)
   const [openIds, setOpenIds] = useState<string[]>([])
+  const [query, setQuery] = useState("")
 
   // Restore open editor windows after mount, dropping ids with no live note.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only restore reads notes once
@@ -65,7 +67,7 @@ export function NotesWidget(): React.JSX.Element {
     )
 
   const addNote = (): void => {
-    const note = createNote()
+    const note = createNote(notes.map((n) => n.title))
     persist([note, ...notes])
     openNote(note.id)
   }
@@ -81,6 +83,17 @@ export function NotesWidget(): React.JSX.Element {
   const pinned = notes.filter((n) => n.pinned)
   const unpinned = notes.filter((n) => !n.pinned)
   const ordered = [...pinned, ...unpinned]
+
+  // Filter by title or tag (case-insensitive).
+  const q = query.trim().toLowerCase()
+  const visible =
+    q === ""
+      ? ordered
+      : ordered.filter(
+          (n) =>
+            n.title.toLowerCase().includes(q) ||
+            n.tags.some((t) => t.toLowerCase().includes(q))
+        )
 
   const renderCard = (note: Note): React.JSX.Element => {
     const preview = htmlToPlainText(note.html)
@@ -157,6 +170,10 @@ export function NotesWidget(): React.JSX.Element {
             ))}
           </div>
         ) : null}
+        <p className="mt-1.5 text-[10px] text-muted-foreground/80">
+          Created {formatNoteDate(note.createdOn)} · Edited{" "}
+          {formatNoteDate(note.updatedOn)}
+        </p>
       </motion.div>
     )
   }
@@ -177,7 +194,7 @@ export function NotesWidget(): React.JSX.Element {
         title="Notes"
       >
         <div className="flex h-full flex-col">
-          <div className="border-border border-b p-2">
+          <div className="flex flex-col gap-2 border-border border-b p-2">
             <motion.button
               className="flex w-full items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground text-sm shadow-sm"
               onClick={addNote}
@@ -189,12 +206,23 @@ export function NotesWidget(): React.JSX.Element {
               <Plus className="size-4" />
               New note
             </motion.button>
+            <div className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2">
+              <Search className="size-3.5 shrink-0 text-muted-foreground" />
+              <input
+                aria-label="Search notes"
+                className="min-w-0 flex-1 bg-transparent py-1.5 text-sm outline-none placeholder:text-muted-foreground"
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search title or tag…"
+                type="search"
+                value={query}
+              />
+            </div>
           </div>
 
           <div className="min-h-0 flex-1 overflow-y-auto p-2">
             <LayoutGroup>
               <AnimatePresence initial={false}>
-                {ordered.map(renderCard)}
+                {visible.map(renderCard)}
               </AnimatePresence>
               {notes.length === 0 ? (
                 <motion.p
@@ -203,6 +231,14 @@ export function NotesWidget(): React.JSX.Element {
                   initial={{ opacity: 0 }}
                 >
                   No notes yet
+                </motion.p>
+              ) : visible.length === 0 ? (
+                <motion.p
+                  animate={{ opacity: 1 }}
+                  className="py-8 text-center text-muted-foreground text-sm"
+                  initial={{ opacity: 0 }}
+                >
+                  No matches
                 </motion.p>
               ) : null}
             </LayoutGroup>

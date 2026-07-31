@@ -1,7 +1,31 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { describe, expect, it } from "vitest"
 
-import { normalizeNote } from "@/lib/notes"
+import { normalizeNote, uniqueUntitledTitle } from "@/lib/notes"
+
+describe("uniqueUntitledTitle", () => {
+  it("uses the bare base when free", () => {
+    expect(uniqueUntitledTitle([])).toBe("Untitled note")
+    expect(uniqueUntitledTitle(["Groceries"])).toBe("Untitled note")
+  })
+
+  it("suffixes the next free index on collision", () => {
+    expect(uniqueUntitledTitle(["Untitled note"])).toBe("Untitled note (1)")
+    expect(uniqueUntitledTitle(["Untitled note", "Untitled note (1)"])).toBe(
+      "Untitled note (2)"
+    )
+  })
+
+  it("treats blank titles as the base placeholder", () => {
+    expect(uniqueUntitledTitle(["", "  "])).toBe("Untitled note (1)")
+  })
+
+  it("fills the lowest available gap", () => {
+    expect(uniqueUntitledTitle(["Untitled note", "Untitled note (2)"])).toBe(
+      "Untitled note (1)"
+    )
+  })
+})
 
 describe("normalizeNote", () => {
   it("keeps valid fields", () => {

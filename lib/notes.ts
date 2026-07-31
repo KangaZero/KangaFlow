@@ -50,13 +50,38 @@ export type Note = {
 export const NOTES_STORAGE_KEY = "kangaflow:notes"
 export const NOTES_OPEN_STORAGE_KEY = "kangaflow:notes-open"
 
+// Short absolute timestamp for created/updated labels (e.g. "Aug 2, 14:30").
+export function formatNoteDate(ms: number): string {
+  return new Date(ms).toLocaleString(undefined, {
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "short",
+  })
+}
+
 const ALIGNS: readonly TextAlign[] = ["left", "center", "right", "justify"]
 
 function isNoteColor(value: unknown): value is NoteColor {
   return typeof value === "string" && value in NOTE_COLORS
 }
 
-export function createNote(): Note {
+export const UNTITLED_BASE = "Untitled note"
+
+// A default title guaranteed not to collide with any existing note. Empty/blank
+// titles count as the base (they render as "Untitled note"), so the placeholder
+// is never visually duplicated. Yields: "Untitled note", "Untitled note (1)", …
+export function uniqueUntitledTitle(existing: readonly string[]): string {
+  const taken = new Set(
+    existing.map((t) => (t.trim() === "" ? UNTITLED_BASE : t.trim()))
+  )
+  if (!taken.has(UNTITLED_BASE)) return UNTITLED_BASE
+  let n = 1
+  while (taken.has(`${UNTITLED_BASE} (${n})`)) n++
+  return `${UNTITLED_BASE} (${n})`
+}
+
+export function createNote(existingTitles: readonly string[] = []): Note {
   const now = Date.now()
   return {
     align: "left",
@@ -68,7 +93,7 @@ export function createNote(): Note {
     lineHeight: 1.5,
     pinned: false,
     tags: [],
-    title: "",
+    title: uniqueUntitledTitle(existingTitles),
     updatedOn: now,
   }
 }

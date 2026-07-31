@@ -7,7 +7,12 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { RichTextEditor } from "@/components/widgets/rich-text-editor"
-import { NOTE_COLOR_KEYS, NOTE_COLORS, type Note } from "@/lib/notes"
+import {
+  formatNoteDate,
+  NOTE_COLOR_KEYS,
+  NOTE_COLORS,
+  type Note,
+} from "@/lib/notes"
 import type { TextAlign } from "@/lib/rich-text"
 import { cn } from "@/lib/utils"
 
@@ -21,15 +26,6 @@ const CASCADE = [
   "top-10 right-10",
   "top-20 right-24",
 ] as const
-
-function formatEdited(ms: number): string {
-  return new Date(ms).toLocaleString(undefined, {
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "short",
-  })
-}
 
 export function NoteEditorWindow({
   cascadeIndex,
@@ -70,10 +66,10 @@ export function NoteEditorWindow({
       storageKey={`note-${note.id}`}
       title={note.title.trim() === "" ? "Untitled note" : note.title}
     >
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex h-full min-h-0 flex-col">
         {/* Title */}
         <input
-          className="border-border border-b bg-transparent px-3 py-2 font-semibold text-sm outline-none placeholder:text-muted-foreground"
+          className="shrink-0 border-border border-b bg-transparent px-3 py-2 font-semibold text-sm outline-none placeholder:text-muted-foreground"
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder="Title"
           value={note.title}
@@ -92,7 +88,7 @@ export function NoteEditorWindow({
         />
 
         {/* Footer: colours, tags, timestamp */}
-        <div className="flex flex-col gap-2 border-border border-t p-2">
+        <div className="flex shrink-0 flex-col gap-2 border-border border-t p-2">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               {NOTE_COLOR_KEYS.map((c) => (
@@ -114,7 +110,8 @@ export function NoteEditorWindow({
               ))}
             </div>
             <span className="ml-auto text-[10px] text-muted-foreground">
-              Edited {formatEdited(note.updatedOn)}
+              Created {formatNoteDate(note.createdOn)} · Edited{" "}
+              {formatNoteDate(note.updatedOn)}
             </span>
           </div>
 
