@@ -160,18 +160,39 @@ export function shortcutSignature(shortcut: Shortcut): string {
  * Shift is held. The meta-or-ctrl flag resolves per platform: ⌘ on macOS, Ctrl
  * elsewhere, with the *other* of the two required to be up.
  */
+// Physical `KeyboardEvent.code` for a shortcut character, or null for letters.
+// Digits and punctuation are matched by physical position so a keyboard layout
+// that relocates or shifts them (AZERTY's number row, non-US punctuation) still
+// triggers the binding — the produced `event.key` there is a different glyph.
+// Letters intentionally return null: they stay character-based (vim convention),
+// so the key labelled "t" works regardless of physical position.
+function physicalCodeFor(char: string): string | null {
+  if (/^\d$/.test(char)) return `Digit${char}`
+  const PUNCTUATION_CODE: Record<string, string> = {
+    "-": "Minus",
+    ",": "Comma",
+    ";": "Semicolon",
+    ".": "Period",
+    "'": "Quote",
+    "[": "BracketLeft",
+    "]": "BracketRight",
+    "/": "Slash",
+    "\\": "Backslash",
+    "`": "Backquote",
+    "=": "Equal",
+  }
+  return PUNCTUATION_CODE[char] ?? null
+}
+
 export function matchesShortcut(
   event: KeyboardEvent,
   shortcut: Shortcut
 ): boolean {
   if (!shortcut.character) return false
   const char = shortcut.character.toLowerCase()
+  const code = physicalCodeFor(char)
   const keyMatches =
-    event.key.toLowerCase() === char ||
-    // Digit shortcuts also match the physical number-row key, so layouts that
-    // shift the digit row (AZERTY, etc.) still trigger them (event.key would be
-    // "&"/"é"/… there). Mirrors the niri workspace-key code fallback.
-    (/^\d$/.test(char) && event.code === `Digit${char}`)
+    event.key.toLowerCase() === char || (code !== null && event.code === code)
   if (!keyMatches) return false
 
   const metaOrCtrl = IS_MAC ? event.metaKey : event.ctrlKey

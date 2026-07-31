@@ -118,6 +118,38 @@ describe("matchesShortcut", () => {
     ).toBe(true)
   })
 
+  it("matches a punctuation shortcut by physical code too", () => {
+    const settings: Shortcut = {
+      action: "toggleSettings",
+      character: ",",
+      hasAltOrOptionKey: false,
+      hasMetaOrCtrlKey: false,
+      hasShiftKey: false,
+    }
+    // A layout where the Comma key prints something else unshifted.
+    expect(
+      matchesShortcut(
+        new KeyboardEvent("keydown", { code: "Comma", key: "Ω" }),
+        settings
+      )
+    ).toBe(true)
+  })
+
+  it("keeps letter shortcuts character-based (no physical-code match)", () => {
+    // Dvorak: the physical "KeyT" position isn't where "t" is typed, so a
+    // letter binding must NOT match by code — only by the produced character.
+    const wrongPhysical = new KeyboardEvent("keydown", {
+      code: "KeyX",
+      key: "d",
+    })
+    expect(matchesShortcut(wrongPhysical, bareD)).toBe(true) // matched via key
+    const rightPhysicalWrongChar = new KeyboardEvent("keydown", {
+      code: "KeyD",
+      key: "x",
+    })
+    expect(matchesShortcut(rightPhysicalWrongChar, bareD)).toBe(false)
+  })
+
   it("never matches a disabled (empty-character) binding", () => {
     const e = new KeyboardEvent("keydown", { key: "" })
     expect(matchesShortcut(e, { ...bareD, character: "" })).toBe(false)
