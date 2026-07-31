@@ -117,14 +117,19 @@ export function keyToAction(event: KeyboardEvent): NiriAction | null {
       break
   }
 
-  // Incremental column resize (no Shift variant).
-  if (!shift) {
-    if (key === "-") {
-      return { delta: -0.1, type: "setWidth" }
-    }
-    if (key === "=") {
-      return { delta: 0.1, type: "setWidth" }
-    }
+  // Incremental resize. Alt+-/= sizes the column (x); Alt+Shift+-/= sizes the
+  // focused window's height (y). Keyed off physical `event.code` ("Minus"/
+  // "Equal") so it's layout-independent (the shifted symbol varies).
+  const { code } = event
+  if (code === "Minus") {
+    return shift
+      ? { delta: -0.2, type: "setHeight" }
+      : { delta: -0.1, type: "setWidth" }
+  }
+  if (code === "Equal") {
+    return shift
+      ? { delta: 0.2, type: "setHeight" }
+      : { delta: 0.1, type: "setWidth" }
   }
 
   return null

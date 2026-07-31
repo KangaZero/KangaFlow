@@ -266,6 +266,20 @@ describe("setWidth", () => {
   })
 })
 
+describe("setHeight", () => {
+  it("resizes the focused window's height, clamped to [MIN_HEIGHT, MAX_HEIGHT]", () => {
+    let state = initialNiriState()
+    state = niriReducer(state, { app: "terminal", type: "spawn" })
+    expect(getFocusedWindow(state)?.height).toBeCloseTo(1)
+    state = niriReducer(state, { delta: 0.4, type: "setHeight" })
+    expect(getFocusedWindow(state)?.height).toBeCloseTo(1.4)
+    state = niriReducer(state, { delta: 10, type: "setHeight" })
+    expect(getFocusedWindow(state)?.height).toBeCloseTo(3) // MAX_HEIGHT
+    state = niriReducer(state, { delta: -10, type: "setHeight" })
+    expect(getFocusedWindow(state)?.height).toBeCloseTo(0.4) // MIN_HEIGHT
+  })
+})
+
 describe("toggleOverview", () => {
   it("flips the overview flag", () => {
     let state = initialNiriState()

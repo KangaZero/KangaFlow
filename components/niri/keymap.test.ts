@@ -94,18 +94,30 @@ describe("keyToAction", () => {
     })
   })
 
-  it("Alt+Minus nudges width down", () => {
-    expect(keyToAction(press({ altKey: true, key: "-" }))).toEqual({
-      delta: -0.1,
-      type: "setWidth",
-    })
+  it("Alt+Minus nudges width down (by physical code, layout-independent)", () => {
+    expect(
+      keyToAction(press({ altKey: true, code: "Minus", key: "-" }))
+    ).toEqual({ delta: -0.1, type: "setWidth" })
   })
 
   it("Alt+Equal nudges width up", () => {
-    expect(keyToAction(press({ altKey: true, key: "=" }))).toEqual({
-      delta: 0.1,
-      type: "setWidth",
-    })
+    expect(
+      keyToAction(press({ altKey: true, code: "Equal", key: "=" }))
+    ).toEqual({ delta: 0.1, type: "setWidth" })
+  })
+
+  it("Alt+Shift+Minus/Equal resize height, regardless of the shifted symbol", () => {
+    // A layout where Shift+Minus is not "_" — code still resolves it.
+    expect(
+      keyToAction(
+        press({ altKey: true, code: "Minus", key: "?", shiftKey: true })
+      )
+    ).toEqual({ delta: -0.2, type: "setHeight" })
+    expect(
+      keyToAction(
+        press({ altKey: true, code: "Equal", key: "*", shiftKey: true })
+      )
+    ).toEqual({ delta: 0.2, type: "setHeight" })
   })
 
   it("returns null for a plain key with no Alt", () => {

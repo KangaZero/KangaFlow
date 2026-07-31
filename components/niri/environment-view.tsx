@@ -41,7 +41,7 @@ import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
-import { useBringToFront, useCloseActive } from "@/providers/z-order-provider"
+import { NIRI_TILE_ID, useZOrder } from "@/providers/z-order-provider"
 
 // xterm / CodeMirror reach for `document` at import, so the two heavy app
 // windows load client-only (mirrors terminal-dialog's boundary).
@@ -211,8 +211,7 @@ export function EnvironmentView() {
   // float bumps it back above the strip. `main` is a stacking context only at
   // uiScale ≠ 1 — at the default scale the strip competes with the floats in the
   // root context, so this raise takes effect (see lib/z-order.ts).
-  const bringToFront = useBringToFront()
-  const closeActive = useCloseActive()
+  const { bringToFront, closeActive, activeId } = useZOrder()
   const [stripZ, setStripZ] = useState<number>(Z_LAYERS.window)
 
   const files = useMemo(() => readSourceFiles(), [])
@@ -312,6 +311,15 @@ export function EnvironmentView() {
       if (panel !== null) return
       const action = keyToAction(event)
       if (action) {
+        // Resize keys belong to a floating window when one is focused — let its
+        // own handler take them instead of resizing the tiled column.
+        const floatActive = activeId !== null && activeId !== NIRI_TILE_ID
+        if (
+          floatActive &&
+          (action.type === "setWidth" || action.type === "setHeight")
+        ) {
+          return
+        }
         event.preventDefault()
         event.stopPropagation()
         // Unified close: Alt+Shift+Q closes the most-recently-focused window
@@ -323,7 +331,7 @@ export function EnvironmentView() {
     }
     window.addEventListener("keydown", onKey, true)
     return () => window.removeEventListener("keydown", onKey, true)
-  }, [panel, state.overview, togglePanel, closeActive])
+  }, [panel, state.overview, togglePanel, closeActive, activeId])
 
   const launch = (app: AppId) => {
     dispatch({ app, title: appTitle[app], type: "spawn" })
@@ -373,7 +381,7 @@ export function EnvironmentView() {
   useEffect(() => {
     const focusedColumn = columns[focusedCol]
     if (!(focusedWin && focusedColumn) || focusedColumn.floating) return
-    setStripZ(bringToFront(() => dispatch({ type: "close" })))
+    setStripZ(bringToFront(() => dispatch({ type: "close" }), NIRI_TILE_ID))
     const el = document.querySelector<HTMLElement>(
       `[data-win-id="${focusedWin.id}"]`
     )
@@ -621,7 +629,7 @@ export function EnvironmentView() {
                         return (
                           <motion.button
                             className={cn(
-                              "pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border text-left shadow-xl",
+                              "pointer-events-auto flex min-h-0 flex-col overflow-hidden rounded-lg border text-left shadow-xl",
                               glassy
                                 ? "bg-card/30 backdrop-blur-md"
                                 : "bg-card",
@@ -647,7 +655,10 @@ export function EnvironmentView() {
                               // above any floating widget, focuses it, and makes
                               // it the target of the unified close shortcut.
                               setStripZ(
-                                bringToFront(() => dispatch({ type: "close" }))
+                                bringToFront(
+                                  () => dispatch({ type: "close" }),
+                                  NIRI_TILE_ID
+                                )
                               )
                               dispatch({
                                 column: ci,
@@ -655,6 +666,12 @@ export function EnvironmentView() {
                                 window: wi,
                                 workspace: state.active,
                               })
+                            }}
+                            // Vertical flex weight = the window's height (y-resize).
+                            style={{
+                              flexBasis: 0,
+                              flexGrow: win.height,
+                              flexShrink: 1,
                             }}
                             transition={{
                               damping: 30,

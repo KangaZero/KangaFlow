@@ -11,7 +11,13 @@ import type {
   NiriWindow,
   NiriWorkspace,
 } from "@/components/niri/types"
-import { MAX_WIDTH, MIN_WIDTH, WIDTH_PRESETS } from "@/components/niri/types"
+import {
+  MAX_HEIGHT,
+  MAX_WIDTH,
+  MIN_HEIGHT,
+  MIN_WIDTH,
+  WIDTH_PRESETS,
+} from "@/components/niri/types"
 
 // Deterministic id source. A module-local counter keeps ids stable and testable
 // without pulling in crypto / Date (both banned here: this file is pure).
@@ -143,6 +149,7 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
       if (totalWindows(state) >= WINDOW_MAX) return state
       const window: NiriWindow = {
         app: action.app,
+        height: 1,
         id: uid("win"),
         title: action.title ?? DEFAULT_TITLES[action.app],
       }
@@ -381,6 +388,24 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
       const width = clamp(column.width + action.delta, MIN_WIDTH, MAX_WIDTH)
       return mapActiveWorkspace(state, (ws) =>
         mapColumn(ws, ws.focused, (col) => ({ ...col, width }))
+      )
+    }
+
+    // Resize the focused window's vertical share within its column's stack.
+    case "setHeight": {
+      const workspace = getActiveWorkspace(state)
+      const column = workspace.columns[workspace.focused]
+      if (!column) return state
+      const win = column.windows[column.focused]
+      if (!win) return state
+      const height = clamp(win.height + action.delta, MIN_HEIGHT, MAX_HEIGHT)
+      return mapActiveWorkspace(state, (ws) =>
+        mapColumn(ws, ws.focused, (col) => ({
+          ...col,
+          windows: col.windows.map((w, i) =>
+            i === col.focused ? { ...w, height } : w
+          ),
+        }))
       )
     }
 

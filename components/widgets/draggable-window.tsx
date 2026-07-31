@@ -18,9 +18,13 @@ import {
 } from "@/components/niri/settings"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { RESIZE_STEP, snapDelta, vimWindowAction } from "@/lib/vim-window"
 import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
-import { useBringToFront } from "@/providers/z-order-provider"
+import { useZOrder } from "@/providers/z-order-provider"
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, value))
 
 type StoredState = {
   position?: { x: number; y: number }
@@ -91,7 +95,7 @@ export function DraggableWindow({
   children,
 }: DraggableWindowProps): React.JSX.Element | null {
   const { envSettings } = useGlobalStates()
-  const bringToFront = useBringToFront()
+  const { bringToFront, activeId } = useZOrder()
   // Latest handlers read through refs so the focus effect can stay off them
   // (their identity changes each render; depending on them would re-raise every
   // render).
@@ -101,8 +105,11 @@ export function DraggableWindow({
   onFocusRef.current = onFocus
   const focus = (): void => {
     onFocusRef.current?.()
-    setZ(bringToFront(() => onCloseRef.current()))
+    setZ(bringToFront(() => onCloseRef.current(), storageKey))
   }
+  const isActive = activeId === storageKey
+  const windowRef = useRef<HTMLDivElement>(null)
+  const gPendingRef = useRef(false)
   const [mounted, setMounted] = useState(false)
   // Per-window stacking value from the shared click-to-front counter; bumped
   // when the window opens and on every pointer-down so the active widget rises
@@ -132,6 +139,83 @@ export function DraggableWindow({
   useEffect(() => {
     if (isOpen) focus()
   }, [isOpen])
+
+  // Vim-style keyboard control while this window owns focus: Shift+H/J/K/L move,
+  // gg/G/0/$ snap to viewport edges, Alt+-/= resize width, Alt+Shift+-/= resize
+  // height. Guards against hijacking typing in inputs/editors.
+  useEffect(() => {
+    if (!(isActive && isOpen)) return
+    const onKey = (event: KeyboardEvent): void => {
+      const target = event.target as HTMLElement | null
+      const editable =
+        target != null &&
+        (target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA")
+      if (editable && !event.altKey) return
+      const { action, pendingG } = vimWindowAction(
+        event.key,
+        event.code,
+        { alt: event.altKey, shift: event.shiftKey },
+        gPendingRef.current
+      )
+      gPendingRef.current = pendingG
+      if (!action) return
+      event.preventDefault()
+      if (action.type === "move") {
+        x.set(x.get() + action.dx)
+        y.set(y.get() + action.dy)
+        saveState(storageKey, { position: { x: x.get(), y: y.get() } })
+      } else if (action.type === "snap") {
+        const el = windowRef.current
+        if (!el) return
+        const { dx, dy } = snapDelta(
+          el.getBoundingClientRect(),
+          { height: window.innerHeight, width: window.innerWidth },
+          action.edge,
+          8
+        )
+        x.set(x.get() + dx)
+        y.set(y.get() + dy)
+        saveState(storageKey, { position: { x: x.get(), y: y.get() } })
+      } else {
+        setSize((s) => {
+          const next =
+            action.axis === "width"
+              ? {
+                  height: s.height,
+                  width: clamp(
+                    s.width + action.dir * RESIZE_STEP,
+                    minWidth,
+                    maxWidth
+                  ),
+                }
+              : {
+                  height: clamp(
+                    s.height + action.dir * RESIZE_STEP,
+                    minHeight,
+                    maxHeight
+                  ),
+                  width: s.width,
+                }
+          saveState(storageKey, { size: next })
+          return next
+        })
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [
+    isActive,
+    isOpen,
+    storageKey,
+    minWidth,
+    maxWidth,
+    minHeight,
+    maxHeight,
+    x,
+    y,
+  ])
   if (!mounted) return null
 
   return createPortal(
@@ -163,6 +247,7 @@ export function DraggableWindow({
             // Capture phase so any interaction anywhere in the window (title-bar
             // drag, content click, resize) raises it before those handlers run.
             onPointerDownCapture={focus}
+            ref={windowRef}
             style={{
               borderRadius: envSettings.windowRadius,
               height: size.height,

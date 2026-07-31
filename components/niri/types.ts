@@ -9,6 +9,9 @@ export type NiriWindow = {
   id: string
   app: AppId
   title: string
+  // Vertical flex weight within its column's stack (1 = equal share). Adjusted
+  // by the y-axis resize (Alt+Shift+-/=).
+  height: number
 }
 
 // A niri column is a vertical stack of windows on the horizontal strip. Width is
@@ -41,6 +44,10 @@ export const WIDTH_PRESETS = [1 / 3, 1 / 2, 2 / 3, 1] as const
 export const MIN_WIDTH = 0.25
 export const MAX_WIDTH = 1
 
+// Bounds for a window's vertical flex weight (Alt+Shift+-/= resize).
+export const MIN_HEIGHT = 0.4
+export const MAX_HEIGHT = 3
+
 export type NiriAction =
   | { type: "spawn"; app: AppId; title?: string }
   | { type: "close" }
@@ -60,6 +67,7 @@ export type NiriAction =
   | { type: "centerColumn" }
   | { type: "cycleWidth" }
   | { type: "setWidth"; delta: number }
+  | { type: "setHeight"; delta: number }
   | { type: "toggleOverview" }
   | { type: "toggleAlignment" }
   // Click-to-focus a specific window (the view dispatches this on pointer down).
