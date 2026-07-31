@@ -2,8 +2,13 @@
 
 import type { Variants } from "motion/react"
 import { AnimatePresence, motion, useAnimation } from "motion/react"
-import type { HTMLAttributes } from "react"
-import { useCallback, useImperativeHandle, useRef } from "react"
+import {
+  type HTMLAttributes,
+  type RefObject,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+} from "react"
 
 import { cn } from "@/lib/utils"
 
