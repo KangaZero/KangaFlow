@@ -111,6 +111,8 @@ export function keyToAction(event: KeyboardEvent): NiriAction | null {
       return shift ? { type: "toggleOverview" } : null
     case "r":
       return shift ? null : { type: "cycleWidth" }
+    case "z":
+      return shift ? null : { type: "toggleAlignment" }
     default:
       break
   }

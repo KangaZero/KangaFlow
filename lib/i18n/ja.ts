@@ -146,6 +146,7 @@ const ja = {
     },
     help: {
       browser: "新しいブラウザーウィンドウ",
+      centerAlign: "タイルの配置を切り替え",
       close: "ウィンドウを閉じる",
       cycleWidth: "列幅を循環",
       description: "niri 風タイル操作 — 修飾キーは Alt。",

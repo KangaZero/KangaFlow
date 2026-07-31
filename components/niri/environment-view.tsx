@@ -573,10 +573,16 @@ export function EnvironmentView() {
             </div>
           ) : (
             <motion.div
-              animate={{ x: offsetX }}
+              animate={{ x: state.isCenterAligned ? offsetX : 0 }}
               className="absolute inset-y-0 flex items-stretch"
-              style={{ gap: GAP, paddingBottom: PAD, paddingTop: PAD }}
-              transition={{ damping: 30, stiffness: 260, type: "spring" }}
+              exit={{ opacity: 0, x: 80 }}
+              style={{ gap: GAP, padding: PAD }}
+              transition={{
+                damping: 30,
+                duration: 100,
+                stiffness: 260,
+                type: "spring",
+              }}
             >
               <AnimatePresence initial={false} mode="popLayout">
                 {tiled.map(({ col, index: ci }, ti) => (

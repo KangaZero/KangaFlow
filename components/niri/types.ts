@@ -28,6 +28,7 @@ export type NiriWorkspace = {
 }
 
 export type NiriState = {
+  isCenterAligned: boolean
   workspaces: NiriWorkspace[]
   active: number // active workspace id
   overview: boolean
@@ -60,5 +61,6 @@ export type NiriAction =
   | { type: "cycleWidth" }
   | { type: "setWidth"; delta: number }
   | { type: "toggleOverview" }
+  | { type: "toggleAlignment" }
   // Click-to-focus a specific window (the view dispatches this on pointer down).
   | { type: "focusAt"; workspace: number; column: number; window: number }

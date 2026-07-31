@@ -32,6 +32,7 @@ const SHORTCUTS: readonly {
   { keys: ["Alt", "Shift", "1–3"], label: "environment.help.moveToWorkspace" },
   { keys: ["Alt", "Shift", "Q"], label: "environment.help.close" },
   { keys: ["Alt", "F"], label: "environment.help.fullscreen" },
+  { keys: ["Alt", "Z"], label: "environment.help.centerAlign" },
   { keys: ["Alt", "R"], label: "environment.help.cycleWidth" },
   { keys: ["Alt", "-", "="], label: "environment.help.resize" },
   { keys: ["Alt", "T"], label: "environment.help.float" },

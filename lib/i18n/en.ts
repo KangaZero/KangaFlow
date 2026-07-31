@@ -146,6 +146,7 @@ const en = {
     },
     help: {
       browser: "New browser window",
+      centerAlign: "Toggle tile alignment",
       close: "Close window",
       cycleWidth: "Cycle column width",
       description: "niri-style tiling — Alt is the modifier.",

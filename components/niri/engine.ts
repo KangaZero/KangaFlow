@@ -101,7 +101,13 @@ export function initialNiriState(): NiriState {
     { length: WORKSPACE_MAX },
     (_, i) => ({ columns: [], focused: 0, id: i + 1 })
   )
-  return { active: 1, fullscreenWinId: null, overview: false, workspaces }
+  return {
+    active: 1,
+    fullscreenWinId: null,
+    isCenterAligned: false,
+    overview: false,
+    workspaces,
+  }
 }
 
 export function getActiveWorkspace(state: NiriState): NiriWorkspace {
@@ -368,32 +374,6 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
         mapColumn(ws, ws.focused, (col) => ({ ...col, width }))
       )
     }
-    //     case "toggleFullscreen": {
-    //       const workspace = getActiveWorkspace(state)
-    //       const column = workspace.columns[workspace.focused]
-    //       if (!column) return state
-    //       const isFullScreen =
-    //         column.width === 1 && state.fullscreenWinId === column.id
-    //
-    //       mapActiveWorkspace(state, (ws) =>
-    //         mapColumn(ws, ws.focused, (col) => ({
-    //           ...col,
-    //           width: isFullScreen ? 0.5 : 1,
-    //         }))
-    //       )
-    // if (isFullScreen) {
-    //         const focusedWin = getFocusedWindow(state)
-    //         if (!focusedWin) return state
-    //
-    //       }
-    //
-    //       return {
-    //           ...state,
-    //           fullscreenWinId:
-    //             state.fullscreenWinId === focusedWin.id ? null : focusedWin.id,
-    //         }
-    //     }
-
     case "setWidth": {
       const workspace = getActiveWorkspace(state)
       const column = workspace.columns[workspace.focused]
@@ -406,6 +386,9 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
 
     case "toggleOverview":
       return { ...state, overview: !state.overview }
+
+    case "toggleAlignment":
+      return { ...state, isCenterAligned: !state.isCenterAligned }
 
     case "focusAt": {
       const active = clamp(action.workspace, WORKSPACE_MIN, WORKSPACE_MAX)
