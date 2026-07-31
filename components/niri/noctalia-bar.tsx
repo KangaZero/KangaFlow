@@ -7,6 +7,7 @@ import { SiNixos } from "react-icons/si"
 import { Counter } from "@/components/Counter"
 import { NotificationCenter } from "@/components/niri/notification-center"
 import type { BorderRadius } from "@/components/niri/settings"
+import { SystemStatus } from "@/components/niri/system-status"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import type { Locale } from "@/lib/i18n"
@@ -83,6 +84,7 @@ export function NoctaliaBar(props: {
   opacity: number // bar background opacity (0..1), from settings.barOpacity
   barRadius: BorderRadius // bar corner radius in px, from settings.barRadius
   orientation: "horizontal" | "vertical" // layout axis (vertical = left/right bar)
+  barPosition: "bottom" | "left" | "right" | "top"
 }): React.JSX.Element {
   const {
     workspaces,
@@ -96,6 +98,7 @@ export function NoctaliaBar(props: {
     opacity,
     barRadius,
     orientation,
+    barPosition,
   } = props
   const { translate } = useLocale()
   const isV = orientation === "vertical"
@@ -112,11 +115,14 @@ export function NoctaliaBar(props: {
       }}
     >
       {/* LEFT: launcher logo + active window title */}
+      {/* TODO(human): derive every bar tooltip's side from barPosition
+          (left→right, right→left, top→bottom, bottom→top) via one helper,
+          instead of the per-tooltip left/right ternaries below. */}
       <div className={cn("flex min-w-0 items-center gap-2", isV && "flex-col")}>
         <AnimatedTooltip
           label={translate("environment.bar.launcher")}
           shortcut={["Alt", "D"]}
-          side="responsive"
+          side={barPosition !== "right" ? "right" : "left"}
         >
           <Button
             aria-label={translate("environment.bar.launcher")}
@@ -174,17 +180,10 @@ export function NoctaliaBar(props: {
 
       {/* RIGHT: faux system monitor + notification bell */}
       <div className={cn("flex items-center gap-2", isV && "flex-col")}>
-        <span
-          className={cn(
-            "font-mono text-muted-foreground tabular-nums",
-            isV && "text-[0.625rem] [writing-mode:vertical-rl]"
-          )}
-        >
-          CPU 12% MEM 43%
-        </span>
+        <SystemStatus vertical={isV} />
         <AnimatedTooltip
           label={translate("environment.settings.wallpaper")}
-          side="responsive"
+          side={barPosition !== "right" ? "left" : "left"}
         >
           <Button
             aria-label={translate("environment.settings.wallpaper")}
@@ -199,7 +198,7 @@ export function NoctaliaBar(props: {
         <AnimatedTooltip
           label={translate("environment.settings.title")}
           shortcut={["Alt", "Shift", ","]}
-          side="responsive"
+          side={barPosition !== "right" ? "left" : "left"}
         >
           <Button
             aria-label={translate("environment.settings.title")}

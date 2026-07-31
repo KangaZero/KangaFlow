@@ -399,6 +399,7 @@ export function EnvironmentView() {
   const bar = (
     <NoctaliaBar
       activeWindowTitle={focusedWin?.title ?? ""}
+      barPosition={settings.barPosition}
       barRadius={settings.barRadius}
       clock={clock}
       keyboardLayout={locale}
@@ -444,7 +445,7 @@ export function EnvironmentView() {
         )}
       >
         {barBefore && !settings.autoHideBar ? (
-          <div className="p-2">{bar}</div>
+          <div className="p-2 px-4">{bar}</div>
         ) : null}
 
         {/* Scrollable-tiling strip */}

@@ -28,7 +28,7 @@ export interface AnimatedTooltipProps {
    * above on mobile and below at `sm+` — matching a nav that sits at the bottom
    * on small screens and the top on larger ones.
    */
-  side?: "top" | "bottom" | "right" | "responsive"
+  side?: "top" | "bottom" | "right" | "left" | "responsive"
   className?: string
 }
 
@@ -36,6 +36,9 @@ export interface AnimatedTooltipProps {
 // tooltip slides out from behind the trigger.
 const SIDE_STYLES = {
   bottom: { className: "top-full mt-2", y: -8 },
+  // TODO(human): refine the "left" placement (mirror "right"'s offset/animation
+  // so it slides out from behind the trigger toward the left).
+  left: { className: "top-0 right-30", y: 12 },
   responsive: {
     className: "bottom-full mb-2 sm:top-full sm:bottom-auto sm:mt-2 sm:mb-0",
     y: 8,
