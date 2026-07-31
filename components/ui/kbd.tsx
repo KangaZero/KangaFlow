@@ -8,7 +8,7 @@ function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
         // inside a tooltip it sits on `bg-card`, so it recolours to card tokens.
         // Uses only per-theme semantic tokens (no `dark:`) so it fits light,
         // dark, AND the terminal/Mocha theme, which applies its own class.
-        "pointer-events-none inline-flex h-5 w-fit min-w-5 select-none items-center justify-center gap-1 rounded-xs bg-muted in-data-[slot=tooltip-content]:bg-card-foreground/10 px-1 font-medium font-sans in-data-[slot=tooltip-content]:text-card-foreground text-[0.625rem] text-muted-foreground [&_svg:not([class*='size-'])]:size-3",
+        "pointer-events-none inline-flex h-5 w-fit min-w-5 select-none items-center justify-center gap-1 text-nowrap rounded-xs bg-muted in-data-[slot=tooltip-content]:bg-card-foreground/10 px-1 font-medium font-sans in-data-[slot=tooltip-content]:text-card-foreground text-[0.625rem] text-muted-foreground [&_svg:not([class*='size-'])]:size-3",
         className
       )}
       data-slot="kbd"
