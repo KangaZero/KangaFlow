@@ -9,9 +9,10 @@
 /* Hide the scrollbar while keeping the element scrollable (Firefox +
    WebKit/Blink). Applied to floating widget windows. */
 @utility scrollbar-none {
-  scrollbar-width: none;
+  scrollbar-width: none !important;
+
   &::-webkit-scrollbar {
-    display: none;
+    display: none !important;
   }
 }
 

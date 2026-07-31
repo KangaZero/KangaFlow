@@ -168,8 +168,9 @@ export function NoctaliaLauncher(props: {
         id: "settings",
         label: translate("nav.settings"),
         onSelect: () => {
-          onOpenSettings()
+          //! Order is important, else it will not open
           onClose()
+          onOpenSettings()
         },
         sublabel: translate("environment.settings.title"),
       },
@@ -178,8 +179,9 @@ export function NoctaliaLauncher(props: {
         id: "wallpaper",
         label: translate("environment.settings.wallpaper"),
         onSelect: () => {
-          onOpenWallpaper()
+          //! Order is important, else it will not open
           onClose()
+          onOpenWallpaper()
         },
         sublabel: translate("environment.settings.wallpaperHint"),
       },

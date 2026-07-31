@@ -145,7 +145,7 @@ export function DraggableWindow({
           <motion.div
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className={cn(
-              "pointer-events-auto fixed flex flex-col overflow-hidden text-card-foreground",
+              "scrollbar-none pointer-events-auto fixed flex flex-col overflow-hidden text-card-foreground",
               GLASS_SURFACE[envSettings.glass],
               anchorClass
             )}
@@ -198,11 +198,7 @@ export function DraggableWindow({
               </Button>
             </div>
 
-            {/* Content — scrollable, fills remaining height. scrollbar-none
-                hides the bar while keeping scroll (applies to every widget). */}
-            <div className="scrollbar-none min-h-0 flex-1 overflow-auto">
-              {children}
-            </div>
+            <div className="min-h-0 flex-1 overflow-auto">{children}</div>
 
             {/* Resize handle — bottom-right corner, uses pointer capture */}
             <div
