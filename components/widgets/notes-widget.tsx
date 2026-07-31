@@ -29,7 +29,8 @@ const REORDER_SPRING = {
 } as const
 
 export function NotesWidget(): React.JSX.Element {
-  const { isNotesOpen, setIsNotesOpen } = useGlobalStates()
+  const { isNotesOpen, setIsNotesOpen, envSettings } = useGlobalStates()
+  const wd = envSettings.widgetDefaults.notes
   const [notes, setNotes] = useState<Note[]>(loadNotes)
   const [openIds, setOpenIds] = useState<string[]>([])
 
@@ -167,14 +168,15 @@ export function NotesWidget(): React.JSX.Element {
   return (
     <>
       <DraggableWindow
+        anchor={wd.anchor}
         defaultHeight={440}
+        defaultOffset={wd.offset}
         defaultWidth={320}
         icon={<Pin aria-hidden className="size-3.5" />}
         isOpen={isNotesOpen}
         minHeight={240}
         minWidth={260}
         onClose={() => setIsNotesOpen(false)}
-        positionClassName="top-4 left-4"
         storageKey="notes-widget"
         title="Notes"
       >

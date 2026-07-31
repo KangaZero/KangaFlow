@@ -11,12 +11,14 @@ import {
 import { useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { GLASS_SURFACE } from "@/components/niri/glass"
+import {
+  WIDGET_STATE_STORAGE_PREFIX as STORAGE_PREFIX,
+  WIDGET_ANCHOR_CLASS,
+  type WidgetAnchor,
+} from "@/components/niri/settings"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
-
-// Per-widget position + size are persisted so windows reopen where they were left.
-const STORAGE_PREFIX = "kangaflow:widget-state:"
 
 type StoredState = {
   position?: { x: number; y: number }
@@ -57,6 +59,11 @@ export type DraggableWindowProps = {
   // Tailwind fixed-position classes for the initial anchor. Drag offset is
   // applied on top via motion values, so the CSS position is only the home base.
   positionClassName?: string
+  // Configured anchor (from settings) — overrides positionClassName when set.
+  anchor?: WidgetAnchor
+  // Configured default drag offset ("apply current"); used only when the window
+  // has no remembered position yet.
+  defaultOffset?: { x: number; y: number } | null
   children: React.ReactNode
 }
 
@@ -73,6 +80,8 @@ export function DraggableWindow({
   maxWidth = 900,
   maxHeight = 800,
   positionClassName = "bottom-4 right-4",
+  anchor,
+  defaultOffset = null,
   children,
 }: DraggableWindowProps): React.JSX.Element | null {
   const { envSettings } = useGlobalStates()
@@ -80,9 +89,10 @@ export function DraggableWindow({
   const constraintsRef = useRef<HTMLDivElement>(null)
   const dragControls = useDragControls()
 
+  const anchorClass = anchor ? WIDGET_ANCHOR_CLASS[anchor] : positionClassName
   const saved = loadState(storageKey)
-  const x = useMotionValue(saved.position?.x ?? 0)
-  const y = useMotionValue(saved.position?.y ?? 0)
+  const x = useMotionValue(saved.position?.x ?? defaultOffset?.x ?? 0)
+  const y = useMotionValue(saved.position?.y ?? defaultOffset?.y ?? 0)
 
   const [size, setSize] = useState({
     height: saved.size?.height ?? defaultHeight,
@@ -108,7 +118,7 @@ export function DraggableWindow({
             className={cn(
               "pointer-events-auto fixed flex flex-col overflow-hidden text-card-foreground",
               GLASS_SURFACE[envSettings.glass],
-              positionClassName
+              anchorClass
             )}
             drag
             dragConstraints={constraintsRef}

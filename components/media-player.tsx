@@ -90,7 +90,9 @@ function EqualizerBars() {
 
 export function MediaPlayer() {
   const { translate } = useLocale()
-  const { isMediaPlayerOpen, setIsMediaPlayerOpen } = useGlobalStates()
+  const { isMediaPlayerOpen, setIsMediaPlayerOpen, envSettings } =
+    useGlobalStates()
+  const wd = envSettings.widgetDefaults.media
 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -223,14 +225,15 @@ export function MediaPlayer() {
         : null}
 
       <DraggableWindow
+        anchor={wd.anchor}
         defaultHeight={224}
+        defaultOffset={wd.offset}
         defaultWidth={320}
         icon={<GripVertical aria-hidden className="size-3.5" />}
         isOpen={isMediaPlayerOpen}
         minHeight={180}
         minWidth={280}
         onClose={() => setIsMediaPlayerOpen(false)}
-        positionClassName="bottom-4 right-4"
         storageKey="media-player"
         title={translate("mediaPlayer.nowPlaying")}
       >

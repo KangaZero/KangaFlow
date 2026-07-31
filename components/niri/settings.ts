@@ -63,6 +63,47 @@ export type BorderRadius = number
 export const BORDER_RADIUS_MIN = 0
 export const BORDER_RADIUS_MAX = 64
 
+// Floating widgets that can be opened on the desktop. Each id maps to a
+// DraggableWindow `storageKey` (`kangaflow:widget-state:<storageKey>`).
+export const WIDGET_IDS = ["notes", "alarm", "calendar", "media"] as const
+export type WidgetId = (typeof WIDGET_IDS)[number]
+
+export const WIDGET_STORAGE_KEYS: Record<WidgetId, string> = {
+  alarm: "alarm-widget",
+  calendar: "calendar-widget",
+  media: "media-player",
+  notes: "notes-widget",
+}
+
+// localStorage key prefix DraggableWindow persists position/size under.
+export const WIDGET_STATE_STORAGE_PREFIX = "kangaflow:widget-state:"
+
+// Corner presets for a widget's default anchor (non-overlapping out of the box).
+export const WIDGET_ANCHORS = [
+  "top-left",
+  "top-right",
+  "bottom-left",
+  "bottom-right",
+  "center",
+] as const
+export type WidgetAnchor = (typeof WIDGET_ANCHORS)[number]
+
+// Tailwind fixed-position classes per anchor. `center` uses inset-0 + m-auto
+// (not translate) so it never fights motion's transform-based drag offset.
+export const WIDGET_ANCHOR_CLASS: Record<WidgetAnchor, string> = {
+  "bottom-left": "bottom-4 left-4",
+  "bottom-right": "bottom-4 right-4",
+  center: "inset-0 m-auto",
+  "top-left": "top-4 left-4",
+  "top-right": "top-4 right-4",
+}
+
+export type WidgetStartup = {
+  show: boolean // auto-open when the environment loads
+  anchor: WidgetAnchor // corner the window opens at
+  offset: { x: number; y: number } | null // drag offset from "apply current"
+}
+
 export type EnvSettings = {
   wallpaper: WallpaperId
   accent: AccentId
@@ -77,6 +118,7 @@ export type EnvSettings = {
   windowRadius: BorderRadius
   barRadius: BorderRadius
   launcherRadius: BorderRadius
+  widgetDefaults: Record<WidgetId, WidgetStartup>
 }
 
 export const DEFAULT_ENV_SETTINGS: EnvSettings = {
@@ -92,5 +134,12 @@ export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   showSystemMonitor: true,
   uiScale: 1,
   wallpaper: "auto",
+  // Non-overlapping default anchors, all hidden until the user opts in.
+  widgetDefaults: {
+    alarm: { anchor: "bottom-left", offset: null, show: false },
+    calendar: { anchor: "top-right", offset: null, show: false },
+    media: { anchor: "bottom-right", offset: null, show: false },
+    notes: { anchor: "top-left", offset: null, show: false },
+  },
   windowRadius: 16,
 }

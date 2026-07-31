@@ -52,7 +52,8 @@ function saveEvents(events: CalEvent[]): void {
 }
 
 export function CalendarWidget(): React.JSX.Element {
-  const { isCalendarOpen, setIsCalendarOpen } = useGlobalStates()
+  const { isCalendarOpen, setIsCalendarOpen, envSettings } = useGlobalStates()
+  const wd = envSettings.widgetDefaults.calendar
   const [events, setEvents] = useState<CalEvent[]>(loadEvents)
   const [selected, setSelected] = useState<Date | undefined>(new Date())
   const [newTitle, setNewTitle] = useState("")
@@ -89,14 +90,15 @@ export function CalendarWidget(): React.JSX.Element {
 
   return (
     <DraggableWindow
+      anchor={wd.anchor}
       defaultHeight={480}
+      defaultOffset={wd.offset}
       defaultWidth={340}
       icon={<CalendarDaysIcon size={14} />}
       isOpen={isCalendarOpen}
       minHeight={380}
       minWidth={300}
       onClose={() => setIsCalendarOpen(false)}
-      positionClassName="top-4 right-4"
       storageKey="calendar-widget"
       title="Calendar"
     >

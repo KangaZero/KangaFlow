@@ -24,6 +24,10 @@ import {
   GLASS_LEVELS,
   UI_SCALES,
   WALLPAPERS,
+  WIDGET_ANCHORS,
+  WIDGET_IDS,
+  type WidgetId,
+  type WidgetStartup,
 } from "@/components/niri/settings"
 import {
   ANIMATION_PREFS,
@@ -88,6 +92,35 @@ function clampRadius(value: unknown, fallback: number): number {
     : fallback
 }
 
+function isOffset(value: unknown): value is { x: number; y: number } {
+  if (value == null || typeof value !== "object") return false
+  const o = value as Record<string, unknown>
+  return typeof o.x === "number" && typeof o.y === "number"
+}
+
+// Validate the per-widget startup map, falling back field-by-field so a partial
+// or garbage stored object can never break a widget's anchor/visibility.
+function pickWidgetDefaults(value: unknown): Record<WidgetId, WidgetStartup> {
+  const src = (value && typeof value === "object" ? value : {}) as Record<
+    string,
+    unknown
+  >
+  const out = {} as Record<WidgetId, WidgetStartup>
+  for (const id of WIDGET_IDS) {
+    const def = DEFAULT_ENV_SETTINGS.widgetDefaults[id]
+    const w = (src[id] && typeof src[id] === "object" ? src[id] : {}) as Record<
+      string,
+      unknown
+    >
+    out[id] = {
+      anchor: pickLiteral(w.anchor, WIDGET_ANCHORS, def.anchor),
+      offset: isOffset(w.offset) ? w.offset : def.offset,
+      show: typeof w.show === "boolean" ? w.show : def.show,
+    }
+  }
+  return out
+}
+
 function loadEnvSettings(): EnvSettings {
   if (typeof window === "undefined") return DEFAULT_ENV_SETTINGS
   try {
@@ -135,6 +168,7 @@ function loadEnvSettings(): EnvSettings {
         WALLPAPERS,
         DEFAULT_ENV_SETTINGS.wallpaper
       ),
+      widgetDefaults: pickWidgetDefaults(o.widgetDefaults),
       windowRadius: clampRadius(
         o.windowRadius,
         DEFAULT_ENV_SETTINGS.windowRadius
@@ -241,7 +275,18 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     setColumnCount(loadColumnCount())
     setShowChromeInEnvironment(loadEnvChrome())
     setAnimationPref(loadAnimationPref())
-    setEnvSettings(loadEnvSettings())
+    const loaded = loadEnvSettings()
+    setEnvSettings(loaded)
+    // Auto-open widgets flagged "show on startup" (single, hydration-time place).
+    const openers: Record<WidgetId, (open: boolean) => void> = {
+      alarm: setIsAlarmOpen,
+      calendar: setIsCalendarOpen,
+      media: setIsMediaPlayerOpen,
+      notes: setIsNotesOpen,
+    }
+    for (const id of WIDGET_IDS) {
+      if (loaded.widgetDefaults[id].show) openers[id](true)
+    }
     hydrated.current = true
   }, [])
 

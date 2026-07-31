@@ -280,7 +280,8 @@ function useTimer(onExpire: () => void): CountdownTimer {
 }
 
 export function AlarmWidget(): React.JSX.Element {
-  const { isAlarmOpen, setIsAlarmOpen } = useGlobalStates()
+  const { isAlarmOpen, setIsAlarmOpen, envSettings } = useGlobalStates()
+  const wd = envSettings.widgetDefaults.alarm
   const [mode, setMode] = useState<Mode>("alarm")
 
   const [alarms, setAlarms] = useState<Alarm[]>(loadAlarms)
@@ -343,14 +344,15 @@ export function AlarmWidget(): React.JSX.Element {
 
   return (
     <DraggableWindow
+      anchor={wd.anchor}
       defaultHeight={380}
+      defaultOffset={wd.offset}
       defaultWidth={300}
       icon={<AlarmClockIcon size={14} />}
       isOpen={isAlarmOpen}
       minHeight={300}
       minWidth={260}
       onClose={() => setIsAlarmOpen(false)}
-      positionClassName="bottom-4 left-4"
       storageKey="alarm-widget"
       title="Clock"
     >

@@ -6,6 +6,9 @@ import {
   ArrowLeft,
   Blend,
   ChevronDown,
+  Crosshair,
+  Eye,
+  EyeOff,
   HelpCircle,
   Image as ImageIcon,
   LayoutGrid,
@@ -14,6 +17,7 @@ import {
   Monitor,
   Palette,
   PanelTop,
+  RotateCcw,
   SlidersHorizontal,
   Type,
 } from "lucide-react"
@@ -37,6 +41,13 @@ import {
   type GlassLevel,
   UI_SCALES,
   type UiScale,
+  WIDGET_ANCHORS,
+  WIDGET_IDS,
+  WIDGET_STATE_STORAGE_PREFIX,
+  WIDGET_STORAGE_KEYS,
+  type WidgetAnchor,
+  type WidgetId,
+  type WidgetStartup,
 } from "@/components/niri/settings"
 import { WallpaperPicker } from "@/components/niri/wallpaper-picker"
 import {
@@ -54,6 +65,48 @@ import { useLocale } from "@/providers/locale-provider"
 
 const percent = (fraction: BarOpacity | UiScale): string =>
   `${Math.round(fraction * 100)}%`
+
+// `as const satisfies` keeps each value's literal key type, so translate()
+// resolves to a plain string (a bare TranslationKey would widen to the union
+// of ALL leaf values, some of which are arrays).
+const WIDGET_ANCHOR_LABEL = {
+  "bottom-left": "environment.settings.widgetAnchorBottomLeft",
+  "bottom-right": "environment.settings.widgetAnchorBottomRight",
+  center: "environment.settings.widgetAnchorCenter",
+  "top-left": "environment.settings.widgetAnchorTopLeft",
+  "top-right": "environment.settings.widgetAnchorTopRight",
+} as const satisfies Record<WidgetAnchor, TranslationKey>
+
+const WIDGET_NAME_KEY = {
+  alarm: "widgets.alarm.title",
+  calendar: "widgets.calendar.title",
+  media: "mediaPlayer.title",
+  notes: "widgets.notes.title",
+} as const satisfies Record<WidgetId, TranslationKey>
+
+// Read the live drag offset a widget persisted (for "apply current position").
+function readWidgetOffset(storageKey: string): { x: number; y: number } | null {
+  if (typeof window === "undefined") return null
+  try {
+    const raw: unknown = JSON.parse(
+      window.localStorage.getItem(WIDGET_STATE_STORAGE_PREFIX + storageKey) ??
+        "{}"
+    )
+    const pos =
+      raw && typeof raw === "object"
+        ? (raw as Record<string, unknown>).position
+        : null
+    if (pos && typeof pos === "object") {
+      const p = pos as Record<string, unknown>
+      if (typeof p.x === "number" && typeof p.y === "number") {
+        return { x: p.x, y: p.y }
+      }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
 
 // Sidebar sections, Noctalia v5-style (icon + label; content pane on the right).
 type SectionId = "appearance" | "bar" | "launcher" | "wallpaper" | "widgets"
@@ -267,7 +320,20 @@ export function NoctaliaSettings(props: {
 }): React.JSX.Element | null {
   const { open, settings, onChange, onClose } = props
   const { translate } = useLocale()
-  const { theme: activeTheme, toggleTheme } = useGlobalStates()
+  const {
+    theme: activeTheme,
+    toggleTheme,
+    isNotesOpen,
+    isAlarmOpen,
+    isCalendarOpen,
+    isMediaPlayerOpen,
+  } = useGlobalStates()
+  const widgetOpen: Record<WidgetId, boolean> = {
+    alarm: isAlarmOpen,
+    calendar: isCalendarOpen,
+    media: isMediaPlayerOpen,
+    notes: isNotesOpen,
+  }
   const [section, setSection] = useState<SectionId>("appearance")
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const shouldReduceMotion = useReducedMotion()
@@ -279,6 +345,14 @@ export function NoctaliaSettings(props: {
     value: EnvSettings[K]
   ): void => {
     onChange({ ...settings, [key]: value })
+  }
+
+  // Patch one widget's startup config within the widgetDefaults map.
+  const setWidget = (id: WidgetId, patch: Partial<WidgetStartup>): void => {
+    set("widgetDefaults", {
+      ...settings.widgetDefaults,
+      [id]: { ...settings.widgetDefaults[id], ...patch },
+    })
   }
 
   // Esc closes, no matter where focus sits within the desktop.
@@ -686,9 +760,95 @@ export function NoctaliaSettings(props: {
                     />
                   </SettingCard>
                 ) : (
-                  <div className="flex flex-1 items-center justify-center text-center text-muted-foreground text-sm">
-                    {translate("environment.settings.widgetsSoon")}
-                  </div>
+                  WIDGET_IDS.map((id) => {
+                    const wd = settings.widgetDefaults[id]
+                    const isOpen = widgetOpen[id]
+                    return (
+                      <SettingCard
+                        icon={LayoutGrid}
+                        key={id}
+                        title={translate(WIDGET_NAME_KEY[id])}
+                      >
+                        {/* Show on startup */}
+                        <button
+                          aria-pressed={wd.show}
+                          className={cn(
+                            "inline-flex w-fit items-center gap-2 rounded-xl border border-border px-3 py-1.5 font-medium text-sm transition-colors",
+                            wd.show
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted/40 text-foreground hover:bg-muted/70"
+                          )}
+                          onClick={() => setWidget(id, { show: !wd.show })}
+                          type="button"
+                        >
+                          {wd.show ? (
+                            <Eye aria-hidden className="size-4" />
+                          ) : (
+                            <EyeOff aria-hidden className="size-4" />
+                          )}
+                          {translate("environment.settings.widgetShowStartup")}
+                        </button>
+
+                        {/* Default position anchor */}
+                        <SectionLabel icon={LayoutGrid}>
+                          {translate("environment.settings.widgetPosition")}
+                        </SectionLabel>
+                        <Segmented<WidgetAnchor>
+                          format={(a) => translate(WIDGET_ANCHOR_LABEL[a])}
+                          label={translate(
+                            "environment.settings.widgetPosition"
+                          )}
+                          onSelect={(a) => setWidget(id, { anchor: a })}
+                          options={WIDGET_ANCHORS}
+                          value={wd.anchor}
+                        />
+
+                        {/* Apply current / reset offset */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            className={cn(
+                              "inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 font-medium text-sm transition-colors",
+                              isOpen
+                                ? "bg-muted/40 hover:bg-muted/70"
+                                : "cursor-not-allowed opacity-50"
+                            )}
+                            disabled={!isOpen}
+                            onClick={() => {
+                              const offset = readWidgetOffset(
+                                WIDGET_STORAGE_KEYS[id]
+                              )
+                              if (offset) setWidget(id, { offset })
+                            }}
+                            type="button"
+                          >
+                            <Crosshair aria-hidden className="size-3.5" />
+                            {translate(
+                              "environment.settings.widgetApplyCurrent"
+                            )}
+                          </button>
+                          {wd.offset ? (
+                            <button
+                              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-muted-foreground text-sm hover:text-foreground"
+                              onClick={() => setWidget(id, { offset: null })}
+                              type="button"
+                            >
+                              <RotateCcw aria-hidden className="size-3.5" />
+                              {translate(
+                                "environment.settings.widgetResetPosition"
+                              )}
+                            </button>
+                          ) : null}
+                        </div>
+                        {isOpen ? null : (
+                          <p className="text-muted-foreground text-xs">
+                            {translate(
+                              "environment.settings.widgetOpenToApply"
+                            )}
+                          </p>
+                        )}
+                      </SettingCard>
+                    )
+                  })
                 )}
               </div>
             </div>
