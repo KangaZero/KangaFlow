@@ -50,6 +50,12 @@ export type Note = {
 export const NOTES_STORAGE_KEY = "kangaflow:notes"
 export const NOTES_OPEN_STORAGE_KEY = "kangaflow:notes-open"
 
+const ALIGNS: readonly TextAlign[] = ["left", "center", "right", "justify"]
+
+function isNoteColor(value: unknown): value is NoteColor {
+  return typeof value === "string" && value in NOTE_COLORS
+}
+
 export function createNote(): Note {
   const now = Date.now()
   return {
@@ -67,13 +73,50 @@ export function createNote(): Note {
   }
 }
 
+// Coerce an unknown/partial/legacy stored record into a valid Note, filling
+// defaults field-by-field. Also migrates the pre-rewrite `{ body, id }` shape
+// (body → html) so old notes don't crash the new colour/typography lookups.
+export function normalizeNote(raw: unknown): Note {
+  const o = (raw && typeof raw === "object" ? raw : {}) as Record<
+    string,
+    unknown
+  >
+  const base = createNote()
+  return {
+    align: ALIGNS.includes(o.align as TextAlign)
+      ? (o.align as TextAlign)
+      : base.align,
+    color: isNoteColor(o.color) ? o.color : base.color,
+    createdOn: typeof o.createdOn === "number" ? o.createdOn : base.createdOn,
+    html:
+      typeof o.html === "string"
+        ? o.html
+        : typeof o.body === "string"
+          ? o.body
+          : base.html,
+    id: typeof o.id === "string" ? o.id : base.id,
+    letterSpacing:
+      typeof o.letterSpacing === "number"
+        ? o.letterSpacing
+        : base.letterSpacing,
+    lineHeight:
+      typeof o.lineHeight === "number" ? o.lineHeight : base.lineHeight,
+    pinned: typeof o.pinned === "boolean" ? o.pinned : base.pinned,
+    tags: Array.isArray(o.tags)
+      ? o.tags.filter((t): t is string => typeof t === "string")
+      : base.tags,
+    title: typeof o.title === "string" ? o.title : base.title,
+    updatedOn: typeof o.updatedOn === "number" ? o.updatedOn : base.updatedOn,
+  }
+}
+
 export function loadNotes(): Note[] {
   if (typeof window === "undefined") return []
   try {
     const raw: unknown = JSON.parse(
       window.localStorage.getItem(NOTES_STORAGE_KEY) ?? "[]"
     )
-    return Array.isArray(raw) ? (raw as Note[]) : []
+    return Array.isArray(raw) ? raw.map(normalizeNote) : []
   } catch {
     return []
   }

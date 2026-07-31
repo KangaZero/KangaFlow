@@ -84,12 +84,13 @@ export function NotesWidget(): React.JSX.Element {
 
   const renderCard = (note: Note): React.JSX.Element => {
     const preview = htmlToPlainText(note.html)
+    const colors = NOTE_COLORS[note.color] ?? NOTE_COLORS.yellow
     return (
       <motion.div
         animate={{ opacity: 1, scale: 1 }}
         className={cn(
           "group mb-2 cursor-pointer rounded-xl border border-border/60 p-3 text-sm",
-          NOTE_COLORS[note.color].bg,
+          colors.bg,
           openIds.includes(note.id) && "ring-1 ring-ring"
         )}
         exit={{ opacity: 0, scale: 0.95 }}
@@ -103,12 +104,7 @@ export function NotesWidget(): React.JSX.Element {
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
-            <span
-              className={cn(
-                "size-2 shrink-0 rounded-full",
-                NOTE_COLORS[note.color].dot
-              )}
-            />
+            <span className={cn("size-2 shrink-0 rounded-full", colors.dot)} />
             <span className="truncate font-medium">
               {note.title.trim() === "" ? "Untitled note" : note.title}
             </span>
