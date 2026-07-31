@@ -139,8 +139,12 @@ const ja = {
       address: "アドレスバー",
       back: "戻る",
       bookmark: "ブックマーク",
+      bookmarks: "ブックマーク一覧",
+      closeTab: "タブを閉じる",
       forward: "進む",
+      newTab: "新しいタブ",
       reload: "再読み込み",
+      suggestions: "候補",
       tagline:
         "ウェブ版 niri デスクトップのポートフォリオ — タイル配置・リサイズして探索しよう。",
     },

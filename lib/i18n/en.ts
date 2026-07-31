@@ -140,8 +140,12 @@ const en = {
       address: "Address bar",
       back: "Back",
       bookmark: "Bookmark",
+      bookmarks: "Bookmarks",
+      closeTab: "Close tab",
       forward: "Forward",
+      newTab: "New tab",
       reload: "Reload",
+      suggestions: "Suggestions",
       tagline: "A web niri desktop portfolio — tile, resize, and explore.",
     },
     help: {
