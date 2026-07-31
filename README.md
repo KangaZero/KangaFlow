@@ -18,8 +18,11 @@
 [Tasks](#tasks) &nbsp;•&nbsp;
 [AI Usage](#ai-usage)
 
-**A bilingual, three-theme Next.js playground — vim command palette, unlockable
-achievements, and live weather, shipped fully static to GitHub Pages.**
+**Two things in one static site:** a bilingual, three-theme **portfolio
+playground** (vim command palette, unlockable achievements, live weather) **and a
+from-scratch, in-browser recreation of my Linux desktop** — a niri-style tiling
+window manager with a Noctalia-style bar, floating widgets, and a working
+terminal. Shipped fully static to GitHub Pages.
 
 [![Stars](https://img.shields.io/github/stars/KangaZero/KangaFlow?style=social)](https://github.com/KangaZero/KangaFlow/stargazers)
 [![License MIT](https://img.shields.io/badge/License-MIT-blue?style=social)](./LICENSE)
@@ -35,12 +38,24 @@ achievements, and live weather, shipped fully static to GitHub Pages.**
 
 <br/>
 
-[![KangaFlow screenshot](./assets/screenshot.png)](https://kangazero.github.io/KangaFlow/)
+[![KangaFlow — portfolio](./assets/screenshot.png)](https://kangazero.github.io/KangaFlow/)
+
+<!-- TODO(human): drop in the real screenshot of the niri/Noctalia desktop at assets/screenshot-environment.png -->
+[![KangaFlow — niri desktop environment](./assets/screenshot-environment.png)](https://kangazero.github.io/KangaFlow/en/environment)
+
+**🚧 TODO:** environment screenshot — capture the `/environment` desktop and save it to `assets/screenshot-environment.png`.
 
 > **Type-safe, animation-forward, and shipped static** — a personal playground
 > that treats polish as a feature.
 
 </div>
+
+> [!NOTE]
+> **Why "NNN"?** The desktop half of KangaFlow is a browser recreation of my real
+> Linux rig — **n**iri (the scrollable-tiling Wayland compositor) · **N**octalia
+> (the desktop shell / top bar) · **N**ix (the flake that pins the whole
+> toolchain). The initialism is entirely on purpose; expansion left as an
+> exercise for the reader, ideally in November. 😌
 
 ## Table of Contents
 
@@ -64,6 +79,10 @@ achievements, and live weather, shipped fully static to GitHub Pages.**
 | 🌏 **Bilingual (EN / 日本語)** | End-to-end **type-safe** i18n — invalid keys don't compile. Locale lives in the URL (`/en`, `/ja`). |
 | 🏆 **Achievements** | Unlockable with rarities, secrets, a localStorage save, and an animated toast. |
 | 🌤️ **Live weather + date** | Client-side [Open-Meteo](https://open-meteo.com/) fetch with a skeleton while loading. |
+| 🖥️ **niri desktop (NNN)** | A scrollable-tiling window manager with a Noctalia-style bar, workspaces, overview, and Alt-based keybinds (`Alt+H/J/K/L` focus, `Alt+T` float, `Alt+Z` align, `Alt+Shift+Q` close). |
+| 🪟 **Floating widgets** | Draggable, resizable Notes (rich text), Clock (alarm / timer / stopwatch + laps), Calendar, and Media player — with click-to-front and a unified z-order. |
+| 🔔 **Notifications** | Bell popover with a dismissible, data-driven list; fires on alarm / timer / stopwatch and supports "remind me in N min" reminders that persist across reloads. |
+| ⌨️ **In-browser terminal** | An [xterm.js](https://xtermjs.org/) shell over a virtual filesystem (`ls`/`cat`/`cd`/`nvim`), fastfetch, and a CodeMirror editor — plus a launcher (`Alt+D`) and a desktop-settings panel. |
 | ⚡ **Fully static** | No server — exported to GitHub Pages and deployed on every push to `main`. |
 
 ## Tech Stack
@@ -73,6 +92,7 @@ achievements, and live weather, shipped fully static to GitHub Pages.**
   `exactOptionalPropertyTypes`, and friends
 - **[Biome](https://biomejs.dev/) 2.4** — one binary for the git hook, CI, and `just` (no ESLint/Prettier)
 - **shadcn/ui** ("radix-mira") + **[animate-ui](https://animate-ui.com/)** + **Motion**
+- **[xterm.js](https://xtermjs.org/)** (terminal) + **CodeMirror** (editor) for the desktop apps
 - **Vitest** for unit tests · **Nix flake** + **just** for a reproducible toolchain
 
 ## Requirements
@@ -136,8 +156,12 @@ Everything runs through `just`:
 app/
   [lang]/            # /en and /ja (generateStaticParams, dynamicParams=false)
     achievements/    # achievements page
+    environment/     # the niri/Noctalia desktop (NNN)
+  icon.svg           # favicon (App Router metadata convention) + favicon.ico
   page.tsx           # root — client redirect to the preferred locale
 components/          # app components (theme toggle, command menu, header date…)
+  niri/              # tiling engine, keymap, bar, launcher, settings, spatial view
+  widgets/           # DraggableWindow + Notes / Alarm / Calendar / Media floats
   ui/                # vendored shadcn primitives
   animate-ui/        # vendored animate-ui primitives
 hooks/               # use-weather (Open-Meteo)
@@ -146,12 +170,21 @@ lib/
   themes.ts          # theme union + cycle (single source of truth)
   weather.ts         # WMO → icon + temperature colour
   achievements.ts    # catalogue + pure unlock/reconcile reducer
+  notifications.ts   # notifications model + pure helpers
+  z-order.ts         # single-source stacking bands for windows/overlays
+providers/           # global state, locale, notifications, z-order (click-to-front)
 ```
 
 ## Architecture Notes
 
-- **Single source of truth.** Themes, locales, WMO codes, and the achievement
-  catalogue are each declared once and their types/lists derive from it.
+- **Single source of truth.** Themes, locales, WMO codes, the achievement
+  catalogue, and the window stacking bands (`lib/z-order.ts`) are each declared
+  once and their types/lists derive from it.
+- **Client-side window manager.** The niri desktop is a pure, DOM-free reducer
+  (`components/niri/engine.ts`) that owns all tiling/layout state; the view layer
+  handles geometry (drag, click-to-front, pixel measurement) and dispatches back
+  in. A shared z-order provider gives every window/overlay a coherent
+  click-to-front order.
 - **Static-export constraints.** No server or middleware: i18n routing is
   client-side, locale is chosen at `/` by a client redirect, and anything needing
   a request (weather) is fetched in the browser. Assets are served under the
