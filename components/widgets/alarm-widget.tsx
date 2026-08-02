@@ -22,6 +22,7 @@ import { AlarmClockIcon } from "@/components/ui/alarm-clock"
 import { BellIcon, type BellIconHandle } from "@/components/ui/bell"
 import { Button } from "@/components/ui/button"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
+import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -308,7 +309,8 @@ function useTimer(onExpire: () => void): CountdownTimer {
 }
 
 export function AlarmWidget(): React.JSX.Element {
-  const { isAlarmOpen, setIsAlarmOpen, envSettings } = useGlobalStates()
+  const { isAlarmOpen, setIsAlarmOpen, envSettings, vimMode } =
+    useGlobalStates()
   const { translate } = useLocale()
   const { notify, remind } = useNotifications()
   const wd = envSettings.widgetDefaults.alarm
@@ -320,6 +322,8 @@ export function AlarmWidget(): React.JSX.Element {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [firing, setFiring] = useState<string | null>(null)
   const bellRef = useRef<BellIconHandle>(null)
+  const labelRef = useRef<HTMLInputElement>(null)
+  useVimInput(labelRef, { enabled: vimMode })
 
   const { h, m, s } = useClockParts()
   const stopwatch = useStopwatch()
@@ -524,6 +528,7 @@ export function AlarmWidget(): React.JSX.Element {
                   if (e.key === "Enter") addAlarm()
                 }}
                 placeholder={translate("widgets.alarm.labelPlaceholder")}
+                ref={labelRef}
                 type="text"
                 value={newLabel}
               />

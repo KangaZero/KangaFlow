@@ -3,10 +3,11 @@
 
 import { NotebookPen, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { RichTextEditor } from "@/components/widgets/rich-text-editor"
+import { useVimInput } from "@/lib/hooks/use-vim-input"
 import {
   formatNoteDate,
   NOTE_COLOR_KEYS,
@@ -15,6 +16,7 @@ import {
 } from "@/lib/notes"
 import type { TextAlign } from "@/lib/rich-text"
 import { cn } from "@/lib/utils"
+import { useGlobalStates } from "@/providers/global-state-provider"
 
 const TAP_SPRING = { damping: 18, stiffness: 500, type: "spring" } as const
 
@@ -39,6 +41,11 @@ export function NoteEditorWindow({
   onClose: () => void
 }): React.JSX.Element {
   const [tagDraft, setTagDraft] = useState("")
+  const { vimMode } = useGlobalStates()
+  const titleRef = useRef<HTMLInputElement>(null)
+  const tagRef = useRef<HTMLInputElement>(null)
+  useVimInput(titleRef, { enabled: vimMode })
+  useVimInput(tagRef, { enabled: vimMode })
 
   const addTag = (): void => {
     const tag = tagDraft.trim()
@@ -72,6 +79,7 @@ export function NoteEditorWindow({
           className="shrink-0 border-border border-b bg-transparent px-3 py-2 font-semibold text-sm outline-none placeholder:text-muted-foreground"
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder="Title"
+          ref={titleRef}
           value={note.title}
         />
 
@@ -152,6 +160,7 @@ export function NoteEditorWindow({
                   removeTag(note.tags[note.tags.length - 1] ?? "")
               }}
               placeholder="Add tag…"
+              ref={tagRef}
               value={tagDraft}
             />
           </div>

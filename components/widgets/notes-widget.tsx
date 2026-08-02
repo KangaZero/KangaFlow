@@ -3,9 +3,10 @@
 
 import { Pin, Plus, Search, Trash2 } from "lucide-react"
 import { AnimatePresence, LayoutGroup, motion } from "motion/react"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { NoteEditorWindow } from "@/components/widgets/note-editor-window"
+import { useVimInput } from "@/lib/hooks/use-vim-input"
 import {
   createNote,
   formatNoteDate,
@@ -30,11 +31,14 @@ const REORDER_SPRING = {
 } as const
 
 export function NotesWidget(): React.JSX.Element {
-  const { isNotesOpen, setIsNotesOpen, envSettings } = useGlobalStates()
+  const { isNotesOpen, setIsNotesOpen, envSettings, vimMode } =
+    useGlobalStates()
   const wd = envSettings.widgetDefaults.notes
   const [notes, setNotes] = useState<Note[]>(loadNotes)
   const [openIds, setOpenIds] = useState<string[]>([])
   const [query, setQuery] = useState("")
+  const searchRef = useRef<HTMLInputElement>(null)
+  useVimInput(searchRef, { enabled: vimMode })
 
   // Restore open editor windows after mount, dropping ids with no live note.
   // biome-ignore lint/correctness/useExhaustiveDependencies: mount-only restore reads notes once
@@ -213,6 +217,7 @@ export function NotesWidget(): React.JSX.Element {
                 className="min-w-0 flex-1 bg-transparent py-1.5 text-sm outline-none placeholder:text-muted-foreground"
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search title or tag…"
+                ref={searchRef}
                 type="search"
                 value={query}
               />

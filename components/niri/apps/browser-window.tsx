@@ -10,7 +10,9 @@ import {
   X,
 } from "lucide-react"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
+import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { cn } from "@/lib/utils"
+import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
 // Bookmarks persist across sessions (localStorage).
@@ -83,6 +85,7 @@ const TOOLBAR_BUTTON =
 
 export function BrowserWindow(): React.JSX.Element {
   const { translate } = useLocale()
+  const { vimMode } = useGlobalStates()
   const initialTab = useMemo(() => makeTab(currentHome()), [])
   const [tabs, setTabs] = useState<Tab[]>(() => [initialTab])
   const [activeId, setActiveId] = useState<string>(() => initialTab.id)
@@ -93,6 +96,7 @@ export function BrowserWindow(): React.JSX.Element {
   const [comboOpen, setComboOpen] = useState(false)
   const [highlight, setHighlight] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  useVimInput(inputRef, { enabled: vimMode })
   const listboxId = useId()
 
   const activeTab = tabs.find((t) => t.id === activeId) ?? tabs[0]

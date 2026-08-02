@@ -3,10 +3,11 @@
 
 import { Plus, Trash2 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarDaysIcon } from "@/components/ui/calendar-days"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
+import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 
@@ -52,12 +53,15 @@ function saveEvents(events: CalEvent[]): void {
 }
 
 export function CalendarWidget(): React.JSX.Element {
-  const { isCalendarOpen, setIsCalendarOpen, envSettings } = useGlobalStates()
+  const { isCalendarOpen, setIsCalendarOpen, envSettings, vimMode } =
+    useGlobalStates()
   const wd = envSettings.widgetDefaults.calendar
   const [events, setEvents] = useState<CalEvent[]>(loadEvents)
   const [selected, setSelected] = useState<Date | undefined>(new Date())
   const [newTitle, setNewTitle] = useState("")
   const [newColor, setNewColor] = useState<string>(EVENT_COLORS[0])
+  const eventRef = useRef<HTMLInputElement>(null)
+  useVimInput(eventRef, { enabled: vimMode })
 
   const updateEvents = (next: CalEvent[]): void => {
     setEvents(next)
@@ -190,6 +194,7 @@ export function CalendarWidget(): React.JSX.Element {
                 if (e.key === "Enter") addEvent()
               }}
               placeholder="Add event…"
+              ref={eventRef}
               type="text"
               value={newTitle}
             />
