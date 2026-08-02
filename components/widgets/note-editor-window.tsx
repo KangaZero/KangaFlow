@@ -117,10 +117,14 @@ export function NoteEditorWindow({
                 />
               ))}
             </div>
-            <span className="ml-auto text-[10px] text-muted-foreground">
-              Created {formatNoteDate(note.createdOn)} · Edited{" "}
-              {formatNoteDate(note.updatedOn)}
-            </span>
+            <div className="flex w-full flex-col justify-end">
+              <span className="ml-auto text-[10px] text-muted-foreground">
+                Created {formatNoteDate(note.createdOn)}
+              </span>
+              <span className="ml-auto text-[10px] text-muted-foreground">
+                Edited {formatNoteDate(note.updatedOn)}
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-1">
