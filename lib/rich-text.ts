@@ -4,6 +4,12 @@
 // string helpers (sanitize/excerpt) are pure and SSR-safe so they can run in
 // render and be unit-tested.
 
+import {
+  domPositionAt,
+  readVimBuffer,
+  type VimBuffer,
+} from "@/lib/rich-text-caret"
+
 export type InlineFormatState = {
   bold: boolean
   underline: boolean
@@ -116,6 +122,99 @@ export function readState(root: HTMLElement): InlineFormatState {
     strike: decoration.includes("line-through"),
     underline: decoration.includes("underline"),
   }
+}
+
+// ── Vim over contentEditable ───────────────────────────────────────────────
+// The vim layer edits the note by flat buffer offset (see rich-text-caret): it
+// reads the buffer, decides with the pure reducer, then translates offsets back
+// to DOM Ranges. Edits go through Range mutation — NOT textContent replacement —
+// so bold/underline/font-size spans around untouched text survive.
+
+// Read the buffer (plain text + caret offset) from the live selection in `root`.
+export function readVim(root: HTMLElement): VimBuffer {
+  const sel = window.getSelection()
+  const focus =
+    sel && sel.rangeCount > 0 && sel.focusNode && root.contains(sel.focusNode)
+      ? { node: sel.focusNode, offset: sel.focusOffset }
+      : null
+  return readVimBuffer(root, focus?.node ?? null, focus?.offset ?? 0)
+}
+
+// Build a DOM Range spanning [from, to) of the current buffer. When the buffer
+// has no text node (an empty note, e.g. right after `dd`), fall back to the root
+// element itself so a caret can still be placed and typed into.
+function rangeFor(root: HTMLElement, from: number, to: number): Range | null {
+  const buffer = readVimBuffer(root)
+  const fallback = { node: root as Node, offset: 0 }
+  const a = domPositionAt(buffer, from) ?? fallback
+  const b = domPositionAt(buffer, to) ?? fallback
+  const range = document.createRange()
+  range.setStart(a.node, a.offset)
+  range.setEnd(b.node, b.offset)
+  return range
+}
+
+function applyRange(range: Range, collapseToStart: boolean): void {
+  const sel = window.getSelection()
+  if (!sel) return
+  if (collapseToStart) range.collapse(true)
+  sel.removeAllRanges()
+  sel.addRange(range)
+}
+
+// Place a collapsed caret at flat `offset`.
+export function placeCaret(root: HTMLElement, offset: number): void {
+  const range = rangeFor(root, offset, offset)
+  if (range) applyRange(range, true)
+}
+
+// Select [from, to) — used for VISUAL and the NORMAL block caret (to = from+1).
+export function selectVimRange(
+  root: HTMLElement,
+  from: number,
+  to: number
+): void {
+  const range = rangeFor(root, from, to)
+  if (range) applyRange(range, false)
+}
+
+// Delete [from, to), preserving surrounding formatting, and collapse the caret
+// to the start. Returns the removed plain text (for the yank register).
+export function deleteVimRange(
+  root: HTMLElement,
+  from: number,
+  to: number
+): string {
+  const range = rangeFor(root, from, to)
+  if (!range) return ""
+  const removed = range.toString()
+  range.deleteContents()
+  placeCaret(root, from) // rebuild against the mutated DOM
+  return removed
+}
+
+// Insert plain `text` at flat `offset` and leave the caret just after it.
+export function insertVimText(
+  root: HTMLElement,
+  offset: number,
+  text: string
+): void {
+  if (text === "") {
+    placeCaret(root, offset)
+    return
+  }
+  const range = rangeFor(root, offset, offset)
+  if (!range) return
+  // Turn "\n" into real <br> breaks (a plain "\n" text node collapses to a space
+  // in contentEditable) so multi-line paste round-trips through the buffer.
+  const fragment = document.createDocumentFragment()
+  text.split("\n").forEach((part, i) => {
+    if (i > 0) fragment.appendChild(document.createElement("br"))
+    if (part) fragment.appendChild(document.createTextNode(part))
+  })
+  range.insertNode(fragment)
+  root.normalize() // merge adjacent text nodes so offsets stay simple
+  placeCaret(root, offset + text.length)
 }
 
 // ── Pure string helpers (SSR-safe, unit-tested) ────────────────────────────

@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Slider } from "@/components/ui/slider"
 import { useCaretPosition } from "@/lib/hooks/use-caret-position"
+import { useLineNumbers } from "@/lib/hooks/use-line-numbers"
+import { useVimContentEditable } from "@/lib/hooks/use-vim-content-editable"
 import {
   DEFAULT_FONT_SIZE,
   FONT_SIZES,
@@ -37,6 +39,7 @@ import {
   toggleDecoration,
 } from "@/lib/rich-text"
 import { cn } from "@/lib/utils"
+import { useGlobalStates } from "@/providers/global-state-provider"
 
 const EMPTY_STATE: InlineFormatState = {
   bold: false,
@@ -108,6 +111,15 @@ export function RichTextEditor({
   const [fmt, setFmt] = useState<InlineFormatState>(EMPTY_STATE)
   // Caret line/column for the vim-style ruler (foundation for line-aware vim).
   const caret = useCaretPosition(editorRef)
+  // Modal (vim) editing over the contentEditable when the global toggle is on.
+  const { vimMode, noteLineNumbers } = useGlobalStates()
+  useVimContentEditable(editorRef, { enabled: vimMode })
+  // Vim-style line-number gutter (off / absolute / relative).
+  const { lines: gutterLines, scrollTop } = useLineNumbers(
+    editorRef,
+    noteLineNumbers,
+    caret?.row ?? 1
+  )
 
   // Seed the contentEditable once (keyed by note id upstream, so a remount loads
   // the right note). Never re-inject on render — React children would fight the
@@ -278,25 +290,46 @@ export function RichTextEditor({
         </DropdownMenu>
       </div>
 
-      {/* Editable surface */}
-      {/* biome-ignore lint/a11y/useFocusableInteractive: contentEditable is inherently focusable */}
-      {/* biome-ignore lint/a11y/useSemanticElements: a rich-text contentEditable cannot be an <input>/<textarea> */}
-      <div
-        aria-label="Note content"
-        aria-multiline="true"
-        className="min-h-0 flex-1 overflow-auto p-3 text-sm leading-relaxed outline-none [&_a]:text-primary [&_a]:underline"
-        contentEditable
-        onInput={emitHtml}
-        ref={editorRef}
-        role="textbox"
-        style={{
-          fontSize: DEFAULT_FONT_SIZE,
-          letterSpacing: `${letterSpacing}px`,
-          lineHeight,
-          textAlign: align,
-        }}
-        suppressContentEditableWarning
-      />
+      {/* Editable surface (+ optional line-number gutter overlay) */}
+      <div className="relative flex min-h-0 flex-1">
+        {noteLineNumbers !== "off" ? (
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 overflow-hidden border-border/40 border-r bg-muted/10 font-mono text-[0.7rem] text-muted-foreground tabular-nums">
+            <div style={{ transform: `translateY(${-scrollTop}px)` }}>
+              {gutterLines.map((line, i) => (
+                <span
+                  className="absolute right-1.5"
+                  // biome-ignore lint/suspicious/noArrayIndexKey: rows are positional
+                  key={i}
+                  style={{ top: line.top }}
+                >
+                  {line.num}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {/* biome-ignore lint/a11y/useFocusableInteractive: contentEditable is inherently focusable */}
+        {/* biome-ignore lint/a11y/useSemanticElements: a rich-text contentEditable cannot be an <input>/<textarea> */}
+        <div
+          aria-label="Note content"
+          aria-multiline="true"
+          className={cn(
+            "min-h-0 flex-1 overflow-auto p-3 text-sm leading-relaxed outline-none [&_a]:text-primary [&_a]:underline",
+            noteLineNumbers !== "off" && "pl-11"
+          )}
+          contentEditable
+          onInput={emitHtml}
+          ref={editorRef}
+          role="textbox"
+          style={{
+            fontSize: DEFAULT_FONT_SIZE,
+            letterSpacing: `${letterSpacing}px`,
+            lineHeight,
+            textAlign: align,
+          }}
+          suppressContentEditableWarning
+        />
+      </div>
 
       {/* Vim-style ruler: line,column · total lines. Numeric, so no i18n label
           needed (matches vim's bottom-right ruler). */}

@@ -12,6 +12,7 @@ import {
   HelpCircle,
   Image as ImageIcon,
   LayoutGrid,
+  ListOrdered,
   type LucideIcon,
   Maximize,
   Monitor,
@@ -57,6 +58,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Slider } from "@/components/ui/slider"
+import {
+  NOTE_LINE_NUMBER_MODES,
+  type NoteLineNumbers,
+} from "@/lib/globalStates"
 import type { TranslationKey } from "@/lib/i18n"
 import { THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
@@ -84,6 +89,12 @@ const WIDGET_NAME_KEY = {
   media: "mediaPlayer.title",
   notes: "widgets.notes.title",
 } as const satisfies Record<WidgetId, TranslationKey>
+
+const NOTE_LINE_NUMBER_LABEL = {
+  absolute: "environment.settings.lineNumbersAbsolute",
+  off: "settings.off",
+  relative: "environment.settings.lineNumbersRelative",
+} as const satisfies Record<NoteLineNumbers, TranslationKey>
 
 // Read the live drag offset a widget persisted (for "apply current position").
 function readWidgetOffset(storageKey: string): { x: number; y: number } | null {
@@ -328,6 +339,8 @@ export function NoctaliaSettings(props: {
     isAlarmOpen,
     isCalendarOpen,
     isMediaPlayerOpen,
+    noteLineNumbers,
+    setNoteLineNumbers,
   } = useGlobalStates()
   const widgetOpen: Record<WidgetId, boolean> = {
     alarm: isAlarmOpen,
@@ -850,6 +863,28 @@ export function NoctaliaSettings(props: {
                             )}
                           </p>
                         )}
+
+                        {/* Notes: vim-style line-number gutter */}
+                        {id === "notes" ? (
+                          <>
+                            <SectionLabel icon={ListOrdered}>
+                              {translate(
+                                "environment.settings.noteLineNumbers"
+                              )}
+                            </SectionLabel>
+                            <Segmented<NoteLineNumbers>
+                              format={(m) =>
+                                translate(NOTE_LINE_NUMBER_LABEL[m])
+                              }
+                              label={translate(
+                                "environment.settings.noteLineNumbers"
+                              )}
+                              onSelect={setNoteLineNumbers}
+                              options={NOTE_LINE_NUMBER_MODES}
+                              value={noteLineNumbers}
+                            />
+                          </>
+                        ) : null}
                       </SettingCard>
                     )
                   })

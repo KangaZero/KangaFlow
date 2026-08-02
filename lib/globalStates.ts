@@ -54,6 +54,10 @@ export type GlobalStatesContextValue = {
   // Read by <VimInput>/useVimInput to arm modal editing on text fields.
   vimMode: boolean
   setVimMode: (on: boolean) => void
+  // Note-editor line-number gutter (persisted): off, absolute, or vim-style
+  // relative (distance from the caret line).
+  noteLineNumbers: NoteLineNumbers
+  setNoteLineNumbers: (mode: NoteLineNumbers) => void
   // Niri environment desktop settings (wallpaper, accent, transparency, bar,
   // font, UI scale). Persisted so the whole site — including the media player's
   // glass surface — can share the chosen look.
@@ -68,3 +72,8 @@ export type GlobalStatesContextValue = {
 
 export const ANIMATION_PREFS = ["system", "on", "off"] as const
 export type AnimationPref = (typeof ANIMATION_PREFS)[number]
+
+// Vim-style line-number gutter modes for the note editor. "absolute" = 1..N,
+// "relative" = distance from the caret line (like :set relativenumber).
+export const NOTE_LINE_NUMBER_MODES = ["off", "absolute", "relative"] as const
+export type NoteLineNumbers = (typeof NOTE_LINE_NUMBER_MODES)[number]

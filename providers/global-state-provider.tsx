@@ -36,6 +36,8 @@ import {
   COLUMN_OPTIONS,
   type ColumnCount,
   type GlobalStatesContextValue,
+  NOTE_LINE_NUMBER_MODES,
+  type NoteLineNumbers,
 } from "@/lib/globalStates"
 import {
   DEFAULT_SHORTCUTS,
@@ -60,6 +62,16 @@ const VIM_MODE_STORAGE_KEY = "kangaflow:vimMode"
 function loadVimMode(): boolean {
   if (typeof window === "undefined") return false
   return window.localStorage.getItem(VIM_MODE_STORAGE_KEY) === "true"
+}
+
+const NOTE_LINE_NUMBERS_STORAGE_KEY = "kangaflow:noteLineNumbers"
+
+function loadNoteLineNumbers(): NoteLineNumbers {
+  if (typeof window === "undefined") return "off"
+  const raw = window.localStorage.getItem(NOTE_LINE_NUMBERS_STORAGE_KEY)
+  return (NOTE_LINE_NUMBER_MODES as readonly string[]).includes(raw ?? "")
+    ? (raw as NoteLineNumbers)
+    : "off"
 }
 
 const ANIMATION_STORAGE_KEY = "kangaflow:animations"
@@ -199,6 +211,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isNotesOpen: false,
   isSettingsOpen: false,
   isTerminalOpen: false,
+  noteLineNumbers: "off",
   setAnimationPref: () => {},
   setColumnCount: () => {},
   setEnvSettings: () => {},
@@ -211,6 +224,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   setIsNotesOpen: () => {},
   setIsSettingsOpen: () => {},
   setIsTerminalOpen: () => {},
+  setNoteLineNumbers: () => {},
   setShortcuts: () => {},
   setShowChromeInEnvironment: () => {},
   setTerminalFile: () => {},
@@ -277,6 +291,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [showChromeInEnvironment, setShowChromeInEnvironment] = useState(false)
   const [animationPref, setAnimationPref] = useState<AnimationPref>("system")
   const [vimMode, setVimMode] = useState(false)
+  const [noteLineNumbers, setNoteLineNumbers] = useState<NoteLineNumbers>("off")
   const [envSettings, setEnvSettings] =
     useState<EnvSettings>(DEFAULT_ENV_SETTINGS)
 
@@ -286,6 +301,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     setShowChromeInEnvironment(loadEnvChrome())
     setAnimationPref(loadAnimationPref())
     setVimMode(loadVimMode())
+    setNoteLineNumbers(loadNoteLineNumbers())
     const loaded = loadEnvSettings()
     setEnvSettings(loaded)
     // Auto-open widgets flagged "show on startup" (single, hydration-time place).
@@ -335,6 +351,15 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     }
   }, [vimMode])
 
+  useEffect(() => {
+    if (hydrated.current) {
+      window.localStorage.setItem(
+        NOTE_LINE_NUMBERS_STORAGE_KEY,
+        noteLineNumbers
+      )
+    }
+  }, [noteLineNumbers])
+
   // Persist the animation preference and mirror the *resolved* state onto a
   // <html data-animations> attribute so the CSS kill-switch (globals.css) can
   // neutralise CSS transitions/animations too, not just motion/react.
@@ -371,6 +396,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isNotesOpen,
       isSettingsOpen,
       isTerminalOpen,
+      noteLineNumbers,
       setAnimationPref,
       setColumnCount,
       setEnvSettings,
@@ -383,6 +409,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       setIsNotesOpen,
       setIsSettingsOpen,
       setIsTerminalOpen,
+      setNoteLineNumbers,
       setShortcuts,
       setShowChromeInEnvironment,
       setTerminalFile,
@@ -398,6 +425,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       animationPref,
       columnCount,
       envSettings,
+      noteLineNumbers,
       showChromeInEnvironment,
       vimMode,
       isAlarmOpen,
