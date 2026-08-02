@@ -7,6 +7,7 @@ import {
   AlignLeft,
   AlignRight,
   Bold,
+  Code2,
   type LucideIcon,
   MoveHorizontal,
   MoveVertical,
@@ -28,8 +29,10 @@ import { useCaretPosition } from "@/lib/hooks/use-caret-position"
 import { useLineNumbers } from "@/lib/hooks/use-line-numbers"
 import { useVimContentEditable } from "@/lib/hooks/use-vim-content-editable"
 import {
+  applyRawHtml,
   DEFAULT_FONT_SIZE,
   FONT_SIZES,
+  formatHtml,
   type InlineFormatState,
   readState,
   sanitizeHtml,
@@ -109,6 +112,10 @@ export function RichTextEditor({
 }: RichTextEditorProps): React.JSX.Element {
   const editorRef = useRef<HTMLDivElement>(null)
   const [fmt, setFmt] = useState<InlineFormatState>(EMPTY_STATE)
+  // Raw-HTML view: shows the editor's actual markup in a plain textarea. The
+  // contentEditable stays mounted (hidden) so the vim/gutter listeners survive.
+  const [showRaw, setShowRaw] = useState(false)
+  const [rawHtml, setRawHtml] = useState("")
   // Caret line/column for the vim-style ruler (foundation for line-aware vim).
   const caret = useCaretPosition(editorRef)
   // Modal (vim) editing over the contentEditable when the global toggle is on.
@@ -152,6 +159,21 @@ export function RichTextEditor({
   const emitHtml = useCallback(() => {
     if (editorRef.current) onHtmlChange(editorRef.current.innerHTML)
   }, [onHtmlChange])
+
+  // Toggle raw ⇄ rendered. Entering raw snapshots the live innerHTML; leaving
+  // applies the (possibly edited) markup back into the still-mounted editor.
+  const toggleRaw = useCallback(() => {
+    const root = editorRef.current
+    if (!root) return
+    if (showRaw) {
+      applyRawHtml(root, rawHtml) // apply edits, stripping indentation whitespace
+      emitHtml()
+      setShowRaw(false)
+    } else {
+      setRawHtml(formatHtml(root.innerHTML)) // pretty-print for reading
+      setShowRaw(true)
+    }
+  }, [showRaw, rawHtml, emitHtml])
 
   // Run an engine command, then push the new html + refresh the toolbar.
   const run = useCallback(
@@ -288,10 +310,22 @@ export function RichTextEditor({
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <span className="mx-0.5 h-4 w-px bg-border" />
+
+        {/* Raw HTML view toggle */}
+        <ToolbarToggle
+          active={showRaw}
+          icon={Code2}
+          label="Raw HTML"
+          onToggle={toggleRaw}
+        />
       </div>
 
-      {/* Editable surface (+ optional line-number gutter overlay) */}
-      <div className="relative flex min-h-0 flex-1">
+      {/* Editable surface (+ optional line-number gutter overlay). The
+          contentEditable stays mounted (hidden in raw mode) so its listeners
+          survive; the raw <textarea> overlays it. */}
+      <div className={cn("relative flex min-h-0 flex-1", showRaw && "hidden")}>
         {noteLineNumbers !== "off" ? (
           <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 overflow-hidden border-border/40 border-r bg-muted/10 font-mono text-[0.7rem] text-muted-foreground tabular-nums">
             <div style={{ transform: `translateY(${-scrollTop}px)` }}>
@@ -330,6 +364,17 @@ export function RichTextEditor({
           suppressContentEditableWarning
         />
       </div>
+
+      {/* Raw HTML editor (shown instead of the rendered surface), fading in. */}
+      {showRaw ? (
+        <textarea
+          aria-label="Raw note HTML"
+          className="fade-in min-h-0 flex-1 animate-in resize-none overflow-auto bg-muted/10 p-3 font-mono text-muted-foreground text-xs outline-none duration-50"
+          onChange={(e) => setRawHtml(e.target.value)}
+          spellCheck={false}
+          value={rawHtml}
+        />
+      ) : null}
 
       {/* Vim-style ruler: line,column · total lines. Numeric, so no i18n label
           needed (matches vim's bottom-right ruler). */}

@@ -2,7 +2,9 @@
 import { afterEach, describe, expect, it } from "vitest"
 
 import {
+  applyRawHtml,
   deleteVimRange,
+  formatHtml,
   htmlToPlainText,
   insertVimText,
   readVim,
@@ -93,6 +95,34 @@ describe("vim DOM ops (formatting-preserving)", () => {
     insertVimText(root, 3, "X") // between foo and bold bar
     expect(root.textContent).toBe("fooXbar")
     expect(root.querySelector("b")?.textContent).toBe("bar")
+  })
+
+  it("formatHtml puts each block on its own line (br stays inline)", () => {
+    expect(formatHtml("<div>a</div><div>b</div>")).toBe(
+      "<div>a</div>\n<div>b</div>"
+    )
+    expect(formatHtml("<div>regular<br></div><div>x</div>")).toBe(
+      "<div>regular<br></div>\n<div>x</div>"
+    )
+  })
+
+  it("toggling raw/rendered 10 times yields the identical raw form", () => {
+    const root = mount("<div>regular<br></div><div>x</div>")
+    const firstRaw = formatHtml(root.innerHTML) // the first "toggle to raw"
+    let raw = firstRaw
+    for (let i = 0; i < 10; i++) {
+      applyRawHtml(root, raw) // toggle back to rendered
+      raw = formatHtml(root.innerHTML) // toggle to raw again
+      expect(raw).toBe(firstRaw) // must be byte-identical every time
+    }
+  })
+
+  it("applyRawHtml strips inter-block whitespace but keeps inline spaces", () => {
+    const root = mount("")
+    applyRawHtml(root, "<div>a</div>\n<div>b</div>")
+    expect(readVim(root).text).toBe("a\nb")
+    applyRawHtml(root, "<b>a</b> <b>b</b>")
+    expect(root.textContent).toBe("a b")
   })
 
   it("insertVimText turns newlines into <br> breaks", () => {

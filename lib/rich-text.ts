@@ -5,6 +5,7 @@
 // render and be unit-tested.
 
 import {
+  BLOCK_TAGS,
   domPositionAt,
   readVimBuffer,
   type VimBuffer,
@@ -215,6 +216,77 @@ export function insertVimText(
   range.insertNode(fragment)
   root.normalize() // merge adjacent text nodes so offsets stay simple
   placeCaret(root, offset + text.length)
+}
+
+// ── Raw-HTML view (pretty-print for the notes "raw" toggle) ─────────────────
+
+function attrsOf(el: Element): string {
+  return Array.from(el.attributes)
+    .map((a) => ` ${a.name}="${a.value}"`)
+    .join("")
+}
+
+// Serialize a node and its subtree inline (no added whitespace), so the output
+// re-parses to the exact same DOM.
+function serializeNode(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? ""
+  if (!(node instanceof HTMLElement)) return ""
+  const tag = node.tagName.toLowerCase()
+  const attrs = attrsOf(node)
+  if (tag === "br") return `<${tag}${attrs}>`
+  const inner = Array.from(node.childNodes).map(serializeNode).join("")
+  return `<${tag}${attrs}>${inner}</${tag}>`
+}
+
+// Pretty-print the editor's markup by putting each TOP-LEVEL node (each line's
+// block) on its own line, content serialized inline. The ONLY added whitespace
+// is the "\n" *between* block siblings — which applyRawHtml strips — so
+// applyRawHtml(formatHtml(x)) is an identity and repeated toggles are stable
+// (deterministic: same input → same output, no widening gaps).
+export function formatHtml(html: string): string {
+  const tmp = document.createElement("div")
+  tmp.innerHTML = html
+  const lines: string[] = []
+  tmp.childNodes.forEach((child) => {
+    const s = serializeNode(child)
+    if (child.nodeType === Node.TEXT_NODE) {
+      if (s.trim()) lines.push(s)
+    } else {
+      lines.push(s)
+    }
+  })
+  return lines.join("\n")
+}
+
+// Whether a node is a block/<br> boundary (or absent) — the places between which
+// pretty-print indentation whitespace sits.
+function isBoundary(node: Node | null): boolean {
+  return (
+    node === null ||
+    (node instanceof HTMLElement &&
+      (BLOCK_TAGS.has(node.tagName) || node.tagName === "BR"))
+  )
+}
+
+// Set the editor markup from the raw view, then drop the whitespace-only text
+// nodes that live *between block boundaries* (the pretty-print indentation) so
+// they don't become real content. Inline whitespace (e.g. a space between two
+// spans) is left untouched.
+export function applyRawHtml(root: HTMLElement, raw: string): void {
+  root.innerHTML = sanitizeHtml(raw)
+  const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  const remove: Text[] = []
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+    const t = n as Text
+    if (
+      /^\s+$/.test(t.data) &&
+      isBoundary(t.previousSibling) &&
+      isBoundary(t.nextSibling)
+    ) {
+      remove.push(t)
+    }
+  }
+  for (const t of remove) t.remove()
 }
 
 // ── Pure string helpers (SSR-safe, unit-tested) ────────────────────────────
