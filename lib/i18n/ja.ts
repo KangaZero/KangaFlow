@@ -321,6 +321,7 @@ const ja = {
     animationSystem: "システム",
     currentLabel: "現在",
     description: "ショートカットを再設定できます。変更は自動保存されます。",
+    enableVim: "テキスト入力で vim キーバインドを有効化",
     errors: {
       duplicate: "この組み合わせは既に使われています。",
       empty: "このショートカットにキーを設定してください。",

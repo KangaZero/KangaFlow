@@ -50,6 +50,10 @@ export type GlobalStatesContextValue = {
   // (the default), "on" forces animations, "off" disables them.
   animationPref: AnimationPref
   setAnimationPref: (pref: AnimationPref) => void
+  // Whether native inputs get modal vim keybindings (persisted; default off).
+  // Read by <VimInput>/useVimInput to arm modal editing on text fields.
+  vimMode: boolean
+  setVimMode: (on: boolean) => void
   // Niri environment desktop settings (wallpaper, accent, transparency, bar,
   // font, UI scale). Persisted so the whole site — including the media player's
   // glass surface — can share the chosen look.

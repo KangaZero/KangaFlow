@@ -25,6 +25,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react"
 import type { BorderRadius } from "@/components/niri/settings"
 import type { AppId } from "@/components/niri/types"
+import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { LOCALES, type Locale } from "@/lib/i18n"
 import { THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
@@ -104,6 +105,7 @@ export function NoctaliaLauncher(props: {
     setIsAlarmOpen,
     isCalendarOpen,
     setIsCalendarOpen,
+    vimMode,
   } = useGlobalStates()
 
   const [query, setQuery] = useState("")
@@ -112,6 +114,11 @@ export function NoctaliaLauncher(props: {
   const inputRef = useRef<HTMLInputElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const shouldReduceMotion = useReducedMotion()
+
+  // Modal (vim) editing on the search field when the global toggle is on. In
+  // INSERT the hook swallows Esc (→ NORMAL); in NORMAL it lets Esc bubble to
+  // handleKeyDown below, which closes the launcher — so no onEscape is needed.
+  useVimInput(inputRef, { enabled: vimMode })
 
   const needle = query.trim().toLowerCase()
 

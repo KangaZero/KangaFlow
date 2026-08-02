@@ -71,6 +71,8 @@ export function SettingsDialog() {
     setShowChromeInEnvironment,
     animationPref,
     setAnimationPref,
+    vimMode,
+    setVimMode,
     theme,
     toggleTheme,
   } = useGlobalStates()
@@ -212,6 +214,17 @@ export function SettingsDialog() {
             aria-pressed={showChromeInEnvironment}
             checked={showChromeInEnvironment}
             onClick={() => setShowChromeInEnvironment(!showChromeInEnvironment)}
+          />
+        </div>
+
+        <div className="flex items-center justify-between gap-3 border-border border-t py-3">
+          <p className="font-medium text-sm">
+            {translate("settings.enableVim")}
+          </p>
+          <Switch
+            aria-pressed={vimMode}
+            checked={vimMode}
+            onClick={() => setVimMode(!vimMode)}
           />
         </div>
 

@@ -321,6 +321,7 @@ const en = {
     animationSystem: "System",
     currentLabel: "Current",
     description: "Rebind keyboard shortcuts. Changes save automatically.",
+    enableVim: "Enable vim keybindings in text inputs",
     errors: {
       duplicate: "This combination is already in use.",
       empty: "Set a key for this shortcut.",

@@ -55,6 +55,13 @@ function loadEnvChrome(): boolean {
   return window.localStorage.getItem(ENV_CHROME_STORAGE_KEY) === "true"
 }
 
+const VIM_MODE_STORAGE_KEY = "kangaflow:vimMode"
+
+function loadVimMode(): boolean {
+  if (typeof window === "undefined") return false
+  return window.localStorage.getItem(VIM_MODE_STORAGE_KEY) === "true"
+}
+
 const ANIMATION_STORAGE_KEY = "kangaflow:animations"
 
 function isAnimationPref(value: string | null): value is AnimationPref {
@@ -207,11 +214,13 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   setShortcuts: () => {},
   setShowChromeInEnvironment: () => {},
   setTerminalFile: () => {},
+  setVimMode: () => {},
   shortcuts: [...DEFAULT_SHORTCUTS],
   showChromeInEnvironment: false,
   terminalFile: null,
   theme: DEFAULT_THEME,
   toggleTheme: async () => {},
+  vimMode: false,
 }
 
 const GlobalStatesContext = createContext<GlobalStatesContextValue>(
@@ -267,6 +276,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     useState<ColumnCount>(DEFAULT_COLUMN_COUNT)
   const [showChromeInEnvironment, setShowChromeInEnvironment] = useState(false)
   const [animationPref, setAnimationPref] = useState<AnimationPref>("system")
+  const [vimMode, setVimMode] = useState(false)
   const [envSettings, setEnvSettings] =
     useState<EnvSettings>(DEFAULT_ENV_SETTINGS)
 
@@ -275,6 +285,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     setColumnCount(loadColumnCount())
     setShowChromeInEnvironment(loadEnvChrome())
     setAnimationPref(loadAnimationPref())
+    setVimMode(loadVimMode())
     const loaded = loadEnvSettings()
     setEnvSettings(loaded)
     // Auto-open widgets flagged "show on startup" (single, hydration-time place).
@@ -317,6 +328,12 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       )
     }
   }, [showChromeInEnvironment])
+
+  useEffect(() => {
+    if (hydrated.current) {
+      window.localStorage.setItem(VIM_MODE_STORAGE_KEY, String(vimMode))
+    }
+  }, [vimMode])
 
   // Persist the animation preference and mirror the *resolved* state onto a
   // <html data-animations> attribute so the CSS kill-switch (globals.css) can
@@ -369,17 +386,20 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       setShortcuts,
       setShowChromeInEnvironment,
       setTerminalFile,
+      setVimMode,
       shortcuts,
       showChromeInEnvironment,
       terminalFile,
       theme,
       toggleTheme,
+      vimMode,
     }),
     [
       animationPref,
       columnCount,
       envSettings,
       showChromeInEnvironment,
+      vimMode,
       isAlarmOpen,
       isCalendarOpen,
       isCommandPaletteOpen,
