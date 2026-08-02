@@ -127,20 +127,21 @@ export function listDir(
     })
 }
 
-/** Pretty cwd for the prompt: root "/" → "~", otherwise the absolute path. */
+/** Pretty cwd for the prompt: root "/" → "~", otherwise "~"-prefixed. */
 export function displayCwd(absPath: string): string {
-  return absPath === "/" ? "~" : absPath
+  return absPath === "/" ? "~" : `~${absPath}`
 }
 
 /**
  * Map a site route pathname (e.g. "/en/timeline") to a starting cwd inside the
- * tree: strip the leading /<locale> segment, then start in that page's folder
- * under app/[lang]. Falls back to "/" if the target dir doesn't exist.
+ * flat page tree: strip the leading /<locale> segment, then start in that page's
+ * dir ("/timeline"), or "/" (home) for a locale-only route. Falls back to "/"
+ * if the target dir doesn't exist.
  */
 export function cwdForRoute(pathname: string, root: VfsNode): string {
   // Drop the leading locale segment; whatever remains is the page sub-path.
   const [, ...rest] = splitAbsolute(pathname)
-  const target = resolvePath("/", ["app/[lang]", ...rest].join("/"))
+  const target = resolvePath("/", rest.join("/"))
 
   const node = nodeAt(root, target)
   if (node === null || node.type !== "dir") {

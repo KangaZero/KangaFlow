@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { buildPrompt, type PromptCtx } from "@/lib/terminal/prompt"
+import {
+  buildPrompt,
+  buildTransientPrompt,
+  type PromptCtx,
+} from "@/lib/terminal/prompt"
 
 const base: PromptCtx = {
   cols: 80,
@@ -47,5 +51,22 @@ describe("buildPrompt", () => {
     // A tiny width must not throw or produce a huge negative pad.
     const { block } = buildPrompt({ ...base, cols: 10 })
     expect(block).toContain("KangaZero/KangaFlow")
+  })
+})
+
+describe("buildTransientPrompt", () => {
+  it("is a compact single line with the cwd and » marker", () => {
+    const line = buildTransientPrompt({ cwd: "~/timeline" })
+    expect(line).toContain("~/timeline")
+    expect(line).toContain("»")
+    expect(line).not.toContain("\r\n") // single line, not the full block
+    expect(line).not.toContain("KangaZero/KangaFlow") // no git/CPU segments
+  })
+
+  it("colours the » marker red only on a non-zero exit", () => {
+    expect(buildTransientPrompt({ cwd: "~" })).not.toContain("38;2;239;83;80")
+    expect(buildTransientPrompt({ cwd: "~", exitCode: 1 })).toContain(
+      "38;2;239;83;80"
+    )
   })
 })

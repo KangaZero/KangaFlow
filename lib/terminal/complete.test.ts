@@ -7,7 +7,7 @@ const FILES = ["app/page.tsx", "app/layout.tsx", "lib/themes.ts"]
 describe("completeLine", () => {
   it("completes command names on the first token", () => {
     const result = completeLine("c", FILES)
-    expect(result.candidates).toEqual(["cat", "clear", "code"])
+    expect(result.candidates).toEqual(["cat", "cd", "clear", "cmatrix", "code"])
     expect(result.commonPrefix).toBe("c")
     expect(result.word).toBe("c")
   })
@@ -33,6 +33,16 @@ describe("completeLine", () => {
 
   it("completes theme names for the theme command", () => {
     expect(completeLine("theme te", FILES).candidates).toEqual(["terminal"])
+  })
+
+  it("completes page names for the cd command", () => {
+    expect(completeLine("cd ", FILES).candidates).toEqual([
+      "achievements",
+      "environment",
+      "home",
+      "timeline",
+    ])
+    expect(completeLine("cd t", FILES).candidates).toEqual(["timeline"])
   })
 
   it("returns no candidates for commands without argument completion", () => {

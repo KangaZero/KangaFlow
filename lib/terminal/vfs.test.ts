@@ -142,27 +142,32 @@ describe("displayCwd", () => {
     expect(displayCwd("/")).toBe("~")
   })
 
-  it("renders a nested path verbatim", () => {
-    expect(displayCwd("/app/[lang]")).toBe("/app/[lang]")
+  it('"~"-prefixes a nested path', () => {
+    expect(displayCwd("/timeline")).toBe("~/timeline")
   })
 })
 
 describe("cwdForRoute", () => {
-  it("maps a locale-only route to the [lang] folder", () => {
-    expect(cwdForRoute("/en", root)).toBe("/app/[lang]")
+  // Flat page tree: each routable page is a top-level dir holding index.tsx.
+  const pageRoot = buildVfs([
+    "index.tsx",
+    "achievements/index.tsx",
+    "timeline/index.tsx",
+  ])
+
+  it("maps a locale-only route to home (root)", () => {
+    expect(cwdForRoute("/en", pageRoot)).toBe("/")
   })
 
-  it("maps a nested route to its page folder", () => {
-    expect(cwdForRoute("/en/timeline", root)).toBe("/app/[lang]/timeline")
+  it("maps a nested route to its page dir", () => {
+    expect(cwdForRoute("/en/timeline", pageRoot)).toBe("/timeline")
   })
 
-  it("maps a ja route to its page folder", () => {
-    expect(cwdForRoute("/ja/achievements", root)).toBe(
-      "/app/[lang]/achievements"
-    )
+  it("maps a ja route to its page dir", () => {
+    expect(cwdForRoute("/ja/achievements", pageRoot)).toBe("/achievements")
   })
 
   it("falls back to root for an unknown route", () => {
-    expect(cwdForRoute("/en/environment", root)).toBe("/")
+    expect(cwdForRoute("/en/nonexistent", pageRoot)).toBe("/")
   })
 })

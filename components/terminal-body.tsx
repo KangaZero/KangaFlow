@@ -33,13 +33,36 @@ import type {
   ITerminalOptions,
 } from "@xterm/xterm"
 import localFont from "next/font/local"
+import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useXTerm } from "react-xtermjs"
 import { CodeEditor } from "@/components/code-editor"
+import {
+  createColumns,
+  frameDelayMs,
+  isMatrixTheme,
+  MATRIX_SCHEMES,
+  type MatrixOptions,
+  parseMatrixArgs,
+  renderFrame,
+  stepColumn,
+} from "@/lib/terminal/cmatrix"
 import { completeLine, suggestLine } from "@/lib/terminal/complete"
 import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
-import { buildPrompt, detectOs } from "@/lib/terminal/prompt"
+import {
+  buildPageFiles,
+  flatFileForSource,
+  hrefForPage,
+  pageByName,
+  pageForRoute,
+  TERMINAL_PAGE_NAMES,
+} from "@/lib/terminal/pages"
+import {
+  buildPrompt,
+  buildTransientPrompt,
+  detectOs,
+} from "@/lib/terminal/prompt"
 import {
   paletteForTheme,
   TERMINAL_FONT_FAMILY,
@@ -51,7 +74,6 @@ import {
   cwdForRoute,
   displayCwd,
   listDir,
-  nodeAt,
   resolvePath,
 } from "@/lib/terminal/vfs"
 import { isTheme, THEMES } from "@/lib/themes"
@@ -85,8 +107,14 @@ type Session = {
   suggestion: string | null
   // True while the nvim editor overlay has control (xterm ignores input).
   editorOpen: boolean
+  // True while the cmatrix screensaver is running (the next keystroke stops it).
+  matrixRunning: boolean
   // Current working directory (absolute VFS path) for cd/pwd/ls/cat/nvim.
   cwd: string
+  // Name of the page the app is currently on (drives cd's "already at" guard);
+  // tracked here because navigation changes the route but not this once-bound
+  // handler's closed-over props.
+  currentPage: string
 }
 
 type BarState = { mode: string; tab: string }
@@ -175,8 +203,9 @@ function ZjStatusBar({
 const HELP: readonly (readonly [cmd: string, desc: string])[] = [
   ["help", "show this help"],
   ["ff", "system info (fastfetch)"],
+  ["cmatrix", "digital rain (--help for options)"],
   ["ls", "list the current directory"],
-  ["cd <dir>", "change directory"],
+  ["cd <page>", "go to a page (home, achievements, timeline, environment)"],
   ["pwd", "print the working directory"],
   ["cat <file>", "print a file"],
   ["nvim <file>", "edit a file in vim"],
@@ -208,11 +237,15 @@ export function TerminalBody({
   routePath?: string
 }) {
   const { locale } = useLocale()
+  const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
   // paletteForTheme returns a shared constant → stable identity for deps.
   const palette = paletteForTheme(resolvedTheme)
-  // Virtual filesystem over the source snapshot (pages become folders).
-  const vfs = useMemo(() => buildVfs(Object.keys(files)), [files])
+  // Flat page filesystem: each routable page is a dir holding `index.tsx`
+  // (see lib/terminal/pages). Real repo paths → terminal display paths here.
+  const pageFiles = useMemo(() => buildPageFiles(files), [files])
+  // Virtual filesystem over the flat page map (pages become folders).
+  const vfs = useMemo(() => buildVfs(Object.keys(pageFiles)), [pageFiles])
   const fit = useMemo(() => new FitAddon(), [])
   // Stable references: useXTerm effect-depends on these, so fresh literals each
   // render would re-init the terminal every render → setState loop. Theme is set
@@ -241,15 +274,26 @@ export function TerminalBody({
   // Live theme for the once-bound data handler (ff reads it on each run).
   const darkRef = useRef(dark)
   darkRef.current = dark
+  // Live theme *name* for cmatrix, which picks a colour scheme per theme and so
+  // needs light/dark/terminal distinguished (unlike the light/dark-only palette).
+  const themeRef = useRef(resolvedTheme)
+  themeRef.current = resolvedTheme
+  // Live locale + router for `cd`, read inside the once-bound data handler.
+  const localeRef = useRef(locale)
+  localeRef.current = locale
+  const routerRef = useRef(router)
+  routerRef.current = router
 
   const startedAt = useRef(Date.now())
   const session = useRef<Session>({
+    currentPage: pageForRoute(routePath)?.name ?? "home",
     cwd: cwdForRoute(routePath, vfs),
     editorOpen: false,
     exitCode: 0,
     histIndex: 0,
     history: [],
     line: "",
+    matrixRunning: false,
     menu: null,
     promptPrefix: "",
     suggestion: null,
@@ -324,10 +368,41 @@ export function TerminalBody({
       for (const line of renderFastfetch(info)) term.writeln(line)
     }
 
+    // cmatrix screensaver. The only animated command: it owns a timer that
+    // paints frames until the next keystroke stops it (see onShellData). rng is
+    // Math.random here; the pure engine takes it as a param so it stays testable.
+    let matrixTimer: ReturnType<typeof setInterval> | null = null
+    const rng = () => Math.random()
+
+    const startMatrix = (options: MatrixOptions) => {
+      s.matrixRunning = true
+      // Hide the cursor and clear the screen for a clean canvas.
+      term.write("\x1b[?25l\x1b[2J")
+      const rows = term.rows
+      const width = term.cols
+      const scheme = MATRIX_SCHEMES[options.theme]
+      const columns = createColumns(width, rows, rng, options.density)
+      matrixTimer = setInterval(() => {
+        for (const col of columns) {
+          if (col) stepColumn(col, rows, rng)
+        }
+        term.write(renderFrame(columns, rows, width, scheme, options.bold))
+      }, frameDelayMs(options.speed))
+    }
+
+    const stopMatrix = () => {
+      if (matrixTimer !== null) clearInterval(matrixTimer)
+      matrixTimer = null
+      s.matrixRunning = false
+      // Restore the cursor, wipe the rain, and drop back to a fresh prompt.
+      term.write("\x1b[?25h\x1b[2J\x1b[H")
+      prompt()
+    }
+
     // Hand off to the CodeMirror (real vim) editor overlay. Returns whether it
     // opened, so the shell can decide whether to reprint the prompt.
     const openEditor = (path: string): boolean => {
-      const content = files[path]
+      const content = pageFiles[path]
       if (content === undefined) {
         term.write(`\r\nnvim: ${path}: no such file`)
         return false
@@ -355,19 +430,60 @@ export function TerminalBody({
           term.write("\r\n")
           fastfetch()
           return true
+        case "cmatrix":
+        case "matrix": {
+          const appTheme = isMatrixTheme(themeRef.current)
+            ? themeRef.current
+            : "terminal"
+          const parsed = parseMatrixArgs(args, appTheme)
+          if (parsed.kind === "help") {
+            term.write(`\r\n${parsed.text}`)
+            return true
+          }
+          if (parsed.kind === "error") {
+            s.exitCode = 1
+            term.write(`\r\n${parsed.message}`)
+            return true
+          }
+          startMatrix(parsed.options)
+          // The timer + stopMatrix own the screen now; don't reprint the prompt.
+          return false
+        }
         case "pwd":
           term.write(`\r\n${s.cwd}`)
           return true
         case "cd": {
-          const target = resolvePath(s.cwd, arg || "~")
-          const node = nodeAt(vfs, target)
-          if (!node) {
-            term.write(`\r\ncd: ${arg}: no such file or directory`)
-          } else if (node.type !== "dir") {
-            term.write(`\r\ncd: ${arg}: not a directory`)
-          } else {
-            s.cwd = target
+          // cd is page navigation: resolve the arg to a routable page and drive
+          // the real Next.js router. The flat tree is one level deep, so "~",
+          // "/" and ".." all mean home.
+          const raw = arg.trim()
+          // Bare `cd` lists the navigable pages instead of navigating anywhere.
+          if (raw === "") {
+            const listed = TERMINAL_PAGE_NAMES.map(
+              (p) => `\x1b[34m${p}\x1b[0m`
+            ).join("  ")
+            term.write(`\r\n${listed}`)
+            return true
           }
+          const name =
+            raw === "~" || raw === "/" || raw === ".."
+              ? "home"
+              : raw.replace(/^\/+|\/+$/g, "")
+          const page = pageByName(name)
+          if (!page) {
+            s.exitCode = 1
+            term.write(`\r\ncd: no such page: ${arg}`)
+            return true
+          }
+          if (name === s.currentPage) {
+            term.write(`\r\nalready at dir: ${name}`)
+            return true
+          }
+          s.currentPage = name
+          s.cwd = page.route ? `/${page.route}` : "/"
+          // Client-side route change; the terminal dialog stays open over it.
+          routerRef.current.push(hrefForPage(localeRef.current, page))
+          term.write(`\r\ncd → ${name}`)
           return true
         }
         case "ls": {
@@ -387,7 +503,7 @@ export function TerminalBody({
         }
         case "cat": {
           const key = resolvePath(s.cwd, arg).replace(/^\//, "")
-          const file = files[key]
+          const file = pageFiles[key]
           if (file === undefined) {
             term.write(`\r\ncat: ${arg}: no such file`)
             return true
@@ -443,7 +559,7 @@ export function TerminalBody({
     // Redraw the line plus its dim ghost-text suggestion, leaving the cursor
     // right after the typed text (the ghost sits ahead of it).
     const renderLine = () => {
-      const suggestion = suggestLine(s.line, Object.keys(files), s.history)
+      const suggestion = suggestLine(s.line, Object.keys(pageFiles), s.history)
       s.suggestion = suggestion
       term.write(`\r${s.promptPrefix}\x1b[K${s.line}`)
       if (suggestion && suggestion.length > s.line.length) {
@@ -458,6 +574,19 @@ export function TerminalBody({
       term.write(`\r${s.promptPrefix}\x1b[K${s.line}`)
     }
 
+    // Transient prompt (oh-my-posh transient_prompt): the input sits on the 3rd
+    // line of its prompt block. On submit, jump to the block's top, clear it,
+    // and redraw a compact one-line prompt echoing the command — so scrollback
+    // keeps only single-line prompts and just the *active* prompt stays full.
+    const collapsePrompt = (cmd: string) => {
+      s.suggestion = null
+      const transient = buildTransientPrompt({
+        cwd: displayCwd(s.cwd),
+        exitCode: s.exitCode,
+      })
+      term.write(`\r\x1b[2A\x1b[0J${transient}${cmd}`)
+    }
+
     // Fill the current ghost suggestion (Tab / →). Returns whether it applied.
     const acceptSuggestion = (): boolean => {
       if (s.suggestion === null) return false
@@ -468,9 +597,20 @@ export function TerminalBody({
 
     // Ambiguous completion: list candidates and open a cycling menu.
     const openMenu = () => {
-      const { wordStart, candidates } = completeLine(s.line, Object.keys(files))
+      const files = Object.keys(pageFiles)
+      // If the line is exactly one complete command with no trailing space,
+      // advance to its argument completion — so `cd`+Tab lists pages (and
+      // `theme`+Tab lists themes) instead of sitting on the finished command.
+      const first = completeLine(s.line, files)
+      const line =
+        first.wordStart === 0 &&
+        first.candidates.length === 1 &&
+        first.candidates[0] === first.word
+          ? `${s.line} `
+          : s.line
+      const { wordStart, candidates } = completeLine(line, files)
       if (candidates.length <= 1) return
-      const base = s.line.slice(0, wordStart)
+      const base = line.slice(0, wordStart)
       const next = base + (candidates[0] ?? "")
       s.menu = { base, candidates, index: 0 }
       s.line = next
@@ -489,6 +629,11 @@ export function TerminalBody({
     }
 
     const onShellData = (data: string) => {
+      // While the rain is running, any key stops it (and swallows that key).
+      if (s.matrixRunning) {
+        stopMatrix()
+        return
+      }
       // Tab: cycle an open menu, else accept the ghost, else open a menu.
       if (data === "\t") {
         if (s.menu) cycleMenu(1)
@@ -507,7 +652,7 @@ export function TerminalBody({
       // Any other key ends an active completion menu.
       s.menu = null
       if (data === "\r") {
-        clearGhost()
+        collapsePrompt(s.line)
         const line = s.line.trim()
         s.line = ""
         if (line) {
@@ -574,7 +719,12 @@ export function TerminalBody({
     fastfetch()
     // Open straight into the editor if a file was requested (page code button),
     // else drop to the shell prompt.
-    if (!(initialFile && openEditor(initialFile))) prompt()
+    // PageCodeButton passes a real deep source path; map it to the flat
+    // terminal file before opening (falling back to the raw value).
+    const startFile = initialFile
+      ? (flatFileForSource(initialFile) ?? initialFile)
+      : null
+    if (!(startFile && openEditor(startFile))) prompt()
 
     // While the editor overlay owns the screen, xterm ignores keystrokes.
     const sub = term.onData((data) => {
@@ -607,6 +757,7 @@ export function TerminalBody({
       sub.dispose()
       cancelAnimationFrame(refitRaf)
       observer.disconnect()
+      if (matrixTimer !== null) clearInterval(matrixTimer)
     }
   }, [instance])
 

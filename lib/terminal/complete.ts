@@ -3,19 +3,23 @@
 // line and the known file list, work out which token is being completed, the
 // matching candidates, and their longest common prefix. Free of xterm/React so
 // the terminal only owns menu state + drawing.
+import { TERMINAL_PAGE_NAMES } from "@/lib/terminal/pages"
 import { THEMES } from "@/lib/themes"
 
 // Single source of truth for the shell's command names (also drives completion
 // of the first word).
 export const SHELL_COMMANDS = [
   "cat",
+  "cd",
   "clear",
+  "cmatrix",
   "code",
   "exit",
   "ff",
   "help",
   "ls",
   "nvim",
+  "pwd",
   "theme",
   "vim",
   "whoami",
@@ -67,6 +71,9 @@ export function completeLine(
     }
   } else if (command === "theme") {
     pool = THEMES
+  } else if (command === "cd") {
+    // cd navigates to a page → complete the page names.
+    pool = TERMINAL_PAGE_NAMES
   } else {
     pool = []
   }

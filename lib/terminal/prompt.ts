@@ -118,6 +118,18 @@ export function buildPrompt(ctx: PromptCtx): {
   return { block: `${line1}\r\n${line2}\r\n${inputPrefix}`, inputPrefix }
 }
 
+// oh-my-posh "transient_prompt": once a command is submitted, its full
+// multi-line block collapses to this compact single line (path + arrow), so the
+// scrollback isn't dominated by repeated 3-line prompts — only the *active*
+// prompt keeps the full block. Pure string; terminal-body drives the redraw.
+export function buildTransientPrompt(ctx: {
+  cwd: string
+  exitCode?: number
+}): string {
+  const arrow = (ctx.exitCode ?? 0) > 0 ? RED : PURPLE
+  return `${fg(PURPLE)}${ctx.cwd}${RESET} ${fg(arrow)}»${RESET} `
+}
+
 //TODO Make this more robust and more options like freeBSD, plan9?? etc
 // Detect the visitor's OS from the User-Agent (Client Hints when available).
 export function detectOs(): OsId {
