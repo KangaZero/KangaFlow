@@ -343,3 +343,19 @@
   animation: none;
   mix-blend-mode: normal;
 }
+
+/* Vim modal caret. Native inputs / contentEditable have no block-caret API, so
+   the "cursor" is a one-char ::selection (useVimInput hides the thin caret and
+   sets data-vim-mode). Distinguish the modes: NORMAL is an inverted block (the
+   classic terminal cursor), VISUAL is an accent highlight. The bare + descendant
+   selectors cover both <input>/<textarea> and the rich-text contentEditable. */
+[data-vim-mode="normal"]::selection,
+[data-vim-mode="normal"] ::selection {
+  background: var(--foreground);
+  color: var(--background);
+}
+[data-vim-mode="visual"]::selection,
+[data-vim-mode="visual"] ::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}

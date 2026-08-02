@@ -14,6 +14,7 @@
 import { type RefObject, useEffect, useRef } from "react"
 
 import { type VimMode, type VimState, vimReduce } from "@/lib/vim-input"
+import { keyFromEvent } from "@/lib/vim-keys"
 
 type VimField = HTMLInputElement | HTMLTextAreaElement
 
@@ -53,21 +54,6 @@ function isClean(s: Persisted): boolean {
     s.find === "" &&
     s.textobj === ""
   )
-}
-
-// Dead keys ('"`~^ on many layouts) fire keydown with key "Dead" and only emit
-// the real char after a compose step — which breaks find/replace/text-object
-// targets like di" or f`. Recover the intended char from the physical code so
-// those single-key targets work everywhere.
-const DEAD_KEYS: Record<string, [plain: string, shifted: string]> = {
-  Backquote: ["`", "~"],
-  Digit6: ["6", "^"],
-  Quote: ["'", '"'],
-}
-function keyFromEvent(e: KeyboardEvent): string {
-  if (e.key !== "Dead") return e.key
-  const pair = DEAD_KEYS[e.code]
-  return pair ? (e.shiftKey ? pair[1] : pair[0]) : e.key
 }
 
 function setNativeValue(el: VimField, value: string): void {
@@ -238,6 +224,7 @@ export function useVimInput(
     }
 
     const onKeyDown = (event: KeyboardEvent): void => {
+      if (event.isComposing) return // don't treat IME composition as commands
       const key = keyFromEvent(event)
       // Redo (Ctrl-r) — checked before the generic modifier passthrough. Claim
       // the key unconditionally (else empty-redo would trigger a browser reload).

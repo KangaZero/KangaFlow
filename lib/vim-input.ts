@@ -101,6 +101,45 @@ function clampBlock(value: string, n: number): number {
   return Math.max(0, Math.min(n, Math.max(0, value.length - 1)))
 }
 
+// The [start, end) of the line the caret is on (end excludes the trailing "\n").
+// On single-line text this is [0, length), so every "line" command below stays
+// correct there while becoming line-relative on multi-line buffers.
+function lineBounds(
+  value: string,
+  cursor: number
+): { start: number; end: number } {
+  const c = Math.max(0, Math.min(cursor, value.length))
+  const start = value.lastIndexOf("\n", c - 1) + 1
+  const nl = value.indexOf("\n", c)
+  return { end: nl === -1 ? value.length : nl, start }
+}
+
+// First non-blank column of the caret's line (for ^, I, gg, G).
+function firstNonBlank(value: string, cursor: number): number {
+  const { start, end } = lineBounds(value, cursor)
+  let i = start
+  while (i < end && /\s/.test(value.charAt(i))) i++
+  return i
+}
+
+// Same-column caret one line down (dir 1) or up (dir -1), clamped to that
+// line's length. Returns `cursor` when there's no line that way.
+function verticalMove(value: string, cursor: number, dir: 1 | -1): number {
+  const { start, end } = lineBounds(value, cursor)
+  const col = cursor - start
+  if (dir === 1) {
+    if (end >= value.length) return cursor // no line below
+    const nextStart = end + 1
+    const nextNl = value.indexOf("\n", nextStart)
+    const nextEnd = nextNl === -1 ? value.length : nextNl
+    return Math.min(nextStart + col, nextEnd)
+  }
+  if (start === 0) return cursor // no line above
+  const prevEnd = start - 1 // the previous "\n"
+  const prevStart = value.lastIndexOf("\n", prevEnd - 1) + 1
+  return Math.min(prevStart + col, prevEnd)
+}
+
 function motionTarget(
   value: string,
   cursor: number,
@@ -114,9 +153,21 @@ function motionTarget(
     case "ArrowRight":
       return Math.min(value.length, cursor + 1)
     case "0":
-      return 0
-    case "$":
-      return value.length
+      return lineBounds(value, cursor).start
+    case "$": {
+      // Last char of the line (inclusive motion — operators add +1 for d$).
+      const { start, end } = lineBounds(value, cursor)
+      return end > start ? end - 1 : start
+    }
+    case "^":
+      return firstNonBlank(value, cursor)
+    case "j":
+      return verticalMove(value, cursor, 1)
+    case "k":
+      return verticalMove(value, cursor, -1)
+    case "G":
+      // Last line, first non-blank (count handled by the caller for NgG).
+      return firstNonBlank(value, value.length)
     case "w":
       return wordBoundary(value, cursor, 1)
     case "b":
@@ -129,11 +180,6 @@ function motionTarget(
       return wordEnd(value, cursor, false)
     case "E":
       return wordEnd(value, cursor, true)
-    case "^": {
-      let i = 0
-      while (i < value.length && /\s/.test(value.charAt(i))) i++
-      return i
-    }
     default:
       return null
   }
@@ -427,9 +473,16 @@ export function vimReduce(state: VimState, key: string): VimResult {
       })
     }
     if (key === "g") {
+      // gg → first non-blank of the first line.
+      const target = firstNonBlank(value, 0)
       return mode === "visual"
-        ? m({ anchor, cursor: 0, mode: "visual", value })
-        : m({ cursor: 0, mode: "normal", value })
+        ? m({
+            anchor,
+            cursor: clampBlock(value, target),
+            mode: "visual",
+            value,
+          })
+        : m({ cursor: clampBlock(value, target), mode: "normal", value })
     }
     return keep // unknown g-command → cancel
   }
@@ -516,20 +569,41 @@ export function vimReduce(state: VimState, key: string): VimResult {
       })
     }
     // The doubling key is the operator itself (dd/cc/yy) or its second letter
-    // for the case ops (guu/gUU/g~~) — meaning "the whole line".
+    // for the case ops (guu/gUU/g~~) — meaning "the current line".
     const dbl = pending.length === 1 ? pending : pending.slice(1)
     if (key === dbl) {
+      const { start, end } = lineBounds(value, cursor)
+      const lineText = value.slice(start, end)
       if (pending === "gu" || pending === "gU" || pending === "g~") {
-        return operate(pending, 0, value.length)
+        return operate(pending, start, end) // case-transform the line
       }
       if (pending === "y") {
-        return m({ cursor, mode: "normal", register: value, value })
+        // yy: yank the line into the register; caret unmoved.
+        return m({
+          cursor: clampBlock(value, cursor),
+          mode: "normal",
+          register: lineText,
+          value,
+        })
       }
+      if (pending === "c") {
+        // cc: blank the line's content, keep the line, INSERT at its start.
+        return make({
+          cursor: start,
+          mode: "insert",
+          register: lineText,
+          value: value.slice(0, start) + value.slice(end),
+        })
+      }
+      // dd: remove the line plus one newline (trailing, else the leading one).
+      const to = end < value.length ? end + 1 : end
+      const from = to === value.length && start > 0 ? start - 1 : start
+      const next = value.slice(0, from) + value.slice(to)
       return make({
-        cursor: 0,
-        mode: pending === "c" ? "insert" : "normal",
-        register: value,
-        value: "",
+        cursor: clampBlock(next, from),
+        mode: "normal",
+        register: lineText,
+        value: next,
       })
     }
     // cw/cW on a non-blank behaves like ce/cE — it does NOT eat the trailing
@@ -550,7 +624,7 @@ export function vimReduce(state: VimState, key: string): VimResult {
     const target = motionN(value, cursor, key, (opCount || 1) * (count || 1))
     if (target === null) return m({ cursor, mode: "normal", value }) // cancel
     // e/E are inclusive motions (de deletes through the word-end char).
-    const inclusive = key === "e" || key === "E"
+    const inclusive = key === "e" || key === "E" || key === "$"
     return operate(
       pending,
       Math.min(cursor, target),
@@ -626,9 +700,19 @@ export function vimReduce(state: VimState, key: string): VimResult {
           value,
         })
       case "I":
-        return m({ cursor: 0, mode: "insert", value })
+        // INSERT at the first non-blank of the current line.
+        return m({
+          cursor: firstNonBlank(value, cursor),
+          mode: "insert",
+          value,
+        })
       case "A":
-        return m({ cursor: value.length, mode: "insert", value })
+        // INSERT at the end of the current line.
+        return m({
+          cursor: lineBounds(value, cursor).end,
+          mode: "insert",
+          value,
+        })
       case "x": {
         if (cursor >= value.length)
           return m({ cursor: clampBlock(value, cursor), mode: "normal", value })
@@ -636,9 +720,9 @@ export function vimReduce(state: VimState, key: string): VimResult {
         return operate("d", cursor, cursor + del)
       }
       case "D":
-        return operate("d", cursor, value.length)
+        return operate("d", cursor, lineBounds(value, cursor).end)
       case "C":
-        return operate("c", cursor, value.length)
+        return operate("c", cursor, lineBounds(value, cursor).end)
       case "r":
         // Await the replacement char; keep the count so 3r<char> works.
         return m({ count, cursor, mode: "normal", replace: true, value })
@@ -652,9 +736,16 @@ export function vimReduce(state: VimState, key: string): VimResult {
       case "s":
         // Substitute char(s): delete forward then INSERT (= cl).
         return operate("c", cursor, Math.min(value.length, cursor + n))
-      case "S":
-        // Substitute line (= cc).
-        return make({ cursor: 0, mode: "insert", register: value, value: "" })
+      case "S": {
+        // Substitute line (= cc): blank the current line, INSERT at its start.
+        const { start, end } = lineBounds(value, cursor)
+        return make({
+          cursor: start,
+          mode: "insert",
+          register: value.slice(start, end),
+          value: value.slice(0, start) + value.slice(end),
+        })
+      }
       case "~": {
         // Toggle case of `count` chars and advance.
         const k = Math.min(n, value.length - cursor)
@@ -711,8 +802,16 @@ export function vimReduce(state: VimState, key: string): VimResult {
           pending: "y",
           value,
         })
-      case "Y":
-        return m({ cursor, mode: "normal", register: value, value })
+      case "Y": {
+        // Yank the current line.
+        const { start, end } = lineBounds(value, cursor)
+        return m({
+          cursor,
+          mode: "normal",
+          register: value.slice(start, end),
+          value,
+        })
+      }
       case "p": {
         if (register === "")
           return m({ cursor: clampBlock(value, cursor), mode: "normal", value })

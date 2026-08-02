@@ -598,6 +598,68 @@ describe("vimReduce — case operators (gu/gU/g~)", () => {
   })
 })
 
+describe("vimReduce — line-aware (multi-line)", () => {
+  const ml = (value: string, cursor: number): VimState => ({
+    cursor,
+    mode: "normal",
+    value,
+  })
+
+  it("dd removes one line (and its newline), not the whole buffer", () => {
+    expect(vimReduce({ ...ml("ab\ncd", 0), pending: "d" }, "d").value).toBe(
+      "cd"
+    )
+    expect(vimReduce({ ...ml("ab\ncd", 3), pending: "d" }, "d").value).toBe(
+      "ab"
+    )
+  })
+
+  it("dd registers the deleted line", () => {
+    expect(vimReduce({ ...ml("ab\ncd", 0), pending: "d" }, "d").register).toBe(
+      "ab"
+    )
+  })
+
+  it("D deletes to end of the current line only", () => {
+    expect(vimReduce({ ...ml("ab\ncd", 0), pending: "" }, "D").value).toBe(
+      "\ncd"
+    )
+  })
+
+  it("0 and $ are line-relative", () => {
+    expect(vimReduce(ml("ab\ncd", 4), "0").cursor).toBe(3) // line 2 start
+    expect(vimReduce(ml("ab\ncd", 0), "$").cursor).toBe(1) // last char of line 1
+  })
+
+  it("$ as an operator deletes to the line end (inclusive)", () => {
+    // d$ on line 1 removes "ab", leaving "\ncd".
+    expect(vimReduce({ ...ml("ab\ncd", 0), pending: "d" }, "$").value).toBe(
+      "\ncd"
+    )
+  })
+
+  it("j/k move down/up keeping the column", () => {
+    expect(vimReduce(ml("ab\ncd", 1), "j").cursor).toBe(4) // b → d
+    expect(vimReduce(ml("ab\ncd", 4), "k").cursor).toBe(1) // d → b
+  })
+
+  it("A/I go to line end / first non-blank of the line", () => {
+    expect(vimReduce(ml("ab\ncd", 3), "A").cursor).toBe(5) // end of line 2
+    expect(vimReduce(ml("ab\n  cd", 5), "I").cursor).toBe(5) // first non-blank
+  })
+
+  it("yy yanks the current line", () => {
+    const py = vimReduce(ml("ab\ncd", 3), "y")
+    expect(vimReduce({ ...py, mode: "normal" }, "y").register).toBe("cd")
+  })
+
+  it("G jumps to the last line, gg to the first", () => {
+    expect(vimReduce(ml("ab\ncd\nef", 0), "G").cursor).toBe(6) // "ef"
+    const gg = vimReduce(ml("ab\ncd", 4), "g")
+    expect(vimReduce({ ...gg, mode: "normal" }, "g").cursor).toBe(0)
+  })
+})
+
 describe("vimReduce — find (f/F/t/T)", () => {
   it("f waits for a target char, then lands on it", () => {
     const pendingF = vimReduce(normal("hello world", 0), "f")
