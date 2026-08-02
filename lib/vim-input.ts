@@ -696,6 +696,16 @@ export function vimReduce(state: VimState, key: string): VimResult {
     }
   }
 
+  // `|` goes to column N of the current line (N| — count is the column, 1-based).
+  if (key === "|") {
+    const { start, end } = lineBounds(value, cursor)
+    const col = Math.max(0, (count || 1) - 1)
+    const c = clampBlock(value, Math.min(start + col, Math.max(start, end - 1)))
+    return mode === "visual"
+      ? m({ anchor, cursor: c, mode: "visual", value })
+      : m({ cursor: c, mode: "normal", value })
+  }
+
   // `G` uses the count as a line NUMBER (NG → line N), not a repeat; bare G is
   // the last line. (dG still goes to the last line via the operator path.)
   if (key === "G") {

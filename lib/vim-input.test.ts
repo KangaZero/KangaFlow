@@ -668,6 +668,21 @@ describe("vimReduce — line-aware (multi-line)", () => {
     expect(vimReduce({ ...g1, mode: "normal" }, "g").cursor).toBe(4)
   })
 
+  it("| goes to column N of the current line", () => {
+    // "hello world": 5| → column 5 = index 4 ('o'); on line 2, relative to it.
+    expect(
+      vimReduce(
+        { count: 5, cursor: 0, mode: "normal", value: "hello world" },
+        "|"
+      ).cursor
+    ).toBe(4)
+    // 3| on line 2 of "ab\ncdef" → col 3 of "cdef" = index 3+2 = 5.
+    expect(
+      vimReduce({ count: 3, cursor: 3, mode: "normal", value: "ab\ncdef" }, "|")
+        .cursor
+    ).toBe(5)
+  })
+
   it("j/k onto a shorter line land on its last char, not the newline", () => {
     // "hello\nhi\nworld": from col 4 of line 1, j → last char of "hi" (index 7).
     expect(vimReduce(ml("hello\nhi\nworld", 4), "j").cursor).toBe(7)

@@ -98,6 +98,12 @@ describe("caretLineColumn (contentEditable walk)", () => {
     expect(readVimBuffer(root).text).toBe("a\nb")
   })
 
+  it("ignores a trailing <br> line-filler (no phantom line)", () => {
+    // The browser leaves a trailing <br> on the line being edited.
+    const root = mount("<div>regular<br></div><div>struck</div>")
+    expect(readVimBuffer(root).text).toBe("regular\nstruck")
+  })
+
   it("domPositionAt round-trips a flat offset back to the DOM", () => {
     const root = mount("<div>foo</div><div>bar</div>")
     const buffer = readVimBuffer(root)

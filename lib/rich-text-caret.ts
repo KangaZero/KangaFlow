@@ -75,13 +75,16 @@ export function readVimBuffer(
       if (chunk) lineStarted = true
     } else if (n instanceof HTMLElement) {
       if (n.tagName === "BR") {
-        // A <br> that is a block's first child is the browser's empty-line
-        // FILLER — the block boundary already accounts for that line, so it
-        // must NOT add a second "\n" (the classic <div><br></div> idiom).
+        // A <br> at the START or END of a block is the browser's line FILLER
+        // (empty-line <div><br></div>, or the trailing <br> left on the line
+        // being edited) — the block boundary already delimits that line, so the
+        // filler must NOT add a second "\n". Only a <br> *between* content on a
+        // line is a real break.
+        const parent = n.parentElement
         const filler =
-          n.previousSibling === null &&
-          n.parentElement !== null &&
-          BLOCK_TAGS.has(n.parentElement.tagName)
+          parent !== null &&
+          BLOCK_TAGS.has(parent.tagName) &&
+          (n.previousSibling === null || n.nextSibling === null)
         if (!filler) text += "\n"
         lineStarted = true
       } else if (BLOCK_TAGS.has(n.tagName)) {
