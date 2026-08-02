@@ -98,7 +98,7 @@ export function AchievementCard({ achievement }: { achievement: Achievement }) {
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <LocaleTransition className="flex flex-col gap-2">
           <p className="text-muted-foreground text-sm">{description}</p>
           <span className="text-muted-foreground text-xs">{status}</span>

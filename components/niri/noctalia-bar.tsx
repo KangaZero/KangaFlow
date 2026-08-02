@@ -183,7 +183,7 @@ export function NoctaliaBar(props: {
         <SystemStatus vertical={isV} />
         <AnimatedTooltip
           label={translate("environment.settings.wallpaper")}
-          side={barPosition !== "right" ? "left" : "left"}
+          side={barPosition === "left" ? "right" : "left"}
         >
           <Button
             aria-label={translate("environment.settings.wallpaper")}
@@ -198,7 +198,7 @@ export function NoctaliaBar(props: {
         <AnimatedTooltip
           label={translate("environment.settings.title")}
           shortcut={["Alt", "Shift", ","]}
-          side={barPosition !== "right" ? "left" : "left"}
+          side={barPosition === "left" ? "right" : "left"}
         >
           <Button
             aria-label={translate("environment.settings.title")}
@@ -210,7 +210,10 @@ export function NoctaliaBar(props: {
             <Settings />
           </Button>
         </AnimatedTooltip>
-        <NotificationCenter orientation={orientation} />
+        <NotificationCenter
+          barPosition={barPosition}
+          orientation={orientation}
+        />
       </div>
     </header>
   )

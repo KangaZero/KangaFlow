@@ -58,8 +58,10 @@ const SNOOZE_OPTIONS = [
 
 export function NotificationCenter({
   orientation,
+  barPosition,
 }: {
   orientation: "horizontal" | "vertical"
+  barPosition: "right" | "left" | "top" | "bottom"
 }): React.JSX.Element {
   const { translate } = useLocale()
   const { notifications, unreadCount, dismiss, clearAll, markRead, remind } =
@@ -87,7 +89,7 @@ export function NotificationCenter({
     <Popover onOpenChange={setOpen} open={open}>
       <AnimatedTooltip
         label={translate("environment.bar.notifications")}
-        side="responsive"
+        side={barPosition === "left" ? "right" : "left"}
       >
         <PopoverTrigger asChild>
           <Button
