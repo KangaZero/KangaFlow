@@ -122,8 +122,21 @@ function firstNonBlank(value: string, cursor: number): number {
   return i
 }
 
-// Same-column caret one line down (dir 1) or up (dir -1), clamped to that
-// line's length. Returns `cursor` when there's no line that way.
+// Offset of the first char of the 1-based line `n`, clamped to the last line.
+function nthLineStart(value: string, n: number): number {
+  let start = 0
+  for (let i = 1; i < n; i++) {
+    const nl = value.indexOf("\n", start)
+    if (nl === -1) return start // fewer lines than n → clamp to the last line
+    start = nl + 1
+  }
+  return start
+}
+
+// Same-column caret one line down (dir 1) or up (dir -1). Returns `cursor` when
+// there's no line that way. Crucially clamps a too-long column to the target
+// line's LAST CHARACTER (end - 1), not its trailing "\n" — otherwise the block
+// cursor lands on the line break and a second j/k is needed to reach the line.
 function verticalMove(value: string, cursor: number, dir: 1 | -1): number {
   const { start, end } = lineBounds(value, cursor)
   const col = cursor - start
@@ -132,12 +145,12 @@ function verticalMove(value: string, cursor: number, dir: 1 | -1): number {
     const nextStart = end + 1
     const nextNl = value.indexOf("\n", nextStart)
     const nextEnd = nextNl === -1 ? value.length : nextNl
-    return Math.min(nextStart + col, nextEnd)
+    return Math.min(nextStart + col, Math.max(nextStart, nextEnd - 1))
   }
   if (start === 0) return cursor // no line above
   const prevEnd = start - 1 // the previous "\n"
   const prevStart = value.lastIndexOf("\n", prevEnd - 1) + 1
-  return Math.min(prevStart + col, prevEnd)
+  return Math.min(prevStart + col, Math.max(prevStart, prevEnd - 1))
 }
 
 function motionTarget(
@@ -473,8 +486,11 @@ export function vimReduce(state: VimState, key: string): VimResult {
       })
     }
     if (key === "g") {
-      // gg → first non-blank of the first line.
-      const target = firstNonBlank(value, 0)
+      // gg → first non-blank of line 1; Ngg → line N.
+      const target = firstNonBlank(
+        value,
+        count > 0 ? nthLineStart(value, count) : 0
+      )
       return mode === "visual"
         ? m({
             anchor,
@@ -648,9 +664,10 @@ export function vimReduce(state: VimState, key: string): VimResult {
 
   // `g` opens the g-prefix (gu/gU/g~/gg), resolved on the next key above.
   if (key === "g") {
+    // Preserve the count so Ngg reaches line N.
     return mode === "visual"
-      ? m({ anchor, cursor, gprefix: true, mode: "visual", value })
-      : m({ cursor, gprefix: true, mode: "normal", value })
+      ? m({ anchor, count, cursor, gprefix: true, mode: "visual", value })
+      : m({ count, cursor, gprefix: true, mode: "normal", value })
   }
 
   // VISUAL operators act immediately on the inclusive selection.
@@ -677,6 +694,21 @@ export function vimReduce(state: VimState, key: string): VimResult {
         value: next,
       })
     }
+  }
+
+  // `G` uses the count as a line NUMBER (NG → line N), not a repeat; bare G is
+  // the last line. (dG still goes to the last line via the operator path.)
+  if (key === "G") {
+    const c = clampBlock(
+      value,
+      firstNonBlank(
+        value,
+        count > 0 ? nthLineStart(value, count) : value.length
+      )
+    )
+    return mode === "visual"
+      ? m({ anchor, cursor: c, mode: "visual", value })
+      : m({ cursor: c, mode: "normal", value })
   }
 
   // Motions (NORMAL and VISUAL) honour the count and clamp onto a char.

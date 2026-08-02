@@ -658,6 +658,22 @@ describe("vimReduce — line-aware (multi-line)", () => {
     const gg = vimReduce(ml("ab\ncd", 4), "g")
     expect(vimReduce({ ...gg, mode: "normal" }, "g").cursor).toBe(0)
   })
+
+  it("NG / Ngg jump to line N (count as a line number)", () => {
+    // "a\nb\nc\nd": line 3 is "c" at index 4.
+    const c3 = vimReduce(ml("a\nb\nc\nd", 0), "3")
+    expect(vimReduce({ ...c3, mode: "normal" }, "G").cursor).toBe(4)
+    // 3gg → line 3 too (count survives entering the g-prefix).
+    const g1 = vimReduce({ ...c3, mode: "normal" }, "g")
+    expect(vimReduce({ ...g1, mode: "normal" }, "g").cursor).toBe(4)
+  })
+
+  it("j/k onto a shorter line land on its last char, not the newline", () => {
+    // "hello\nhi\nworld": from col 4 of line 1, j → last char of "hi" (index 7).
+    expect(vimReduce(ml("hello\nhi\nworld", 4), "j").cursor).toBe(7)
+    // "hi\nhello\nx": from col 4 of line 2, k → last char of "hi" (index 1).
+    expect(vimReduce(ml("hi\nhello\nx", 7), "k").cursor).toBe(1)
+  })
 })
 
 describe("vimReduce — find (f/F/t/T)", () => {
