@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Slider } from "@/components/ui/slider"
+import { useCaretPosition } from "@/lib/hooks/use-caret-position"
 import {
   DEFAULT_FONT_SIZE,
   FONT_SIZES,
@@ -105,6 +106,8 @@ export function RichTextEditor({
 }: RichTextEditorProps): React.JSX.Element {
   const editorRef = useRef<HTMLDivElement>(null)
   const [fmt, setFmt] = useState<InlineFormatState>(EMPTY_STATE)
+  // Caret line/column for the vim-style ruler (foundation for line-aware vim).
+  const caret = useCaretPosition(editorRef)
 
   // Seed the contentEditable once (keyed by note id upstream, so a remount loads
   // the right note). Never re-inject on render — React children would fight the
@@ -294,6 +297,15 @@ export function RichTextEditor({
         }}
         suppressContentEditableWarning
       />
+
+      {/* Vim-style ruler: line,column · total lines. Numeric, so no i18n label
+          needed (matches vim's bottom-right ruler). */}
+      <div className="flex justify-end border-border border-t px-3 py-1 font-mono text-muted-foreground text-xs tabular-nums">
+        {caret ? `${caret.row},${caret.col}` : "1,1"}
+        <span className="ml-2 opacity-60">
+          {caret ? `${caret.lines}L` : "1L"}
+        </span>
+      </div>
     </div>
   )
 }
