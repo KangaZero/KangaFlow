@@ -17,6 +17,7 @@ import {
   subscribeHints,
   typeHintChar,
 } from "@/lib/hint-store"
+import { Z_LAYERS } from "@/lib/z-order"
 
 export function HintOverlay() {
   const state = useSyncExternalStore(
@@ -67,7 +68,8 @@ export function HintOverlay() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-[90]"
+      className="pointer-events-none fixed inset-0"
+      style={{ zIndex: Z_LAYERS.hint }}
     >
       {/* Faint glass wash so the hints read as an overlay layer. */}
       <div className="absolute inset-0 bg-background/5 backdrop-blur-[0.5px]" />
