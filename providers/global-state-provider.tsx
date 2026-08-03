@@ -150,6 +150,8 @@ function loadEnvSettings(): EnvSettings {
       string,
       unknown
     >
+
+    console.log("o", o)
     return {
       accent: pickLiteral(o.accent, ACCENTS, DEFAULT_ENV_SETTINGS.accent),
       autoHideBar:

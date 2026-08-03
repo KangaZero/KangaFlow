@@ -275,6 +275,7 @@ const ja = {
   },
   mediaPlayer: {
     close: "プレーヤーを閉じる",
+    loop: "ループ",
     next: "次の曲",
     nowPlaying: "再生中",
     pause: "一時停止",
@@ -282,6 +283,7 @@ const ja = {
     previous: "前の曲",
     seek: "シーク",
     title: "メディアプレーヤー",
+    volume: "音量",
   },
   nav: {
     achievements: "実績",

@@ -69,7 +69,7 @@ export const CommandMenu = ({ commands = [] }: CommandMenuProps) => {
     const shortcutAsLabel: string[] = []
     if (shortcut.hasMetaOrCtrlKey) shortcutAsLabel.push(IS_MAC ? "⌘" : "Ctrl")
     if (shortcut.hasAltOrOptionKey) shortcutAsLabel.push(IS_MAC ? "⌥" : "Alt")
-    if (shortcut.hasShiftKey) shortcutAsLabel.push(IS_MAC ? "⌘" : "Shift")
+    if (shortcut.hasShiftKey) shortcutAsLabel.push(IS_MAC ? "Shift" : "Shift")
     shortcutAsLabel.push(shortcut.character.toUpperCase())
     return shortcutAsLabel.join(IS_MAC ? "" : " + ")
   }

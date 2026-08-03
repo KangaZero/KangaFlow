@@ -275,6 +275,7 @@ const en = {
   },
   mediaPlayer: {
     close: "Close player",
+    loop: "Loop",
     next: "Next track",
     nowPlaying: "Now playing",
     pause: "Pause",
@@ -282,6 +283,7 @@ const en = {
     previous: "Previous track",
     seek: "Seek",
     title: "Media player",
+    volume: "Volume",
   },
   nav: {
     achievements: "Achievements",

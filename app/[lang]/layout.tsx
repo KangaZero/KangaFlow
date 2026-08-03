@@ -3,15 +3,12 @@ import { notFound } from "next/navigation"
 import { AchievementToast } from "@/components/achievement-toast"
 import { CommandMenu } from "@/components/command-menu"
 import { HintOverlay } from "@/components/hint-overlay"
-import { MediaPlayer } from "@/components/media-player"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { ShortcutDispatcher } from "@/components/shortcut-dispatcher"
 import { SiteHeader } from "@/components/site-header"
 import { TerminalDialog } from "@/components/terminal-dialog"
 import { ThemeBackground } from "@/components/theme-background"
-import { AlarmWidget } from "@/components/widgets/alarm-widget"
-import { CalendarWidget } from "@/components/widgets/calendar-widget"
-import { NotesWidget } from "@/components/widgets/notes-widget"
+import { WidgetManagement } from "@/components/widgets/widget-management"
 import { isLocale, LOCALES } from "@/lib/i18n"
 import { readSourceFiles } from "@/lib/terminal/source"
 import { AchievementsProvider } from "@/providers/achievements-provider"
@@ -56,13 +53,10 @@ export default async function LangLayout({
                 {children}
                 <CommandMenu />
                 <SettingsDialog />
-                <MediaPlayer />
-                <NotesWidget />
-                <AlarmWidget />
-                <CalendarWidget />
                 <TerminalDialog files={sourceFiles} />
                 <ShortcutDispatcher />
                 <HintOverlay />
+                <WidgetManagement />
                 <AchievementToast />
               </div>
             </AchievementsProvider>

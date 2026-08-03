@@ -183,7 +183,12 @@ export function EnvironmentView() {
   const { translate, locale } = useLocale()
   const { resolvedTheme } = useTheme()
   const dark = resolvedTheme !== "light"
-  const theme = isTheme(resolvedTheme) ? resolvedTheme : DEFAULT_THEME
+  const themeFromLocalStorage = localStorage.getItem("theme")
+  const theme = isTheme(resolvedTheme)
+    ? resolvedTheme
+    : isTheme(themeFromLocalStorage)
+      ? themeFromLocalStorage
+      : DEFAULT_THEME
   const pathname = usePathname()
   const reduceMotion = useReducedMotion()
 
@@ -205,6 +210,9 @@ export function EnvironmentView() {
   const closePanel = useCallback(() => setPanel(null), [])
   const [clock, setClock] = useState(clockNowInHHMM)
   const [stripWidth, setStripWidth] = useState(0)
+  const [wallpaperStyleProp, setWallpaperStylePro] = useState<CSSProperties>(
+    wallpaperStyle(settings.wallpaper, theme)
+  )
 
   // Shared click-to-front counter (same one the floating widgets use). Focusing
   // a tiled window bumps the whole tiled layer above the floats; clicking a
@@ -242,6 +250,10 @@ export function EnvironmentView() {
     }),
     [translate]
   )
+
+  useEffect(() => {
+    setWallpaperStylePro(wallpaperStyle(settings.wallpaper, theme))
+  }, [theme, settings.wallpaper])
 
   // Ticking clock for the bar.
   useEffect(() => {
@@ -288,7 +300,11 @@ export function EnvironmentView() {
         togglePanel("launcher")
         return
       }
-      if (event.altKey && event.shiftKey && event.key === ",") {
+      if (
+        event.altKey &&
+        (event.ctrlKey || event.metaKey) &&
+        event.key === ","
+      ) {
         event.preventDefault()
         togglePanel("settings")
         return
@@ -441,10 +457,7 @@ export function EnvironmentView() {
       }
     >
       {/* Wallpaper */}
-      <div
-        className="absolute inset-0 -z-10"
-        style={wallpaperStyle(settings.wallpaper, theme)}
-      />
+      <div className="absolute inset-0 -z-10" style={wallpaperStyleProp} />
 
       <div
         className={cn(
@@ -579,9 +592,9 @@ export function EnvironmentView() {
               })}
             </motion.div>
           ) : columns.length === 0 && settings.showStartingHint ? (
-            <div className="flex h-full items-center justify-center text-center text-sm text-white/70">
+            <h1 className="flex h-full items-center justify-center text-center text-2xl [text-shadow:2px_1px_0_var(--color-sidebar-accent)]">
               {translate("environment.hint")}
-            </div>
+            </h1>
           ) : (
             <motion.div
               animate={{ x: state.isCenterAligned ? offsetX : 0 }}
