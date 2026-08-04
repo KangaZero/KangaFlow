@@ -20,6 +20,8 @@ import {
 import { AudioLinesIcon } from "@/components/animate-ui/icons/audio-lines"
 import { OrbitIcon } from "@/components/animate-ui/icons/orbit"
 import { Volume1Icon } from "@/components/animate-ui/icons/volume-1"
+import { Volume2Icon } from "@/components/animate-ui/icons/volume-2"
+import { VolumeOffIcon } from "@/components/animate-ui/icons/volume-off"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
@@ -31,12 +33,15 @@ import ElasticSlider from "../ElasticSlider"
 // Full track descriptor. `src` drives the <audio> element; if absent the player
 // falls back to a simulated clock so the UI works before files are downloaded.
 // Drop MP3s into public/tracks/ then fill in `src: "/KangaFlow/tracks/file.mp3"`.
+
+export type TrackSrc = `/tracks/${string}.mp3`
+
 export type Track = {
   title: string
   composer: string
   artist?: string
   duration: number // seconds — used as slider range fallback before metadata loads
-  src?: string // URL served by Next.js static export, e.g. "/KangaFlow/tracks/..."
+  src: TrackSrc // URL served by Next.js static export, e.g. "/KangaFlow/tracks/..."
   album?: string
   year?: number
   genre?: string
@@ -101,8 +106,12 @@ const TAP_SPRING = { damping: 18, stiffness: 500, type: "spring" } as const
 
 export function MediaPlayer() {
   const { translate } = useLocale()
-  const { isMediaPlayerOpen, setIsMediaPlayerOpen, envSettings } =
-    useGlobalStates()
+  const {
+    isMediaPlayerOpen,
+    setIsMediaPlayerOpen,
+    envSettings,
+    setEnvSettings,
+  } = useGlobalStates()
   const wd = envSettings.widgetDefaults.media
 
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -118,13 +127,21 @@ export function MediaPlayer() {
 
   useEffect(() => {
     isPlayingRef.current = isPlaying
-  }, [isPlaying])
+    if (audioRef.current)
+      audioRef.current.volume = Math.min(
+        1,
+        Math.max(
+          0,
+          envSettings.widgetDefaults.media.options.currentVolume / 100
+        )
+      )
+  }, [isPlaying, envSettings.widgetDefaults.media.options.currentVolume])
 
   // Scrolling browser-tab title while playing; static when reducedMotion is on.
   useEffect(() => {
     if (!isPlaying) return
     const prev = document.title
-    const playTitle = `♪ ${track.title} · ${track.artist}  `
+    const playTitle = `♪ ${track.title} · ${track.composer}  `
     if (shouldReduceMotion) {
       document.title = playTitle.trim()
       return () => {
@@ -140,21 +157,32 @@ export function MediaPlayer() {
       window.clearInterval(id)
       document.title = prev
     }
-  }, [isPlaying, track.title, track.artist, shouldReduceMotion])
+  }, [isPlaying, track.title, track.composer, shouldReduceMotion])
 
   useEffect(() => setMounted(true), [])
 
   const hasAudio = Boolean(track.src)
   const duration = audioDuration ?? track.duration
 
+  // Keep audio.loop in sync with isLooping so the browser's native loop behaviour
+  // reflects the current setting immediately (not just on the next track end).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <need to be mounted first before audioRef.current can be found>
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.loop = wd.options.isLooping
+  }, [mounted, wd.options.isLooping])
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: mounted gates the portal render; setters are stable
   useEffect(() => {
     const audio = audioRef.current
     if (!audio) return
     const onTimeUpdate = () => setCurrentTimeSec(Math.floor(audio.currentTime))
+    // When loop is true, the browser loops natively and never fires "ended".
+    // When loop is false, "ended" fires and we advance to the next track.
     const onEnded = () => {
-      setCurrentIndex((i) => (i + 1) % PLAYLIST.length)
       setCurrentTimeSec(0)
+      setCurrentIndex((i) => (i + 1) % PLAYLIST.length)
     }
     const onLoadedMetadata = () =>
       setAudioDuration(
@@ -199,12 +227,6 @@ export function MediaPlayer() {
     const id = window.setInterval(() => setCurrentTimeSec((t) => t + 1), 1000)
     return () => window.clearInterval(id)
   }, [hasAudio, isPlaying])
-
-  useEffect(() => {
-    if (hasAudio || !isPlaying || currentTimeSec < duration) return
-    setCurrentIndex((i) => (i + 1) % PLAYLIST.length)
-    setCurrentTimeSec(0)
-  }, [hasAudio, isPlaying, currentTimeSec, duration])
 
   const goToIndex = (index: number): void => {
     const count = PLAYLIST.length
@@ -317,11 +339,29 @@ export function MediaPlayer() {
               <AnimatedTooltip label={translate("mediaPlayer.loop")} side="top">
                 <Button
                   aria-label={translate("mediaPlayer.loop")}
-                  onClick={() => {}}
+                  onClick={() => {
+                    setEnvSettings({
+                      ...envSettings,
+                      widgetDefaults: {
+                        ...envSettings.widgetDefaults,
+                        media: {
+                          ...envSettings.widgetDefaults.media,
+                          options: {
+                            ...envSettings.widgetDefaults.media.options,
+                            isLooping: !wd.options.isLooping,
+                          },
+                        },
+                      },
+                    })
+                  }}
                   size="icon"
-                  variant="ghost"
+                  variant={wd.options.isLooping ? "link" : "ghost"}
                 >
-                  <OrbitIcon animateOnHover className="size-4" />
+                  <OrbitIcon
+                    animate={wd.options.isLooping}
+                    animateOnHover
+                    className="size-4"
+                  />
                 </Button>
               </AnimatedTooltip>
             </motion.div>
@@ -445,7 +485,42 @@ export function MediaPlayer() {
                       size="icon"
                       variant="ghost"
                     >
-                      <Volume1Icon animateOnHover className="size-4" />
+                      <AnimatePresence mode="wait">
+                        {wd.options.currentVolume <= 0 ? (
+                          <motion.span
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex"
+                            exit={{ opacity: 0.5, scale: 0.6 }}
+                            initial={{ opacity: 0.5, scale: 0.6 }}
+                            key="mute"
+                            transition={{ duration: 0.12 }}
+                          >
+                            <VolumeOffIcon animateOnHover className="size-4" />
+                          </motion.span>
+                        ) : wd.options.currentVolume < 70 ? (
+                          <motion.span
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex"
+                            exit={{ opacity: 0.5, scale: 0.6 }}
+                            initial={{ opacity: 0.5, scale: 0.6 }}
+                            key="low"
+                            transition={{ duration: 0.12 }}
+                          >
+                            <Volume1Icon animateOnHover className="size-4" />
+                          </motion.span>
+                        ) : (
+                          <motion.span
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex"
+                            exit={{ opacity: 0.5, scale: 0.6 }}
+                            initial={{ opacity: 0.5, scale: 0.6 }}
+                            key="high"
+                            transition={{ duration: 0.12 }}
+                          >
+                            <Volume2Icon animateOnHover className="size-4" />
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </Button>
                   </AnimatedTooltip>
                 </motion.div>
@@ -455,7 +530,24 @@ export function MediaPlayer() {
                   <ElasticSlider
                     isStepped={false}
                     maxValue={100}
+                    // TODO: Consider using immer to make life easier
+                    setValue={(value) => {
+                      setEnvSettings({
+                        ...envSettings,
+                        widgetDefaults: {
+                          ...envSettings.widgetDefaults,
+                          media: {
+                            ...envSettings.widgetDefaults.media,
+                            options: {
+                              ...envSettings.widgetDefaults.media.options,
+                              currentVolume: value,
+                            },
+                          },
+                        },
+                      })
+                    }}
                     startingValue={0}
+                    value={wd.options.currentVolume}
                   />
                 </div>
               </PopoverContent>

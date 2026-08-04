@@ -1,6 +1,5 @@
 "use client"
 
-//TODO fix type errors!
 import {
   type HTMLMotionProps,
   type LegacyAnimationControls,
@@ -121,6 +120,12 @@ function composeEventHandlers<E extends React.SyntheticEvent<unknown>>(
     theirs?.(event)
     ours?.(event)
   }
+}
+
+function asHandler<E extends React.SyntheticEvent<unknown>>(
+  v: unknown
+): ((event: E) => void) | undefined {
+  return typeof v === "function" ? (v as (event: E) => void) : undefined
 }
 
 type AnyProps = Record<string, unknown>
@@ -387,14 +392,14 @@ function AnimateIcon({
   ) as AnyProps
 
   const handleMouseEnter = composeEventHandlers<React.MouseEvent<HTMLElement>>(
-    childProps.onMouseEnter,
+    asHandler(childProps.onMouseEnter),
     () => {
       if (animateOnHover) startAnimation(animateOnHover)
     }
   )
 
   const handleMouseLeave = composeEventHandlers<React.MouseEvent<HTMLElement>>(
-    childProps.onMouseLeave,
+    asHandler(childProps.onMouseLeave),
     () => {
       if (animateOnHover || animateOnTap) stopAnimation()
     }
@@ -402,12 +407,12 @@ function AnimateIcon({
 
   const handlePointerDown = composeEventHandlers<
     React.PointerEvent<HTMLElement>
-  >(childProps.onPointerDown, () => {
+  >(asHandler(childProps.onPointerDown), () => {
     if (animateOnTap) startAnimation(animateOnTap)
   })
 
   const handlePointerUp = composeEventHandlers<React.PointerEvent<HTMLElement>>(
-    childProps.onPointerUp,
+    asHandler(childProps.onPointerUp),
     () => {
       if (animateOnTap) stopAnimation()
     }
@@ -518,19 +523,35 @@ function IconWrapper<T extends string>({
       return (
         <AnimateIcon
           animate={finalAnimate}
-          animateOnHover={animateOnHover}
-          animateOnTap={animateOnTap}
-          animateOnView={animateOnView}
-          animateOnViewMargin={animateOnViewMargin}
-          animateOnViewOnce={animateOnViewOnce}
+          {...(animateOnHover !== undefined ? { animateOnHover } : {})}
+          {...(animateOnTap !== undefined ? { animateOnTap } : {})}
+          {...(animateOnView !== undefined ? { animateOnView } : {})}
+          {...(animateOnViewMargin !== undefined
+            ? { animateOnViewMargin }
+            : {})}
+          {...(animateOnViewOnce !== undefined ? { animateOnViewOnce } : {})}
           animation={animationProp ?? parentAnimation}
           asChild
-          completeOnStop={completeOnStop ?? parentCompleteOnStop}
-          delay={delay ?? parentDelay}
-          initialOnAnimateEnd={initialOnAnimateEnd ?? parentInitialOnAnimateEnd}
+          {...((completeOnStop ?? parentCompleteOnStop) !== undefined
+            ? { completeOnStop: completeOnStop ?? parentCompleteOnStop }
+            : {})}
+          {...((delay ?? parentDelay) !== undefined
+            ? { delay: delay ?? parentDelay }
+            : {})}
+          {...((initialOnAnimateEnd ?? parentInitialOnAnimateEnd) !== undefined
+            ? {
+                initialOnAnimateEnd:
+                  initialOnAnimateEnd ?? parentInitialOnAnimateEnd,
+              }
+            : {})}
           loop={loop ?? parentLoop}
           loopDelay={loopDelay ?? parentLoopDelay}
-          persistOnAnimateEnd={persistOnAnimateEnd ?? parentPersistOnAnimateEnd}
+          {...((persistOnAnimateEnd ?? parentPersistOnAnimateEnd) !== undefined
+            ? {
+                persistOnAnimateEnd:
+                  persistOnAnimateEnd ?? parentPersistOnAnimateEnd,
+              }
+            : {})}
         >
           <IconComponent
             className={cn(
@@ -554,12 +575,16 @@ function IconWrapper<T extends string>({
       <AnimateIconContext.Provider
         value={{
           active: parentActive,
-          animate: parentAnimate,
+          ...(parentAnimate !== undefined ? { animate: parentAnimate } : {}),
           animation: animationToUse,
-          completeOnStop: parentCompleteOnStop,
+          ...(parentCompleteOnStop !== undefined
+            ? { completeOnStop: parentCompleteOnStop }
+            : {}),
           controls,
-          delay: parentDelay,
-          initialOnAnimateEnd: parentInitialOnAnimateEnd,
+          ...(parentDelay !== undefined ? { delay: parentDelay } : {}),
+          ...(parentInitialOnAnimateEnd !== undefined
+            ? { initialOnAnimateEnd: parentInitialOnAnimateEnd }
+            : {}),
           loop: loopToUse,
           loopDelay: loopDelayToUse,
         }}
@@ -586,18 +611,18 @@ function IconWrapper<T extends string>({
   ) {
     return (
       <AnimateIcon
-        animate={animate}
-        animateOnHover={animateOnHover}
-        animateOnTap={animateOnTap}
-        animateOnView={animateOnView}
-        animateOnViewMargin={animateOnViewMargin}
-        animateOnViewOnce={animateOnViewOnce}
-        animation={animationProp}
+        {...(animate !== undefined ? { animate } : {})}
+        {...(animateOnHover !== undefined ? { animateOnHover } : {})}
+        {...(animateOnTap !== undefined ? { animateOnTap } : {})}
+        {...(animateOnView !== undefined ? { animateOnView } : {})}
+        {...(animateOnViewMargin !== undefined ? { animateOnViewMargin } : {})}
+        {...(animateOnViewOnce !== undefined ? { animateOnViewOnce } : {})}
+        {...(animationProp !== undefined ? { animation: animationProp } : {})}
         asChild
-        completeOnStop={completeOnStop}
-        delay={delay}
-        loop={loop}
-        loopDelay={loopDelay}
+        {...(completeOnStop !== undefined ? { completeOnStop } : {})}
+        {...(delay !== undefined ? { delay } : {})}
+        {...(loop !== undefined ? { loop } : {})}
+        {...(loopDelay !== undefined ? { loopDelay } : {})}
       >
         <IconComponent
           className={cn(
@@ -629,7 +654,7 @@ function getVariants<
   V extends { default: T; [key: string]: T },
   T extends Record<string, Variants>,
 >(animations: V): T {
-  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // biome-ignore lint/correctness/useHookAtTopLevel: <From animate ui>
   const { animation: animationType } = useAnimateIconContext()
 
   let result: T

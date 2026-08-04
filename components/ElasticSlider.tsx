@@ -6,12 +6,13 @@ import {
   useTransform,
 } from "motion/react"
 import type React from "react"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 
 const MAX_OVERFLOW = 50
 
 interface ElasticSliderProps {
-  defaultValue?: number
+  value: number
+  setValue: (value: number) => void
   startingValue?: number
   maxValue?: number
   className?: string
@@ -21,7 +22,8 @@ interface ElasticSliderProps {
 }
 
 const ElasticSlider: React.FC<ElasticSliderProps> = ({
-  defaultValue = 50,
+  value,
+  setValue,
   startingValue = 0,
   maxValue = 100,
   className = "",
@@ -34,20 +36,22 @@ const ElasticSlider: React.FC<ElasticSliderProps> = ({
       className={`flex flex-col items-center justify-center gap-4 ${className}`}
     >
       <Slider
-        defaultValue={defaultValue}
         isStepped={isStepped}
         // leftIcon={leftIcon}
         maxValue={maxValue}
+        setValue={setValue}
         startingValue={startingValue}
         stepSize={stepSize}
+        value={value}
       />
     </div>
   )
 }
 
 interface SliderProps {
-  defaultValue: number
+  value: number
   startingValue: number
+  setValue: (value: number) => void
   maxValue: number
   isStepped: boolean
   stepSize: number
@@ -55,23 +59,19 @@ interface SliderProps {
 }
 
 const Slider: React.FC<SliderProps> = ({
-  defaultValue,
+  value,
+  setValue,
   startingValue,
   maxValue,
   isStepped,
   stepSize,
   // leftIcon,
 }) => {
-  const [value, setValue] = useState<number>(defaultValue)
   const sliderRef = useRef<HTMLDivElement>(null)
   const [_region, setRegion] = useState<"left" | "middle" | "right">("middle")
   const clientX = useMotionValue(0)
   const overflow = useMotionValue(0)
   const scale = useMotionValue(1)
-
-  useEffect(() => {
-    setValue(defaultValue)
-  }, [defaultValue])
 
   useMotionValueEvent(clientX, "change", (latest: number) => {
     if (sliderRef.current) {

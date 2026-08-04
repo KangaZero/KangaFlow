@@ -362,7 +362,10 @@ export function NoctaliaSettings(props: {
   }
 
   // Patch one widget's startup config within the widgetDefaults map.
-  const setWidget = (id: WidgetId, patch: Partial<WidgetStartup>): void => {
+  const setWidget = (
+    id: WidgetId,
+    patch: Partial<WidgetStartup<WidgetId>>
+  ): void => {
     set("widgetDefaults", {
       ...settings.widgetDefaults,
       [id]: { ...settings.widgetDefaults[id], ...patch },

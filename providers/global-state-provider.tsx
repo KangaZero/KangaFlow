@@ -27,8 +27,8 @@ import {
   WIDGET_ANCHORS,
   WIDGET_IDS,
   type WidgetId,
-  type WidgetStartup,
 } from "@/components/niri/settings"
+import type { TrackSrc } from "@/components/widgets/media-player"
 import {
   ANIMATION_PREFS,
   type AnimationPref,
@@ -119,25 +119,63 @@ function isOffset(value: unknown): value is { x: number; y: number } {
 
 // Validate the per-widget startup map, falling back field-by-field so a partial
 // or garbage stored object can never break a widget's anchor/visibility.
-function pickWidgetDefaults(value: unknown): Record<WidgetId, WidgetStartup> {
+function pickWidgetDefaults(value: unknown): EnvSettings["widgetDefaults"] {
   const src = (value && typeof value === "object" ? value : {}) as Record<
     string,
     unknown
   >
-  const out = {} as Record<WidgetId, WidgetStartup>
-  for (const id of WIDGET_IDS) {
+
+  function pickBase(id: WidgetId) {
     const def = DEFAULT_ENV_SETTINGS.widgetDefaults[id]
     const w = (src[id] && typeof src[id] === "object" ? src[id] : {}) as Record<
       string,
       unknown
     >
-    out[id] = {
+    return {
       anchor: pickLiteral(w.anchor, WIDGET_ANCHORS, def.anchor),
       offset: isOffset(w.offset) ? w.offset : def.offset,
       show: typeof w.show === "boolean" ? w.show : def.show,
     }
   }
-  return out
+
+  const mediaDef = DEFAULT_ENV_SETTINGS.widgetDefaults.media
+  const mw = (
+    src.media && typeof src.media === "object" ? src.media : {}
+  ) as Record<string, unknown>
+  const opts = (
+    mw.options && typeof mw.options === "object" ? mw.options : {}
+  ) as Record<string, unknown>
+  const rawTrack = opts.currentTrack
+  const track: TrackSrc =
+    typeof rawTrack === "string" &&
+    rawTrack.startsWith("/tracks/") &&
+    rawTrack.endsWith(".mp3")
+      ? (rawTrack as TrackSrc)
+      : mediaDef.options.currentTrack
+
+  return {
+    alarm: pickBase("alarm"),
+    calendar: pickBase("calendar"),
+    media: {
+      ...pickBase("media"),
+      options: {
+        currentDuration:
+          typeof opts.currentDuration === "number"
+            ? opts.currentDuration
+            : mediaDef.options.currentDuration,
+        currentTrack: track,
+        currentVolume:
+          typeof opts.currentVolume === "number"
+            ? opts.currentVolume
+            : mediaDef.options.currentVolume,
+        isLooping:
+          typeof opts.isLooping === "boolean"
+            ? opts.isLooping
+            : mediaDef.options.isLooping,
+      },
+    },
+    notes: pickBase("notes"),
+  }
 }
 
 function loadEnvSettings(): EnvSettings {
@@ -151,7 +189,6 @@ function loadEnvSettings(): EnvSettings {
       unknown
     >
 
-    console.log("o", o)
     return {
       accent: pickLiteral(o.accent, ACCENTS, DEFAULT_ENV_SETTINGS.accent),
       autoHideBar:

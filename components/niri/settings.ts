@@ -3,6 +3,8 @@
 // is a literal union or a bounded scalar — no bare strings/numbers where a
 // finite set applies. Pure data (no React/DOM).
 
+import type { TrackSrc } from "@/components/widgets/media-player"
+
 // "auto" follows the active theme's default photo; the rest are pinnable —
 // three photo wallpapers then the illustrative gradients.
 export const WALLPAPERS = [
@@ -98,10 +100,21 @@ export const WIDGET_ANCHOR_CLASS: Record<WidgetAnchor, string> = {
   "top-right": "top-4 right-4",
 }
 
-export type WidgetStartup = {
-  show: boolean // auto-open when the environment loads
-  anchor: WidgetAnchor // corner the window opens at
-  offset: { x: number; y: number } | null // drag offset from "apply current"
+type WidgetStartupBase = {
+  show: boolean
+  anchor: WidgetAnchor
+  offset: { x: number; y: number } | null
+}
+
+export type WidgetStartup<T extends WidgetId> = T extends "media"
+  ? WidgetStartupBase & { options: MediaPlayerOptions }
+  : WidgetStartupBase
+
+type MediaPlayerOptions = {
+  currentVolume: number
+  currentTrack: TrackSrc
+  currentDuration: number
+  isLooping: boolean
 }
 
 export type EnvSettings = {
@@ -118,7 +131,9 @@ export type EnvSettings = {
   windowRadius: BorderRadius
   barRadius: BorderRadius
   launcherRadius: BorderRadius
-  widgetDefaults: Record<WidgetId, WidgetStartup>
+  widgetDefaults: {
+    [K in WidgetId]: WidgetStartup<K>
+  }
 }
 
 export const DEFAULT_ENV_SETTINGS: EnvSettings = {
@@ -138,7 +153,17 @@ export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   widgetDefaults: {
     alarm: { anchor: "bottom-left", offset: null, show: false },
     calendar: { anchor: "top-right", offset: null, show: false },
-    media: { anchor: "bottom-right", offset: null, show: false },
+    media: {
+      anchor: "bottom-right",
+      offset: null,
+      options: {
+        currentDuration: 0,
+        currentTrack: "/tracks/kapustin-eight-concert-etudes-op40-7.mp3",
+        currentVolume: 100,
+        isLooping: false,
+      },
+      show: false,
+    },
     notes: { anchor: "top-left", offset: null, show: false },
   },
   windowRadius: 16,

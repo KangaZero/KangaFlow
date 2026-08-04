@@ -124,54 +124,54 @@ function IconComponent({ size, ...props }: AudioLinesProps) {
       {...props}
     >
       <motion.line
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.line1 !== undefined ? { variants: variants.line1 } : {})}
         initial="initial"
-        variants={variants.line1}
         x1={2}
         x2={2}
         y1={10}
         y2={13}
       />
       <motion.line
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.line2 !== undefined ? { variants: variants.line2 } : {})}
         initial="initial"
-        variants={variants.line2}
         x1={6}
         x2={6}
         y1={6}
         y2={17}
       />
       <motion.line
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.line3 !== undefined ? { variants: variants.line3 } : {})}
         initial="initial"
-        variants={variants.line3}
         x1={10}
         x2={10}
         y1={3}
         y2={21}
       />
       <motion.line
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.line4 !== undefined ? { variants: variants.line4 } : {})}
         initial="initial"
-        variants={variants.line4}
         x1={14}
         x2={14}
         y1={8}
         y2={15}
       />
       <motion.line
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.line5 !== undefined ? { variants: variants.line5 } : {})}
         initial="initial"
-        variants={variants.line5}
         x1={18}
         x2={18}
         y1={5}
         y2={18}
       />
       <motion.line
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.line6 !== undefined ? { variants: variants.line6 } : {})}
         initial="initial"
-        variants={variants.line6}
         x1={22}
         x2={22}
         y1={10}

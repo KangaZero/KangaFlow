@@ -38,7 +38,8 @@ function IconComponent({ size, ...props }: OrbitProps) {
 
   return (
     <motion.svg
-      animate={controls}
+      {...(controls !== undefined ? { animate: controls } : {})}
+      {...(variants.group !== undefined ? { variants: variants.group } : {})}
       fill="none"
       height={size}
       initial="initial"
@@ -46,47 +47,52 @@ function IconComponent({ size, ...props }: OrbitProps) {
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth={2}
-      variants={variants.group}
       viewBox="0 0 24 24"
       width={size}
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <motion.path
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.path1 !== undefined ? { variants: variants.path1 } : {})}
         d="M20.341 6.484A10 10 0 0 1 10.266 21.85"
         initial="initial"
-        variants={variants.path1}
       />
       <motion.path
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.path2 !== undefined ? { variants: variants.path2 } : {})}
         d="M3.659 17.516A10 10 0 0 1 13.74 2.152"
         initial="initial"
-        variants={variants.path2}
       />
       <motion.circle
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.circle1 !== undefined
+          ? { variants: variants.circle1 }
+          : {})}
         cx="12"
         cy="12"
         initial="initial"
         r="3"
-        variants={variants.circle1}
       />
       <motion.circle
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.circle2 !== undefined
+          ? { variants: variants.circle2 }
+          : {})}
         cx="19"
         cy="5"
         initial="initial"
         r="2"
-        variants={variants.circle2}
       />
       <motion.circle
-        animate={controls}
+        {...(controls !== undefined ? { animate: controls } : {})}
+        {...(variants.circle3 !== undefined
+          ? { variants: variants.circle3 }
+          : {})}
         cx="5"
         cy="19"
         initial="initial"
         r="2"
-        variants={variants.circle3}
       />
     </motion.svg>
   )

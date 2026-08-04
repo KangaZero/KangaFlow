@@ -183,7 +183,8 @@ export function EnvironmentView() {
   const { translate, locale } = useLocale()
   const { resolvedTheme } = useTheme()
   const dark = resolvedTheme !== "light"
-  const themeFromLocalStorage = localStorage.getItem("theme")
+  const themeFromLocalStorage =
+    typeof window !== "undefined" ? localStorage.getItem("theme") : null
   const theme = isTheme(resolvedTheme)
     ? resolvedTheme
     : isTheme(themeFromLocalStorage)
