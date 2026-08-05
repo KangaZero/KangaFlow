@@ -367,7 +367,9 @@ function SecuritySection(): React.JSX.Element {
     msg: string
     ok: boolean
   } | null>(null)
-  const [isSet, setIsSet] = useState(hasStoredPassword)
+  const [isSet, setIsSet] = useState(
+    () => typeof window !== "undefined" && hasStoredPassword()
+  )
 
   async function handleSet(): Promise<void> {
     if (pwdInput !== confirmInput) {
