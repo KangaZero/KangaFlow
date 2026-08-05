@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button"
 import type { Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
+import { useNotifications } from "@/providers/notifications-provider"
 
 // A single workspace indicator ("pip"): whether it holds windows and whether it
 // is the focused workspace. Purely presentational — the bar never owns this
@@ -120,8 +121,20 @@ export function NoctaliaBar(props: {
     barPosition,
   } = props
   const { translate, setLocale } = useLocale()
+  const { notify } = useNotifications()
   const isV = orientation === "vertical"
   const otherLayout = keyboardLayout === "en" ? "ja" : "en"
+
+  function switchLocale(): void {
+    setLocale(otherLayout)
+    notify(
+      translate(
+        otherLayout === "en"
+          ? "notifications.localeSwitchedToEn"
+          : "notifications.localeSwitchedToJa"
+      )
+    )
+  }
 
   return (
     <header
@@ -213,7 +226,7 @@ export function NoctaliaBar(props: {
               "group relative overflow-hidden rounded-sm border border-border/50 p-1 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none transition-colors hover:border-primary",
               isV && "[writing-mode:vertical-rl]"
             )}
-            onClick={() => setLocale(otherLayout)}
+            onClick={switchLocale}
             type="button"
           >
             <span

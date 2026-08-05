@@ -22,6 +22,9 @@ import {
   ENV_FONTS,
   type EnvSettings,
   GLASS_LEVELS,
+  TOAST_DURATIONS,
+  TOAST_MAX_STACKS,
+  TOAST_POSITIONS,
   UI_SCALES,
   WALLPAPERS,
   WIDGET_ANCHORS,
@@ -221,6 +224,21 @@ function loadEnvSettings(): EnvSettings {
         typeof o.showSystemMonitor === "boolean"
           ? o.showSystemMonitor
           : DEFAULT_ENV_SETTINGS.showSystemMonitor,
+      toastDuration: pickLiteral(
+        o.toastDuration,
+        TOAST_DURATIONS,
+        DEFAULT_ENV_SETTINGS.toastDuration
+      ),
+      toastMaxStack: pickLiteral(
+        o.toastMaxStack,
+        TOAST_MAX_STACKS,
+        DEFAULT_ENV_SETTINGS.toastMaxStack
+      ),
+      toastPosition: pickLiteral(
+        o.toastPosition,
+        TOAST_POSITIONS,
+        DEFAULT_ENV_SETTINGS.toastPosition
+      ),
       uiScale: pickLiteral(o.uiScale, UI_SCALES, DEFAULT_ENV_SETTINGS.uiScale),
       wallpaper: pickLiteral(
         o.wallpaper,

@@ -18,6 +18,7 @@ export const Z_LAYERS = {
   hint: 1200,
   panel: 900,
   popover: 1100,
+  toast: 1150,
   window: 100,
   windowMax: 800,
 } as const

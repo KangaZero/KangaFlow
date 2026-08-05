@@ -46,7 +46,7 @@ export function WallpaperDialog({
           <DialogTitle>
             {translate("environment.settings.wallpaper")}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-color-accent-foreground">
             {translate("environment.settings.wallpaperHint")}
           </DialogDescription>
         </DialogHeader>

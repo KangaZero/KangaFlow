@@ -75,6 +75,7 @@ export function ShortcutDispatcher() {
             !isHelloEffectAnimationComplete &&
             (currentPath === "/en/" || currentPath === "/ja/")
           )
+            //INFO: Do not notify here, this is explicity not added in
             return //Without this language change may cause animation to never complete resulting in never rendering the about section and stuck on the hello-effect
           setLocale(locale === "en" ? "ja" : "en")
           break

@@ -122,11 +122,11 @@ export function MediaMiniPill({
                 <motion.div
                   animate={vertical ? { y: [0, "-50%"] } : { x: [0, "-50%"] }}
                   className={cn(
-                    "flex whitespace-nowrap text-[10px] text-foreground",
+                    "flex text-[10px] text-foreground",
                     vertical ? "flex-col" : ""
                   )}
-                  exit={{ opacity: 0 }}
-                  initial={{ opacity: 0 }}
+                  exit={{ opacity: 1 }}
+                  initial={{ opacity: 1 }}
                   key={`marquee-${track.title}`}
                   transition={{
                     opacity: { duration: 0.1 },

@@ -4,6 +4,7 @@
 import {
   AppWindow,
   ArrowLeft,
+  Bell,
   Blend,
   ChevronDown,
   Crosshair,
@@ -40,6 +41,12 @@ import {
   type EnvSettings,
   GLASS_LEVELS,
   type GlassLevel,
+  TOAST_DURATIONS,
+  TOAST_MAX_STACKS,
+  TOAST_POSITIONS,
+  type ToastDuration,
+  type ToastMaxStack,
+  type ToastPosition,
   UI_SCALES,
   type UiScale,
   WIDGET_ANCHORS,
@@ -127,7 +134,13 @@ function readWidgetOffset(storageKey: string): { x: number; y: number } | null {
 }
 
 // Sidebar sections, Noctalia v5-style (icon + label; content pane on the right).
-type SectionId = "appearance" | "bar" | "launcher" | "wallpaper" | "widgets"
+type SectionId =
+  | "appearance"
+  | "bar"
+  | "launcher"
+  | "notifications"
+  | "wallpaper"
+  | "widgets"
 const SECTIONS: readonly {
   id: SectionId
   icon: LucideIcon
@@ -150,6 +163,11 @@ const SECTIONS: readonly {
     labelKey: "environment.settings.wallpaper",
   },
   { icon: LayoutGrid, id: "widgets", labelKey: "environment.settings.widgets" },
+  {
+    icon: Bell,
+    id: "notifications",
+    labelKey: "environment.settings.sectionNotifications",
+  },
 ]
 
 // A small section heading paired with a lucide glyph.
@@ -789,6 +807,76 @@ export function NoctaliaSettings(props: {
                     <WallpaperPicker
                       onChange={(w) => set("wallpaper", w)}
                       value={settings.wallpaper}
+                    />
+                  </SettingCard>
+                ) : section === "notifications" ? (
+                  <SettingCard
+                    icon={Bell}
+                    title={translate(
+                      "environment.settings.sectionNotifications"
+                    )}
+                  >
+                    <SectionLabel icon={Bell}>
+                      {translate("environment.settings.toastPosition")}
+                    </SectionLabel>
+                    <Segmented<ToastPosition>
+                      format={(p) =>
+                        translate(
+                          p === "top-left"
+                            ? "environment.settings.toastPositionTopLeft"
+                            : p === "top-right"
+                              ? "environment.settings.toastPositionTopRight"
+                              : p === "bottom-left"
+                                ? "environment.settings.toastPositionBottomLeft"
+                                : "environment.settings.toastPositionBottomRight"
+                        )
+                      }
+                      label={translate("environment.settings.toastPosition")}
+                      onSelect={(p) => set("toastPosition", p)}
+                      options={TOAST_POSITIONS}
+                      value={settings.toastPosition}
+                    />
+
+                    <SectionLabel icon={SlidersHorizontal}>
+                      {translate("environment.settings.toastDuration")}
+                    </SectionLabel>
+                    <Segmented<ToastDuration>
+                      format={(d) =>
+                        translate(
+                          d === 3000
+                            ? "environment.settings.toastDuration3s"
+                            : d === 5000
+                              ? "environment.settings.toastDuration5s"
+                              : d === 8000
+                                ? "environment.settings.toastDuration8s"
+                                : "environment.settings.toastDuration12s"
+                        )
+                      }
+                      label={translate("environment.settings.toastDuration")}
+                      onSelect={(d) => set("toastDuration", d)}
+                      options={TOAST_DURATIONS}
+                      value={settings.toastDuration}
+                    />
+
+                    <SectionLabel icon={LayoutGrid}>
+                      {translate("environment.settings.toastMaxStack")}
+                    </SectionLabel>
+                    <Segmented<ToastMaxStack>
+                      format={(n) =>
+                        translate(
+                          n === 1
+                            ? "environment.settings.toastMaxStack1"
+                            : n === 3
+                              ? "environment.settings.toastMaxStack3"
+                              : n === 5
+                                ? "environment.settings.toastMaxStack5"
+                                : "environment.settings.toastMaxStack8"
+                        )
+                      }
+                      label={translate("environment.settings.toastMaxStack")}
+                      onSelect={(n) => set("toastMaxStack", n)}
+                      options={TOAST_MAX_STACKS}
+                      value={settings.toastMaxStack}
                     />
                   </SettingCard>
                 ) : (

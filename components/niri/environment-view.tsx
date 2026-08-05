@@ -30,6 +30,7 @@ import {
   NoctaliaLauncher,
 } from "@/components/niri/noctalia-launcher"
 import { NoctaliaSettings } from "@/components/niri/noctalia-settings"
+import { NotificationToast } from "@/components/niri/notification-toast"
 import { ACCENT_COLORS, type BarPosition } from "@/components/niri/settings"
 import type { AppId, NiriWindow } from "@/components/niri/types"
 import { wallpaperStyle } from "@/components/niri/wallpaper"
@@ -814,6 +815,7 @@ export function EnvironmentView() {
         onOpenChange={(o) => setPanel(o ? "help" : null)}
         open={panel === "help"}
       />
+      <NotificationToast />
     </main>
   )
 }

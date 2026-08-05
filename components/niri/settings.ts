@@ -65,6 +65,23 @@ export type BorderRadius = number
 export const BORDER_RADIUS_MIN = 0
 export const BORDER_RADIUS_MAX = 64
 
+// Toast notification position on the desktop.
+export const TOAST_POSITIONS = [
+  "top-left",
+  "top-right",
+  "bottom-left",
+  "bottom-right",
+] as const
+export type ToastPosition = (typeof TOAST_POSITIONS)[number]
+
+// Auto-dismiss delay in ms. 0 means "until manually closed".
+export const TOAST_DURATIONS = [3000, 5000, 8000, 12000] as const
+export type ToastDuration = (typeof TOAST_DURATIONS)[number]
+
+// Maximum simultaneously-visible toast stack size.
+export const TOAST_MAX_STACKS = [1, 3, 5, 8] as const
+export type ToastMaxStack = (typeof TOAST_MAX_STACKS)[number]
+
 // Floating widgets that can be opened on the desktop. Each id maps to a
 // DraggableWindow `storageKey` (`kangaflow:widget-state:<storageKey>`).
 export const WIDGET_IDS = ["notes", "alarm", "calendar", "media"] as const
@@ -131,6 +148,9 @@ export type EnvSettings = {
   windowRadius: BorderRadius
   barRadius: BorderRadius
   launcherRadius: BorderRadius
+  toastPosition: ToastPosition
+  toastDuration: ToastDuration
+  toastMaxStack: ToastMaxStack
   widgetDefaults: {
     [K in WidgetId]: WidgetStartup<K>
   }
@@ -147,6 +167,9 @@ export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   launcherRadius: 16,
   showStartingHint: true,
   showSystemMonitor: true,
+  toastDuration: 5000,
+  toastMaxStack: 3,
+  toastPosition: "bottom-right",
   uiScale: 1,
   wallpaper: "auto",
   // Non-overlapping default anchors, all hidden until the user opts in.
