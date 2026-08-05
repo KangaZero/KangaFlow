@@ -56,7 +56,7 @@ export function NotificationCenter({
   barPosition: "right" | "left" | "top" | "bottom"
 }): React.JSX.Element {
   const { translate } = useLocale()
-  const { notifications, unreadCount, dismiss, clearAll, markRead, remind } =
+  const { notifications, unreadCount, dismiss, markRead, remind } =
     useNotifications()
   const {
     setIsAlarmOpen,
@@ -65,6 +65,21 @@ export function NotificationCenter({
     setIsNotesOpen,
   } = useGlobalStates()
   const [open, setOpen] = useState(false)
+  const [clearing, setClearing] = useState(false)
+
+  function handleClearAll() {
+    if (clearing || notifications.length === 0) return
+    setClearing(true)
+    const ids = notifications.map((n) => n.id)
+    let accumulated = 0
+    let interval = 120
+    for (const id of ids) {
+      setTimeout(() => dismiss(id), accumulated)
+      accumulated += interval
+      interval = Math.max(18, Math.round(interval * 0.65))
+    }
+    setTimeout(() => setClearing(false), accumulated + 400)
+  }
 
   // target → widget open-setter, so a card click reveals the right widget.
   const openWidget: Record<WidgetId, (isOpen: boolean) => void> = {
@@ -113,8 +128,9 @@ export function NotificationCenter({
           </span>
           {notifications.length > 0 ? (
             <button
-              className="rounded px-1.5 py-0.5 text-muted-foreground text-xs transition-colors hover:text-foreground"
-              onClick={clearAll}
+              className="rounded px-1.5 py-0.5 text-muted-foreground text-xs transition-colors hover:text-foreground disabled:opacity-40"
+              disabled={clearing}
+              onClick={handleClearAll}
               type="button"
             >
               {translate("notifications.clearAll")}

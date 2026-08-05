@@ -164,8 +164,22 @@ export function DraggableWindow({
       if (!action) return
       event.preventDefault()
       if (action.type === "move") {
-        x.set(x.get() + action.dx)
-        y.set(y.get() + action.dy)
+        const el = windowRef.current
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        // Clamp the real screen position, then convert back to an offset delta.
+        const nextLeft = clamp(
+          rect.left + action.dx,
+          0,
+          window.innerWidth - rect.width
+        )
+        const nextTop = clamp(
+          rect.top + action.dy,
+          0,
+          window.innerHeight - rect.height
+        )
+        x.set(x.get() + (nextLeft - rect.left))
+        y.set(y.get() + (nextTop - rect.top))
         saveState(storageKey, { position: { x: x.get(), y: y.get() } })
       } else if (action.type === "snap") {
         const el = windowRef.current

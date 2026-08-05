@@ -113,7 +113,7 @@ export function CalendarWidget(): React.JSX.Element {
           classNames={{
             month: "flex w-full flex-col gap-3",
             month_grid: "w-full border-collapse",
-            months: "w-full",
+            months: "relative w-full",
             root: "w-full",
           }}
           mode="single"
