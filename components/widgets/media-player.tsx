@@ -31,7 +31,6 @@ import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { TrackList } from "@/components/widgets/track-list"
 import { formatSecondsToMMSS, PLAYLIST } from "@/components/widgets/tracks"
 import { SPRING_TAP, TWEEN_FAST, TWEEN_TRACK } from "@/lib/motion"
-import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 

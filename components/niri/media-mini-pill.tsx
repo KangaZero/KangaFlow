@@ -1,7 +1,7 @@
 "use client"
 
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import type * as React from "react"
 import { useCallback } from "react"
 import {
@@ -47,6 +47,7 @@ export function MediaMiniPill({
   } = useGlobalStates()
   const { translate } = useLocale()
 
+  const shouldReduceMotion = useReducedMotion()
   const wd = envSettings.widgetDefaults.media
   const track = PLAYLIST[mediaCurrentIndex] ?? PLAYLIST[0]
   const isLooping = wd.options.isLooping
@@ -112,26 +113,61 @@ export function MediaMiniPill({
           style={{ borderRadius: `${barRadius}px` }}
           transition={{ duration: 0.25, ease: "easeOut", type: "tween" }}
         >
-          {/* Scrolling track title */}
+          {/* Track title: marquee while playing, truncated static when paused */}
           <div
             className={cn(
               "overflow-hidden",
               vertical ? "max-h-20" : "max-w-24"
             )}
           >
-            {/* TODO(human): replace the truncated span below with a marquee
-                animation — when the title text overflows the container it
-                should scroll continuously. The container is max-w-24 (96px)
-                with overflow-hidden. Implement using CSS @keyframes or a
-                motion animation on the inner span. */}
-            <span
-              className={cn(
-                "block truncate text-[10px] text-foreground",
-                vertical && "[writing-mode:vertical-rl]"
+            <AnimatePresence initial={false} mode="wait">
+              {isMediaPlayerPlaying && !shouldReduceMotion ? (
+                <motion.div
+                  animate={vertical ? { y: [0, "-50%"] } : { x: [0, "-50%"] }}
+                  className={cn(
+                    "flex whitespace-nowrap text-[10px] text-foreground",
+                    vertical ? "flex-col" : ""
+                  )}
+                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0 }}
+                  key={`marquee-${track.title}`}
+                  transition={{
+                    opacity: { duration: 0.1 },
+                    x: {
+                      duration: 8,
+                      ease: "linear",
+                      repeat: Number.POSITIVE_INFINITY,
+                      repeatType: "loop",
+                    },
+                    y: {
+                      duration: 8,
+                      ease: "linear",
+                      repeat: Number.POSITIVE_INFINITY,
+                      repeatType: "loop",
+                    },
+                  }}
+                >
+                  <span className="shrink-0 pr-6">{track.title}</span>
+                  <span aria-hidden className="shrink-0 pr-6">
+                    {track.title}
+                  </span>
+                </motion.div>
+              ) : (
+                <motion.span
+                  animate={{ opacity: 1 }}
+                  className={cn(
+                    "block truncate text-[10px] text-foreground",
+                    vertical && "[writing-mode:vertical-rl]"
+                  )}
+                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0 }}
+                  key="static"
+                  transition={{ duration: 0.1 }}
+                >
+                  {track.title}
+                </motion.span>
               )}
-            >
-              {track.title}
-            </span>
+            </AnimatePresence>
           </div>
 
           {/* Divider */}
@@ -149,9 +185,10 @@ export function MediaMiniPill({
           >
             <Button
               aria-label={translate("mediaPlayer.previous")}
-              onClick={() =>
+              onClick={() => {
                 setMediaCurrentIndex((i) => (i - 1 + count) % count)
-              }
+                setIsMediaPlayerPlaying(true)
+              }}
               size="icon-sm"
               variant="ghost"
             >
@@ -193,7 +230,10 @@ export function MediaMiniPill({
           >
             <Button
               aria-label={translate("mediaPlayer.next")}
-              onClick={() => setMediaCurrentIndex((i) => (i + 1) % count)}
+              onClick={() => {
+                setMediaCurrentIndex((i) => (i + 1) % count)
+                setIsMediaPlayerPlaying(true)
+              }}
               size="icon-sm"
               variant="ghost"
             >

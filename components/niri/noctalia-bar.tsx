@@ -205,39 +205,52 @@ export function NoctaliaBar(props: {
           ))}
         </ul>
         <BarClock time={clock} vertical={isV} />
-        <MediaMiniPill
-          barPosition={barPosition}
-          barRadius={barRadius}
-          vertical={isV}
-        />
-        <button
-          aria-label={`${translate("nav.language")} → ${otherLayout.toUpperCase()}`}
-          className={cn(
-            "group relative overflow-hidden rounded-sm border border-border/50 p-1 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none transition-colors hover:border-primary",
-            isV && "[writing-mode:vertical-rl]"
-          )}
-          onClick={() => setLocale(otherLayout)}
-          type="button"
-        >
-          <span
-            aria-hidden
+        {/* Keyboard badge — pill floats outside it via absolute, no layout shift */}
+        <div className={cn("relative", isV ? "self-center" : "")}>
+          <button
+            aria-label={`${translate("nav.language")} → ${otherLayout.toUpperCase()}`}
             className={cn(
-              "pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 bg-primary",
-              CIRCLE_REVEAL
+              "group relative overflow-hidden rounded-sm border border-border/50 p-1 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none transition-colors hover:border-primary",
+              isV && "[writing-mode:vertical-rl]"
             )}
-          />
-          <span className="relative z-10 grid place-items-center">
-            <span className="col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-y-[-150%]">
-              {keyboardLayout}
-            </span>
+            onClick={() => setLocale(otherLayout)}
+            type="button"
+          >
             <span
               aria-hidden
-              className="col-start-1 row-start-1 translate-y-[150%] text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-y-0"
-            >
-              {otherLayout}
+              className={cn(
+                "pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 bg-primary",
+                CIRCLE_REVEAL
+              )}
+            />
+            <span className="relative z-10 grid place-items-center">
+              <span className="col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-y-[-150%]">
+                {keyboardLayout}
+              </span>
+              <span
+                aria-hidden
+                className="col-start-1 row-start-1 translate-y-[150%] text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-y-0"
+              >
+                {otherLayout}
+              </span>
             </span>
-          </span>
-        </button>
+          </button>
+          {/* Floats to the right of the badge (or below for vertical bars) */}
+          <div
+            className={cn(
+              "absolute z-10",
+              isV
+                ? "top-full left-1/2 mt-1 -translate-x-1/2"
+                : "top-1/2 left-full ml-1 -translate-y-1/2"
+            )}
+          >
+            <MediaMiniPill
+              barPosition={barPosition}
+              barRadius={barRadius}
+              vertical={isV}
+            />
+          </div>
+        </div>
       </div>
 
       {/* RIGHT: faux system monitor + notification bell */}
