@@ -115,10 +115,7 @@ export function MediaMiniPill({
         >
           {/* Track title: marquee while playing, truncated static when paused */}
           <div
-            className={cn(
-              "overflow-hidden",
-              vertical ? "max-h-20" : "max-w-24"
-            )}
+            className={cn("overflow-hidden", vertical ? "hidden" : "max-w-24")}
           >
             <AnimatePresence initial={false} mode="wait">
               {isMediaPlayerPlaying && !shouldReduceMotion ? (

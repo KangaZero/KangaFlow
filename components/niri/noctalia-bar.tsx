@@ -224,12 +224,22 @@ export function NoctaliaBar(props: {
               )}
             />
             <span className="relative z-10 grid place-items-center">
-              <span className="col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-y-[-150%]">
+              <span
+                className={cn(
+                  "col-start-1 row-start-1 transition-transform duration-300 ease-out",
+                  isV
+                    ? "group-hover:translate-x-[-150%]"
+                    : "group-hover:translate-y-[-150%]"
+                )}
+              >
                 {keyboardLayout}
               </span>
               <span
                 aria-hidden
-                className="col-start-1 row-start-1 translate-y-[150%] text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-y-0"
+                className={cn(
+                  "col-start-1 row-start-1 text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-x-0 group-hover:translate-y-0",
+                  isV ? "translate-x-[150%]" : "translate-y-[150%]"
+                )}
               >
                 {otherLayout}
               </span>
