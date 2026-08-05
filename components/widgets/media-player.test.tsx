@@ -72,7 +72,8 @@ vi.mock("@/components/animate-ui/components/radix/popover", () => ({
 }))
 
 vi.mock("@/components/ui/slider", () => ({ Slider: () => null }))
-vi.mock("../ElasticSlider", () => ({ default: () => null }))
+vi.mock("../ElasticSlider", () => ({ ElasticSlider: () => null }))
+vi.mock("@/components/widgets/track-list", () => ({ TrackList: () => null }))
 
 import type { EnvSettings } from "@/components/niri/settings"
 // ── Global state stub ─────────────────────────────────────────────────────────
@@ -95,11 +96,8 @@ vi.mock("@/providers/global-state-provider", () => ({
 }))
 
 // ── Imports (after all vi.mock calls) ─────────────────────────────────────────
-import {
-  formatSecondsToMMSS,
-  MediaPlayer,
-  PLAYLIST,
-} from "@/components/widgets/media-player"
+import { MediaPlayer } from "@/components/widgets/media-player"
+import { formatSecondsToMMSS, PLAYLIST } from "@/components/widgets/tracks"
 
 // ── Test harness ──────────────────────────────────────────────────────────────
 let container: HTMLDivElement

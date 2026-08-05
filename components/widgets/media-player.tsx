@@ -10,7 +10,7 @@ import {
   SkipForward,
 } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import {
   Popover,
@@ -18,91 +18,36 @@ import {
   PopoverTrigger,
 } from "@/components/animate-ui/components/radix/popover"
 import { AudioLinesIcon } from "@/components/animate-ui/icons/audio-lines"
+import { ListIcon } from "@/components/animate-ui/icons/list"
 import { OrbitIcon } from "@/components/animate-ui/icons/orbit"
 import { Volume1Icon } from "@/components/animate-ui/icons/volume-1"
 import { Volume2Icon } from "@/components/animate-ui/icons/volume-2"
 import { VolumeOffIcon } from "@/components/animate-ui/icons/volume-off"
+import { ElasticSlider } from "@/components/ElasticSlider"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
+import { TrackList } from "@/components/widgets/track-list"
+import { formatSecondsToMMSS, PLAYLIST } from "@/components/widgets/tracks"
+import { SPRING_TAP, TWEEN_FAST, TWEEN_TRACK } from "@/lib/motion"
+import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
-import ElasticSlider from "../ElasticSlider"
 
-// Full track descriptor. `src` drives the <audio> element; if absent the player
-// falls back to a simulated clock so the UI works before files are downloaded.
-// Drop MP3s into public/tracks/ then fill in `src: "/KangaFlow/tracks/file.mp3"`.
+const TRACK_FAVORITES_KEY = "kangaflow:trackFavorites"
 
-export type TrackSrc = `/tracks/${string}.mp3`
-
-export type Track = {
-  title: string
-  composer: string
-  artist?: string
-  duration: number // seconds — used as slider range fallback before metadata loads
-  src: TrackSrc // URL served by Next.js static export, e.g. "/KangaFlow/tracks/..."
-  album?: string
-  year?: number
-  genre?: string
-  coverSrc?: string // URL to album-art image (square, 200×200+ recommended)
-  accentColor?: string // dominant hex/oklch colour for optional player tint
+function loadFavorites(): ReadonlySet<number> {
+  if (typeof window === "undefined") return new Set()
+  try {
+    const raw: unknown = JSON.parse(
+      window.localStorage.getItem(TRACK_FAVORITES_KEY) ?? "[]"
+    )
+    return new Set(Array.isArray(raw) ? (raw as number[]) : [])
+  } catch {
+    return new Set()
+  }
 }
-
-type Minutes = number & { _brand: "minutes" }
-type Seconds = number & { _brand: "seconds" }
-
-// Non-empty tuple so PLAYLIST[0] is always Track (satisfies noUncheckedIndexedAccess).
-// Add more tracks: nix run nixpkgs#yt-dlp -- -x --audio-format mp3 --audio-quality 0 \
-//   -o "public/tracks/%(id)s.%(ext)s" "<youtube-url>"
-//   Get the duration via nix run nixpkgs#yt-dlp -- --print duration "<youtube-url>"
-// To slice and take a particular section in seconds --download-sections "*0-203"
-export const PLAYLIST: readonly [Track, ...Track[]] = [
-  {
-    composer: "Wizet / Nexon",
-    duration: 377,
-    genre: "Game OST",
-    src: "/tracks/maplestory-intro.mp3",
-    title: "MapleStory — Intro Theme",
-  },
-  {
-    composer: "Sergei Bortkiewicz",
-    duration: 375,
-    genre: "Classical",
-    src: "/tracks/bortkiewicz-op24-1.mp3",
-    title: "Nocturne (Diana), Op.24/1",
-  },
-  {
-    artist: "Nikolai Lvovich Lugansky",
-    composer: "Nikolai Girshevich Kapustin",
-    duration: 203,
-    genre: "Jazz/Classical",
-    src: "/tracks/kapustin-eight-concert-etudes-op40-7.mp3",
-    title: "Eight Concert Etudes, Op.40/7",
-  },
-  {
-    artist: "Yunchan Lim",
-    composer: "Fryderyk Franciszek Chopin",
-    duration: 135,
-    genre: "Classical",
-    src: "/tracks/chopin-op-10-10.mp3",
-    title: "Etude (A Flat Major), Op.10/10",
-  },
-]
-
-// Format a whole-second count as m:ss (e.g. 258 → "4:18"). Pure + exported so it
-// can be unit-tested independently of the component.
-export function formatSecondsToMMSS(
-  totalSeconds: number
-): `${Minutes}:${Seconds}` {
-  const safe = Math.max(0, Math.floor(totalSeconds))
-  const minutes = Math.floor(safe / 60) as Minutes
-  const seconds = (safe % 60) as Seconds
-  return `${minutes}:${seconds.toString().padStart(2, "0") as `${Seconds}`}`
-}
-
-// Springy press/hover feedback shared by the transport buttons.
-const TAP_SPRING = { damping: 18, stiffness: 500, type: "spring" } as const
 
 export function MediaPlayer() {
   const { translate } = useLocale()
@@ -119,6 +64,8 @@ export function MediaPlayer() {
   const [currentTimeSec, setCurrentTimeSec] = useState(0)
   const [audioDuration, setAudioDuration] = useState<number | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [favorites, setFavorites] = useState<ReadonlySet<number>>(loadFavorites)
+  const [showList, setShowList] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const isPlayingRef = useRef(false)
@@ -236,6 +183,34 @@ export function MediaPlayer() {
 
   const goToNext = (): void => goToIndex(currentIndex + 1)
 
+  const toggleFavorite = useCallback((index: number): void => {
+    setFavorites((prev) => {
+      const next = new Set(prev)
+      if (next.has(index)) next.delete(index)
+      else next.add(index)
+      window.localStorage.setItem(
+        TRACK_FAVORITES_KEY,
+        JSON.stringify([...next])
+      )
+      return next
+    })
+  }, [])
+
+  const { favoritedIndices, restIndices } = useMemo(() => {
+    const all = PLAYLIST.map((_, i) => i)
+    return {
+      favoritedIndices: all.filter((i) => favorites.has(i)),
+      restIndices: all.filter((i) => !favorites.has(i)),
+    }
+  }, [favorites])
+
+  const handleSelectTrack = useCallback((index: number): void => {
+    setCurrentIndex(index)
+    if (!isPlayingRef.current) setIsPlaying(true)
+  }, [])
+
+  const closeList = useCallback(() => setShowList(false), [])
+
   const goToPrevious = (): void => {
     if (currentTimeSec > 3) {
       setCurrentTimeSec(0)
@@ -290,7 +265,7 @@ export function MediaPlayer() {
                     initial={{ opacity: 0, rotateY: 90 }}
                     key={isPlaying ? "playing" : "paused"}
                     style={{ transformStyle: "preserve-3d" }}
-                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    transition={TWEEN_TRACK}
                   >
                     {isPlaying ? (
                       <AudioLinesIcon animate />
@@ -308,6 +283,27 @@ export function MediaPlayer() {
                 {track.album ? ` · ${track.album}` : ""}
               </p>
             </div>
+
+            <motion.div
+              className="[anchor-name:--list-btn]"
+              transition={SPRING_TAP}
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.85 }}
+            >
+              <AnimatedTooltip
+                label={translate("mediaPlayer.list")}
+                side="left"
+              >
+                <Button
+                  aria-label={translate("mediaPlayer.list")}
+                  onClick={() => setShowList((v) => !v)}
+                  size="icon"
+                  variant={showList ? "link" : "ghost"}
+                >
+                  <ListIcon animateOnTap className="size-4" />
+                </Button>
+              </AnimatedTooltip>
+            </motion.div>
           </div>
 
           {/* Scrubber */}
@@ -332,7 +328,7 @@ export function MediaPlayer() {
           {/* Transport controls */}
           <div className="flex items-center justify-center gap-2">
             <motion.div
-              transition={TAP_SPRING}
+              transition={SPRING_TAP}
               whileHover={{ scale: 1.15, x: -2 }}
               whileTap={{ scale: 0.85 }}
             >
@@ -367,7 +363,7 @@ export function MediaPlayer() {
             </motion.div>
 
             <motion.div
-              transition={TAP_SPRING}
+              transition={SPRING_TAP}
               whileHover={{ scale: 1.15, x: -2 }}
               whileTap={{ scale: 0.85 }}
             >
@@ -376,7 +372,7 @@ export function MediaPlayer() {
                   (
                     PLAYLIST[
                       (currentIndex - 1 + PLAYLIST.length) % PLAYLIST.length
-                    ] as Track
+                    ] ?? PLAYLIST[0]
                   ).title
                 }
                 side="top"
@@ -396,7 +392,7 @@ export function MediaPlayer() {
             </motion.div>
 
             <motion.div
-              transition={TAP_SPRING}
+              transition={SPRING_TAP}
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.85 }}
             >
@@ -431,7 +427,7 @@ export function MediaPlayer() {
                     exit={{ opacity: 0, scale: 0.6 }}
                     initial={{ opacity: 0, scale: 0.6 }}
                     key={isPlaying ? "pause" : "play"}
-                    transition={{ duration: 0.12 }}
+                    transition={TWEEN_FAST}
                   >
                     {isPlaying ? (
                       <Pause className="size-5" />
@@ -444,7 +440,7 @@ export function MediaPlayer() {
             </motion.div>
 
             <motion.div
-              transition={TAP_SPRING}
+              transition={SPRING_TAP}
               whileHover={{ scale: 1.15, x: 2 }}
               whileTap={{ scale: 0.85 }}
             >
@@ -471,7 +467,7 @@ export function MediaPlayer() {
             <Popover>
               <PopoverTrigger>
                 <motion.div
-                  transition={TAP_SPRING}
+                  transition={SPRING_TAP}
                   whileHover={{ scale: 1.15, x: -2 }}
                   whileTap={{ scale: 0.85 }}
                 >
@@ -493,7 +489,7 @@ export function MediaPlayer() {
                             exit={{ opacity: 0.5, scale: 0.6 }}
                             initial={{ opacity: 0.5, scale: 0.6 }}
                             key="mute"
-                            transition={{ duration: 0.12 }}
+                            transition={TWEEN_FAST}
                           >
                             <VolumeOffIcon animateOnHover className="size-4" />
                           </motion.span>
@@ -504,7 +500,7 @@ export function MediaPlayer() {
                             exit={{ opacity: 0.5, scale: 0.6 }}
                             initial={{ opacity: 0.5, scale: 0.6 }}
                             key="low"
-                            transition={{ duration: 0.12 }}
+                            transition={TWEEN_FAST}
                           >
                             <Volume1Icon animateOnHover className="size-4" />
                           </motion.span>
@@ -515,7 +511,7 @@ export function MediaPlayer() {
                             exit={{ opacity: 0.5, scale: 0.6 }}
                             initial={{ opacity: 0.5, scale: 0.6 }}
                             key="high"
-                            transition={{ duration: 0.12 }}
+                            transition={TWEEN_FAST}
                           >
                             <Volume2Icon animateOnHover className="size-4" />
                           </motion.span>
@@ -555,6 +551,16 @@ export function MediaPlayer() {
           </div>
         </div>
       </DraggableWindow>
+
+      <TrackList
+        currentIndex={currentIndex}
+        favoritedIndices={favoritedIndices}
+        isOpen={showList}
+        onClose={closeList}
+        onSelect={handleSelectTrack}
+        onToggleFavorite={toggleFavorite}
+        restIndices={restIndices}
+      />
     </>
   )
 }

@@ -274,7 +274,11 @@ const ja = {
     themeHint: "d キーでテーマを切り替え",
   },
   mediaPlayer: {
+    allTracks: "全トラック",
     close: "プレーヤーを閉じる",
+    favorite: "お気に入りに追加",
+    favorites: "お気に入り",
+    list: "トラック一覧",
     loop: "ループ",
     next: "次の曲",
     nowPlaying: "再生中",
@@ -283,6 +287,7 @@ const ja = {
     previous: "前の曲",
     seek: "シーク",
     title: "メディアプレーヤー",
+    unfavorite: "お気に入りを解除",
     volume: "音量",
   },
   nav: {

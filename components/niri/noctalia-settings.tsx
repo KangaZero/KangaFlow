@@ -63,6 +63,12 @@ import {
   type NoteLineNumbers,
 } from "@/lib/globalStates"
 import type { TranslationKey } from "@/lib/i18n"
+import {
+  SPRING_PANEL,
+  SPRING_SEGMENTED,
+  TWEEN_QUICK,
+  TWEEN_SMOOTH,
+} from "@/lib/motion"
 import { THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
@@ -212,7 +218,7 @@ function Segmented<T extends string | number>(props: {
                 aria-hidden
                 className="absolute inset-0 rounded-lg bg-primary shadow-sm"
                 layoutId={layoutId}
-                transition={{ damping: 32, stiffness: 400, type: "spring" }}
+                transition={SPRING_SEGMENTED}
               />
             ) : null}
             <span
@@ -411,7 +417,7 @@ export function NoctaliaSettings(props: {
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             role="dialog"
             style={{ borderRadius: `${settings.windowRadius}px` }}
-            transition={{ duration: 0.16, ease: "easeOut" }}
+            transition={TWEEN_QUICK}
           >
             {/* Header — always visible; mobile shows dropdown + close, desktop shows title + sidebar toggle */}
             <div className="flex shrink-0 items-center gap-2 border-border/60 border-b px-4 py-2.5">
@@ -481,9 +487,7 @@ export function NoctaliaSettings(props: {
                   animate={{ rotate: sidebarOpen ? 0 : 180 }}
                   style={{ display: "inline-flex" }}
                   transition={
-                    shouldReduceMotion
-                      ? { duration: 0 }
-                      : { damping: 30, stiffness: 300, type: "spring" }
+                    shouldReduceMotion ? { duration: 0 } : SPRING_PANEL
                   }
                 >
                   <ArrowLeft className="size-5" />
@@ -503,9 +507,7 @@ export function NoctaliaSettings(props: {
                     initial={{ opacity: 0, width: 0 }}
                     key="sidebar"
                     transition={
-                      shouldReduceMotion
-                        ? { duration: 0 }
-                        : { damping: 30, stiffness: 300, type: "spring" }
+                      shouldReduceMotion ? { duration: 0 } : SPRING_PANEL
                     }
                   >
                     <div className="flex flex-col gap-1 px-3">
@@ -516,17 +518,27 @@ export function NoctaliaSettings(props: {
                           <button
                             aria-current={active}
                             className={cn(
-                              "flex items-center gap-2.5 rounded-lg px-3 py-2 text-left font-medium text-sm transition-colors",
+                              "relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-left font-medium text-sm transition-colors",
                               active
-                                ? "bg-primary/15 text-primary"
+                                ? "text-primary"
                                 : "text-muted-foreground hover:bg-muted/60"
                             )}
                             key={s.id}
                             onClick={() => setSection(s.id)}
                             type="button"
                           >
-                            <Icon aria-hidden className="size-4 shrink-0" />
-                            <span className="truncate">
+                            {active ? (
+                              <motion.span
+                                className="absolute inset-0 rounded-lg bg-primary/15"
+                                layoutId="settings-nav-pill"
+                                transition={TWEEN_SMOOTH}
+                              />
+                            ) : null}
+                            <Icon
+                              aria-hidden
+                              className="relative size-4 shrink-0"
+                            />
+                            <span className="relative truncate">
                               {translate(s.labelKey)}
                             </span>
                           </button>

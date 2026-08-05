@@ -3,7 +3,7 @@
 // is a literal union or a bounded scalar — no bare strings/numbers where a
 // finite set applies. Pure data (no React/DOM).
 
-import type { TrackSrc } from "@/components/widgets/media-player"
+import type { TrackSrc } from "@/components/widgets/tracks"
 
 // "auto" follows the active theme's default photo; the rest are pinnable —
 // three photo wallpapers then the illustrative gradients.

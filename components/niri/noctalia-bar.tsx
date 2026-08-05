@@ -22,6 +22,24 @@ type WorkspacePip = {
   occupied: boolean
   active: boolean
 }
+
+// Same circle-reveal CSS as site-header's PillHover.
+const CIRCLE_REVEAL =
+  "origin-bottom scale-0 transition-transform duration-300 ease-out group-hover:scale-100"
+
+// Daiji (大字) — traditional formal Japanese numerals shown on hover.
+const DAIJI: Record<number, string> = {
+  1: "壱",
+  2: "弐",
+  3: "参",
+  4: "肆",
+  5: "伍",
+  6: "陸",
+  7: "柒",
+  8: "捌",
+  9: "玖",
+  10: "拾",
+}
 // Clock built on the react-bits Counter — "HH:MM" split into two fixed-2-digit
 // rolling counters. Falls back to plain text if the format is unexpected.
 function BarClock({
@@ -100,8 +118,9 @@ export function NoctaliaBar(props: {
     orientation,
     barPosition,
   } = props
-  const { translate } = useLocale()
+  const { translate, setLocale } = useLocale()
   const isV = orientation === "vertical"
+  const otherLayout = keyboardLayout === "en" ? "ja" : "en"
 
   return (
     <header
@@ -152,30 +171,67 @@ export function NoctaliaBar(props: {
               <button
                 aria-label={`${translate("environment.bar.workspace")} ${ws.id}`}
                 className={cn(
-                  "flex size-5 items-center justify-center rounded-full text-[0.625rem] tabular-nums leading-none transition-colors",
+                  "group relative flex size-5 items-center justify-center overflow-hidden rounded-full text-[0.625rem] tabular-nums leading-none transition-colors",
                   ws.active
                     ? "bg-primary text-primary-foreground"
                     : ws.occupied
-                      ? "bg-muted text-foreground hover:bg-muted/70"
-                      : "border border-border/50 bg-transparent text-muted-foreground hover:bg-muted/40"
+                      ? "bg-muted text-foreground"
+                      : "border border-border/50 bg-transparent text-muted-foreground"
                 )}
                 onClick={() => onWorkspace(ws.id)}
                 type="button"
               >
-                {ws.id}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 rounded-full bg-primary",
+                    CIRCLE_REVEAL
+                  )}
+                />
+                <span className="relative z-10 grid place-items-center">
+                  <span className="col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-y-[-150%]">
+                    {ws.id}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="col-start-1 row-start-1 translate-y-[150%] text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-y-0"
+                  >
+                    {DAIJI[ws.id] ?? String(ws.id)}
+                  </span>
+                </span>
               </button>
             </li>
           ))}
         </ul>
         <BarClock time={clock} vertical={isV} />
-        <span
+        <button
+          aria-label={`${translate("nav.language")} → ${otherLayout.toUpperCase()}`}
           className={cn(
-            "rounded-sm border border-border/50 px-1 py-0.5 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none",
+            "group relative overflow-hidden rounded-sm border border-border/50 p-1 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none transition-colors hover:border-primary",
             isV && "[writing-mode:vertical-rl]"
           )}
+          onClick={() => setLocale(otherLayout)}
+          type="button"
         >
-          {keyboardLayout}
-        </span>
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 bg-primary",
+              CIRCLE_REVEAL
+            )}
+          />
+          <span className="relative z-10 grid place-items-center">
+            <span className="col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-y-[-150%]">
+              {keyboardLayout}
+            </span>
+            <span
+              aria-hidden
+              className="col-start-1 row-start-1 translate-y-[150%] text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-y-0"
+            >
+              {otherLayout}
+            </span>
+          </span>
+        </button>
       </div>
 
       {/* RIGHT: faux system monitor + notification bell */}

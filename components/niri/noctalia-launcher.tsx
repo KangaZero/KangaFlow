@@ -27,6 +27,7 @@ import type { BorderRadius } from "@/components/niri/settings"
 import type { AppId } from "@/components/niri/types"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { LOCALES, type Locale } from "@/lib/i18n"
+import { SPRING_REORDER, TWEEN_QUICK } from "@/lib/motion"
 import { THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
@@ -403,7 +404,7 @@ export function NoctaliaLauncher(props: {
         key={result.resultId}
         layout
         layoutId={result.resultId}
-        transition={{ damping: 20, mass: 0.8, stiffness: 320, type: "spring" }}
+        transition={SPRING_REORDER}
       >
         <button
           aria-selected={selected}
@@ -488,7 +489,7 @@ export function NoctaliaLauncher(props: {
             initial={{ opacity: 0, scale: 0.96, y: -8 }}
             role="dialog"
             style={{ borderRadius: `${launcherRadius}px` }}
-            transition={{ duration: 0.16, ease: "easeOut" }}
+            transition={TWEEN_QUICK}
           >
             <div className="border-border/60 border-b p-3">
               <input

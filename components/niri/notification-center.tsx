@@ -23,21 +23,13 @@ import {
 import type { WidgetId } from "@/components/niri/settings"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
+import { SPRING_CARD, SPRING_CONTENT } from "@/lib/motion"
 import type { NotificationType } from "@/lib/notifications"
 import { formatRelativeTime } from "@/lib/notifications"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 import { useNotifications } from "@/providers/notifications-provider"
-
-const CARD_SPRING = {
-  damping: 22,
-  mass: 0.8,
-  stiffness: 320,
-  type: "spring",
-} as const
-
-const CONTENT_SPRING = { damping: 26, stiffness: 320, type: "spring" } as const
 
 // Per-type card icon. `info` falls back to the bell.
 const TYPE_ICON: Record<NotificationType, LucideIcon> = {
@@ -113,7 +105,7 @@ export function NotificationCenter({
         className="w-80 p-0"
         side={isV ? "right" : "bottom"}
         sideOffset={8}
-        transition={CONTENT_SPRING}
+        transition={SPRING_CONTENT}
       >
         <div className="flex items-center justify-between border-border border-b px-3 py-2">
           <span className="font-semibold text-sm">
@@ -155,7 +147,7 @@ export function NotificationCenter({
                       key={n.id}
                       layout
                       layoutId={n.id}
-                      transition={CARD_SPRING}
+                      transition={SPRING_CARD}
                     >
                       <div className="flex items-start gap-2.5">
                         {/* biome-ignore lint/a11y/noStaticElementInteractions: the row is a secondary shortcut to open the widget; every action is also reachable via the dedicated buttons. */}
@@ -193,7 +185,7 @@ export function NotificationCenter({
                           aria-label={translate("notifications.dismiss")}
                           className="rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
                           onClick={() => dismiss(n.id)}
-                          transition={CARD_SPRING}
+                          transition={SPRING_CARD}
                           type="button"
                           whileTap={{ scale: 0.8 }}
                         >

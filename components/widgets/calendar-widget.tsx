@@ -8,11 +8,9 @@ import { Calendar } from "@/components/ui/calendar"
 import { CalendarDaysIcon } from "@/components/ui/calendar-days"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
+import { SPRING_LIST, SPRING_TAP } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
-
-const TAP_SPRING = { damping: 18, stiffness: 500, type: "spring" } as const
-const LIST_SPRING = { damping: 22, stiffness: 340, type: "spring" } as const
 
 const STORAGE_KEY = "kangaflow:calendar-events"
 
@@ -147,7 +145,7 @@ export function CalendarWidget(): React.JSX.Element {
                 exit={{ opacity: 0, x: -8 }}
                 initial={{ opacity: 0, x: -8 }}
                 key={ev.id}
-                transition={LIST_SPRING}
+                transition={SPRING_LIST}
               >
                 <span
                   className={cn("size-2 shrink-0 rounded-full", ev.color)}
@@ -157,7 +155,7 @@ export function CalendarWidget(): React.JSX.Element {
                   aria-label={`Delete ${ev.title}`}
                   className="rounded p-0.5 text-muted-foreground hover:text-destructive"
                   onClick={() => deleteEvent(ev.id)}
-                  transition={TAP_SPRING}
+                  transition={SPRING_TAP}
                   type="button"
                   whileTap={{ scale: 0.8 }}
                 >
@@ -180,7 +178,7 @@ export function CalendarWidget(): React.JSX.Element {
                   )}
                   key={c}
                   onClick={() => setNewColor(c)}
-                  transition={TAP_SPRING}
+                  transition={SPRING_TAP}
                   type="button"
                   whileHover={{ scale: newColor === c ? 1.25 : 1.2 }}
                   whileTap={{ scale: 0.85 }}
@@ -202,7 +200,7 @@ export function CalendarWidget(): React.JSX.Element {
               aria-label="Add event"
               className="rounded border border-border bg-muted/40 p-1 hover:bg-muted"
               onClick={addEvent}
-              transition={TAP_SPRING}
+              transition={SPRING_TAP}
               type="button"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.88 }}

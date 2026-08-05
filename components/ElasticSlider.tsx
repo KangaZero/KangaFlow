@@ -206,4 +206,4 @@ function decay(value: number, max: number): number {
   return sigmoid * max
 }
 
-export default ElasticSlider
+export { ElasticSlider }

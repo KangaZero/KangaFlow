@@ -17,6 +17,7 @@ import {
   type WidgetAnchor,
 } from "@/components/niri/settings"
 import { Button } from "@/components/ui/button"
+import { SPRING_CONTENT } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import { RESIZE_STEP, snapDelta, vimWindowAction } from "@/lib/vim-window"
 import { Z_LAYERS } from "@/lib/z-order"
@@ -255,7 +256,7 @@ export function DraggableWindow({
               x,
               y,
             }}
-            transition={{ damping: 26, stiffness: 320, type: "spring" }}
+            transition={SPRING_CONTENT}
           >
             {/* Title bar — drag handle */}
             <div

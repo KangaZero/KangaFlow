@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { RichTextEditor } from "@/components/widgets/rich-text-editor"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
+import { SPRING_TAP } from "@/lib/motion"
 import {
   formatNoteDate,
   NOTE_COLOR_KEYS,
@@ -17,8 +18,6 @@ import {
 import type { TextAlign } from "@/lib/rich-text"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
-
-const TAP_SPRING = { damping: 18, stiffness: 500, type: "spring" } as const
 
 // A few cascading anchors so freshly-opened editor windows don't stack exactly.
 const CASCADE = [
@@ -110,7 +109,7 @@ export function NoteEditorWindow({
                   )}
                   key={c}
                   onClick={() => onChange({ color: c })}
-                  transition={TAP_SPRING}
+                  transition={SPRING_TAP}
                   type="button"
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.85 }}
@@ -135,7 +134,7 @@ export function NoteEditorWindow({
                   exit={{ opacity: 0, scale: 0.8 }}
                   initial={{ opacity: 0, scale: 0.8 }}
                   key={tag}
-                  transition={TAP_SPRING}
+                  transition={SPRING_TAP}
                 >
                   <Badge className="gap-1" variant="secondary">
                     {tag}

@@ -28,7 +28,7 @@ import {
   WIDGET_IDS,
   type WidgetId,
 } from "@/components/niri/settings"
-import type { TrackSrc } from "@/components/widgets/media-player"
+import type { TrackSrc } from "@/components/widgets/tracks"
 import {
   ANIMATION_PREFS,
   type AnimationPref,

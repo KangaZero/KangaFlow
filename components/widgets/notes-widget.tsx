@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { NoteEditorWindow } from "@/components/widgets/note-editor-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
+import { SPRING_REORDER, SPRING_TAP } from "@/lib/motion"
 import {
   createNote,
   formatNoteDate,
@@ -20,15 +21,6 @@ import {
 import { htmlToPlainText } from "@/lib/rich-text"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
-
-const TAP_SPRING = { damping: 18, stiffness: 500, type: "spring" } as const
-// Same reorder spring as the launcher pin list, for a consistent feel.
-const REORDER_SPRING = {
-  damping: 20,
-  mass: 0.8,
-  stiffness: 320,
-  type: "spring",
-} as const
 
 export function NotesWidget(): React.JSX.Element {
   const { isNotesOpen, setIsNotesOpen, envSettings, vimMode } =
@@ -116,7 +108,7 @@ export function NotesWidget(): React.JSX.Element {
         layout
         layoutId={note.id}
         onClick={() => openNote(note.id)}
-        transition={REORDER_SPRING}
+        transition={SPRING_REORDER}
         whileHover={{ scale: 1.01 }}
       >
         <div className="flex items-start justify-between gap-2">
@@ -202,7 +194,7 @@ export function NotesWidget(): React.JSX.Element {
             <motion.button
               className="flex w-full items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-2 font-medium text-primary-foreground text-sm shadow-sm"
               onClick={addNote}
-              transition={TAP_SPRING}
+              transition={SPRING_TAP}
               type="button"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}

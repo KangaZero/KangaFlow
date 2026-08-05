@@ -35,6 +35,12 @@ import type { AppId, NiriWindow } from "@/components/niri/types"
 import { wallpaperStyle } from "@/components/niri/wallpaper"
 import { WallpaperDialog } from "@/components/niri/wallpaper-dialog"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
+import {
+  SPRING_LAYOUT,
+  SPRING_PIP,
+  SPRING_TILE,
+  SPRING_WORKSPACE,
+} from "@/lib/motion"
 import { readSourceFiles } from "@/lib/terminal/source"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
@@ -127,11 +133,7 @@ function AutoHideBar({
       <motion.div
         animate={revealed ? visible : hidden}
         initial={hidden}
-        transition={
-          shouldReduceMotion
-            ? { duration: 0 }
-            : { damping: 30, stiffness: 320, type: "spring" }
-        }
+        transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
       >
         <div className="p-2">{children}</div>
       </motion.div>
@@ -507,7 +509,7 @@ export function EnvironmentView() {
                     key={ws.id}
                     layout
                     ref={ws.id === state.active ? activeTileRef : undefined}
-                    transition={{ damping: 50, stiffness: 200, type: "spring" }}
+                    transition={SPRING_PIP}
                   >
                     <button
                       aria-label={wsLabel}
@@ -602,12 +604,7 @@ export function EnvironmentView() {
               className="absolute inset-y-0 flex items-stretch"
               exit={{ opacity: 0, x: 80 }}
               style={{ gap: GAP, padding: PAD }}
-              transition={{
-                damping: 30,
-                duration: 100,
-                stiffness: 260,
-                type: "spring",
-              }}
+              transition={SPRING_WORKSPACE}
             >
               <AnimatePresence initial={false} mode="popLayout">
                 {tiled.map(({ col, index: ci }, ti) => (
@@ -687,11 +684,7 @@ export function EnvironmentView() {
                               flexGrow: win.height,
                               flexShrink: 1,
                             }}
-                            transition={{
-                              damping: 30,
-                              stiffness: 260,
-                              type: "spring",
-                            }}
+                            transition={SPRING_TILE}
                             type="button"
                           >
                             <div className="flex items-center gap-2 border-border border-b bg-muted/40 px-3 py-1.5">

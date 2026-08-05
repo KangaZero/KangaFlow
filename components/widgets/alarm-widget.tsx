@@ -23,14 +23,11 @@ import { BellIcon, type BellIconHandle } from "@/components/ui/bell"
 import { Button } from "@/components/ui/button"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
+import { SPRING_LIST, SPRING_PILL, SPRING_TAP } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 import { useNotifications } from "@/providers/notifications-provider"
-
-const TAP_SPRING = { damping: 18, stiffness: 500, type: "spring" } as const
-const LIST_SPRING = { damping: 22, stiffness: 340, type: "spring" } as const
-const PILL_SPRING = { damping: 26, stiffness: 340, type: "spring" } as const
 
 const STORAGE_KEY = "kangaflow:alarms"
 
@@ -63,7 +60,7 @@ function ModeTabs({
             <motion.span
               className="absolute inset-0 rounded-md bg-background shadow-sm"
               layoutId="alarm-mode-pill"
-              transition={PILL_SPRING}
+              transition={SPRING_PILL}
             />
           ) : null}
           <span
@@ -475,7 +472,7 @@ export function AlarmWidget(): React.JSX.Element {
                     exit={{ opacity: 0, x: -8 }}
                     initial={{ opacity: 0, x: -8 }}
                     key={alarm.id}
-                    transition={LIST_SPRING}
+                    transition={SPRING_LIST}
                   >
                     <button
                       className="flex flex-1 flex-col text-left"
@@ -493,7 +490,7 @@ export function AlarmWidget(): React.JSX.Element {
                       aria-label={translate("widgets.alarm.edit")}
                       className="rounded p-1 text-muted-foreground hover:text-foreground"
                       onClick={() => startEdit(alarm)}
-                      transition={TAP_SPRING}
+                      transition={SPRING_TAP}
                       type="button"
                       whileTap={{ scale: 0.8 }}
                     >
@@ -503,7 +500,7 @@ export function AlarmWidget(): React.JSX.Element {
                       aria-label={translate("widgets.alarm.delete")}
                       className="rounded p-1 text-muted-foreground hover:text-destructive"
                       onClick={() => deleteAlarm(alarm.id)}
-                      transition={TAP_SPRING}
+                      transition={SPRING_TAP}
                       type="button"
                       whileTap={{ scale: 0.8 }}
                     >
@@ -546,7 +543,7 @@ export function AlarmWidget(): React.JSX.Element {
                 ) : null}
                 <motion.div
                   className="flex-1"
-                  transition={TAP_SPRING}
+                  transition={SPRING_TAP}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.96 }}
                 >
@@ -592,7 +589,7 @@ export function AlarmWidget(): React.JSX.Element {
                       "alarm"
                     )
                   }
-                  transition={TAP_SPRING}
+                  transition={SPRING_TAP}
                   type="button"
                   whileTap={{ scale: 0.92 }}
                 >
@@ -615,7 +612,7 @@ export function AlarmWidget(): React.JSX.Element {
             />
             <div className="flex items-center gap-2">
               <motion.div
-                transition={TAP_SPRING}
+                transition={SPRING_TAP}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
               >
@@ -629,7 +626,7 @@ export function AlarmWidget(): React.JSX.Element {
                 </Button>
               </motion.div>
               <motion.div
-                transition={TAP_SPRING}
+                transition={SPRING_TAP}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
               >
@@ -668,7 +665,7 @@ export function AlarmWidget(): React.JSX.Element {
                       initial={{ opacity: 0, y: -6 }}
                       // biome-ignore lint/suspicious/noArrayIndexKey: laps are append-only and never reordered, so the index is a stable identity.
                       key={i}
-                      transition={LIST_SPRING}
+                      transition={SPRING_LIST}
                     >
                       <span className="text-muted-foreground">
                         {translate("widgets.alarm.lap")} {i + 1}
@@ -730,7 +727,7 @@ export function AlarmWidget(): React.JSX.Element {
 
             <div className="flex items-center gap-2">
               <motion.div
-                transition={TAP_SPRING}
+                transition={SPRING_TAP}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
               >
@@ -749,7 +746,7 @@ export function AlarmWidget(): React.JSX.Element {
                 </Button>
               </motion.div>
               <motion.div
-                transition={TAP_SPRING}
+                transition={SPRING_TAP}
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
               >

@@ -274,7 +274,11 @@ const en = {
     themeHint: "Press d to cycle theme",
   },
   mediaPlayer: {
+    allTracks: "All tracks",
     close: "Close player",
+    favorite: "Favorite",
+    favorites: "Favorites",
+    list: "Track list",
     loop: "Loop",
     next: "Next track",
     nowPlaying: "Now playing",
@@ -283,6 +287,7 @@ const en = {
     previous: "Previous track",
     seek: "Seek",
     title: "Media player",
+    unfavorite: "Unfavorite",
     volume: "Volume",
   },
   nav: {

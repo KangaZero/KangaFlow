@@ -16,6 +16,7 @@ import {
   useTransform,
 } from "motion/react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { SPRING_PANEL } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 
 export interface CarouselItem {
@@ -40,7 +41,7 @@ const GAP = 16
 const DRAG_BUFFER = 0
 const VELOCITY_THRESHOLD = 500
 const CONTAINER_PADDING = 16
-const SPRING: Transition = { damping: 30, stiffness: 300, type: "spring" }
+const SPRING = SPRING_PANEL
 
 // A single card. `x` is the shared track motion value; each card reads it to
 // rotate itself in 3D as the track scrolls past (the React Bits "coverflow").
