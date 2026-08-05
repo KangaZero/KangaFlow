@@ -29,6 +29,7 @@ import {
   type WidgetId,
 } from "@/components/niri/settings"
 import type { TrackSrc } from "@/components/widgets/tracks"
+import { PLAYLIST } from "@/components/widgets/tracks"
 import {
   ANIMATION_PREFS,
   type AnimationPref,
@@ -247,9 +248,12 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isHelloEffectAnimationComplete: false,
   isJavascriptFlipTechIconFlipped: false,
   isMediaPlayerOpen: false,
+  isMediaPlayerPlaying: false,
   isNotesOpen: false,
   isSettingsOpen: false,
   isTerminalOpen: false,
+  isTrackListOpen: false,
+  mediaCurrentIndex: 0,
   noteLineNumbers: "off",
   setAnimationPref: () => {},
   setColumnCount: () => {},
@@ -260,9 +264,12 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   setIsHelloEffectAnimationComplete: () => {},
   setIsJavascriptFlipTechIconFlipped: () => {},
   setIsMediaPlayerOpen: () => {},
+  setIsMediaPlayerPlaying: () => {},
   setIsNotesOpen: () => {},
   setIsSettingsOpen: () => {},
   setIsTerminalOpen: () => {},
+  setIsTrackListOpen: () => {},
+  setMediaCurrentIndex: () => {},
   setNoteLineNumbers: () => {},
   setShortcuts: () => {},
   setShowChromeInEnvironment: () => {},
@@ -303,6 +310,9 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isMediaPlayerOpen, setIsMediaPlayerOpen] = useState(false)
+  const [isMediaPlayerPlaying, setIsMediaPlayerPlaying] = useState(false)
+  const [mediaCurrentIndex, setMediaCurrentIndex] = useState(0)
+  const [isTrackListOpen, setIsTrackListOpen] = useState(false)
   const [isNotesOpen, setIsNotesOpen] = useState(false)
   const [isAlarmOpen, setIsAlarmOpen] = useState(false)
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
@@ -343,6 +353,10 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     setNoteLineNumbers(loadNoteLineNumbers())
     const loaded = loadEnvSettings()
     setEnvSettings(loaded)
+    // Resume from the last-played track (index derived from stored TrackSrc).
+    const storedSrc = loaded.widgetDefaults.media.options.currentTrack
+    const resumeIdx = PLAYLIST.findIndex((t) => t.src === storedSrc)
+    if (resumeIdx >= 0) setMediaCurrentIndex(resumeIdx)
     // Auto-open widgets flagged "show on startup" (single, hydration-time place).
     const openers: Record<WidgetId, (open: boolean) => void> = {
       alarm: setIsAlarmOpen,
@@ -432,9 +446,12 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isHelloEffectAnimationComplete,
       isJavascriptFlipTechIconFlipped,
       isMediaPlayerOpen,
+      isMediaPlayerPlaying,
       isNotesOpen,
       isSettingsOpen,
       isTerminalOpen,
+      isTrackListOpen,
+      mediaCurrentIndex,
       noteLineNumbers,
       setAnimationPref,
       setColumnCount,
@@ -445,9 +462,12 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       setIsHelloEffectAnimationComplete,
       setIsJavascriptFlipTechIconFlipped,
       setIsMediaPlayerOpen,
+      setIsMediaPlayerPlaying,
       setIsNotesOpen,
       setIsSettingsOpen,
       setIsTerminalOpen,
+      setIsTrackListOpen,
+      setMediaCurrentIndex,
       setNoteLineNumbers,
       setShortcuts,
       setShowChromeInEnvironment,
@@ -473,9 +493,12 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isHelloEffectAnimationComplete,
       isJavascriptFlipTechIconFlipped,
       isMediaPlayerOpen,
+      isMediaPlayerPlaying,
       isNotesOpen,
       isSettingsOpen,
       isTerminalOpen,
+      isTrackListOpen,
+      mediaCurrentIndex,
       shortcuts,
       terminalFile,
       theme,

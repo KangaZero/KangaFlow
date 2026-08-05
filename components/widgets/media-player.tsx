@@ -56,21 +56,67 @@ export function MediaPlayer() {
     setIsMediaPlayerOpen,
     envSettings,
     setEnvSettings,
+    isMediaPlayerPlaying: isPlaying,
+    setIsMediaPlayerPlaying: setIsPlaying,
+    mediaCurrentIndex: currentIndex,
+    setMediaCurrentIndex: setCurrentIndex,
+    isTrackListOpen: showList,
+    setIsTrackListOpen: setShowList,
   } = useGlobalStates()
   const wd = envSettings.widgetDefaults.media
 
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
   const [currentTimeSec, setCurrentTimeSec] = useState(0)
   const [audioDuration, setAudioDuration] = useState<number | null>(null)
   const [mounted, setMounted] = useState(false)
   const [favorites, setFavorites] = useState<ReadonlySet<number>>(loadFavorites)
-  const [showList, setShowList] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement>(null)
   const isPlayingRef = useRef(false)
+  const currentTimeSecRef = useRef(0)
   const track = PLAYLIST[currentIndex] ?? PLAYLIST[0]
   const shouldReduceMotion = useReducedMotion()
+
+  // Keep refs in sync so effects with [] deps can read current values.
+  useEffect(() => {
+    currentTimeSecRef.current = currentTimeSec
+  }, [currentTimeSec])
+
+  // Persist current track src whenever the index changes (so the bar and next
+  // session can resume from the right track). Also resets currentDuration to 0.
+  useEffect(() => {
+    const src = (PLAYLIST[currentIndex] ?? PLAYLIST[0]).src
+    setEnvSettings((prev) => ({
+      ...prev,
+      widgetDefaults: {
+        ...prev.widgetDefaults,
+        media: {
+          ...prev.widgetDefaults.media,
+          options: {
+            ...prev.widgetDefaults.media.options,
+            currentDuration: 0,
+            currentTrack: src,
+          },
+        },
+      },
+    }))
+  }, [currentIndex, setEnvSettings])
+
+  // Persist playhead position when pausing so the mini-pill visibility condition
+  // survives a page reload (shows pill if user left mid-track).
+  useEffect(() => {
+    if (isPlaying) return
+    const t = currentTimeSecRef.current
+    setEnvSettings((prev) => ({
+      ...prev,
+      widgetDefaults: {
+        ...prev.widgetDefaults,
+        media: {
+          ...prev.widgetDefaults.media,
+          options: { ...prev.widgetDefaults.media.options, currentDuration: t },
+        },
+      },
+    }))
+  }, [isPlaying, setEnvSettings])
 
   useEffect(() => {
     isPlayingRef.current = isPlaying
@@ -167,7 +213,7 @@ export function MediaPlayer() {
     } else {
       audio.pause()
     }
-  }, [isPlaying, hasAudio])
+  }, [isPlaying, hasAudio, setIsPlaying])
 
   useEffect(() => {
     if (hasAudio || !isPlaying) return
@@ -204,12 +250,15 @@ export function MediaPlayer() {
     }
   }, [favorites])
 
-  const handleSelectTrack = useCallback((index: number): void => {
-    setCurrentIndex(index)
-    if (!isPlayingRef.current) setIsPlaying(true)
-  }, [])
+  const handleSelectTrack = useCallback(
+    (index: number): void => {
+      setCurrentIndex(index)
+      if (!isPlayingRef.current) setIsPlaying(true)
+    },
+    [setCurrentIndex, setIsPlaying]
+  )
 
-  const closeList = useCallback(() => setShowList(false), [])
+  const closeList = useCallback(() => setShowList(false), [setShowList])
 
   const goToPrevious = (): void => {
     if (currentTimeSec > 3) {

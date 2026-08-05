@@ -5,6 +5,7 @@ import { Image as ImageIcon, Settings } from "lucide-react"
 import type * as React from "react"
 import { SiNixos } from "react-icons/si"
 import { Counter } from "@/components/Counter"
+import { MediaMiniPill } from "@/components/niri/media-mini-pill"
 import { NotificationCenter } from "@/components/niri/notification-center"
 import type { BorderRadius } from "@/components/niri/settings"
 import { SystemStatus } from "@/components/niri/system-status"
@@ -204,6 +205,11 @@ export function NoctaliaBar(props: {
           ))}
         </ul>
         <BarClock time={clock} vertical={isV} />
+        <MediaMiniPill
+          barPosition={barPosition}
+          barRadius={barRadius}
+          vertical={isV}
+        />
         <button
           aria-label={`${translate("nav.language")} → ${otherLayout.toUpperCase()}`}
           className={cn(

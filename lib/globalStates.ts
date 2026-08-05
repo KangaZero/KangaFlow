@@ -1,3 +1,4 @@
+import type { Dispatch, SetStateAction } from "react"
 import type { EnvSettings } from "@/components/niri/settings"
 import type { Locale } from "@/lib/i18n"
 import type { Shortcut } from "@/lib/shortcuts"
@@ -24,6 +25,14 @@ export type GlobalStatesContextValue = {
   // Media-player floating panel open state (ephemeral — not persisted).
   isMediaPlayerOpen: boolean
   setIsMediaPlayerOpen: (state: boolean) => void
+  // Media-player playback state — lifted so the bar mini-pill can read/control
+  // without prop-drilling. Setters support functional-update form.
+  isMediaPlayerPlaying: boolean
+  setIsMediaPlayerPlaying: Dispatch<SetStateAction<boolean>>
+  mediaCurrentIndex: number
+  setMediaCurrentIndex: Dispatch<SetStateAction<number>>
+  isTrackListOpen: boolean
+  setIsTrackListOpen: Dispatch<SetStateAction<boolean>>
   // Widget floating panels — notes, alarm, calendar (ephemeral).
   isNotesOpen: boolean
   setIsNotesOpen: (state: boolean) => void
@@ -62,7 +71,7 @@ export type GlobalStatesContextValue = {
   // font, UI scale). Persisted so the whole site — including the media player's
   // glass surface — can share the chosen look.
   envSettings: EnvSettings
-  setEnvSettings: (settings: EnvSettings) => void
+  setEnvSettings: Dispatch<SetStateAction<EnvSettings>>
   // Active site theme (resolved from next-themes) and the animated toggle
   // function. Centralised here so any consumer avoids duplicating the
   // useTheme + useThemeTransition pairing.

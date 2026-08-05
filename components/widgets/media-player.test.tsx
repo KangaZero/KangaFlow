@@ -83,17 +83,34 @@ import { DEFAULT_ENV_SETTINGS } from "@/components/niri/settings"
 let mockEnvSettings: EnvSettings = DEFAULT_ENV_SETTINGS
 let mockSetEnvSettings = vi.fn()
 
-vi.mock("@/providers/global-state-provider", () => ({
-  useGlobalStates: () => ({
-    get envSettings() {
-      return mockEnvSettings
+vi.mock("@/providers/global-state-provider", async () => {
+  const { useState } = await import("react")
+  return {
+    useGlobalStates: () => {
+      // Real useState so that calling setters causes re-renders, allowing
+      // effects like [isPlaying, hasAudio] to fire in tests.
+      const [isMediaPlayerPlaying, setIsMediaPlayerPlaying] = useState(false)
+      const [mediaCurrentIndex, setMediaCurrentIndex] = useState(0)
+      const [isTrackListOpen, setIsTrackListOpen] = useState(false)
+      return {
+        get envSettings() {
+          return mockEnvSettings
+        },
+        isMediaPlayerOpen: true,
+        isMediaPlayerPlaying,
+        isTrackListOpen,
+        mediaCurrentIndex,
+        setEnvSettings: (
+          u: EnvSettings | ((prev: EnvSettings) => EnvSettings)
+        ) => mockSetEnvSettings(u),
+        setIsMediaPlayerOpen: vi.fn(),
+        setIsMediaPlayerPlaying,
+        setIsTrackListOpen,
+        setMediaCurrentIndex,
+      }
     },
-    isMediaPlayerOpen: true,
-    setEnvSettings: (u: EnvSettings | ((prev: EnvSettings) => EnvSettings)) =>
-      mockSetEnvSettings(u),
-    setIsMediaPlayerOpen: vi.fn(),
-  }),
-}))
+  }
+})
 
 // ── Imports (after all vi.mock calls) ─────────────────────────────────────────
 import { MediaPlayer } from "@/components/widgets/media-player"
@@ -272,6 +289,7 @@ describe("MediaPlayer", () => {
 
     it("clicking the loop button calls setEnvSettings to enable isLooping", async () => {
       await renderPlayer()
+      mockSetEnvSettings.mockClear() // clear mount-effect calls before asserting
       await act(async () => {
         btn("mediaPlayer.loop").click()
       })
