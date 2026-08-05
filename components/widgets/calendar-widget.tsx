@@ -1,9 +1,22 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { Plus, Trash2 } from "lucide-react"
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Trash2,
+} from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useRef, useState } from "react"
+import { type CaptionLabelProps, useDayPicker } from "react-day-picker"
+import { enUS, ja } from "react-day-picker/locale"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/animate-ui/components/radix/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { CalendarDaysIcon } from "@/components/ui/calendar-days"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
@@ -11,6 +24,7 @@ import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { SPRING_LIST, SPRING_TAP } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
+import { useLocale } from "@/providers/locale-provider"
 
 const STORAGE_KEY = "kangaflow:calendar-events"
 
@@ -50,12 +64,101 @@ function saveEvents(events: CalEvent[]): void {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
 }
 
+const MONTH_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const
+
+// Module-level so DayPicker always gets a stable reference — inlining it
+// inside CalendarWidget would recreate it each render and remount the caption.
+function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
+  const { months, goToMonth, dayPickerProps } = useDayPicker()
+  const current = months[0]?.date ?? new Date()
+  const localeCode = dayPickerProps.locale?.code ?? "en-US"
+  const [open, setOpen] = useState(false)
+
+  const year = current.getFullYear()
+  const monthIdx = current.getMonth()
+
+  const label = current.toLocaleString(localeCode, {
+    month: "long",
+    year: "numeric",
+  })
+
+  const monthNames = MONTH_INDICES.map((i) =>
+    new Date(2024, i, 1).toLocaleString(localeCode, { month: "short" })
+  )
+
+  function pickMonth(m: number): void {
+    goToMonth(new Date(year, m, 1))
+    setOpen(false)
+  }
+
+  function shiftYear(dir: 1 | -1): void {
+    goToMonth(new Date(year + dir, monthIdx, 1))
+  }
+
+  return (
+    <Popover onOpenChange={setOpen} open={open}>
+      <PopoverTrigger asChild>
+        <button
+          className="flex items-center gap-1 rounded-md px-2 py-0.5 font-medium text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+          id={id}
+          type="button"
+        >
+          {label}
+          <ChevronDown className="size-3 opacity-50" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="center" className="w-52 p-3" side="bottom">
+        {/* Year navigation */}
+        <div className="mb-3 flex items-center justify-between">
+          <button
+            aria-label="Previous year"
+            className="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground"
+            onClick={() => shiftYear(-1)}
+            type="button"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
+          <span className="font-medium text-sm tabular-nums">{year}</span>
+          <button
+            aria-label="Next year"
+            className="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground"
+            onClick={() => shiftYear(1)}
+            type="button"
+          >
+            <ChevronRight className="size-4" />
+          </button>
+        </div>
+        {/* 4×3 month grid */}
+        <div className="grid grid-cols-4 gap-1">
+          {monthNames.map((name, i) => (
+            <button
+              className={cn(
+                "rounded px-1 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground",
+                i === monthIdx &&
+                  "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+              )}
+              key={name}
+              onClick={() => pickMonth(i)}
+              type="button"
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
 export function CalendarWidget(): React.JSX.Element {
   const { isCalendarOpen, setIsCalendarOpen, envSettings, vimMode } =
     useGlobalStates()
+  const { locale } = useLocale()
+  const calLocale = locale === "ja" ? ja : enUS
   const wd = envSettings.widgetDefaults.calendar
   const [events, setEvents] = useState<CalEvent[]>(loadEvents)
   const [selected, setSelected] = useState<Date | undefined>(new Date())
+  const [month, setMonth] = useState(() => new Date())
   const [newTitle, setNewTitle] = useState("")
   const [newColor, setNewColor] = useState<string>(EVENT_COLORS[0])
   const eventRef = useRef<HTMLInputElement>(null)
@@ -108,28 +211,42 @@ export function CalendarWidget(): React.JSX.Element {
         {/* Month picker — fill the window width. Overriding classNames.root
             drops the base `w-fit`; a larger --cell-size lets the flex grid
             expand to the full 340px instead of collapsing to ~192px. */}
-        <Calendar
-          className="w-full rounded-none border-0 p-2 [--cell-size:--spacing(9)]"
-          classNames={{
-            month: "flex w-full flex-col gap-3",
-            month_grid: "w-full border-collapse",
-            months: "relative w-full",
-            root: "w-full",
-          }}
-          mode="single"
-          modifiers={hasEventModifier}
-          modifiersClassNames={{
-            hasEvent: "font-bold underline decoration-primary decoration-2",
-          }}
-          onSelect={setSelected}
-          selected={selected}
-        />
+        <AnimatePresence initial={false} mode="wait">
+          <motion.div
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            key={`${month.getFullYear()}-${month.getMonth()}`}
+            transition={{ duration: 0.15, ease: "easeInOut" }}
+          >
+            <Calendar
+              className="w-full rounded-none border-0 p-2 [--cell-size:--spacing(9)]"
+              classNames={{
+                month: "flex w-full flex-col gap-3",
+                month_grid: "w-full border-collapse",
+                months: "relative w-full",
+                root: "w-full",
+              }}
+              components={{ CaptionLabel: CaptionLabelPicker }}
+              locale={calLocale}
+              mode="single"
+              modifiers={hasEventModifier}
+              modifiersClassNames={{
+                hasEvent: "font-bold underline decoration-primary decoration-2",
+              }}
+              month={month}
+              onMonthChange={setMonth}
+              onSelect={setSelected}
+              selected={selected}
+            />
+          </motion.div>
+        </AnimatePresence>
 
         {/* Day event list */}
         <div className="flex flex-col gap-2 border-border border-t p-3">
           <p className="font-medium text-muted-foreground text-xs">
             {selected
-              ? selected.toLocaleDateString(undefined, {
+              ? selected.toLocaleDateString(locale, {
                   day: "numeric",
                   month: "long",
                   weekday: "short",

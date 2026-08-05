@@ -67,6 +67,8 @@ export type GlobalStatesContextValue = {
   // relative (distance from the caret line).
   noteLineNumbers: NoteLineNumbers
   setNoteLineNumbers: (mode: NoteLineNumbers) => void
+  isLoggedIn: boolean
+  setIsLoggedIn: (state: boolean) => void
   // Niri environment desktop settings (wallpaper, accent, transparency, bar,
   // font, UI scale). Persisted so the whole site — including the media player's
   // glass surface — can share the chosen look.

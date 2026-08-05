@@ -17,12 +17,14 @@ import {
 } from "react"
 import { AboutWindow } from "@/components/niri/apps/about-window"
 import { BrowserWindow } from "@/components/niri/apps/browser-window"
+import { BurntPaperTransition } from "@/components/niri/burnt-paper-transition"
 import {
   getFocusedWindow,
   initialNiriState,
   niriReducer,
 } from "@/components/niri/engine"
 import { keyToAction } from "@/components/niri/keymap"
+import { LoginScreen } from "@/components/niri/login-screen"
 import { NiriHelpDialog } from "@/components/niri/niri-help-dialog"
 import { NoctaliaBar } from "@/components/niri/noctalia-bar"
 import {
@@ -197,8 +199,20 @@ export function EnvironmentView() {
   const reduceMotion = useReducedMotion()
 
   const [state, dispatch] = useReducer(niriReducer, undefined, initialNiriState)
-  const { envSettings: settings, setEnvSettings: setSettings } =
-    useGlobalStates()
+  const {
+    envSettings: settings,
+    setEnvSettings: setSettings,
+    isLoggedIn,
+    setIsLoggedIn,
+  } = useGlobalStates()
+  const [loginPhase, setLoginPhase] = useState<"login" | "burning">("login")
+
+  function handleBurnStart(): void {
+    setLoginPhase("burning")
+  }
+  function handleBurnComplete(): void {
+    setIsLoggedIn(true)
+  }
   // Only one overlay panel opens at a time; opening while another is up is a
   // no-op (early return), matching a real compositor's modal panels.
   const [panel, setPanel] = useState<EnvPanel | null>(null)
@@ -816,6 +830,16 @@ export function EnvironmentView() {
         open={panel === "help"}
       />
       <NotificationToast />
+      {!isLoggedIn ? (
+        <>
+          {loginPhase === "login" ? (
+            <LoginScreen onLogin={handleBurnStart} />
+          ) : null}
+          {loginPhase === "burning" ? (
+            <BurntPaperTransition onComplete={handleBurnComplete} />
+          ) : null}
+        </>
+      ) : null}
     </main>
   )
 }

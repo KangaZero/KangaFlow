@@ -208,6 +208,7 @@ const ja = {
       sectionBar: "バー",
       sectionLauncher: "ランチャー",
       sectionNotifications: "通知",
+      sectionSecurity: "セキュリティ",
       showHint: "ヒントオーバーレイを表示",
       systemMonitor: "システムモニター",
       theme: "テーマ",

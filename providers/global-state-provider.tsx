@@ -265,6 +265,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isCommandPaletteOpen: false,
   isHelloEffectAnimationComplete: false,
   isJavascriptFlipTechIconFlipped: false,
+  isLoggedIn: false,
   isMediaPlayerOpen: false,
   isMediaPlayerPlaying: false,
   isNotesOpen: false,
@@ -281,6 +282,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   setIsCommandPaletteOpen: () => {},
   setIsHelloEffectAnimationComplete: () => {},
   setIsJavascriptFlipTechIconFlipped: () => {},
+  setIsLoggedIn: () => {},
   setIsMediaPlayerOpen: () => {},
   setIsMediaPlayerPlaying: () => {},
   setIsNotesOpen: () => {},
@@ -359,6 +361,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [animationPref, setAnimationPref] = useState<AnimationPref>("system")
   const [vimMode, setVimMode] = useState(false)
   const [noteLineNumbers, setNoteLineNumbers] = useState<NoteLineNumbers>("off")
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [envSettings, setEnvSettings] =
     useState<EnvSettings>(DEFAULT_ENV_SETTINGS)
 
@@ -463,6 +466,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isCommandPaletteOpen,
       isHelloEffectAnimationComplete,
       isJavascriptFlipTechIconFlipped,
+      isLoggedIn,
       isMediaPlayerOpen,
       isMediaPlayerPlaying,
       isNotesOpen,
@@ -479,6 +483,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       setIsCommandPaletteOpen,
       setIsHelloEffectAnimationComplete,
       setIsJavascriptFlipTechIconFlipped,
+      setIsLoggedIn,
       setIsMediaPlayerOpen,
       setIsMediaPlayerPlaying,
       setIsNotesOpen,
@@ -510,6 +515,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isCommandPaletteOpen,
       isHelloEffectAnimationComplete,
       isJavascriptFlipTechIconFlipped,
+      isLoggedIn,
       isMediaPlayerOpen,
       isMediaPlayerPlaying,
       isNotesOpen,

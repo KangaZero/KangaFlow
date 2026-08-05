@@ -20,6 +20,7 @@ import {
   Palette,
   PanelTop,
   RotateCcw,
+  ShieldCheck,
   SlidersHorizontal,
   Type,
 } from "lucide-react"
@@ -65,6 +66,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Slider } from "@/components/ui/slider"
+import {
+  clearStoredPassword,
+  hasStoredPassword,
+  setStoredPassword,
+} from "@/lib/auth"
 import {
   NOTE_LINE_NUMBER_MODES,
   type NoteLineNumbers,
@@ -139,6 +145,7 @@ type SectionId =
   | "bar"
   | "launcher"
   | "notifications"
+  | "security"
   | "wallpaper"
   | "widgets"
 const SECTIONS: readonly {
@@ -167,6 +174,11 @@ const SECTIONS: readonly {
     icon: Bell,
     id: "notifications",
     labelKey: "environment.settings.sectionNotifications",
+  },
+  {
+    icon: ShieldCheck,
+    id: "security",
+    labelKey: "environment.settings.sectionSecurity",
   },
 ]
 
@@ -345,6 +357,100 @@ function AccentRow(props: {
         )
       })}
     </div>
+  )
+}
+
+function SecuritySection(): React.JSX.Element {
+  const [pwdInput, setPwdInput] = useState("")
+  const [confirmInput, setConfirmInput] = useState("")
+  const [feedback, setFeedback] = useState<{
+    msg: string
+    ok: boolean
+  } | null>(null)
+  const [isSet, setIsSet] = useState(hasStoredPassword)
+
+  async function handleSet(): Promise<void> {
+    if (pwdInput !== confirmInput) {
+      setFeedback({ msg: "Passwords do not match", ok: false })
+      return
+    }
+    await setStoredPassword(pwdInput)
+    setIsSet(hasStoredPassword())
+    setPwdInput("")
+    setConfirmInput("")
+    setFeedback({
+      msg: pwdInput ? "Password set" : "Password cleared",
+      ok: true,
+    })
+  }
+
+  function handleClear(): void {
+    clearStoredPassword()
+    setIsSet(false)
+    setPwdInput("")
+    setConfirmInput("")
+    setFeedback({ msg: "Password cleared", ok: true })
+  }
+
+  const inputClass =
+    "w-full rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary"
+
+  return (
+    <SettingCard icon={ShieldCheck} title="Security">
+      <p className="text-muted-foreground text-xs">
+        Status:{" "}
+        <span className={isSet ? "text-primary" : "text-muted-foreground"}>
+          {isSet ? "Password set" : "No password (open access)"}
+        </span>
+      </p>
+
+      <input
+        className={inputClass}
+        onChange={(e) => setPwdInput(e.target.value)}
+        placeholder="New password (empty = remove)"
+        type="password"
+        value={pwdInput}
+      />
+      <input
+        className={inputClass}
+        onChange={(e) => setConfirmInput(e.target.value)}
+        placeholder="Confirm password"
+        type="password"
+        value={confirmInput}
+      />
+
+      <div className="flex gap-2">
+        <button
+          className="flex-1 rounded-lg border border-primary/60 bg-primary/10 py-2 font-medium text-primary text-sm transition-colors hover:bg-primary/20"
+          onClick={() => void handleSet()}
+          type="button"
+        >
+          Set Password
+        </button>
+        <button
+          className="rounded-lg border border-border px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted/60 hover:text-destructive disabled:opacity-40"
+          disabled={!isSet}
+          onClick={handleClear}
+          type="button"
+        >
+          Clear
+        </button>
+      </div>
+
+      <AnimatePresence>
+        {feedback ? (
+          <motion.p
+            animate={{ opacity: 1, y: 0 }}
+            className={`text-xs ${feedback.ok ? "text-emerald-500" : "text-destructive"}`}
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.2 }}
+          >
+            {feedback.msg}
+          </motion.p>
+        ) : null}
+      </AnimatePresence>
+    </SettingCard>
   )
 }
 
@@ -879,6 +985,8 @@ export function NoctaliaSettings(props: {
                       value={settings.toastMaxStack}
                     />
                   </SettingCard>
+                ) : section === "security" ? (
+                  <SecuritySection />
                 ) : (
                   WIDGET_IDS.map((id) => {
                     const wd = settings.widgetDefaults[id]

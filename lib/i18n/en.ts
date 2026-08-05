@@ -208,6 +208,7 @@ const en = {
       sectionBar: "Bar",
       sectionLauncher: "Launcher",
       sectionNotifications: "Notifications",
+      sectionSecurity: "Security",
       showHint: "Show hint overlay",
       systemMonitor: "System monitor",
       theme: "Theme",
