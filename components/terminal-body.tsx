@@ -37,17 +37,13 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useXTerm } from "react-xtermjs"
-import {
-  GlyphRain,
-  type GlyphRainOptions,
-} from "@/components/canvasui/GlyphRain"
+import { GlyphRain } from "@/components/canvasui/GlyphRain"
 import { CodeEditor } from "@/components/code-editor"
 import {
   isMatrixTheme,
-  MATRIX_SCHEMES,
   type MatrixOptions,
+  matrixToGlyphRain,
   parseMatrixArgs,
-  type Rgb,
 } from "@/lib/terminal/cmatrix"
 import { completeLine, suggestLine } from "@/lib/terminal/complete"
 import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
@@ -78,6 +74,7 @@ import {
   resolvePath,
 } from "@/lib/terminal/vfs"
 import { isTheme, THEMES } from "@/lib/themes"
+import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
 // Subset Symbols Nerd Font supplying the oh-my-posh prompt icons (OS / git /
@@ -110,6 +107,10 @@ type Session = {
   editorOpen: boolean
   // True while the cmatrix screensaver is running (the next keystroke stops it).
   matrixRunning: boolean
+  // True while THIS terminal is running the global (desktop) cmatrix rain as a
+  // foreground tool (`cmatrix -g`). Set at start, cleared on stop/unmount so
+  // closing the launching terminal always kills the rain.
+  globalRunning: boolean
   // Current working directory (absolute VFS path) for cd/pwd/ls/cat/nvim.
   cwd: string
   // Name of the page the app is currently on (drives cd's "already at" guard);
@@ -139,35 +140,6 @@ function formatUptime(ms: number): string {
 
 function baseName(path: string): string {
   return path.split("/").at(-1) ?? path
-}
-
-// Map the cmatrix CLI options (parsed by lib/terminal/cmatrix) onto the WebGL
-// GlyphRain effect that now renders the rain. Speed/density/bold map onto
-// GlyphRain's equivalents; the theme picks the colour scheme, converted from
-// cmatrix's 0-255 RGB to the shader's 0-1 floats. Content is empty, so dim and
-// lighting (which act on captured page content) are turned off.
-function matrixToGlyphRain(options: MatrixOptions): GlyphRainOptions {
-  const scheme = MATRIX_SCHEMES[options.theme]
-  const norm = ([r, g, b]: Rgb): [number, number, number] => [
-    r / 255,
-    g / 255,
-    b / 255,
-  ]
-  return {
-    color: norm(scheme.trail[0] ?? scheme.head),
-    density: options.density,
-    dim: 0,
-    flicker: 0,
-    glow: options.bold ? 2.6 : 1.6,
-    headColor: norm(scheme.head),
-    layers: 2,
-    light: 0,
-    mutate: 0,
-    speed: 0.2 + (options.speed / 10) * 2.2,
-    speedVariance: 0.5,
-    stir: 0,
-    trail: 0.9,
-  }
 }
 
 // zjstatus mode segment: kanji label + palette bg, mirroring the user's zellij
@@ -269,6 +241,7 @@ export function TerminalBody({
   const { locale } = useLocale()
   const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
+  const { globalMatrixRunning, setGlobalMatrixOptions } = useGlobalStates()
   // paletteForTheme returns a shared constant → stable identity for deps.
   const palette = paletteForTheme(resolvedTheme)
   // Flat page filesystem: each routable page is a dir holding `index.tsx`
@@ -315,6 +288,10 @@ export function TerminalBody({
   localeRef.current = locale
   const routerRef = useRef(router)
   routerRef.current = router
+  // Live global-matrix state for the once-bound data handler ("already running"
+  // guard). Mirrored like the other refs because the handler is bound once.
+  const globalMatrixRunningRef = useRef(globalMatrixRunning)
+  globalMatrixRunningRef.current = globalMatrixRunning
 
   const startedAt = useRef(Date.now())
   const session = useRef<Session>({
@@ -322,6 +299,7 @@ export function TerminalBody({
     cwd: cwdForRoute(routePath, vfs),
     editorOpen: false,
     exitCode: 0,
+    globalRunning: false,
     histIndex: 0,
     history: [],
     line: "",
@@ -378,6 +356,22 @@ export function TerminalBody({
     }
   }
 
+  // When the compositor stops the global (desktop) rain with q / Ctrl-C, this
+  // terminal — the one that launched `cmatrix -g` — comes back to a fresh
+  // prompt. The stop itself happens in EnvironmentView's capture handler, so
+  // xterm never sees the key; only this state flip signals the change.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: makePrompt reads only refs/stable machine facts and is intentionally omitted (matches the once-bound handler's pattern).
+  useEffect(() => {
+    if (globalMatrixRunning || !session.current.globalRunning) return
+    session.current.globalRunning = false
+    setBar({ mode: "NORMAL", tab: "zsh" })
+    if (!instance) return
+    instance.write("\x1b[?25h\x1b[2J\x1b[H")
+    instance.write(
+      `\r\n${makePrompt(session.current.cwd, session.current.exitCode, instance.cols)}`
+    )
+  }, [globalMatrixRunning, instance])
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: one-time setup bound to the xterm instance; handlers read live values via the `session` ref, and the closed-over props are stable for a session's lifetime.
   useEffect(() => {
     if (!instance) return
@@ -414,6 +408,19 @@ export function TerminalBody({
       s.matrixRunning = false
       setMatrix(null)
       // Restore the cursor, wipe the rain, and drop back to a fresh prompt.
+      term.write("\x1b[?25h\x1b[2J\x1b[H")
+      prompt()
+    }
+
+    // Global (desktop) rain: `cmatrix -g` turns this terminal into a running
+    // foreground tool until q / Ctrl-C (compositor) or closing the terminal.
+    // The rain itself renders on EnvironmentView; here we own the session flag,
+    // the "running — active tool" status, and the fresh prompt on the way back.
+    const stopGlobalMatrix = () => {
+      s.globalRunning = false
+      setGlobalMatrixOptions(null)
+      setBar({ mode: "NORMAL", tab: "zsh" })
+      // Restore the cursor, wipe the screen, and drop back to a fresh prompt.
       term.write("\x1b[?25h\x1b[2J\x1b[H")
       prompt()
     }
@@ -463,6 +470,24 @@ export function TerminalBody({
             s.exitCode = 1
             term.write(`\r\n${parsed.message}`)
             return true
+          }
+          if (parsed.global) {
+            // The desktop rain is a single foreground tool: a second attempt
+            // while one is already running is an error, like a busy device.
+            if (globalMatrixRunningRef.current) {
+              s.exitCode = 1
+              term.write(
+                "\r\ncmatrix: already running (global rain on desktop)"
+              )
+              return true
+            }
+            s.globalRunning = true
+            setGlobalMatrixOptions(parsed.options)
+            // The terminal shows itself as the running active tool; the rain
+            // lives on the whole desktop (EnvironmentView renders the overlay).
+            setBar({ mode: "NORMAL", tab: "running — active tool" })
+            term.write("\x1b[?25l\x1b[2J")
+            return false
           }
           startMatrix(parsed.options)
           // The timer + stopMatrix own the screen now; don't reprint the prompt.
@@ -653,6 +678,15 @@ export function TerminalBody({
         stopMatrix()
         return
       }
+      // While THIS terminal runs the global (desktop) rain as a foreground
+      // tool, its stdin is the tool: q and Ctrl-C stop it (the compositor
+      // intercepts them on /environment, where xterm never sees the key; this
+      // is the fallback for when the terminal lives off that page), everything
+      // else is swallowed instead of being typed into the shell.
+      if (s.globalRunning) {
+        if (data === "q" || data === "\x03") stopGlobalMatrix()
+        return
+      }
       // Tab: cycle an open menu, else accept the ghost, else open a menu.
       if (data === "\t") {
         if (s.menu) cycleMenu(1)
@@ -776,6 +810,10 @@ export function TerminalBody({
       sub.dispose()
       cancelAnimationFrame(refitRaf)
       observer.disconnect()
+      // Closing this terminal while it runs the global (desktop) rain kills the
+      // rain (it can't outlive the tool that started it). Other terminals don't
+      // clear it — `globalRunning` is only set by the launching session.
+      if (s.globalRunning) setGlobalMatrixOptions(null)
     }
   }, [instance])
 

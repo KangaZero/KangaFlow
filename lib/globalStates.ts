@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react"
 import type { EnvSettings } from "@/components/niri/settings"
 import type { Locale } from "@/lib/i18n"
 import type { Shortcut } from "@/lib/shortcuts"
+import type { MatrixOptions } from "@/lib/terminal/cmatrix"
 import type { Theme } from "@/lib/themes"
 
 // Achievements grid density — lifted to global state so the "toggle columns"
@@ -46,6 +47,12 @@ export type GlobalStatesContextValue = {
   setIsTerminalOpen: (state: boolean) => void
   terminalFile: string | null
   setTerminalFile: (file: string | null) => void
+  // Global desktop cmatrix rain (`cmatrix -g`). Options are non-null exactly
+  // while the rain runs over the whole environment; `globalMatrixRunning` is
+  // the derived boolean so the compositor's key handler checks it directly.
+  globalMatrixOptions: MatrixOptions | null
+  setGlobalMatrixOptions: (state: MatrixOptions | null) => void
+  globalMatrixRunning: boolean
   // Persisted settings (localStorage).
   shortcuts: Shortcut[]
   setShortcuts: (shortcuts: Shortcut[]) => void

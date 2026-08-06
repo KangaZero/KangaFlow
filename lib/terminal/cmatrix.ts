@@ -4,6 +4,8 @@
 // function of its inputs (state + injected rng) — trivially testable and safe in
 // the static export, exactly like fastfetch.ts. The React component owns the
 // clock (setInterval) and the keystroke that stops it; everything here is logic.
+
+import type { GlyphRainOptions } from "@/components/canvasui/GlyphRain"
 //
 // Model: one `Column | null` per terminal column (null = a column that never
 // rains, so `--density` just thins the array). A column tracks its falling
@@ -82,11 +84,12 @@ export const DEFAULT_MATRIX_OPTIONS: Omit<MatrixOptions, "theme"> = {
   speed: 5,
 }
 
-// Result of parsing the argv-style token list. `run` carries validated options;
-// `help` and `error` carry a ready-to-print message (English, like the other
-// shell strings — this is CLI/`--help` output, not user-facing UI copy).
+// Result of parsing the argv-style token list. `run` carries validated options
+// and whether the rain is global (`-g`, across the whole desktop instead of one
+// terminal); `help` and `error` carry a ready-to-print message (English, like
+// the other shell strings — this is CLI/`--help` output, not user-facing copy).
 export type MatrixParse =
-  | { kind: "run"; options: MatrixOptions }
+  | { kind: "run"; options: MatrixOptions; global?: boolean }
   | { kind: "help"; text: string }
   | { kind: "error"; message: string }
 
@@ -98,9 +101,10 @@ export const MATRIX_HELP = [
   "  -d, --density <0-1>    fraction of columns raining (default 0.5)",
   "  -b, --bold             bold glyphs",
   "  -C, --color <theme>    force a palette: light | dark | terminal",
+  "  -g, --global           rain across the whole desktop",
   "  -h, --help             show this help",
   "",
-  "press any key to stop.",
+  "press any key to stop (with -g: press q or Ctrl-C).",
 ].join("\r\n")
 
 // Clamp a parsed number into [min, max], or return null if it wasn't a number.
@@ -122,6 +126,7 @@ export function parseMatrixArgs(
   appTheme: MatrixTheme
 ): MatrixParse {
   const options: MatrixOptions = { ...DEFAULT_MATRIX_OPTIONS, theme: appTheme }
+  let global = false
 
   for (let i = 0; i < args.length; i++) {
     const token = args[i]
@@ -129,6 +134,10 @@ export function parseMatrixArgs(
       case "-h":
       case "--help":
         return { kind: "help", text: MATRIX_HELP }
+      case "-g":
+      case "--global":
+        global = true
+        break
       case "-b":
       case "--bold":
         options.bold = true
@@ -174,7 +183,38 @@ export function parseMatrixArgs(
     }
   }
 
-  return { kind: "run", options }
+  // `global` is only present when set, so the plain-run shape stays stable for
+  // callers/tests that don't opt into the desktop rain.
+  return global ? { global, kind: "run", options } : { kind: "run", options }
+}
+
+// Map the cmatrix CLI options onto the WebGL GlyphRain effect that renders the
+// rain. Speed/density/bold map onto GlyphRain's equivalents; the theme picks the
+// colour scheme, converted from cmatrix's 0-255 RGB to the shader's 0-1 floats.
+// Content is empty, so dim and lighting (which act on captured page content)
+// are turned off.
+export function matrixToGlyphRain(options: MatrixOptions): GlyphRainOptions {
+  const scheme = MATRIX_SCHEMES[options.theme]
+  const norm = ([r, g, b]: Rgb): [number, number, number] => [
+    r / 255,
+    g / 255,
+    b / 255,
+  ]
+  return {
+    color: norm(scheme.trail[0] ?? scheme.head),
+    density: options.density,
+    dim: 0,
+    flicker: 0,
+    glow: options.bold ? 2.6 : 1.6,
+    headColor: norm(scheme.head),
+    layers: 2,
+    light: 0,
+    mutate: 0,
+    speed: 0.2 + (options.speed / 10) * 2.2,
+    speedVariance: 0.5,
+    stir: 0,
+    trail: 0.9,
+  }
 }
 
 // --- Column state + stepping ----------------------------------------------

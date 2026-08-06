@@ -67,6 +67,23 @@ describe("parseMatrixArgs", () => {
     expect(parsed.options.theme).toBe("terminal")
   })
 
+  it("marks the run as global for -g/--global", () => {
+    expect(parseMatrixArgs(["-g"], "dark").kind).toBe("run")
+    const short = parseMatrixArgs(["-g", "-s", "8"], "dark")
+    if (short.kind !== "run") throw new Error("expected run")
+    expect(short.global).toBe(true)
+    expect(short.options.speed).toBe(8)
+    const long = parseMatrixArgs(["--global"], "dark")
+    if (long.kind !== "run") throw new Error("expected run")
+    expect(long.global).toBe(true)
+  })
+
+  it("stays non-global without the flag", () => {
+    const parsed = parseMatrixArgs([], "dark")
+    if (parsed.kind !== "run") throw new Error("expected run")
+    expect(parsed.global).toBeUndefined()
+  })
+
   it("returns help for -h/--help", () => {
     expect(parseMatrixArgs(["-h"], "dark").kind).toBe("help")
     expect(parseMatrixArgs(["--help"], "dark").kind).toBe("help")

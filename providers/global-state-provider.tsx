@@ -49,6 +49,7 @@ import {
   type Shortcut,
   saveShortcuts,
 } from "@/lib/shortcuts"
+import type { MatrixOptions } from "@/lib/terminal/cmatrix"
 import { useThemeTransition } from "@/lib/theme-transition"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 
@@ -260,6 +261,8 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   animationPref: "system",
   columnCount: DEFAULT_COLUMN_COUNT,
   envSettings: DEFAULT_ENV_SETTINGS,
+  globalMatrixOptions: null,
+  globalMatrixRunning: false,
   isAlarmOpen: false,
   isCalendarOpen: false,
   isCommandPaletteOpen: false,
@@ -277,6 +280,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   setAnimationPref: () => {},
   setColumnCount: () => {},
   setEnvSettings: () => {},
+  setGlobalMatrixOptions: () => {},
   setIsAlarmOpen: () => {},
   setIsCalendarOpen: () => {},
   setIsCommandPaletteOpen: () => {},
@@ -338,6 +342,8 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
   const [isTerminalOpen, setIsTerminalOpen] = useState(false)
   const [terminalFile, setTerminalFile] = useState<string | null>(null)
+  const [globalMatrixOptions, setGlobalMatrixOptions] =
+    useState<MatrixOptions | null>(null)
   const currentPath = usePathname() as AppPath
 
   useEffect(() => {
@@ -461,6 +467,8 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       animationPref,
       columnCount,
       envSettings,
+      globalMatrixOptions,
+      globalMatrixRunning: globalMatrixOptions !== null,
       isAlarmOpen,
       isCalendarOpen,
       isCommandPaletteOpen,
@@ -478,6 +486,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       setAnimationPref,
       setColumnCount,
       setEnvSettings,
+      setGlobalMatrixOptions,
       setIsAlarmOpen,
       setIsCalendarOpen,
       setIsCommandPaletteOpen,
@@ -523,6 +532,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isTerminalOpen,
       isTrackListOpen,
       mediaCurrentIndex,
+      globalMatrixOptions,
       shortcuts,
       terminalFile,
       theme,

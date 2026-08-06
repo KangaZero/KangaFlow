@@ -15,6 +15,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { GlyphRain } from "@/components/canvasui/GlyphRain"
 import { AboutWindow } from "@/components/niri/apps/about-window"
 import { BrowserWindow } from "@/components/niri/apps/browser-window"
 import { BurntPaperTransition } from "@/components/niri/burnt-paper-transition"
@@ -44,6 +45,7 @@ import {
   SPRING_TILE,
   SPRING_WORKSPACE,
 } from "@/lib/motion"
+import { matrixToGlyphRain } from "@/lib/terminal/cmatrix"
 import { readSourceFiles } from "@/lib/terminal/source"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
@@ -204,6 +206,9 @@ export function EnvironmentView() {
     setEnvSettings: setSettings,
     isLoggedIn,
     setIsLoggedIn,
+    globalMatrixOptions,
+    globalMatrixRunning,
+    setGlobalMatrixOptions,
   } = useGlobalStates()
   const [loginPhase, setLoginPhase] = useState<"login" | "burning">("login")
 
@@ -313,6 +318,20 @@ export function EnvironmentView() {
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       const key = event.key.toLowerCase()
+      // While the global (desktop) cmatrix rain runs, `q` and Ctrl-C are
+      // reserved for stopping it, wherever focus is (the launching terminal's
+      // own handler mirrors this for when the terminal lives off this page).
+      if (globalMatrixRunning) {
+        const stops =
+          (key === "q" && !event.ctrlKey && !event.metaKey && !event.altKey) ||
+          (event.ctrlKey && key === "c")
+        if (stops) {
+          event.preventDefault()
+          event.stopPropagation()
+          setGlobalMatrixOptions(null)
+          return
+        }
+      }
       if (event.altKey && !event.shiftKey && key === "d") {
         event.preventDefault()
         togglePanel("launcher")
@@ -365,7 +384,15 @@ export function EnvironmentView() {
     }
     window.addEventListener("keydown", onKey, true)
     return () => window.removeEventListener("keydown", onKey, true)
-  }, [panel, state.overview, togglePanel, closeActive, activeId])
+  }, [
+    panel,
+    state.overview,
+    togglePanel,
+    closeActive,
+    activeId,
+    globalMatrixRunning,
+    setGlobalMatrixOptions,
+  ])
 
   const launch = (app: AppId) => {
     dispatch({ app, title: appTitle[app], type: "spawn" })
@@ -476,6 +503,24 @@ export function EnvironmentView() {
     >
       {/* Wallpaper */}
       <div className="absolute inset-0 -z-10" style={wallpaperStyleProp} />
+
+      {/* Global cmatrix rain (`cmatrix -g`): covers the desktop above the
+          wallpaper but below the strip/windows and every UI band, so windows
+          float over it and the bar stays clickable. pointer-events-none — it's
+          a screensaver, not an input surface. */}
+      {globalMatrixOptions ? (
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ zIndex: -1 }}
+        >
+          <GlyphRain
+            className="h-full w-full"
+            {...matrixToGlyphRain(globalMatrixOptions)}
+          >
+            <div className="h-full w-full" />
+          </GlyphRain>
+        </div>
+      ) : null}
 
       <div
         className={cn(
