@@ -39,6 +39,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useXTerm } from "react-xtermjs"
 import { GlyphRain } from "@/components/canvasui/GlyphRain"
 import { CodeEditor } from "@/components/code-editor"
+import { getWindowContent, setWindowContent } from "@/lib/niri-window-cache"
 import {
   isMatrixTheme,
   type MatrixOptions,
@@ -76,6 +77,18 @@ import {
 import { isTheme, THEMES } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
+
+// xterm exposes its font measurement behind a private `_core` (its own addons
+// reach in the same way). fit() reads the render service's cached cell dims,
+// which stay at fallback metrics until the char size service re-measures —
+// typed here so the font-load path can force that re-measure.
+type XtermCore = {
+  _charSizeService?: {
+    measure(): void
+  }
+}
+const xtermCore = (term: unknown): XtermCore =>
+  ((term as { _core?: XtermCore })._core ?? {}) as XtermCore
 
 // Subset Symbols Nerd Font supplying the oh-my-posh prompt icons (OS / git /
 // shell / clock / path — 12 PUA codepoints, ~2.1KB). JetBrains Mono renders the
@@ -231,17 +244,23 @@ export function TerminalBody({
   initialFile,
   onClose,
   routePath = "/",
+  windowId,
 }: {
   files: Record<string, string>
   initialFile: string | null
   onClose: () => void
   // Current route pathname → the terminal starts in that page's folder.
   routePath?: string
+  // When rendered as a niri window, live state (input/history/cwd) is persisted
+  // per window id and restored on mount. Absent (standalone terminal dialog) →
+  // no persistence.
+  windowId?: string
 }) {
   const { locale } = useLocale()
   const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
-  const { globalMatrixRunning, setGlobalMatrixOptions } = useGlobalStates()
+  const { globalMatrixRunning, setGlobalMatrixOptions, envSettings } =
+    useGlobalStates()
   // paletteForTheme returns a shared constant → stable identity for deps.
   const palette = paletteForTheme(resolvedTheme)
   // Flat page filesystem: each routable page is a dir holding `index.tsx`
@@ -264,7 +283,16 @@ export function TerminalBody({
     []
   )
   const { ref, instance } = useXTerm({ addons, options })
-  const [bar, setBar] = useState<BarState>({ mode: "NORMAL", tab: "zsh" })
+
+  // Restore this window's last session (typed input, history, cwd, running
+  // cmatrix/editor flags) from the per-window content cache when it existed.
+  const savedContent = windowId ? getWindowContent(windowId) : null
+  const saved = savedContent?.app === "terminal" ? savedContent.state : null
+
+  const [bar, setBar] = useState<BarState>(() => ({
+    mode: saved?.barMode ?? "NORMAL",
+    tab: saved?.barTab ?? "zsh",
+  }))
 
   // Theme the live terminal from the app palette; runs on mount and on any
   // light↔dark switch (palette is a stable constant, so no needless churn).
@@ -272,9 +300,20 @@ export function TerminalBody({
     if (instance) instance.options.theme = xtermTheme(palette)
   }, [instance, palette])
 
-  const [editor, setEditor] = useState<{ content: string } | null>(null)
+  const [editor, setEditor] = useState<{ content: string } | null>(() =>
+    saved?.editorOpen && saved.editorContent !== null
+      ? { content: saved.editorContent }
+      : null
+  )
   // Live cmatrix options for the GlyphRain overlay (null when not running).
-  const [matrix, setMatrix] = useState<MatrixOptions | null>(null)
+  const [matrix, setMatrix] = useState<MatrixOptions | null>(() =>
+    saved?.matrixRunning && saved.matrixOptions !== null
+      ? saved.matrixOptions
+      : null
+  )
+  const isVerticalBar =
+    envSettings.barPosition === "left" || envSettings.barPosition === "right"
+
   const dark = resolvedTheme !== "light"
   // Live theme for the once-bound data handler (ff reads it on each run).
   const darkRef = useRef(dark)
@@ -293,21 +332,75 @@ export function TerminalBody({
   const globalMatrixRunningRef = useRef(globalMatrixRunning)
   globalMatrixRunningRef.current = globalMatrixRunning
 
-  const startedAt = useRef(Date.now())
+  const startedAt = useRef(saved?.startedAt ?? Date.now())
   const session = useRef<Session>({
-    currentPage: pageForRoute(routePath)?.name ?? "home",
-    cwd: cwdForRoute(routePath, vfs),
-    editorOpen: false,
+    currentPage: saved?.currentPage ?? pageForRoute(routePath)?.name ?? "home",
+    cwd: saved?.cwd ?? cwdForRoute(routePath, vfs),
+    editorOpen: saved?.editorOpen ?? false,
     exitCode: 0,
-    globalRunning: false,
-    histIndex: 0,
-    history: [],
-    line: "",
-    matrixRunning: false,
+    globalRunning: saved?.globalRunning ?? false,
+    histIndex: Math.min(
+      Math.max(saved?.histIndex ?? 0, 0),
+      saved?.history.length ?? 0
+    ),
+    history: saved?.history ?? [],
+    line: saved?.line ?? "",
+    matrixRunning: saved?.matrixRunning ?? false,
     menu: null,
     promptPrefix: "",
     suggestion: null,
   })
+
+  // Live view of the overlay states for the once-bound data handler (kept in
+  // refs so the persist snapshot below never reads a stale closure).
+  const barRef = useRef(bar)
+  barRef.current = bar
+  const editorRef = useRef(editor)
+  editorRef.current = editor
+  const matrixRef = useRef(matrix)
+  matrixRef.current = matrix
+
+  // Snapshot this session's serializable state into the per-window cache. Cheap
+  // (a Map write) and re-render-free, so it can run on every keystroke.
+  const persist = (): void => {
+    if (!windowId) return
+    const s = session.current
+    setWindowContent(windowId, {
+      app: "terminal",
+      state: {
+        barMode: barRef.current.mode,
+        barTab: barRef.current.tab,
+        currentPage: s.currentPage,
+        cwd: s.cwd,
+        editorContent: editorRef.current?.content ?? null,
+        editorOpen: s.editorOpen,
+        globalRunning: s.globalRunning,
+        histIndex: s.histIndex,
+        history: s.history,
+        line: s.line,
+        matrixOptions: matrixRef.current,
+        matrixRunning: s.matrixRunning,
+        startedAt: startedAt.current,
+      },
+    })
+  }
+  const persistRef = useRef(persist)
+  persistRef.current = persist
+
+  // Overlay state changes (editor open/close, cmatrix start/stop) go through
+  // setState, not onShellData — mirror them into the cache when they flip.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: persist() reads live refs (barRef/editorRef/matrixRef/session) and is intentionally omitted — only the overlay states drive this.
+  useEffect(() => {
+    persist()
+  }, [bar, editor, matrix])
+
+  // On unmount (workspace switch / close / navigation away) snapshot the final
+  // state too, so even a teardown without a preceding change is captured.
+  useEffect(() => {
+    return () => {
+      if (windowId) persistRef.current()
+    }
+  }, [windowId])
 
   // Machine facts for the prompt, read once (stable per session). The browser
   // exposes core count + approximate RAM (Chrome-only) but NOT CPU usage.
@@ -528,6 +621,7 @@ export function TerminalBody({
           // Client-side route change; the terminal dialog stays open over it.
           routerRef.current.push(hrefForPage(localeRef.current, page))
           term.write(`\r\ncd → ${name}`)
+          persistRef.current()
           return true
         }
         case "ls": {
@@ -598,6 +692,7 @@ export function TerminalBody({
     const replaceLine = (next: string) => {
       term.write(`\r${s.promptPrefix}\x1b[K${next}`)
       s.line = next
+      persistRef.current()
     }
 
     // Redraw the line plus its dim ghost-text suggestion, leaving the cursor
@@ -610,6 +705,7 @@ export function TerminalBody({
         const ghost = suggestion.slice(s.line.length)
         term.write(`\x1b[2m${ghost}\x1b[0m\x1b[${ghost.length}D`)
       }
+      persistRef.current()
     }
 
     // Redraw without the ghost (before Enter/Ctrl-C so no dim tail lingers).
@@ -713,6 +809,7 @@ export function TerminalBody({
           s.histIndex = s.history.length
         }
         const reprompt = runCommand(line)
+        persistRef.current()
         if (reprompt && !s.editorOpen) prompt()
         return
       }
@@ -777,7 +874,21 @@ export function TerminalBody({
     const startFile = initialFile
       ? (flatFileForSource(initialFile) ?? initialFile)
       : null
-    if (!(startFile && openEditor(startFile))) prompt()
+    if (startFile && openEditor(startFile)) {
+      // Page-code button: the editor overlay owns the screen.
+    } else if (s.matrixRunning) {
+      // Restored cmatrix screensaver: hide the cursor + clear for the overlay.
+      term.write("\x1b[?25l\x1b[2J")
+    } else if (!s.editorOpen) {
+      // Restored session: reprint the prompt with the pending line (scrollback
+      // is not persisted, so only the current input comes back). Fresh session
+      // prints the plain prompt via `prompt()`.
+      if (s.line) {
+        term.write(`\r\n${makePrompt(s.cwd, s.exitCode, term.cols)}${s.line}`)
+      } else {
+        prompt()
+      }
+    }
 
     // While the editor overlay owns the screen, xterm ignores keystrokes.
     const sub = term.onData((data) => {
@@ -804,9 +915,38 @@ export function TerminalBody({
     }
     const observer = new ResizeObserver(refit)
     if (container) observer.observe(container)
+    // The observer only fires on a size *change*, so a restored session mounts
+    // with the box already at its final size and never refits on its own. The
+    // deferred refit covers a mount mid-layout-animation (0-sized box). On a
+    // fresh page load (hydrate) the custom font can also land after fit() ran:
+    // the grid stays frozen at fallback metrics while the rendered cell uses
+    // the loaded font, so the screen under-fills its box and the observer never
+    // fires (the box didn't change). xterm caches the measured cell and does
+    // not watch document.fonts itself, so force the font load, re-measure the
+    // cell, then fit against the fresh dimensions.
+    refit()
+    let disposed = false
+    const familySpecs = (term.options.fontFamily ?? "")
+      .split(",")
+      .map((family) => family.trim())
+      .filter(Boolean)
+    if (document.fonts?.load && familySpecs.length > 0) {
+      void Promise.all(
+        familySpecs.map((family) => document.fonts.load(`13px ${family}`))
+      )
+        .then(() => {
+          if (disposed) return
+          xtermCore(term)._charSizeService?.measure()
+          refit()
+        })
+        .catch(() => {
+          if (!disposed) refit()
+        })
+    }
     term.focus()
 
     return () => {
+      disposed = true
       sub.dispose()
       cancelAnimationFrame(refitRaf)
       observer.disconnect()
@@ -822,8 +962,9 @@ export function TerminalBody({
       <div className="relative h-full w-full flex-1">
         {/* Scrim behind the transparent xterm canvas: readability backing that
             still lets the wallpaper through (light theme only; dark = none). */}
+        {/* TODO find out how to resize automaticaly */}
         <div
-          className="h-full w-full rounded-t-md"
+          className={`${isVerticalBar ? "h-[92.8vh]" : "h-[86.6vh]"} w-full rounded-t-m`}
           ref={ref}
           style={{ background: palette.scrim }}
         />

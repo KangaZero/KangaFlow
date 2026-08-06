@@ -32,8 +32,8 @@ const DEFAULT_TITLES: Record<AppId, string> = {
   terminal: "Terminal",
 }
 
-const WORKSPACE_MIN = 1
-const WORKSPACE_MAX = 3
+export const WORKSPACE_MIN = 1
+export const WORKSPACE_MAX = 3
 const SPAWN_WIDTH = 1 / 2
 // Hard cap on total open windows across all workspaces.
 const WINDOW_MAX = 20
@@ -310,6 +310,10 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
         ...state,
         active: clamp(action.id, WORKSPACE_MIN, WORKSPACE_MAX),
       }
+
+    case "restore":
+      // Layout already validated + sanitised by lib/niri-persistence's loader.
+      return action.state
 
     case "moveToWorkspace": {
       const column = getFocusedColumn(state)

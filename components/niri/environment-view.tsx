@@ -45,6 +45,7 @@ import {
   SPRING_TILE,
   SPRING_WORKSPACE,
 } from "@/lib/motion"
+import { loadNiriState, saveNiriState } from "@/lib/niri-persistence"
 import { matrixToGlyphRain } from "@/lib/terminal/cmatrix"
 import { readSourceFiles } from "@/lib/terminal/source"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
@@ -167,6 +168,7 @@ function WindowContent({
           initialFile={null}
           onClose={onClose}
           routePath={routePath}
+          windowId={win.id}
         />
       )
     case "editor":
@@ -180,7 +182,7 @@ function WindowContent({
     case "about":
       return <AboutWindow />
     case "browser":
-      return <BrowserWindow />
+      return <BrowserWindow windowId={win.id} />
     default:
       return null
   }
@@ -210,6 +212,44 @@ export function EnvironmentView() {
     globalMatrixRunning,
     setGlobalMatrixOptions,
   } = useGlobalStates()
+
+  // Hydrate the persisted layout after mount (reading storage during the initial
+  // render would mismatch the server HTML). `hydratedRef` gates the persist
+  // effect so the pristine defaults never clobber the stored desktop.
+  const hydratedRef = useRef(false)
+  useEffect(() => {
+    const saved = loadNiriState()
+    if (saved) {
+      dispatch({ state: saved, type: "restore" })
+    } else {
+      hydratedRef.current = true
+    }
+  }, [])
+
+  // Persist layout + each window's cached content on every reducer change. The
+  // first change after mount IS the restore itself, so that run just marks
+  // hydration instead of writing (the loaded state is already in storage).
+  useEffect(() => {
+    if (!hydratedRef.current) {
+      hydratedRef.current = true
+      return
+    }
+    saveNiriState(state)
+  }, [state])
+
+  // Apps write their content to the in-session cache on every change; make sure
+  // storage catches up even when no layout change follows (e.g. a keystroke
+  // right before leaving the page / closing the tab).
+  const latestState = useRef(state)
+  latestState.current = state
+  useEffect(() => {
+    const flush = (): void => saveNiriState(latestState.current)
+    window.addEventListener("pagehide", flush)
+    return () => {
+      window.removeEventListener("pagehide", flush)
+      flush()
+    }
+  }, [])
 
   function handleBurnComplete(): void {
     setIsLoggedIn(true)

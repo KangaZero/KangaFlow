@@ -2,8 +2,57 @@
 // Shared contract for the niri-style scrollable-tiling environment. Pure data —
 // no React/DOM — so the reducer, keymap, and view all agree on one model.
 
+import type { MatrixOptions } from "@/lib/terminal/cmatrix"
+
 // Runnable "apps" that can occupy a window.
 export type AppId = "terminal" | "editor" | "about" | "browser"
+
+// Per-window content that survives workspace switches / unmounts and is stored
+// under `kangaflow:niriWorkspaces`. Pure serializable data only — terminal
+// output/scrollback is deliberately excluded (the xterm buffer is never part of
+// state). Mirrors what terminal-body.tsx / browser-window.tsx read to restore.
+export type TerminalWindowContent = {
+  // Currently typed (unsubmitted) shell input.
+  line: string
+  // Submitted command history + the up-arrow cursor into it.
+  history: string[]
+  histIndex: number
+  // Current VFS working directory + the page it maps to (`cd` drives both).
+  cwd: string
+  currentPage: string
+  // zjstatus bar mirror (mode segment label + active tab text).
+  barMode: string
+  barTab: string
+  // True while the nvim editor overlay owns the screen (+ its buffered content).
+  editorOpen: boolean
+  editorContent: string | null
+  // True while the cmatrix screensaver runs (its overlay options).
+  matrixRunning: boolean
+  matrixOptions: MatrixOptions | null
+  // True while THIS terminal runs the global desktop rain (`cmatrix -g`).
+  globalRunning: boolean
+  // Session birth time, so the fastfetch `ff` uptime survives unmounts.
+  startedAt: number
+}
+
+// One browser tab's history stack + cursor; mirrors browser-window's Tab.
+export type BrowserTab = {
+  id: string
+  history: string[]
+  index: number
+  nonce: number
+}
+
+export type BrowserWindowContent = {
+  tabs: BrowserTab[]
+  activeId: string
+  // Current text in the address bar (may be an unsubmitted edit).
+  address: string
+}
+
+export type NiriWindowContent =
+  | { app: "terminal"; state: TerminalWindowContent }
+  | { app: "browser"; state: BrowserWindowContent }
 
 export type NiriWindow = {
   id: string
@@ -72,3 +121,6 @@ export type NiriAction =
   | { type: "toggleAlignment" }
   // Click-to-focus a specific window (the view dispatches this on pointer down).
   | { type: "focusAt"; workspace: number; column: number; window: number }
+  // Replace the whole layout after hydrating `kangaflow:niriWorkspaces` (the
+  // persisted state was validated upstream in lib/niri-persistence).
+  | { type: "restore"; state: NiriState }

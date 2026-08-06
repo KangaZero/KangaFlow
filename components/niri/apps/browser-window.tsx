@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
+import { getWindowContent, setWindowContent } from "@/lib/niri-window-cache"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -83,13 +84,29 @@ function makeTab(url: string): Tab {
 const TOOLBAR_BUTTON =
   "rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-40"
 
-export function BrowserWindow(): React.JSX.Element {
+export function BrowserWindow({
+  windowId,
+}: {
+  // When rendered as a niri window, tabs/address persist per window id and
+  // restore on mount. Absent → no persistence.
+  windowId?: string
+}): React.JSX.Element {
   const { translate } = useLocale()
   const { vimMode } = useGlobalStates()
+  // Restore this window's last tabs + address from the per-window content cache.
+  const savedContent = windowId ? getWindowContent(windowId) : null
+  const saved = savedContent?.app === "browser" ? savedContent.state : null
   const initialTab = useMemo(() => makeTab(currentHome()), [])
-  const [tabs, setTabs] = useState<Tab[]>(() => [initialTab])
-  const [activeId, setActiveId] = useState<string>(() => initialTab.id)
-  const [address, setAddress] = useState(currentHome)
+  const [tabs, setTabs] = useState<Tab[]>(() =>
+    saved && saved.tabs.length > 0 ? saved.tabs : [initialTab]
+  )
+  const [activeId, setActiveId] = useState<string>(() => {
+    if (!saved) return initialTab.id
+    return saved.tabs.some((t) => t.id === saved.activeId)
+      ? saved.activeId
+      : (saved.tabs[0]?.id ?? initialTab.id)
+  })
+  const [address, setAddress] = useState(() => saved?.address ?? currentHome())
   const [bookmarks, setBookmarks] = useState<string[]>(loadBookmarks)
 
   // Combobox (address suggestions) state.
@@ -127,6 +144,16 @@ export function BrowserWindow(): React.JSX.Element {
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks))
   }, [bookmarks])
+
+  // Mirror this window's tabs/address into the per-window content cache so they
+  // survive workspace switches / unmounts. Cheap Map write, no re-renders.
+  useEffect(() => {
+    if (!windowId) return
+    setWindowContent(windowId, {
+      app: "browser",
+      state: { activeId, address, tabs },
+    })
+  }, [tabs, activeId, address, windowId])
 
   const updateActive = (fn: (t: Tab) => Tab): void =>
     setTabs((ts) => ts.map((t) => (t.id === activeId ? fn(t) : t)))
