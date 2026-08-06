@@ -741,7 +741,9 @@ export function NoctaliaSettings(props: {
                               ? "environment.settings.transparencySolid"
                               : level === "soft"
                                 ? "environment.settings.transparencySoft"
-                                : "environment.settings.transparencyGlass"
+                                : level === "true"
+                                  ? "environment.settings.transparencyTrue"
+                                  : "environment.settings.transparencyGlass"
                           )
                         }
                         label={translate("environment.settings.transparency")}

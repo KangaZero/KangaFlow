@@ -15,6 +15,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { Glass } from "@/components/canvasui/Glass"
 import { GlyphRain } from "@/components/canvasui/GlyphRain"
 import { AboutWindow } from "@/components/niri/apps/about-window"
 import { BrowserWindow } from "@/components/niri/apps/browser-window"
@@ -692,13 +693,18 @@ export function EnvironmentView() {
                         // wallpaper shows through their transparent content.
                         const glassy =
                           win.app === "terminal" || win.app === "editor"
+                        // "true" glass swaps the CSS blur for the WebGL
+                        // shader pane (canvasui/Glass) behind the content.
+                        const trueGlass = settings.glass === "true" && glassy
                         return (
                           <motion.button
                             className={cn(
                               "pointer-events-auto flex min-h-0 flex-col overflow-hidden rounded-lg border text-left shadow-xl",
-                              glassy
-                                ? "bg-card/30 backdrop-blur-md"
-                                : "bg-card",
+                              trueGlass
+                                ? "bg-transparent shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_12px_44px_rgba(0,0,0,0.38)]"
+                                : glassy
+                                  ? "bg-card/30 backdrop-blur-md"
+                                  : "bg-card",
                               isFocused ? "border-primary" : "border-border"
                             )}
                             data-win-id={win.id}
@@ -770,14 +776,42 @@ export function EnvironmentView() {
                                 }}
                               />
                             </div>
-                            <div className="min-h-0 flex-1 overflow-hidden">
-                              <WindowContent
-                                dark={dark}
-                                files={files}
-                                onClose={() => dispatch({ type: "close" })}
-                                routePath={pathname}
-                                win={win}
-                              />
+                            <div className="relative min-h-0 flex-1 overflow-hidden">
+                              {trueGlass ? (
+                                // Full-pane frosted glass. The wallpaper is
+                                // captured *inside* the pane so the shader has
+                                // something to refract; the live content then
+                                // renders crisp on top of the glass.
+                                <div className="absolute inset-0">
+                                  <Glass
+                                    aberration={0.6}
+                                    blur={1.5}
+                                    className="h-full w-full"
+                                    corner={8}
+                                    fill
+                                    ior={1.35}
+                                    reflection={0.9}
+                                    shape="rectangle"
+                                    shine={0.08}
+                                  >
+                                    <div
+                                      className="h-full w-full"
+                                      style={wallpaperStyleProp}
+                                    />
+                                  </Glass>
+                                </div>
+                              ) : null}
+                              <div
+                                className={cn(trueGlass && "absolute inset-0")}
+                              >
+                                <WindowContent
+                                  dark={dark}
+                                  files={files}
+                                  onClose={() => dispatch({ type: "close" })}
+                                  routePath={pathname}
+                                  win={win}
+                                />
+                              </div>
                             </div>
                           </motion.button>
                         )

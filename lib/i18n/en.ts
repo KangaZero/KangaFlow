@@ -232,6 +232,7 @@ const en = {
       transparencyGlass: "Glass",
       transparencySoft: "Soft",
       transparencySolid: "Solid",
+      transparencyTrue: "True glass",
       uiScale: "UI scale",
       wallpaper: "Wallpaper",
       wallpaperAuto: "Theme default",

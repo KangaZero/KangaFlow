@@ -13,4 +13,8 @@ export const GLASS_SURFACE: Record<GlassLevel, string> = {
   glass: `${RIM} bg-card/25 backdrop-blur-2xl backdrop-saturate-150`,
   soft: `${RIM} bg-card/60 backdrop-blur-xl backdrop-saturate-150`,
   solid: `${RIM} bg-card/95 backdrop-blur-sm`,
+  // True glass is mostly a WebGL shader surface on windows; the CSS fallback
+  // stays as close to fully transparent as readability allows for the panels
+  // that only get the class (settings/wallpaper preview, toast).
+  true: `${RIM} bg-card/5 backdrop-blur-2xl backdrop-saturate-150`,
 }

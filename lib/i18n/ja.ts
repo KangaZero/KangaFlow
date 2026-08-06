@@ -232,6 +232,7 @@ const ja = {
       transparencyGlass: "ガラス",
       transparencySoft: "ソフト",
       transparencySolid: "ソリッド",
+      transparencyTrue: "本物のガラス",
       uiScale: "UI スケール",
       wallpaper: "壁紙",
       wallpaperAuto: "テーマ標準",

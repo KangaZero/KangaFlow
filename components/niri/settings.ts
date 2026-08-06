@@ -57,7 +57,8 @@ export const ACCENT_COLORS: Record<Exclude<AccentId, "default">, string> = {
 }
 
 // Surface translucency (Noctalia's transparency_mode) for the glass panels.
-export const GLASS_LEVELS = ["solid", "soft", "glass"] as const
+// "true" opts into the WebGL true-glass surface (canvasui/Glass) on windows.
+export const GLASS_LEVELS = ["solid", "soft", "glass", "true"] as const
 export type GlassLevel = (typeof GLASS_LEVELS)[number]
 
 // Border-radius in px (0 = square). Stored as a plain number; clamped 0–64 on load.
