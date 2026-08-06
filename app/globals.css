@@ -344,6 +344,24 @@
   mix-blend-mode: normal;
 }
 
+@theme {
+  --animate-caret-blink: caret-blink 1.1s step-end infinite;
+
+  @keyframes caret-blink {
+    0%,
+    45% {
+      opacity: 1;
+    }
+    50%,
+    95% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+}
+
 /* Vim modal caret. Native inputs / contentEditable have no block-caret API, so
    the "cursor" is a one-char ::selection (useVimInput hides the thin caret and
    sets data-vim-mode). Distinguish the modes: NORMAL is an inverted block (the

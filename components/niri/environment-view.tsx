@@ -18,7 +18,6 @@ import {
 import { GlyphRain } from "@/components/canvasui/GlyphRain"
 import { AboutWindow } from "@/components/niri/apps/about-window"
 import { BrowserWindow } from "@/components/niri/apps/browser-window"
-import { BurntPaperTransition } from "@/components/niri/burnt-paper-transition"
 import {
   getFocusedWindow,
   initialNiriState,
@@ -210,11 +209,7 @@ export function EnvironmentView() {
     globalMatrixRunning,
     setGlobalMatrixOptions,
   } = useGlobalStates()
-  const [loginPhase, setLoginPhase] = useState<"login" | "burning">("login")
 
-  function handleBurnStart(): void {
-    setLoginPhase("burning")
-  }
   function handleBurnComplete(): void {
     setIsLoggedIn(true)
   }
@@ -875,16 +870,7 @@ export function EnvironmentView() {
         open={panel === "help"}
       />
       <NotificationToast />
-      {!isLoggedIn ? (
-        <>
-          {loginPhase === "login" ? (
-            <LoginScreen onLogin={handleBurnStart} />
-          ) : null}
-          {loginPhase === "burning" ? (
-            <BurntPaperTransition onComplete={handleBurnComplete} />
-          ) : null}
-        </>
-      ) : null}
+      {!isLoggedIn ? <LoginScreen onBurnComplete={handleBurnComplete} /> : null}
     </main>
   )
 }
