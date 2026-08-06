@@ -37,16 +37,17 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useXTerm } from "react-xtermjs"
+import {
+  GlyphRain,
+  type GlyphRainOptions,
+} from "@/components/canvasui/GlyphRain"
 import { CodeEditor } from "@/components/code-editor"
 import {
-  createColumns,
-  frameDelayMs,
   isMatrixTheme,
   MATRIX_SCHEMES,
   type MatrixOptions,
   parseMatrixArgs,
-  renderFrame,
-  stepColumn,
+  type Rgb,
 } from "@/lib/terminal/cmatrix"
 import { completeLine, suggestLine } from "@/lib/terminal/complete"
 import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
@@ -138,6 +139,35 @@ function formatUptime(ms: number): string {
 
 function baseName(path: string): string {
   return path.split("/").at(-1) ?? path
+}
+
+// Map the cmatrix CLI options (parsed by lib/terminal/cmatrix) onto the WebGL
+// GlyphRain effect that now renders the rain. Speed/density/bold map onto
+// GlyphRain's equivalents; the theme picks the colour scheme, converted from
+// cmatrix's 0-255 RGB to the shader's 0-1 floats. Content is empty, so dim and
+// lighting (which act on captured page content) are turned off.
+function matrixToGlyphRain(options: MatrixOptions): GlyphRainOptions {
+  const scheme = MATRIX_SCHEMES[options.theme]
+  const norm = ([r, g, b]: Rgb): [number, number, number] => [
+    r / 255,
+    g / 255,
+    b / 255,
+  ]
+  return {
+    color: norm(scheme.trail[0] ?? scheme.head),
+    density: options.density,
+    dim: 0,
+    flicker: 0,
+    glow: options.bold ? 2.6 : 1.6,
+    headColor: norm(scheme.head),
+    layers: 2,
+    light: 0,
+    mutate: 0,
+    speed: 0.2 + (options.speed / 10) * 2.2,
+    speedVariance: 0.5,
+    stir: 0,
+    trail: 0.9,
+  }
 }
 
 // zjstatus mode segment: kanji label + palette bg, mirroring the user's zellij
@@ -270,6 +300,8 @@ export function TerminalBody({
   }, [instance, palette])
 
   const [editor, setEditor] = useState<{ content: string } | null>(null)
+  // Live cmatrix options for the GlyphRain overlay (null when not running).
+  const [matrix, setMatrix] = useState<MatrixOptions | null>(null)
   const dark = resolvedTheme !== "light"
   // Live theme for the once-bound data handler (ff reads it on each run).
   const darkRef = useRef(dark)
@@ -368,32 +400,19 @@ export function TerminalBody({
       for (const line of renderFastfetch(info)) term.writeln(line)
     }
 
-    // cmatrix screensaver. The only animated command: it owns a timer that
-    // paints frames until the next keystroke stops it (see onShellData). rng is
-    // Math.random here; the pure engine takes it as a param so it stays testable.
-    let matrixTimer: ReturnType<typeof setInterval> | null = null
-    const rng = () => Math.random()
-
+    // cmatrix screensaver. The only animated command: a WebGL GlyphRain overlay
+    // owns the screen until the next keystroke stops it (see onShellData).
     const startMatrix = (options: MatrixOptions) => {
       s.matrixRunning = true
-      // Hide the cursor and clear the screen for a clean canvas.
+      // Hide the cursor and clear the screen for a clean canvas; GlyphRain
+      // (mounted via state, see the render below) covers the terminal.
       term.write("\x1b[?25l\x1b[2J")
-      const rows = term.rows
-      const width = term.cols
-      const scheme = MATRIX_SCHEMES[options.theme]
-      const columns = createColumns(width, rows, rng, options.density)
-      matrixTimer = setInterval(() => {
-        for (const col of columns) {
-          if (col) stepColumn(col, rows, rng)
-        }
-        term.write(renderFrame(columns, rows, width, scheme, options.bold))
-      }, frameDelayMs(options.speed))
+      setMatrix(options)
     }
 
     const stopMatrix = () => {
-      if (matrixTimer !== null) clearInterval(matrixTimer)
-      matrixTimer = null
       s.matrixRunning = false
+      setMatrix(null)
       // Restore the cursor, wipe the rain, and drop back to a fresh prompt.
       term.write("\x1b[?25h\x1b[2J\x1b[H")
       prompt()
@@ -757,7 +776,6 @@ export function TerminalBody({
       sub.dispose()
       cancelAnimationFrame(refitRaf)
       observer.disconnect()
-      if (matrixTimer !== null) clearInterval(matrixTimer)
     }
   }, [instance])
 
@@ -781,6 +799,13 @@ export function TerminalBody({
               }
               value={editor.content}
             />
+          </div>
+        ) : null}
+        {matrix ? (
+          <div className="absolute inset-0 z-10">
+            <GlyphRain className="h-full w-full" {...matrixToGlyphRain(matrix)}>
+              <div className="h-full w-full" />
+            </GlyphRain>
           </div>
         ) : null}
       </div>

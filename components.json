@@ -12,6 +12,7 @@
   "menuColor": "default-translucent",
   "registries": {
     "@animate-ui": "https://animate-ui.com/r/{name}.json",
+    "@canvas-ui": "https://canvasui.dev/r/{name}.json",
     "@react-bits": "https://reactbits.dev/r/{name}.json"
   },
   "rsc": true,

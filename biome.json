@@ -81,6 +81,19 @@
           }
         }
       }
+    },
+    {
+      "includes": ["components/canvasui/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useHookAtTopLevel": "off"
+          },
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
     }
   ],
   "vcs": {
