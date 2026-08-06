@@ -1,0 +1,144 @@
+- generic [ref=e1]:
+  - main [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - button "Launcher" [ref=e11] [cursor=pointer]
+          - generic [ref=e12]: —
+        - generic [ref=e13]:
+          - list [ref=e14]:
+            - listitem [ref=e15]:
+              - button "Workspace 1" [ref=e16] [cursor=pointer]:
+                - generic [ref=e17]:
+                  - generic [ref=e18]: "1"
+                  - generic [ref=e19]: 壱
+            - listitem [ref=e20]:
+              - button "Workspace 2" [ref=e21] [cursor=pointer]:
+                - generic [ref=e22]:
+                  - generic [ref=e23]: "2"
+                  - generic [ref=e24]: 弐
+            - listitem [ref=e25]:
+              - button "Workspace 3" [ref=e26] [cursor=pointer]:
+                - generic [ref=e27]:
+                  - generic [ref=e28]: "3"
+                  - generic [ref=e29]: 参
+          - generic [ref=e30]:
+            - generic [ref=e32]:
+              - generic [ref=e33]:
+                - generic [ref=e34]: "0"
+                - generic [ref=e35]: "1"
+                - generic [ref=e36]: "2"
+                - generic [ref=e37]: "3"
+                - generic [ref=e38]: "4"
+                - generic [ref=e39]: "5"
+                - generic [ref=e40]: "6"
+                - generic [ref=e41]: "7"
+                - generic [ref=e42]: "8"
+                - generic [ref=e43]: "9"
+              - generic [ref=e44]:
+                - generic [ref=e45]: "0"
+                - generic [ref=e46]: "1"
+                - generic [ref=e47]: "2"
+                - generic [ref=e48]: "3"
+                - generic [ref=e49]: "4"
+                - generic [ref=e50]: "5"
+                - generic [ref=e51]: "6"
+                - generic [ref=e52]: "7"
+                - generic [ref=e53]: "8"
+                - generic [ref=e54]: "9"
+            - generic [ref=e55]: ":"
+            - generic [ref=e57]:
+              - generic [ref=e58]:
+                - generic [ref=e59]: "0"
+                - generic [ref=e60]: "1"
+                - generic [ref=e61]: "2"
+                - generic [ref=e62]: "3"
+                - generic [ref=e63]: "4"
+                - generic [ref=e64]: "5"
+                - generic [ref=e65]: "6"
+                - generic [ref=e66]: "7"
+                - generic [ref=e67]: "8"
+                - generic [ref=e68]: "9"
+              - generic [ref=e69]:
+                - generic [ref=e70]: "0"
+                - generic [ref=e71]: "1"
+                - generic [ref=e72]: "2"
+                - generic [ref=e73]: "3"
+                - generic [ref=e74]: "4"
+                - generic [ref=e75]: "5"
+                - generic [ref=e76]: "6"
+                - generic [ref=e77]: "7"
+                - generic [ref=e78]: "8"
+                - generic [ref=e79]: "9"
+          - button "Language → JA" [ref=e81] [cursor=pointer]:
+            - generic [ref=e82]:
+              - generic [ref=e83]: en
+              - generic [ref=e84]: ja
+        - generic [ref=e85]:
+          - generic [ref=e86]: 80%
+          - button "Wallpaper" [ref=e100] [cursor=pointer]
+          - button "Desktop settings" [ref=e102] [cursor=pointer]
+          - button "Notifications" [ref=e104] [cursor=pointer]
+      - generic:
+        - heading "Alt+D opens the launcher · Alt+H/J/K/L to navigate · ? for shortcuts" [level=1]
+    - generic [ref=e162]:
+      - button "Close settings" [ref=e163]
+      - dialog "Desktop settings" [ref=e164]:
+        - generic [ref=e165]:
+          - heading "Desktop settings" [level=2] [ref=e166]
+          - button "Collapse sidebar" [ref=e167] [cursor=pointer]
+        - generic [ref=e171]:
+          - navigation [ref=e172]:
+            - generic [ref=e173]:
+              - button "Appearance" [ref=e174] [cursor=pointer]
+              - button "Bar" [ref=e183] [cursor=pointer]
+              - button "Launcher" [ref=e187] [cursor=pointer]
+              - button "Wallpaper" [ref=e191] [cursor=pointer]
+              - button "Widgets" [ref=e197] [cursor=pointer]
+              - button "Notifications" [ref=e204] [cursor=pointer]
+              - button "Security" [ref=e209] [cursor=pointer]
+          - generic [ref=e214]:
+            - generic [ref=e215]:
+              - heading "Theme" [level=3] [ref=e216]
+              - group "Theme" [ref=e223]:
+                - button "Light theme" [ref=e224] [cursor=pointer]
+                - button "Dark theme" [ref=e225] [cursor=pointer]
+                - button "Terminal theme" [pressed] [ref=e226] [cursor=pointer]
+            - generic [ref=e228]:
+              - heading "Accent" [level=3] [ref=e229]
+              - generic [ref=e236]:
+                - button "default" [pressed] [ref=e237] [cursor=pointer]
+                - button "rose" [ref=e238] [cursor=pointer]
+                - button "amber" [ref=e239] [cursor=pointer]
+                - button "emerald" [ref=e240] [cursor=pointer]
+                - button "sky" [ref=e241] [cursor=pointer]
+                - button "violet" [ref=e242] [cursor=pointer]
+            - generic [ref=e243]:
+              - heading "Font" [level=3] [ref=e244]
+              - group "Font" [ref=e247]:
+                - button "Mono" [pressed] [ref=e248] [cursor=pointer]
+                - button "Sans" [ref=e250] [cursor=pointer]
+            - generic [ref=e251]:
+              - heading "UI scale" [level=3] [ref=e252]
+              - generic [ref=e258]:
+                - generic [ref=e259]: 100%
+                - generic "UI scale" [ref=e260]:
+                  - slider [ref=e264]
+            - generic [ref=e265]:
+              - heading "Transparency" [level=3] [ref=e266]
+              - generic [ref=e270]:
+                - generic [ref=e271]: Glass
+                - generic "Transparency" [ref=e272]:
+                  - slider [active] [ref=e276]
+            - generic [ref=e277]:
+              - heading "Corners" [level=3] [ref=e278]
+              - heading "Window corners" [level=3] [ref=e280]
+              - generic [ref=e282]:
+                - generic [ref=e283]: 16px
+                - generic "Window corners" [ref=e284]:
+                  - slider [ref=e288]
+            - generic [ref=e289]:
+              - heading "Show hint overlay" [level=3] [ref=e290]
+              - button "On" [pressed] [ref=e294] [cursor=pointer]
+  - button "Open Next.js Dev Tools" [ref=e157] [cursor=pointer]
+  - alert [ref=e161]

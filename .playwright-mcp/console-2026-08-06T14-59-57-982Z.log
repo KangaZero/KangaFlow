@@ -1,0 +1,4 @@
+[      80ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[     104ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[     111ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[     774ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776

@@ -1,0 +1,15 @@
+[      83ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[      89ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[     106ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[    2066ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[    5097ms] [WARNING] The resource http://localhost:3000/_next/static/media/symbols_nerd-s.p.1v-p-lg6vc8kw.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/en/environment/:0
+[  159043ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) @ http://localhost:3000/en/environment/:0
+[  305941ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  305970ms] [LOG] [Fast Refresh] done in 70ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  308959ms] [WARNING] The resource http://localhost:3000/_next/static/media/symbols_nerd-s.p.1v-p-lg6vc8kw.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/en/environment/:0
+[  310361ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  310412ms] [LOG] [Fast Refresh] done in 32ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  310465ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[  317020ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  317047ms] [LOG] [Fast Refresh] done in 33ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  317124ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0

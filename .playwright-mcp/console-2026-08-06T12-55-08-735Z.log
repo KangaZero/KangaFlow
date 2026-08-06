@@ -1,0 +1,106 @@
+[      36ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[      45ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[     315ms] [WARNING] Image with src "http://localhost:3000/trademarks/kanga-zero.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[     700ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[    2817ms] [WARNING] Image with src "http://localhost:3000/_next/static/media/avatar.2imok5vdcbgl0.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   97832ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   97861ms] [LOG] [Fast Refresh] done in 29ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  101209ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  101237ms] [LOG] [Fast Refresh] done in 32ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  104562ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  104590ms] [LOG] [Fast Refresh] done in 32ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  107051ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  107081ms] [LOG] [Fast Refresh] done in 29ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  111235ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  111264ms] [LOG] [Fast Refresh] done in 30ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  114265ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  114293ms] [LOG] [Fast Refresh] done in 28ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  119291ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  119320ms] [LOG] [Fast Refresh] done in 32ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  145245ms] [ERROR] ./components/niri/login-screen.tsx:29:23
+Error: the name `useEffect` is defined multiple times
+  27 | ...word } from "@...
+  28 | ... from "@/lib/z...
+> 29 | ...k, useEffect, ...
+     |       ^^^^^^^^^
+  30 | ...
+  31 | ...con: IconType;...
+  32 | ...
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./components/niri/login-screen.tsx [Client Component Browser]
+    ./components/niri/environment-view.tsx [Client Component Browser]
+    ./components/niri/environment-view.tsx [Server Component]
+    ./app/[lang]/environment/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/niri/login-screen.tsx [Client Component SSR]
+    ./components/niri/environment-view.tsx [Client Component SSR]
+    ./components/niri/environment-view.tsx [Server Component]
+    ./app/[lang]/environment/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:1052
+[  145245ms] [ERROR] ./components/niri/login-screen.tsx:29:34
+Error: the name `useRef` is defined multiple times
+  27 | ...m "@/lib/auth"
+  28 | ...ib/z-order"
+> 29 | ...ct, useRef, us...
+     |        ^^^^^^
+  30 | ...
+  31 | ...ype; color: st...
+  32 | ...
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./components/niri/login-screen.tsx [Client Component Browser]
+    ./components/niri/environment-view.tsx [Client Component Browser]
+    ./components/niri/environment-view.tsx [Server Component]
+    ./app/[lang]/environment/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/niri/login-screen.tsx [Client Component SSR]
+    ./components/niri/environment-view.tsx [Client Component SSR]
+    ./components/niri/environment-view.tsx [Server Component]
+    ./app/[lang]/environment/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:1052
+[  145245ms] [ERROR] ./components/niri/login-screen.tsx:29:42
+Error: the name `useState` is defined multiple times
+  27 | ...auth"
+  28 | ...r"
+> 29 | ...f, useState } ...
+     |       ^^^^^^^^
+  30 | ...
+  31 | ...r: string }
+  32 | ...
+
+Ecmascript file had an error
+
+Import traces:
+  Client Component Browser:
+    ./components/niri/login-screen.tsx [Client Component Browser]
+    ./components/niri/environment-view.tsx [Client Component Browser]
+    ./components/niri/environment-view.tsx [Server Component]
+    ./app/[lang]/environment/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/niri/login-screen.tsx [Client Component SSR]
+    ./components/niri/environment-view.tsx [Client Component SSR]
+    ./components/niri/environment-view.tsx [Server Component]
+    ./app/[lang]/environment/page.tsx [Server Component] @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:1052
+[  145279ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  148324ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  148377ms] [LOG] [Fast Refresh] done in 48ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  161315ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  161344ms] [LOG] [Fast Refresh] done in 40ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  166988ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  167016ms] [LOG] [Fast Refresh] done in 30ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  175790ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  175855ms] [LOG] [Fast Refresh] done in 83ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  179049ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  179074ms] [LOG] [Fast Refresh] done in 33ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  182257ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  182286ms] [LOG] [Fast Refresh] done in 39ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  199589ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  199616ms] [LOG] [Fast Refresh] done in 39ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776

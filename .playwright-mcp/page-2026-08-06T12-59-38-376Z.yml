@@ -1,0 +1,98 @@
+- generic [active] [ref=f4e1]:
+  - main [ref=f4e4]:
+    - generic [ref=f4e6]:
+      - generic [ref=f4e8]:
+        - generic [ref=f4e9]:
+          - button "Launcher" [ref=f4e11] [cursor=pointer]
+          - generic [ref=f4e12]: —
+        - generic [ref=f4e13]:
+          - list [ref=f4e14]:
+            - listitem [ref=f4e15]:
+              - button "Workspace 1" [ref=f4e16] [cursor=pointer]:
+                - generic [ref=f4e17]:
+                  - generic [ref=f4e18]: "1"
+                  - generic [ref=f4e19]: 壱
+            - listitem [ref=f4e20]:
+              - button "Workspace 2" [ref=f4e21] [cursor=pointer]:
+                - generic [ref=f4e22]:
+                  - generic [ref=f4e23]: "2"
+                  - generic [ref=f4e24]: 弐
+            - listitem [ref=f4e25]:
+              - button "Workspace 3" [ref=f4e26] [cursor=pointer]:
+                - generic [ref=f4e27]:
+                  - generic [ref=f4e28]: "3"
+                  - generic [ref=f4e29]: 参
+          - generic [ref=f4e30]:
+            - generic [ref=f4e32]:
+              - generic [ref=f4e33]:
+                - generic [ref=f4e34]: "0"
+                - generic [ref=f4e35]: "1"
+                - generic [ref=f4e36]: "2"
+                - generic [ref=f4e37]: "3"
+                - generic [ref=f4e38]: "4"
+                - generic [ref=f4e39]: "5"
+                - generic [ref=f4e40]: "6"
+                - generic [ref=f4e41]: "7"
+                - generic [ref=f4e42]: "8"
+                - generic [ref=f4e43]: "9"
+              - generic [ref=f4e44]:
+                - generic [ref=f4e45]: "0"
+                - generic [ref=f4e46]: "1"
+                - generic [ref=f4e47]: "2"
+                - generic [ref=f4e48]: "3"
+                - generic [ref=f4e49]: "4"
+                - generic [ref=f4e50]: "5"
+                - generic [ref=f4e51]: "6"
+                - generic [ref=f4e52]: "7"
+                - generic [ref=f4e53]: "8"
+                - generic [ref=f4e54]: "9"
+            - generic [ref=f4e55]: ":"
+            - generic [ref=f4e57]:
+              - generic [ref=f4e58]:
+                - generic [ref=f4e59]: "0"
+                - generic [ref=f4e60]: "1"
+                - generic [ref=f4e61]: "2"
+                - generic [ref=f4e62]: "3"
+                - generic [ref=f4e63]: "4"
+                - generic [ref=f4e64]: "5"
+                - generic [ref=f4e65]: "6"
+                - generic [ref=f4e66]: "7"
+                - generic [ref=f4e67]: "8"
+                - generic [ref=f4e68]: "9"
+              - generic [ref=f4e69]:
+                - generic [ref=f4e70]: "0"
+                - generic [ref=f4e71]: "1"
+                - generic [ref=f4e72]: "2"
+                - generic [ref=f4e73]: "3"
+                - generic [ref=f4e74]: "4"
+                - generic [ref=f4e75]: "5"
+                - generic [ref=f4e76]: "6"
+                - generic [ref=f4e77]: "7"
+                - generic [ref=f4e78]: "8"
+                - generic [ref=f4e79]: "9"
+          - button "Language → JA" [ref=f4e81] [cursor=pointer]:
+            - generic [ref=f4e82]:
+              - generic [ref=f4e83]: en
+              - generic [ref=f4e84]: ja
+        - generic [ref=f4e85]:
+          - button "Wallpaper" [ref=f4e100] [cursor=pointer]
+          - button "Desktop settings" [ref=f4e102] [cursor=pointer]
+          - button "Notifications" [ref=f4e104] [cursor=pointer]
+      - generic:
+        - heading "Alt+D opens the launcher · Alt+H/J/K/L to navigate · ? for shortcuts" [level=1]
+    - generic [ref=f4e115]:
+      - generic [ref=f4e120]:
+        - heading "KANGAFLOW" [level=1] [ref=f4e121]
+        - paragraph [ref=f4e122]: SYSTEM ACCESS REQUIRED
+      - generic [ref=f4e123]:
+        - generic [ref=f4e124]: USER ›
+        - textbox "identifier" [ref=f4e125]
+      - generic [ref=f4e126]:
+        - generic [ref=f4e127]: PASS ›
+        - generic [ref=f4e128]:
+          - generic [ref=f4e129]: access key
+          - textbox [ref=f4e130]
+        - button "Show password" [ref=f4e131] [cursor=pointer]
+      - button "AUTHENTICATE" [ref=f4e135] [cursor=pointer]
+      - paragraph [ref=f4e136]: CTRL + ALT + Q · FORCE ENTRY
+  - button "Open Next.js Dev Tools" [ref=f4e142] [cursor=pointer]

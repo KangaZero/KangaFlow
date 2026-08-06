@@ -1,0 +1,9 @@
+- generic [active]:
+  - button "Open Next.js Dev Tools" [ref=f1e6] [cursor=pointer]:
+    - generic [ref=f1e9]:
+      - text: Compiling
+      - generic [ref=f1e10]:
+        - generic [ref=f1e11]: .
+        - generic [ref=f1e12]: .
+        - generic [ref=f1e13]: .
+  - alert [ref=f1e14]

@@ -1,0 +1,55 @@
+[      59ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[      68ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[      76ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[     635ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[    3313ms] [WARNING] The resource http://localhost:3000/_next/static/media/symbols_nerd-s.p.1v-p-lg6vc8kw.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/en/environment/:0
+[   85850ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   85876ms] [LOG] [Fast Refresh] done in 42ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  109152ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  109180ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  431438ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  431465ms] [LOG] [Fast Refresh] done in 42ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  448625ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  448653ms] [LOG] [Fast Refresh] done in 40ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  450530ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  450557ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  513115ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  513140ms] [LOG] [Fast Refresh] done in 37ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  537960ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  538007ms] [LOG] [Fast Refresh] done in 65ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  540977ms] [WARNING] The resource http://localhost:3000/_next/static/media/symbols_nerd-s.p.1v-p-lg6vc8kw.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/en/environment/:0
+[  614940ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  614967ms] [LOG] [Fast Refresh] done in 43ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  628909ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  628933ms] [LOG] [Fast Refresh] done in 46ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  674865ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  674889ms] [LOG] [Fast Refresh] done in 40ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  676839ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  676867ms] [LOG] [Fast Refresh] done in 45ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  729587ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  729624ms] [LOG] [Fast Refresh] done in 48ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  741617ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  741643ms] [LOG] [Fast Refresh] done in 45ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  748120ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  748146ms] [LOG] [Fast Refresh] done in 42ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  762918ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  762947ms] [LOG] [Fast Refresh] done in 71ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  765928ms] [WARNING] The resource http://localhost:3000/_next/static/media/symbols_nerd-s.p.1v-p-lg6vc8kw.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/en/environment/:0
+[  768081ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  768108ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  770510ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  770552ms] [LOG] [Fast Refresh] done in 79ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  773532ms] [WARNING] The resource http://localhost:3000/_next/static/media/symbols_nerd-s.p.1v-p-lg6vc8kw.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/en/environment/:0
+[  787871ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  787898ms] [LOG] [Fast Refresh] done in 42ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  798525ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  798553ms] [LOG] [Fast Refresh] done in 41ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  808160ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  808187ms] [LOG] [Fast Refresh] done in 38ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[ 1132821ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[ 1132828ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[ 1132838ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[ 1133384ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[ 1136061ms] [WARNING] The resource http://localhost:3000/_next/static/media/symbols_nerd-s.p.1v-p-lg6vc8kw.woff2 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/en/environment/:0
+[ 1454860ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[ 1454865ms] [LOG] [Fast Refresh] done in 106ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776

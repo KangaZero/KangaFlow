@@ -1,0 +1,307 @@
+[      70ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[      95ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[     127ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[     722ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   50440ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[   50465ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   50473ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   51218ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   54433ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[   58432ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   58439ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   58676ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <div className="flex min-h...">
+      <div className="p-2 px-4">
+        <NoctaliaBar activeWindowTitle="" barPosition="top" barRadius={12} clock="23:25" keyboardLayout="en" ...>
+          <header className="flex justi..." style={{...}}>
+            <div>
+            <div className="flex items...">
+              <ul>
+              <BarClock time="23:25" vertical={false}>
+                <span className="flex items...">
+                  <Counter>
+                  <span>
+                  <Counter fontSize={13} gap={0} gradientHeight={0} horizontalPadding={0} places={[...]} value={25} ...>
+                    <span style={{display:"i...", ...}}>
+                      <span style={{...}}>
+                        <Digit>
+                        <Digit digitStyle={undefined} height={13} place={1} value={25}>
+                          <span className="relative i..." style={{...}}>
+                            <DigitColumn height={13} mv={{...}} number={0}>
+                              <motion.span style={{...}}>
+                                <span
+                                  style={{
++                                   alignItems: "center"
++                                   display: "flex"
+-                                   display: "flex"
++                                   inset: 0
++                                   justifyContent: "center"
++                                   position: "absolute"
+-                                   position: "absolute"
++                                   transform: "translateY(65px)"
+-                                   transform: "translateY(-52px)"
+-                                   align-items: "center"
+-                                   top: "0px"
+-                                   right: "0px"
+-                                   bottom: "0px"
+-                                   left: "0px"
+-                                   justify-content: "center"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
++                                 0
+                            <DigitColumn height={13} mv={{...}} number={1}>
+                              <motion.span style={{...}}>
+                                <span
+                                  style={{
++                                   alignItems: "center"
++                                   display: "flex"
+-                                   display: "flex"
++                                   inset: 0
++                                   justifyContent: "center"
++                                   position: "absolute"
+-                                   position: "absolute"
++                                   transform: "translateY(-52px)"
+-                                   transform: "translateY(-39px)"
+-                                   align-items: "center"
+-                                   top: "0px"
+-                                   right: "0px"
+-                                   bottom: "0px"
+-                                   left: "0px"
+-                                   justify-content: "center"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
++                                 1
+                            <DigitColumn height={13} mv={{...}} number={2}>
+                              <motion.span style={{...}}>
+                                <span
+                                  style={{
++                                   alignItems: "center"
++                                   display: "flex"
+-                                   display: "flex"
++                                   inset: 0
++                                   justifyContent: "center"
++                                   position: "absolute"
+-                                   position: "absolute"
++                                   transform: "translateY(-39px)"
+-                                   transform: "translateY(-26px)"
+-                                   align-items: "center"
+-                                   top: "0px"
+-                                   right: "0px"
+-                                   bottom: "0px"
+-                                   left: "0px"
+-                                   justify-content: "center"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
++                                 2
+                            <DigitColumn height={13} mv={{...}} number={3}>
+                              <motion.span style={{...}}>
+                                <span
+                                  style={{
++                                   alignItems: "center"
++                                   display: "flex"
+-                                   display: "flex"
++                                   inset: 0
++                                   justifyContent: "center"
++                                   position: "absolute"
+-                                   position: "absolute"
++                                   transform: "translateY(-26px)"
+-                                   transform: "translateY(-13px)"
+-                                   align-items: "center"
+-                                   top: "0px"
+-                                   right: "0px"
+-                                   bottom: "0px"
+-                                   left: "0px"
+-                                   justify-content: "center"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
++                                 3
+                            <DigitColumn height={13} mv={{...}} number={4}>
+                              <motion.span style={{...}}>
+                                <span
+                                  style={{
++                                   alignItems: "center"
++                                   display: "flex"
+-                                   display: "flex"
++                                   inset: 0
++                                   justifyContent: "center"
++                                   position: "absolute"
+-                                   position: "absolute"
++                                   transform: "translateY(-13px)"
+-                                   transform: "none"
+-                                   align-items: "center"
+-                                   top: "0px"
+-                                   right: "0px"
+-                                   bottom: "0px"
+-                                   left: "0px"
+-                                   justify-content: "center"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
++                                 4
+                            <DigitColumn height={13} mv={{...}} number={5}>
+                              <motion.span style={{...}}>
+                                <span
+                                  style={{
++                                   alignItems: "center"
++                                   display: "flex"
+-                                   display: "flex"
++                                   inset: 0
++                                   justifyContent: "center"
++                                   position: "absolute"
+-                                   position: "absolute"
++                                   transform: "none"
+-                                   transform: "translateY(13px)"
+-                                   align-items: "center"
+-                                   top: "0px"
+-                                   right: "0px"
+-                                   bottom: "0px"
+-                                   left: "0px"
+-                                   justify-content: "center"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
++                                 5
+                            <DigitColumn height={13} mv={{...}} number={6}>
+                              <motion.span style={{...}}>
+                                <span
+                                  style={{
++                                   alignItems: "center"
++                                   display: "flex"
+-                                   display: "flex"
++                                   inset: 0
++                                   justifyContent: "center"
++                                   position: "absolute"
+-                                   position: "absolute"
++                                   transform: "translateY(13px)"
+-                                   transform: "translateY(26px)"
+-                                   align-items: "center"
+-                                   top: "0px"
+-                                   right: "0px"
+-                                   bottom: "0px"
+-                                   left: "0px"
+-                                   justify-content: "center"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
++                                 6
+                            <DigitColumn height={13} mv={{...}} number={7}>
+                              <motion.span style={{...}}>
+                                <span
+                                  style={{
++                                   alignItems: "center"
++                                   display: "flex"
+-                                   display: "flex"
++                                   inset: 0
++                                   justifyContent: "center"
++                                   position: "absolute"
+-                                   position: "absolute"
++                                   transform: "translateY(26px)"
+-                                   transform: "translateY(39px)"
+-                                   align-items: "center"
+-                                   top: "0px"
+-                                   right: "0px"
+-                                   bottom: "0px"
+-                                   left: "0px"
+-                                   justify-content: "center"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
++                                 7
+                            <DigitColumn height={13} mv={{...}} number={8}>
+                              <motion.span style={{...}}>
+                                <span
+                                  style={{
++                                   alignItems: "center"
++                                   display: "flex"
+-                                   display: "flex"
++                                   inset: 0
++                                   justifyContent: "center"
++                                   position: "absolute"
+-                                   position: "absolute"
++                                   transform: "translateY(39px)"
+-                                   transform: "translateY(52px)"
+-                                   align-items: "center"
+-                                   top: "0px"
+-                                   right: "0px"
+-                                   bottom: "0px"
+-                                   left: "0px"
+-                                   justify-content: "center"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
++                                 8
+                            <DigitColumn height={13} mv={{...}} number={9}>
+                              <motion.span style={{...}}>
+                                <span
+                                  style={{
++                                   alignItems: "center"
++                                   display: "flex"
+-                                   display: "flex"
++                                   inset: 0
++                                   justifyContent: "center"
++                                   position: "absolute"
+-                                   position: "absolute"
++                                   transform: "translateY(52px)"
+-                                   transform: "translateY(65px)"
+-                                   align-items: "center"
+-                                   top: "0px"
+-                                   right: "0px"
+-                                   bottom: "0px"
+-                                   left: "0px"
+-                                   justify-content: "center"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
++                                 9
+                      ...
+              ...
+            ...
+      ...
+ @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:1052
+[   59158ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   81616ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[   89634ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   89641ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[   90322ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  133812ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[  133824ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  133844ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  134404ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  510208ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  510246ms] [LOG] [Fast Refresh] done in 72ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  516218ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  516253ms] [LOG] [Fast Refresh] done in 63ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  527024ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[  533018ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  533037ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  533731ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  583365ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[  583387ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  583410ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  583999ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  716073ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  716115ms] [LOG] [Fast Refresh] done in 77ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  720299ms] [VERBOSE] [DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o @ http://localhost:3000/en/environment/:0
+[  720303ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  720315ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  720874ms] [WARNING] THREE.Clock: This module has been deprecated. Please use THREE.Timer instead. @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  754831ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  754865ms] [LOG] [Fast Refresh] done in 44ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  818629ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776
+[  818678ms] [LOG] [Fast Refresh] done in 57ms @ http://localhost:3000/_next/static/chunks/1z6v_next_dist_1rc46pd._.js:776

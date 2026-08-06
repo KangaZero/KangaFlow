@@ -1,0 +1,104 @@
+- generic [active] [ref=e1]:
+  - main [ref=e4]:
+    - generic [ref=e6]:
+      - generic [ref=e8]:
+        - generic [ref=e9]:
+          - button "Launcher" [ref=e11] [cursor=pointer]
+          - generic [ref=e12]: —
+        - generic [ref=e13]:
+          - list [ref=e14]:
+            - listitem [ref=e15]:
+              - button "Workspace 1" [ref=e16] [cursor=pointer]:
+                - generic [ref=e17]:
+                  - generic [ref=e18]: "1"
+                  - generic [ref=e19]: 壱
+            - listitem [ref=e20]:
+              - button "Workspace 2" [ref=e21] [cursor=pointer]:
+                - generic [ref=e22]:
+                  - generic [ref=e23]: "2"
+                  - generic [ref=e24]: 弐
+            - listitem [ref=e25]:
+              - button "Workspace 3" [ref=e26] [cursor=pointer]:
+                - generic [ref=e27]:
+                  - generic [ref=e28]: "3"
+                  - generic [ref=e29]: 参
+          - generic [ref=e30]:
+            - generic [ref=e32]:
+              - generic [ref=e33]:
+                - generic [ref=e34]: "0"
+                - generic [ref=e35]: "1"
+                - generic [ref=e36]: "2"
+                - generic [ref=e37]: "3"
+                - generic [ref=e38]: "4"
+                - generic [ref=e39]: "5"
+                - generic [ref=e40]: "6"
+                - generic [ref=e41]: "7"
+                - generic [ref=e42]: "8"
+                - generic [ref=e43]: "9"
+              - generic [ref=e44]:
+                - generic [ref=e45]: "0"
+                - generic [ref=e46]: "1"
+                - generic [ref=e47]: "2"
+                - generic [ref=e48]: "3"
+                - generic [ref=e49]: "4"
+                - generic [ref=e50]: "5"
+                - generic [ref=e51]: "6"
+                - generic [ref=e52]: "7"
+                - generic [ref=e53]: "8"
+                - generic [ref=e54]: "9"
+            - generic [ref=e55]: ":"
+            - generic [ref=e57]:
+              - generic [ref=e58]:
+                - generic [ref=e59]: "0"
+                - generic [ref=e60]: "1"
+                - generic [ref=e61]: "2"
+                - generic [ref=e62]: "3"
+                - generic [ref=e63]: "4"
+                - generic [ref=e64]: "5"
+                - generic [ref=e65]: "6"
+                - generic [ref=e66]: "7"
+                - generic [ref=e67]: "8"
+                - generic [ref=e68]: "9"
+              - generic [ref=e69]:
+                - generic [ref=e70]: "0"
+                - generic [ref=e71]: "1"
+                - generic [ref=e72]: "2"
+                - generic [ref=e73]: "3"
+                - generic [ref=e74]: "4"
+                - generic [ref=e75]: "5"
+                - generic [ref=e76]: "6"
+                - generic [ref=e77]: "7"
+                - generic [ref=e78]: "8"
+                - generic [ref=e79]: "9"
+          - button "Language → JA" [ref=e81] [cursor=pointer]:
+            - generic [ref=e82]:
+              - generic [ref=e83]: en
+              - generic [ref=e84]: ja
+        - generic [ref=e85]:
+          - button "Wallpaper" [ref=e100] [cursor=pointer]
+          - button "Desktop settings" [ref=e102] [cursor=pointer]
+          - button "Notifications" [ref=e104] [cursor=pointer]
+      - generic:
+        - heading "Alt+D opens the launcher · Alt+H/J/K/L to navigate · ? for shortcuts" [level=1]
+    - generic [ref=e115]:
+      - generic [ref=e120]:
+        - heading "KANGAFLOW" [level=1] [ref=e121]
+        - paragraph [ref=e122]: SYSTEM ACCESS REQUIRED
+      - generic [ref=e123]:
+        - generic [ref=e124]: USER ›
+        - textbox "identifier" [ref=e125]
+      - generic [ref=e126]:
+        - generic [ref=e127]: PASS ›
+        - generic [ref=e128]:
+          - generic [ref=e129]: access key
+          - textbox [ref=e130]
+        - button "Show password" [ref=e131] [cursor=pointer]
+      - button "AUTHENTICATE" [ref=e135] [cursor=pointer]
+      - paragraph [ref=e136]: CTRL + ALT + Q · FORCE ENTRY
+  - button "Open Next.js Dev Tools" [ref=e142] [cursor=pointer]:
+    - generic [ref=e145]:
+      - text: Compiling
+      - generic [ref=e146]:
+        - generic [ref=e147]: .
+        - generic [ref=e148]: .
+        - generic [ref=e149]: .

@@ -834,10 +834,7 @@ export function EnvironmentView() {
                                     shape="rectangle"
                                     shine={0.08}
                                   >
-                                    <div
-                                      className="h-full w-full"
-                                      style={wallpaperStyleProp}
-                                    />
+                                    <div className="h-full w-full" />
                                   </Glass>
                                 </div>
                               ) : null}

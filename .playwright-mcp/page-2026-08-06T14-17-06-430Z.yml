@@ -1,0 +1,85 @@
+- generic [active] [ref=f3e1]:
+  - main [ref=f3e4]:
+    - generic [ref=f3e6]:
+      - generic [ref=f3e8]:
+        - generic [ref=f3e9]:
+          - button "Launcher" [ref=f3e11] [cursor=pointer]
+          - generic [ref=f3e12]: —
+        - generic [ref=f3e13]:
+          - list [ref=f3e14]:
+            - listitem [ref=f3e15]:
+              - button "Workspace 1" [ref=f3e16] [cursor=pointer]:
+                - generic [ref=f3e17]:
+                  - generic [ref=f3e18]: "1"
+                  - generic [ref=f3e19]: 壱
+            - listitem [ref=f3e20]:
+              - button "Workspace 2" [ref=f3e21] [cursor=pointer]:
+                - generic [ref=f3e22]:
+                  - generic [ref=f3e23]: "2"
+                  - generic [ref=f3e24]: 弐
+            - listitem [ref=f3e25]:
+              - button "Workspace 3" [ref=f3e26] [cursor=pointer]:
+                - generic [ref=f3e27]:
+                  - generic [ref=f3e28]: "3"
+                  - generic [ref=f3e29]: 参
+          - generic [ref=f3e30]:
+            - generic [ref=f3e32]:
+              - generic [ref=f3e33]:
+                - generic [ref=f3e34]: "0"
+                - generic [ref=f3e35]: "1"
+                - generic [ref=f3e36]: "2"
+                - generic [ref=f3e37]: "3"
+                - generic [ref=f3e38]: "4"
+                - generic [ref=f3e39]: "5"
+                - generic [ref=f3e40]: "6"
+                - generic [ref=f3e41]: "7"
+                - generic [ref=f3e42]: "8"
+                - generic [ref=f3e43]: "9"
+              - generic [ref=f3e44]:
+                - generic [ref=f3e45]: "0"
+                - generic [ref=f3e46]: "1"
+                - generic [ref=f3e47]: "2"
+                - generic [ref=f3e48]: "3"
+                - generic [ref=f3e49]: "4"
+                - generic [ref=f3e50]: "5"
+                - generic [ref=f3e51]: "6"
+                - generic [ref=f3e52]: "7"
+                - generic [ref=f3e53]: "8"
+                - generic [ref=f3e54]: "9"
+            - generic [ref=f3e55]: ":"
+            - generic [ref=f3e57]:
+              - generic [ref=f3e58]:
+                - generic [ref=f3e59]: "0"
+                - generic [ref=f3e60]: "1"
+                - generic [ref=f3e61]: "2"
+                - generic [ref=f3e62]: "3"
+                - generic [ref=f3e63]: "4"
+                - generic [ref=f3e64]: "5"
+                - generic [ref=f3e65]: "6"
+                - generic [ref=f3e66]: "7"
+                - generic [ref=f3e67]: "8"
+                - generic [ref=f3e68]: "9"
+              - generic [ref=f3e69]:
+                - generic [ref=f3e70]: "0"
+                - generic [ref=f3e71]: "1"
+                - generic [ref=f3e72]: "2"
+                - generic [ref=f3e73]: "3"
+                - generic [ref=f3e74]: "4"
+                - generic [ref=f3e75]: "5"
+                - generic [ref=f3e76]: "6"
+                - generic [ref=f3e77]: "7"
+                - generic [ref=f3e78]: "8"
+                - generic [ref=f3e79]: "9"
+          - button "Language → JA" [ref=f3e81] [cursor=pointer]:
+            - generic [ref=f3e82]:
+              - generic [ref=f3e83]: en
+              - generic [ref=f3e84]: ja
+        - generic [ref=f3e85]:
+          - generic [ref=f3e86]: 80%
+          - button "Wallpaper" [ref=f3e100] [cursor=pointer]
+          - button "Desktop settings" [ref=f3e102] [cursor=pointer]
+          - button "Notifications" [ref=f3e104] [cursor=pointer]
+      - generic:
+        - heading "Alt+D opens the launcher · Alt+H/J/K/L to navigate · ? for shortcuts" [level=1]
+  - button "Open Next.js Dev Tools" [ref=f3e142] [cursor=pointer]
+  - alert [ref=f3e153]
