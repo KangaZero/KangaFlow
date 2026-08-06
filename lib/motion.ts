@@ -115,3 +115,8 @@ export const TWEEN_SMOOTH = {
   duration: 0.2,
   ease: "easeInOut",
 } as const
+
+export const TWEEN_SMOOTH_SLOW = {
+  duration: 1,
+  ease: "easeInOut",
+} as const

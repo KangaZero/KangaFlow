@@ -25,6 +25,7 @@ import {
 } from "@/components/canvasui/FlameWrap"
 import { HexFloat } from "@/components/canvasui/HexFloat"
 import { verifyPassword } from "@/lib/auth"
+import { TWEEN_SMOOTH_SLOW } from "@/lib/motion"
 import { Z_LAYERS } from "@/lib/z-order"
 
 type LangIcon = { Icon: IconType; color: string }
@@ -64,7 +65,7 @@ function BlinkingCaret(): React.JSX.Element {
   return (
     <span
       aria-hidden
-      className="h-[1.25em] w-[2px] shrink-0 animate-caret-blink bg-primary"
+      className="h-[1.25em] w-0.5 shrink-0 animate-caret-blink bg-primary"
     />
   )
 }
@@ -217,7 +218,12 @@ export function LoginScreen({
       </FlameWrap>
 
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative z-10 w-[380px]">
+        <motion.div
+          animate={{ opacity: 1, y: 0 }}
+          className="relative z-10 w-95"
+          initial={{ opacity: 0, y: -400 }}
+          transition={TWEEN_SMOOTH_SLOW}
+        >
           {/* Burning glow card */}
           <FlameWrap
             className="w-full"
@@ -242,9 +248,19 @@ export function LoginScreen({
             turbulenceReach={28}
             turbulenceScale={0.7}
           >
-            <div
+            <motion.div
+              animate={{ opacity: 1, scale: burning ? 0 : 1 }}
               className="flex h-full w-full flex-col justify-center rounded-xl border border-primary/30 bg-background/60 px-8 py-10 backdrop-blur-md"
-              style={{ boxShadow: "0 0 40px -8px var(--primary)" }}
+              initial={{ opacity: 0 }}
+              style={{
+                boxShadow: "0 0 40px -8px var(--primary)",
+                transformOrigin: "center",
+              }}
+              transition={
+                burning
+                  ? { duration: 0.4, ease: "easeIn" }
+                  : { duration: 1, ease: "easeOut" }
+              }
             >
               <Corner position="tl" />
               <Corner position="tr" />
@@ -300,7 +316,7 @@ export function LoginScreen({
                     value={password}
                   />
                 ) : (
-                  <div className="flex min-h-[1.25rem] flex-1 items-center gap-1 overflow-hidden">
+                  <div className="flex min-h-5 flex-1 items-center gap-1 overflow-hidden">
                     {passwordFocused && password.length === 0 ? (
                       <BlinkingCaret />
                     ) : null}
@@ -389,9 +405,9 @@ export function LoginScreen({
               <p className="mt-5 text-center font-mono text-[0.6rem] text-muted-foreground/50 uppercase tracking-[0.2em]">
                 CTRL + ALT + Q · FORCE ENTRY
               </p>
-            </div>
+            </motion.div>
           </FlameWrap>
-        </div>
+        </motion.div>
       </div>
     </div>
   )
