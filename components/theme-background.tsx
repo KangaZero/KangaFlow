@@ -8,6 +8,7 @@ import { useTheme } from "next-themes"
 import { useEffect, useState } from "react"
 
 import { BlueSky } from "@/components/blue-sky"
+import { Clouds } from "@/components/canvasui/Clouds"
 import { SwimmingSchool } from "@/components/sea-creatures"
 
 // The WebGL backgrounds pull heavy deps (ogl / three + postprocessing), so they
@@ -35,7 +36,17 @@ function activeBackground(theme: string | undefined) {
     case "terminal":
       return <PixelBlast className={FILL} color="#a6e3a1" transparent />
     default:
-      return <BlueSky className={FILL} />
+      return (
+        <Clouds
+          className={FILL}
+          cover={0.1}
+          refraction={0.1}
+          speed={0.6}
+          wind={0.2}
+        >
+          <BlueSky className={FILL} />
+        </Clouds>
+      )
   }
 }
 
