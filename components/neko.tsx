@@ -16,7 +16,12 @@ export function Neko() {
     if (!Oneko.canInitialize()) {
       return
     }
-    const neko = new Oneko({ source: onekoSrc.src })
+    // Spawn in the middle of the viewport (window coords, top-left origin).
+    const neko = new Oneko({
+      source: onekoSrc.src,
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2,
+    })
     return () => neko.destroy()
   }, [])
 

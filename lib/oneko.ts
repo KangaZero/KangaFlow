@@ -118,6 +118,8 @@ export interface OnekoOptions {
   sleepDuration?: number
   scratchDuration?: number
   maxAlertDuration?: number
+  /** How long (ms) a click holds the "!" alert pose before resuming. */
+  clickAlertDuration?: number
   /** Auto-wire a document mousemove listener to chase the cursor (default true). */
   followMouse?: boolean
   /** Override the DOM element. Defaults to a new <div> appended to <body>. */
@@ -168,6 +170,7 @@ export class Oneko extends EventTarget {
   private readonly sleepDuration: number
   private readonly scratchDuration: number
   private readonly maxAlertDuration: number
+  private readonly clickAlertDuration: number
   private readonly ownsElement: boolean
 
   private x: number
@@ -179,6 +182,7 @@ export class Oneko extends EventTarget {
   private idleAnimation: IdleAnimation | null = null
   private idleAnimationFrame = 0
   private lastFrameTimestamp = 0
+  private alertUntil = 0
   private running = false
 
   constructor(options: OnekoOptions) {
@@ -197,13 +201,14 @@ export class Oneko extends EventTarget {
     this.size = options.size ?? 32
     this.allowedTargetDistance = options.allowedTargetDistance ?? 48
     this.updateSpeed = options.updateSpeed ?? 100
-    this.skipAlertAnimation = options.skipAlertAnimation ?? false
+    this.skipAlertAnimation = options.skipAlertAnimation ?? true
     this.allowedIdleAnimations =
       options.allowedIdleAnimations ?? DEFAULT_IDLE_ANIMATIONS
     this.yawnDuration = options.yawnDuration ?? 8
     this.sleepDuration = options.sleepDuration ?? 192
     this.scratchDuration = options.scratchDuration ?? 9
     this.maxAlertDuration = options.maxAlertDuration ?? 7
+    this.clickAlertDuration = options.clickAlertDuration ?? 1000
     this.targetX = this.x
     this.targetY = this.y
 
@@ -213,12 +218,15 @@ export class Oneko extends EventTarget {
     // Static styles set once; per-frame draw() only moves left/top.
     this.element.className = "oneko"
     this.element.setAttribute("aria-hidden", "true")
+    this.element.addEventListener("click", this.onClick)
     Object.assign(this.element.style, {
       backgroundImage: `url(${this.source})`,
       backgroundSize: `${this.size * 8}px`,
       height: `${this.size}px`,
       imageRendering: "pixelated",
-      pointerEvents: "none",
+      // "auto" (not "none") so the cat can receive its click handler; the
+      // tradeoff is that it intercepts clicks over whatever sits beneath it.
+      pointerEvents: "auto",
       position: "fixed",
       width: `${this.size}px`,
       zIndex: "2147483647",
@@ -272,6 +280,7 @@ export class Oneko extends EventTarget {
   destroy(): void {
     this.running = false
     document.removeEventListener("mousemove", this.onMouseMove)
+    this.element.removeEventListener("click", this.onClick)
     if (this.ownsElement) {
       this.element.remove()
     }
@@ -279,6 +288,14 @@ export class Oneko extends EventTarget {
 
   private readonly onMouseMove = (event: MouseEvent): void => {
     this.setTarget(event.clientX, event.clientY)
+  }
+
+  private readonly onClick = (): void => {
+    // Hold the alert pose until this deadline; frame() enforces the freeze.
+    // performance.now() shares the clock with requestAnimationFrame timestamps.
+    this.alertUntil = performance.now() + this.clickAlertDuration
+    this.setSprite("alert", 0)
+    this.draw()
   }
 
   private readonly onAnimationFrame = (timestamp: number): void => {
@@ -371,6 +388,13 @@ export class Oneko extends EventTarget {
   }
 
   private frame(): void {
+    // Clicked recently: hold the "!" pose and stay put until the deadline.
+    if (performance.now() < this.alertUntil) {
+      this.setSprite("alert", 0)
+      this.draw()
+      return
+    }
+
     this.frameCount += 1
     const diffX = this.x - this.targetX
     const diffY = this.y - this.targetY
