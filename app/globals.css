@@ -377,3 +377,79 @@
   background: var(--primary);
   color: var(--primary-foreground);
 }
+
+/* ── Oneko speech bubble ──────────────────────────────────────────────────
+   8-bit popover the cat shows while idling (see lib/oneko.ts). It lives in the
+   top layer (Popover API) and pegs itself to the cat via CSS anchor positioning
+   — the lib sets `anchor-name: --oneko` on the cat element. Colours are theme
+   tokens, so light/dark/terminal adapt automatically.
+
+   To restyle, mostly touch the knobs below. To move it, change `position-area`
+   (e.g. top / bottom / left / right / top-end). */
+.oneko-speech {
+  /* knobs ---------------------------------------------------------------- */
+  --speech-bg: var(--card);
+  --speech-fg: var(--card-foreground);
+  --speech-outline: var(--foreground);
+  --speech-px: 3px; /* pixel-outline thickness */
+  --speech-gap: 8px; /* distance from the cat */
+
+  /* reset the popover user-agent defaults (else it centres in the viewport) */
+  inset: auto;
+  margin: 0;
+  border: 0;
+  padding: 0.35rem 0.55rem;
+
+  /* peg next to the cat */
+  position-anchor: --oneko;
+  position-area: top;
+  margin-bottom: var(--speech-gap);
+  /* auto-reposition at viewport edges: flip below (top⇄bottom) if there's no
+     room above, then flip across (left⇄right) as a second try */
+  position-try-fallbacks: flip-block, flip-inline;
+
+  /* 8-bit look: hard edges, mono type, stepped pixel outline + hard drop */
+  background: var(--speech-bg);
+  color: var(--speech-fg);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: 0;
+  box-shadow:
+    0 0 0 var(--speech-px) var(--speech-outline),
+    var(--speech-px) var(--speech-px) 0 var(--speech-px) var(--speech-outline);
+
+  /* 8-bit pop-in: quantised with steps(); display/overlay animate discretely
+     so the enter transition runs when the popover opens */
+  transform-origin: bottom center;
+  transition:
+    scale 0.12s steps(3),
+    opacity 0.12s steps(3),
+    overlay 0.12s allow-discrete,
+    display 0.12s allow-discrete;
+}
+
+/* a little pixel nub pointing down at the cat */
+.oneko-speech::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: var(--speech-px);
+  height: calc(var(--speech-px) * 2);
+  transform: translateX(-50%);
+  background: var(--speech-outline);
+}
+
+.oneko-speech:popover-open {
+  scale: 1;
+  opacity: 1;
+}
+@starting-style {
+  .oneko-speech:popover-open {
+    scale: 0;
+    opacity: 0;
+  }
+}

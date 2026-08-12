@@ -316,6 +316,9 @@ const en = {
     settings: "Settings",
     timeline: "Timeline",
   },
+  neko: {
+    speech: ["meow", "nya~", "purr...", "hi!", "snacks?", "*blink*"],
+  },
   notifications: {
     clearAll: "Clear all",
     dismiss: "Dismiss",

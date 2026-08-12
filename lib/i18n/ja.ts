@@ -316,6 +316,16 @@ const ja = {
     settings: "設定",
     timeline: "タイムライン",
   },
+  neko: {
+    speech: [
+      "にゃー",
+      "みゃ〜",
+      "ごろごろ…",
+      "やあ！",
+      "おやつある？",
+      "ぱちぱち",
+    ],
+  },
   notifications: {
     clearAll: "すべて消去",
     dismiss: "閉じる",

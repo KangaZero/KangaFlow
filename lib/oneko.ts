@@ -120,6 +120,14 @@ export interface OnekoOptions {
   maxAlertDuration?: number
   /** How long (ms) a click holds the "!" alert pose before resuming. */
   clickAlertDuration?: number
+  /** Messages the cat may "say" while idling (not sleeping). Empty disables it. */
+  speechMessages?: readonly string[]
+  /** Chance (0–1) of a speech bubble each time the cat starts idling. Default 1/3. */
+  speechChance?: number
+  /** Class on the speech-bubble popover (style it in your CSS). Default "oneko-speech". */
+  speechClassName?: string
+  /** anchor-name set on the cat element for CSS anchor positioning. Default "--oneko". */
+  anchorName?: string
   /** Auto-wire a document mousemove listener to chase the cursor (default true). */
   followMouse?: boolean
   /** Override the DOM element. Defaults to a new <div> appended to <body>. */
@@ -171,6 +179,13 @@ export class Oneko extends EventTarget {
   private readonly scratchDuration: number
   private readonly maxAlertDuration: number
   private readonly clickAlertDuration: number
+  private readonly speechMessages: readonly string[]
+  private readonly speechChance: number
+  private readonly speechEl: HTMLElement | null
+  // True when the browser lacks CSS anchor positioning (older Firefox < 147 /
+  // Safari < 26); we then position the bubble by hand instead of via
+  // position-area. A no-op on browsers that support it (the vast majority now).
+  private readonly anchorFallback: boolean
   private readonly ownsElement: boolean
 
   private x: number
@@ -183,6 +198,8 @@ export class Oneko extends EventTarget {
   private idleAnimationFrame = 0
   private lastFrameTimestamp = 0
   private alertUntil = 0
+  private speechOpen = false
+  private speechRolled = false
   private running = false
 
   constructor(options: OnekoOptions) {
@@ -209,8 +226,14 @@ export class Oneko extends EventTarget {
     this.scratchDuration = options.scratchDuration ?? 9
     this.maxAlertDuration = options.maxAlertDuration ?? 7
     this.clickAlertDuration = options.clickAlertDuration ?? 1000
+    this.speechMessages = options.speechMessages ?? []
+    this.speechChance = options.speechChance ?? 1
+    this.anchorFallback = !CSS.supports("position-area", "top")
     this.targetX = this.x
     this.targetY = this.y
+
+    const anchorName = options.anchorName ?? "--oneko"
+    const speechClassName = options.speechClassName ?? "oneko-speech"
 
     this.ownsElement = options.element === undefined
     this.element = options.element ?? document.createElement("div")
@@ -231,6 +254,13 @@ export class Oneko extends EventTarget {
       width: `${this.size}px`,
       zIndex: "2147483647",
     } satisfies Partial<CSSStyleDeclaration>)
+    // Name the cat as a CSS anchor so the speech bubble can peg itself to it
+    // via position-anchor / position-area (no JS position math).
+    this.element.style.setProperty("anchor-name", anchorName)
+
+    // The speech bubble is a top-layer popover (escapes z-index/overflow). Built
+    // only when messages exist and the browser supports the Popover API.
+    this.speechEl = this.createSpeechElement(speechClassName)
 
     if (this.ownsElement) {
       document.body.appendChild(this.element)
@@ -281,6 +311,8 @@ export class Oneko extends EventTarget {
     this.running = false
     document.removeEventListener("mousemove", this.onMouseMove)
     this.element.removeEventListener("click", this.onClick)
+    this.hideSpeech()
+    this.speechEl?.remove()
     if (this.ownsElement) {
       this.element.remove()
     }
@@ -296,6 +328,62 @@ export class Oneko extends EventTarget {
     this.alertUntil = performance.now() + this.clickAlertDuration
     this.setSprite("alert", 0)
     this.draw()
+  }
+
+  private createSpeechElement(className: string): HTMLElement | null {
+    const supportsPopover = "popover" in HTMLElement.prototype
+    if (this.speechMessages.length === 0 || !supportsPopover) {
+      return null
+    }
+    const el = document.createElement("div")
+    el.className = className
+    el.setAttribute("popover", "manual") // programmatic show/hide, no light dismiss
+    el.setAttribute("aria-hidden", "true")
+    el.style.scrollbarWidth = "none"
+    document.body.appendChild(el)
+    return el
+  }
+
+  private showSpeech(): void {
+    const el = this.speechEl
+    if (!el || this.speechOpen || this.speechMessages.length === 0) {
+      return
+    }
+    const message =
+      this.speechMessages[
+        Math.floor(Math.random() * this.speechMessages.length)
+      ]
+    if (message === undefined) {
+      return
+    }
+    el.textContent = message
+    el.showPopover()
+    this.speechOpen = true
+    this.positionSpeech()
+  }
+
+  private hideSpeech(): void {
+    if (!this.speechEl || !this.speechOpen) {
+      return
+    }
+    this.speechEl.hidePopover()
+    this.speechOpen = false
+  }
+
+  // Fallback for browsers without CSS anchor positioning: peg the bubble above
+  // the cat by hand (centre-aligned, minus a gap). No-op where position-area
+  // works, so modern Firefox/Chromium/Safari never hit this.
+  private positionSpeech(): void {
+    const el = this.speechEl
+    if (!el || !this.speechOpen || !this.anchorFallback) {
+      return
+    }
+    const gap = 8
+    const rect = el.getBoundingClientRect()
+    const left = this.x - rect.width / 2
+    const top = this.y - this.size / 2 - gap - rect.height
+    el.style.left = `${Math.max(0, left)}px`
+    el.style.top = `${Math.max(0, top)}px`
   }
 
   private readonly onAnimationFrame = (timestamp: number): void => {
@@ -332,6 +420,15 @@ export class Oneko extends EventTarget {
     }
     this.idleTime += 1
 
+    // Once per idle session (reset on movement), roll a 1-in-N chance to speak.
+    // Skipped if already asleep — a sleeping cat stays quiet.
+    if (!this.speechRolled && this.idleAnimation !== "sleeping") {
+      this.speechRolled = true
+      if (Math.random() < this.speechChance) {
+        this.showSpeech()
+      }
+    }
+
     // Roughly every 20s of idling, roll for a new idle animation.
     if (
       this.idleTime > 10 &&
@@ -359,6 +456,8 @@ export class Oneko extends EventTarget {
     const anim = this.idleAnimation
     switch (anim) {
       case "sleeping":
+        // Falling asleep dismisses any bubble — sleeping cats don't talk.
+        this.hideSpeech()
         if (this.idleAnimationFrame < this.yawnDuration) {
           this.setSprite("tired", 0)
           break
@@ -406,6 +505,9 @@ export class Oneko extends EventTarget {
     }
 
     this.resetIdleAnimation()
+    // Left idle → drop any bubble and re-arm the roll for the next idle session.
+    this.speechRolled = false
+    this.hideSpeech()
 
     if (this.skipAlertAnimation) {
       if (this.idleTime > 1) {
