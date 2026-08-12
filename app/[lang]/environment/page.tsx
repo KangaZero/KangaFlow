@@ -1,6 +1,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { notFound } from "next/navigation"
 
+import { Neko } from "@/components/neko"
 import { EnvironmentView } from "@/components/niri/environment-view"
 import { isLocale } from "@/lib/i18n"
 
@@ -14,5 +15,10 @@ export default async function EnvironmentPage({
     notFound()
   }
 
-  return <EnvironmentView />
+  return (
+    <>
+      <EnvironmentView />
+      <Neko />
+    </>
+  )
 }
