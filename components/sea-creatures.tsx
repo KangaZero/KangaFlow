@@ -1,32 +1,22 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { motion, useReducedMotion } from "motion/react"
+import { motion, type Transition, useReducedMotion } from "motion/react"
 import { useEffect, useMemo, useState } from "react"
+import {
+  BIO,
+  type Bubble,
+  bubbleBackground,
+  makeBubbles,
+  mulberry32,
+} from "@/lib/bubbles"
 import { cn } from "@/lib/utils"
 
-// Shared deep-sea life: bioluminescent SVG silhouettes + a seeded PRNG, reused
-// by the page-transition doors (gentle in-place drift) and the dark-theme
-// background (a school swimming across the viewport).
-
-// Bioluminescent accent — a literal, like the environment wallpapers: the colour
-// IS the deep-sea identity, not a theme token.
-export const BIO = "#39e6cf"
+// Deep-sea life: bioluminescent SVG silhouettes, reused by the page-transition
+// doors (gentle in-place drift) and the dark-theme background (a school swimming
+// across the viewport). Shared bubble/PRNG primitives live in `lib/bubbles`.
 
 const GLOW_FILTER = "drop-shadow(0 0 4px rgba(57,230,207,0.55))"
-
-// Tiny deterministic PRNG (mulberry32). Seed it with Date.now() to get a
-// fresh-but-reproducible arrangement each time.
-export function mulberry32(seed: number): () => number {
-  let a = seed
-  return () => {
-    a |= 0
-    a = (a + 0x6d2b79f5) | 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
 
 // Four tentacles as cubic Béziers. Only the control points move between these
 // snapshots (anchors + tips are fixed) so motion can interpolate `d` — pushing
@@ -140,22 +130,37 @@ function makeSchool(seed: number, count: number): Swimmer[] {
 // mismatch, and skipped entirely under prefers-reduced-motion.
 export function SwimmingSchool({
   className,
+  bubbleSpeed = 0.2,
   count = 9,
+  popAt = 0.95,
 }: {
   className?: string
   count?: number
+  bubbleSpeed?: number
+  popAt?: number
 }) {
   const reduceMotion = useReducedMotion()
   const [seed, setSeed] = useState<number | null>(null)
+  const bubbles = useMemo(
+    () => (seed === null ? [] : makeBubbles(seed, 5, 3)),
+    [seed]
+  )
 
   useEffect(() => setSeed(Date.now()), [])
 
   const swimmers = useMemo(
-    () => (seed == null ? [] : makeSchool(seed, count)),
+    () => (seed === null ? [] : makeSchool(seed, count)),
     [seed, count]
   )
 
-  if (reduceMotion || seed == null) return null
+  if (reduceMotion || seed === null) return null
+
+  const bubbleTransition = (b: Bubble): Transition => ({
+    delay: b.delay / bubbleSpeed,
+    duration: b.dur / bubbleSpeed,
+    repeat: Number.POSITIVE_INFINITY,
+    repeatType: "loop",
+  })
 
   return (
     <div
@@ -165,6 +170,62 @@ export function SwimmingSchool({
         className
       )}
     >
+      {bubbles.map((b) => (
+        <motion.span
+          animate={{
+            x: [0, `${b.drift}vw`, `${-b.drift}vw`, `${-b.drift}vw`],
+            y: [0, "-6vh", `-${b.riseVh}vh`, `-${b.riseVh}vh`],
+          }}
+          className="absolute"
+          initial={{ y: 0 }}
+          key={b.id}
+          style={{
+            bottom: -b.size - Math.random() * 120,
+            height: b.size,
+            left: `${b.leftPct}%`,
+            width: b.size,
+          }}
+          transition={{
+            ...bubbleTransition(b),
+            ease: "linear",
+            times: [0, 0.06, popAt, 1],
+          }}
+        >
+          {/* the bubble itself */}
+          <motion.span
+            animate={{
+              opacity: [0, 1, 0.8, 0.3, 0],
+              scale: [1, 1, 1, 1.25, 1.3],
+            }}
+            className="absolute inset-0 rounded-full"
+            style={{ background: bubbleBackground(BIO) }}
+            transition={{
+              ...bubbleTransition(b),
+              // hold intact → swell → snap out: opacity stays 1 until the
+              // rupture, then vanishes over ~1% of the loop (instant to the eye).
+              ease: ["easeOut", "linear", "easeOut"],
+              times: [0, 0.06, popAt, popAt + 0.03, popAt + 0.2],
+            }}
+          />
+
+          {/* the burst ring */}
+          <motion.span
+            animate={{
+              opacity: [0, 0, 0.9, 0],
+              scale: [0.9, 0.9, 1.1, 2.2],
+            }}
+            className="absolute inset-0 rounded-full border-2 border-white/60"
+            transition={{
+              ...bubbleTransition(b),
+              // shockwave: fires at the rupture instant, flies outward fast then
+              // decelerates (easeOut) as it fades — the spray after the snap.
+              ease: "easeOut",
+              times: [0, popAt + 0.01, popAt + 0.015, popAt + 0.2],
+            }}
+          />
+        </motion.span>
+      ))}
+
       {swimmers.map((s) => (
         <motion.div
           animate={{ x: s.dir > 0 ? ["-12vw", "112vw"] : ["112vw", "-12vw"] }}
