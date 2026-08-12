@@ -201,6 +201,7 @@ export class Oneko extends EventTarget {
   private speechOpen = false
   private speechRolled = false
   private running = false
+  private dragging = false
 
   constructor(options: OnekoOptions) {
     super()
@@ -242,6 +243,10 @@ export class Oneko extends EventTarget {
     this.element.className = "oneko"
     this.element.setAttribute("aria-hidden", "true")
     this.element.addEventListener("click", this.onClick)
+    this.element.addEventListener("pointerdown", this.onPointerDown)
+    this.element.addEventListener("pointermove", this.onPointerMove)
+    this.element.addEventListener("pointerup", this.onPointerUp)
+
     Object.assign(this.element.style, {
       backgroundImage: `url(${this.source})`,
       backgroundSize: `${this.size * 8}px`,
@@ -311,6 +316,9 @@ export class Oneko extends EventTarget {
     this.running = false
     document.removeEventListener("mousemove", this.onMouseMove)
     this.element.removeEventListener("click", this.onClick)
+    this.element.removeEventListener("pointerdown", this.onPointerDown)
+    this.element.removeEventListener("pointermove", this.onPointerMove)
+    this.element.removeEventListener("pointerup", this.onPointerUp)
     this.hideSpeech()
     this.speechEl?.remove()
     if (this.ownsElement) {
@@ -327,6 +335,27 @@ export class Oneko extends EventTarget {
     // performance.now() shares the clock with requestAnimationFrame timestamps.
     this.alertUntil = performance.now() + this.clickAlertDuration
     this.setSprite("alert", 0)
+    this.draw()
+  }
+
+  private readonly onPointerDown = (e: PointerEvent): void => {
+    this.dragging = true
+    this.element.setPointerCapture(e.pointerId)
+    this.setSprite("alert", 0)
+    this.draw()
+  }
+
+  private readonly onPointerMove = (e: PointerEvent): void => {
+    if (!this.dragging) return
+    this.setPosition(e.x, e.y)
+    this.setSprite("scratchWallS", 0)
+    this.draw()
+  }
+
+  private readonly onPointerUp = (e: PointerEvent): void => {
+    this.dragging = false
+    this.element.releasePointerCapture(e.pointerId)
+    this.setSprite("scratchSelf", 0)
     this.draw()
   }
 
@@ -487,6 +516,9 @@ export class Oneko extends EventTarget {
   }
 
   private frame(): void {
+    if (this.dragging) {
+      return
+    }
     // Clicked recently: hold the "!" pose and stay put until the deadline.
     if (performance.now() < this.alertUntil) {
       this.setSprite("alert", 0)
