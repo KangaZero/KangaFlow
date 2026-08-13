@@ -485,6 +485,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isTrackListOpen,
       mediaCurrentIndex,
       noteLineNumbers,
+      onekoSettings: DEFAULT_ONEKO_OPTIONS,
       setAnimationPref,
       setColumnCount,
       setEnvSettings,

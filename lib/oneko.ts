@@ -209,7 +209,7 @@ export class Oneko extends EventTarget {
   private readonly clickAlertDuration: number
   private readonly speechMessages: readonly string[]
   private readonly speechChance: number
-  private readonly speechEl: HTMLElement | null
+  private readonly speechEl: HTMLElement | null = null
   // True when the browser lacks CSS anchor positioning (older Firefox < 147 /
   // Safari < 26); we then position the bubble by hand instead of via
   // position-area. A no-op on browsers that support it (the vast majority now).
@@ -232,13 +232,20 @@ export class Oneko extends EventTarget {
   private running = false
   private dragging = false
 
-  constructor(options = DEFAULT_ONEKO_OPTIONS) {
+  constructor(rawOptions: Partial<OnekoOptions> = {}) {
     super()
 
     if (typeof document === "undefined") {
       throw new Error(
         "Oneko requires a browser DOM; instantiate on the client."
       )
+    }
+
+    // Capture before merge so we know if the caller supplied their own element.
+    const ownsElement = rawOptions.element === undefined
+    const options: Required<OnekoOptions> = {
+      ...DEFAULT_ONEKO_OPTIONS,
+      ...rawOptions,
     }
 
     this.source = options.source
@@ -266,8 +273,8 @@ export class Oneko extends EventTarget {
     const anchorName = options.anchorName
     const speechClassName = options.speechClassName
 
-    this.ownsElement = options.element === undefined
-    this.element = options.element
+    this.ownsElement = ownsElement
+    this.element = ownsElement ? document.createElement("div") : options.element
 
     //TODO: Add "Psychopath" achievement as well but at oneko cmd (terminal body switch case)
     if (!this.isToggledOn) {
