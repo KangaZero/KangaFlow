@@ -98,12 +98,15 @@ const DEFAULT_IDLE_ANIMATIONS: readonly IdleAnimation[] = [
 ]
 
 //NOTE: Other DEFAULT settings at /components/niri/settings.ts, but oneko settings can only be configured via the terminal only
-export const DEFAULT_ONEKO_OPTIONS: Required<OnekoOptions> = {
+// element is intentionally excluded: the constructor creates its own <div> when
+// the caller doesn't supply one, so this constant is safe to import SSR-side.
+// x/y default to 16 (a static fallback); callers that need the viewport centre
+// pass explicit values (see components/neko.tsx).
+export const DEFAULT_ONEKO_OPTIONS: Omit<Required<OnekoOptions>, "element"> = {
   allowedIdleAnimations: DEFAULT_IDLE_ANIMATIONS,
   allowedTargetDistance: 48,
   anchorName: "--oneko",
   clickAlertDuration: 1000, //ms
-  element: document.createElement("div"),
   followMouse: true,
   isToggledOn: true,
   maxAlertDuration: 4,
@@ -117,8 +120,8 @@ export const DEFAULT_ONEKO_OPTIONS: Required<OnekoOptions> = {
   speechMessages: [], //Set at /components/neko.tsx as it needs `useLocale` provider
   speed: 10,
   updateSpeed: 100,
-  x: window.innerHeight / 2,
-  y: window.innerHeight / 2,
+  x: 16,
+  y: 16,
   yawnDuration: 8,
 } as const
 
@@ -246,6 +249,9 @@ export class Oneko extends EventTarget {
     const options: Required<OnekoOptions> = {
       ...DEFAULT_ONEKO_OPTIONS,
       ...rawOptions,
+      // element must be an HTMLElement; supply a new <div> when caller omits it.
+      // Placed after the spread so an explicit rawOptions.element still wins.
+      element: rawOptions.element ?? document.createElement("div"),
     }
 
     this.source = options.source
@@ -274,7 +280,7 @@ export class Oneko extends EventTarget {
     const speechClassName = options.speechClassName
 
     this.ownsElement = ownsElement
-    this.element = ownsElement ? document.createElement("div") : options.element
+    this.element = options.element
 
     //TODO: Add "Psychopath" achievement as well but at oneko cmd (terminal body switch case)
     if (!this.isToggledOn) {

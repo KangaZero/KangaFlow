@@ -87,7 +87,8 @@ export type GlobalStatesContextValue = {
   // useTheme + useThemeTransition pairing.
   theme: Theme
   toggleTheme: (theme: Theme, duration?: number) => Promise<void>
-  onekoSettings: Required<OnekoOptions>
+  // element is excluded: it's browser-only and created by the constructor.
+  onekoSettings: Omit<Required<OnekoOptions>, "element">
 }
 
 export const ANIMATION_PREFS = ["system", "on", "off"] as const
