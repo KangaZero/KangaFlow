@@ -43,6 +43,7 @@ import {
   NOTE_LINE_NUMBER_MODES,
   type NoteLineNumbers,
 } from "@/lib/globalStates"
+import { DEFAULT_ONEKO_OPTIONS } from "@/lib/oneko"
 import {
   DEFAULT_SHORTCUTS,
   loadShortcuts,
@@ -277,6 +278,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isTrackListOpen: false,
   mediaCurrentIndex: 0,
   noteLineNumbers: "off",
+  onekoSettings: DEFAULT_ONEKO_OPTIONS,
   setAnimationPref: () => {},
   setColumnCount: () => {},
   setEnvSettings: () => {},

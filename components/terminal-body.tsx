@@ -46,8 +46,13 @@ import {
   matrixToGlyphRain,
   parseMatrixArgs,
 } from "@/lib/terminal/cmatrix"
-import { completeLine, suggestLine } from "@/lib/terminal/complete"
+import {
+  completeLine,
+  type SHELL_COMMANDS,
+  suggestLine,
+} from "@/lib/terminal/complete"
 import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
+import { onekoHelp, onekoReduceMotionWarning } from "@/lib/terminal/oneko"
 import {
   buildPageFiles,
   flatFileForSource,
@@ -215,7 +220,10 @@ function ZjStatusBar({
 
 // `help` output: aligned command + description. ANSI 16-colour so it maps to
 // the active xterm theme palette (magenta command, dim grey description).
-const HELP: readonly (readonly [cmd: string, desc: string])[] = [
+const HELP: readonly (readonly [
+  cmd: (typeof SHELL_COMMANDS)[number] | string,
+  desc: string,
+])[] = [
   ["help", "show this help"],
   ["ff", "system info (fastfetch)"],
   ["cmatrix", "digital rain (--help for options)"],
@@ -225,6 +233,7 @@ const HELP: readonly (readonly [cmd: string, desc: string])[] = [
   ["cat <file>", "print a file"],
   ["nvim <file>", "edit a file in vim"],
   ["theme <name>", "switch theme (light | dark | terminal)"],
+  ["oneko", "your sticky pet"],
   ["clear", "clear the screen"],
   ["whoami", "print the current user"],
   ["exit", "close the terminal"],
@@ -259,8 +268,12 @@ export function TerminalBody({
   const { locale } = useLocale()
   const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
-  const { globalMatrixRunning, setGlobalMatrixOptions, envSettings } =
-    useGlobalStates()
+  const {
+    globalMatrixRunning,
+    setGlobalMatrixOptions,
+    envSettings,
+    animationPref,
+  } = useGlobalStates()
   // paletteForTheme returns a shared constant → stable identity for deps.
   const palette = paletteForTheme(resolvedTheme)
   // Flat page filesystem: each routable page is a dir holding `index.tsx`
@@ -331,6 +344,10 @@ export function TerminalBody({
   // guard). Mirrored like the other refs because the handler is bound once.
   const globalMatrixRunningRef = useRef(globalMatrixRunning)
   globalMatrixRunningRef.current = globalMatrixRunning
+  // Live animation pref for oneko commands: "off" = explicit disable; "system"
+  // defers to OS prefers-reduced-motion which we re-query at call time.
+  const animationPrefRef = useRef(animationPref)
+  animationPrefRef.current = animationPref
 
   const startedAt = useRef(saved?.startedAt ?? Date.now())
   const session = useRef<Session>({
@@ -589,6 +606,24 @@ export function TerminalBody({
         case "pwd":
           term.write(`\r\n${s.cwd}`)
           return true
+
+        case "oneko": {
+          const pref = animationPrefRef.current
+          const motionReduced =
+            pref === "off" ||
+            (pref === "system" &&
+              window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+          if (arg.trim() === "") {
+            term.write(onekoHelp(true))
+            if (motionReduced) term.write(onekoReduceMotionWarning())
+            return true
+          }
+          if (motionReduced) {
+            term.write(onekoReduceMotionWarning())
+            return true
+          }
+          return true
+        }
         case "cd": {
           // cd is page navigation: resolve the arg to a routable page and drive
           // the real Next.js router. The flat tree is one level deep, so "~",

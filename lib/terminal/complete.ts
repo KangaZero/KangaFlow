@@ -5,6 +5,7 @@
 // the terminal only owns menu state + drawing.
 import { TERMINAL_PAGE_NAMES } from "@/lib/terminal/pages"
 import { THEMES } from "@/lib/themes"
+import { ONEKO_COMMANDS } from "./oneko"
 
 // Single source of truth for the shell's command names (also drives completion
 // of the first word).
@@ -23,6 +24,7 @@ export const SHELL_COMMANDS = [
   "theme",
   "vim",
   "whoami",
+  "oneko",
 ] as const
 
 export type Completion = {
@@ -74,6 +76,8 @@ export function completeLine(
   } else if (command === "cd") {
     // cd navigates to a page → complete the page names.
     pool = TERMINAL_PAGE_NAMES
+  } else if (command === "oneko") {
+    pool = ONEKO_COMMANDS
   } else {
     pool = []
   }

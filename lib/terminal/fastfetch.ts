@@ -178,6 +178,7 @@ const paletteRows = (colors: number): string[] => {
 // a blank spacer and the colour palette. Returns strings xterm.js writes as-is.
 export function renderFastfetch(info: FastfetchInfo): string[] {
   const accents = info.dark ? MOCHA : LATTE
+  //TODO: Take from global state
   const user = "user"
   const host = "kangaflow"
   const title = `${fg(accents.teal)}${user}${RESET}${fg(accents.text)}@${RESET}${fg(accents.blue)}${host}${RESET}`
@@ -185,7 +186,7 @@ export function renderFastfetch(info: FastfetchInfo): string[] {
 
   const t = LABELS[info.locale]
   const rows: InfoRow[] = [
-    { label: t.os, value: "KangaFlow (Next.js 16)" },
+    { label: t.os, value: "KangaFlow-Nix" },
     { label: t.host, value: "kangazero.github.io" },
     { label: t.kernel, value: info.browser },
     { label: t.shell, value: "kanga-zsh" },

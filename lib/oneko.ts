@@ -9,6 +9,7 @@
 // cell is a [col, row] pair as NEGATIVE multiples of `size`, matching CSS
 // background-position (which shifts the image up/left to reveal a tile).
 // Multi-frame animations cycle through their cell array.
+import onekoSrc from "@/assets/oneko/default.png"
 
 export type Direction = "N" | "NE" | "E" | "SE" | "S" | "SW" | "W" | "NW"
 
@@ -96,6 +97,31 @@ const DEFAULT_IDLE_ANIMATIONS: readonly IdleAnimation[] = [
   "scratchWallW",
 ]
 
+//NOTE: Other DEFAULT settings at /components/niri/settings.ts, but oneko settings can only be configured via the terminal only
+export const DEFAULT_ONEKO_OPTIONS: Required<OnekoOptions> = {
+  allowedIdleAnimations: DEFAULT_IDLE_ANIMATIONS,
+  allowedTargetDistance: 48,
+  anchorName: "--oneko",
+  clickAlertDuration: 1000, //ms
+  element: document.createElement("div"),
+  followMouse: true,
+  isToggledOn: true,
+  maxAlertDuration: 4,
+  scratchDuration: 5,
+  size: 32,
+  skipAlertAnimation: true,
+  sleepDuration: 30,
+  source: onekoSrc.src,
+  speechChance: 0.5,
+  speechClassName: "oneko-speech",
+  speechMessages: [], //Set at /components/neko.tsx as it needs `useLocale` provider
+  speed: 10,
+  updateSpeed: 100,
+  x: window.innerHeight / 2,
+  y: window.innerHeight / 2,
+  yawnDuration: 8,
+} as const
+
 export interface OnekoOptions {
   /** URL of the sprite-sheet PNG (8x4 grid of `size`px tiles). Required. */
   source: string
@@ -132,6 +158,8 @@ export interface OnekoOptions {
   followMouse?: boolean
   /** Override the DOM element. Defaults to a new <div> appended to <body>. */
   element?: HTMLElement
+  /** the oneko toggle cmd */
+  isToggledOn?: boolean
 }
 
 /** Dispatched on the instance (it is an EventTarget): "draw" | "startRunning" | "stopRunning". */
@@ -187,6 +215,7 @@ export class Oneko extends EventTarget {
   // position-area. A no-op on browsers that support it (the vast majority now).
   private readonly anchorFallback: boolean
   private readonly ownsElement: boolean
+  private readonly isToggledOn: boolean
 
   private x: number
   private y: number
@@ -203,7 +232,7 @@ export class Oneko extends EventTarget {
   private running = false
   private dragging = false
 
-  constructor(options: OnekoOptions) {
+  constructor(options = DEFAULT_ONEKO_OPTIONS) {
     super()
 
     if (typeof document === "undefined") {
@@ -213,31 +242,38 @@ export class Oneko extends EventTarget {
     }
 
     this.source = options.source
-    this.x = options.x ?? 16
-    this.y = options.y ?? 16
-    this.speed = options.speed ?? 10
-    this.size = options.size ?? 32
-    this.allowedTargetDistance = options.allowedTargetDistance ?? 48
-    this.updateSpeed = options.updateSpeed ?? 100
-    this.skipAlertAnimation = options.skipAlertAnimation ?? true
-    this.allowedIdleAnimations =
-      options.allowedIdleAnimations ?? DEFAULT_IDLE_ANIMATIONS
-    this.yawnDuration = options.yawnDuration ?? 8
-    this.sleepDuration = options.sleepDuration ?? 192
-    this.scratchDuration = options.scratchDuration ?? 9
-    this.maxAlertDuration = options.maxAlertDuration ?? 7
-    this.clickAlertDuration = options.clickAlertDuration ?? 1000
-    this.speechMessages = options.speechMessages ?? []
-    this.speechChance = options.speechChance ?? 1
+    this.x = options.x
+    this.y = options.y
+    this.speed = options.speed
+    this.size = options.size
+    this.allowedTargetDistance = options.allowedTargetDistance
+    this.updateSpeed = options.updateSpeed
+    this.skipAlertAnimation = options.skipAlertAnimation
+    this.allowedIdleAnimations = options.allowedIdleAnimations
+    this.yawnDuration = options.yawnDuration
+    this.sleepDuration = options.sleepDuration
+    this.scratchDuration = options.scratchDuration
+    this.maxAlertDuration = options.maxAlertDuration
+    this.clickAlertDuration = options.clickAlertDuration
+    this.speechMessages = options.speechMessages
+    this.speechChance = options.speechChance
     this.anchorFallback = !CSS.supports("position-area", "top")
     this.targetX = this.x
     this.targetY = this.y
 
-    const anchorName = options.anchorName ?? "--oneko"
-    const speechClassName = options.speechClassName ?? "oneko-speech"
+    this.isToggledOn = options.isToggledOn
+
+    const anchorName = options.anchorName
+    const speechClassName = options.speechClassName
 
     this.ownsElement = options.element === undefined
-    this.element = options.element ?? document.createElement("div")
+    this.element = options.element
+
+    //TODO: Add "Psychopath" achievement as well but at oneko cmd (terminal body switch case)
+    if (!this.isToggledOn) {
+      console.warn("How could you!")
+      return
+    }
 
     // Static styles set once; per-frame draw() only moves left/top.
     this.element.className = "oneko"

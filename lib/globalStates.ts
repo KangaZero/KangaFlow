@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react"
 import type { EnvSettings } from "@/components/niri/settings"
 import type { Locale } from "@/lib/i18n"
+import type { OnekoOptions } from "@/lib/oneko"
 import type { Shortcut } from "@/lib/shortcuts"
 import type { MatrixOptions } from "@/lib/terminal/cmatrix"
 import type { Theme } from "@/lib/themes"
@@ -86,6 +87,7 @@ export type GlobalStatesContextValue = {
   // useTheme + useThemeTransition pairing.
   theme: Theme
   toggleTheme: (theme: Theme, duration?: number) => Promise<void>
+  onekoSettings: Required<OnekoOptions>
 }
 
 export const ANIMATION_PREFS = ["system", "on", "off"] as const

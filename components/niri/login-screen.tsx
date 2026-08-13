@@ -141,7 +141,7 @@ export function LoginScreen({
         distortion: lerp(10, 36, ignite),
         ember: 2 * (1 - die),
         intensity: lerp(0, 1.8, ignite) * (1 - die),
-        melt: lerp(8, 360, ignite),
+        melt: lerp(8, 1000, ignite),
         rim: 2.5 * (1 - die),
         scorch: lerp(0, 1.7, ignite),
         smoke: lerp(0, 2, ignite) * (1 - die),
