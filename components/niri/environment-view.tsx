@@ -34,7 +34,11 @@ import {
 } from "@/components/niri/noctalia-launcher"
 import { NoctaliaSettings } from "@/components/niri/noctalia-settings"
 import { NotificationToast } from "@/components/niri/notification-toast"
-import { ACCENT_COLORS, type BarPosition } from "@/components/niri/settings"
+import {
+  ACCENT_COLORS,
+  type BarPosition,
+  DAIJI,
+} from "@/components/niri/settings"
 import type { AppId, NiriWindow } from "@/components/niri/types"
 import { wallpaperStyle } from "@/components/niri/wallpaper"
 import { WallpaperDialog } from "@/components/niri/wallpaper-dialog"
@@ -285,6 +289,7 @@ export function EnvironmentView() {
   const stripRef = useRef<HTMLDivElement>(null)
   const overviewRef = useRef<HTMLDivElement>(null)
   const activeTileRef = useRef<HTMLDivElement>(null)
+  const activeWinRef = useRef<HTMLDivElement>(null)
 
   // Launcher entries, localised. `name`/`subtitle` framing is translated; brand
   // and binary names (kitty/nvim/firefox/KangaZero) stay literal inside the JA
@@ -330,23 +335,29 @@ export function EnvironmentView() {
     return () => ro.disconnect()
   }, [])
 
-  // Auto-scroll the overview so the active workspace tile stays centred as
-  // Alt+J/K moves focus. Set scrollTop on the container directly (not
-  // scrollIntoView) so it works on the overflow-hidden box and uses layout
-  // offsets (offsetTop) that the tiles' FLIP transforms don't perturb.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: state.active is an intentional trigger (refs are stable) so the scroll re-runs on focus change.
+  // Overview auto-scroll. Both refs live inside the one scroll container
+  // (`overviewRef`), and `scrollIntoView` walks *every* scroll ancestor — so
+  // scrolling the focused window also drags its workspace tile into view;
+  // scrolling both is redundant. Refs (not ids) because only one node can ever
+  // be the active tile / focused window, so React re-points them on commit and
+  // there is nothing to collide. Deps are state-derived: ref mutations don't
+  // re-run effects, so `state.workspaces` is what tells us focus moved.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <needed for auto-scroll>
   useEffect(() => {
-    const container = overviewRef.current
-    const tile = activeTileRef.current
     if (!state.overview) return
-    if (!(container && tile)) return
-    container.scrollTo({
-      // Instant jump under reduced motion — a raw scroll animation the global
-      // MotionConfig / CSS guards can't reach.
-      behavior: reduceMotion ? "auto" : "smooth",
-      top: tile.offsetTop - (container.clientHeight - tile.clientHeight) / 2,
+    // Focused window when the workspace has one, else the tile itself (empty
+    // workspace) — one call, since the window's ancestors include the tile.
+    const target = activeWinRef.current ?? activeTileRef.current
+    if (!target) return
+    target.scrollIntoView({
+      behavior: reduceMotion ? "instant" : "smooth",
+      // `block` is consumed by the vertical root scroller (workspace tiles),
+      // `inline` by the horizontal column row — centring both mirrors the live
+      // strip's centre-aligned focus.
+      block: "center",
+      inline: "center",
     })
-  }, [state.overview, state.active, reduceMotion])
+  }, [state.overview, state.active, state.workspaces, reduceMotion])
 
   // Compositor-level key capture: panel toggles always work; otherwise niri
   // tiling binds are intercepted (preventDefault + stopPropagation) before the
@@ -501,7 +512,7 @@ export function EnvironmentView() {
   const barBefore =
     settings.barPosition === "top" || settings.barPosition === "left"
 
-  const bar = (
+  const bar = state.overview ? null : (
     <NoctaliaBar
       activeWindowTitle={focusedWin?.title ?? ""}
       barPosition={settings.barPosition}
@@ -526,6 +537,8 @@ export function EnvironmentView() {
       )}
       style={
         {
+          ...wallpaperStyleProp,
+          backgroundAttachment: "fixed",
           // Omit `zoom` entirely at 1× so `main` never becomes a stacking
           // context at the default scale — that would trap the tiled strip and
           // panels below the body-level floats (defeating the z-order system).
@@ -538,7 +551,11 @@ export function EnvironmentView() {
       }
     >
       {/* Wallpaper */}
-      <div className="absolute inset-0 -z-10" style={wallpaperStyleProp} />
+      {/*<div
+        className="absolute inset-0 -z-10"
+        style={{ ...wallpaperStyleProp, backgroundAttachment: "fixed" }}
+      />
+      */}
 
       {/* Global cmatrix rain (`cmatrix -g`): covers the desktop above the
           wallpaper but below the strip/windows and every UI band, so windows
@@ -573,9 +590,11 @@ export function EnvironmentView() {
             its empty areas — only the actual windows (and overview) re-enable
             them, letting floats beneath stay clickable in the gaps. */}
         <div
-          className="overflow-show pointer-events-none relative min-h-0 min-w-0 flex-1"
+          className="pointer-events-none relative min-h-0 min-w-0 flex-1"
           ref={stripRef}
-          style={{ zIndex: stripZ }}
+          style={{
+            zIndex: stripZ,
+          }}
         >
           {state.overview ? (
             // Overview (Alt+Shift+O): all workspaces stacked over a blurred
@@ -584,8 +603,13 @@ export function EnvironmentView() {
             // enter. Each tile renders its windows' real content, live.
             <motion.div
               animate={{ opacity: 1 }}
-              className="pointer-events-auto absolute inset-0 flex flex-col gap-3 p-4"
+              className="scrollbar-none pointer-events-auto absolute inset-0 flex flex-col gap-3 overflow-hidden p-2"
               initial={{ opacity: 0 }}
+              // Scroll container holding `layout`-animated tiles: without this,
+              // Motion's projection ignores our scrollTop, measures the tiles as
+              // having "moved", and FLIPs them straight back — the scroll lands
+              // but is visually cancelled.
+              layoutScroll
               ref={overviewRef}
             >
               {state.workspaces.map((ws) => {
@@ -597,7 +621,7 @@ export function EnvironmentView() {
                   // nesting interactive elements inside a <button>.
                   <motion.div
                     className={cn(
-                      "relative flex min-h-90 flex-1 flex-col gap-2 rounded-2xl border-2 bg-card/20 p-3",
+                      "relative flex min-h-[90vh] flex-1 flex-col gap-2 rounded-2xl border-2 bg-card/20 p-3",
                       ws.id === state.active
                         ? "border-primary"
                         : "border-border/40 hover:border-border"
@@ -605,21 +629,25 @@ export function EnvironmentView() {
                     key={ws.id}
                     layout
                     ref={ws.id === state.active ? activeTileRef : undefined}
+                    // style={{
+                    //   ...(state.overview ? { transform: "scale(0.5)" } : {}),
+                    // }}
                     transition={SPRING_PIP}
                   >
                     <button
                       aria-label={wsLabel}
-                      className="absolute inset-0 z-10"
+                      className="absolute top-[-7] right-0 z-10 rounded-full border bg-accent px-2 font-medium text-foreground text-xs hover:scale-105"
                       onClick={() => {
                         dispatch({ id: ws.id, type: "focusWorkspace" })
                         dispatch({ type: "toggleOverview" })
                       }}
                       type="button"
-                    />
-                    <span className="font-medium text-muted-foreground text-xs">
-                      {wsLabel}
-                    </span>
-                    <div className="flex min-h-0 flex-1 gap-2">
+                    >
+                      {DAIJI[ws.id]}
+                    </button>
+                    {/* Horizontal scroller for the columns: `inline: "center"`
+                        on the focused window resolves against this box. */}
+                    <div className="scrollbar-none flex min-h-0 flex-1 gap-0 overflow-x-hidden">
                       {ws.columns.length === 0 ? (
                         <span className="flex flex-1 items-center justify-center text-muted-foreground/50 text-xs">
                           —
@@ -627,9 +655,9 @@ export function EnvironmentView() {
                       ) : (
                         ws.columns.map((col, ci) => (
                           <div
-                            className="flex min-w-0 flex-col gap-2"
+                            className="mx-auto flex min-w-[80%] flex-col gap-2"
                             key={col.id}
-                            style={{ flex: col.width }}
+                            // style={{ flex: 1}}
                           >
                             {col.windows.map((win, wi) => {
                               const winFocused =
@@ -640,11 +668,17 @@ export function EnvironmentView() {
                                 <div
                                   className={cn(
                                     "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border-2 bg-card transition-colors",
+                                    wi <= col.windows.length - 1 ? "mr-2" : "",
                                     winFocused
                                       ? "border-primary"
                                       : "border-border hover:border-primary/60"
                                   )}
+                                  id={String(col.windows.length)}
                                   key={win.id}
+                                  // `winFocused` already requires the active
+                                  // workspace, so at most one window in the
+                                  // whole overview claims this ref.
+                                  ref={winFocused ? activeWinRef : undefined}
                                 >
                                   <div className="flex items-center border-border border-b bg-muted/40 px-2 py-1">
                                     <span className="truncate font-medium text-[10px] text-card-foreground">

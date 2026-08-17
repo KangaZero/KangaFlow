@@ -143,6 +143,7 @@ export function getFocusedWindow(state: NiriState): NiriWindow | null {
 // Reducer
 // ---------------------------------------------------------------------------
 
+//TODO Really check this, cant move the first window when window count >=3
 export function niriReducer(state: NiriState, action: NiriAction): NiriState {
   switch (action.type) {
     case "spawn": {

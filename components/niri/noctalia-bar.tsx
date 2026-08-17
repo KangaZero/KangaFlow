@@ -7,7 +7,7 @@ import { SiNixos } from "react-icons/si"
 import { Counter } from "@/components/Counter"
 import { MediaMiniPill } from "@/components/niri/media-mini-pill"
 import { NotificationCenter } from "@/components/niri/notification-center"
-import type { BorderRadius } from "@/components/niri/settings"
+import { type BorderRadius, DAIJI } from "@/components/niri/settings"
 import { SystemStatus } from "@/components/niri/system-status"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
@@ -29,19 +29,6 @@ type WorkspacePip = {
 const CIRCLE_REVEAL =
   "origin-bottom scale-0 transition-transform duration-300 ease-out group-hover:scale-100"
 
-// Daiji (大字) — traditional formal Japanese numerals shown on hover.
-const DAIJI: Record<number, string> = {
-  1: "壱",
-  2: "弐",
-  3: "参",
-  4: "肆",
-  5: "伍",
-  6: "陸",
-  7: "柒",
-  8: "捌",
-  9: "玖",
-  10: "拾",
-}
 // Clock built on the react-bits Counter — "HH:MM" split into two fixed-2-digit
 // rolling counters. Falls back to plain text if the format is unexpected.
 function BarClock({
