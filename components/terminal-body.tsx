@@ -52,7 +52,11 @@ import {
   suggestLine,
 } from "@/lib/terminal/complete"
 import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
-import { onekoHelp, onekoReduceMotionWarning } from "@/lib/terminal/oneko"
+import {
+  type ONEKO_COMMANDS,
+  onekoHelp,
+  onekoReduceMotionWarning,
+} from "@/lib/terminal/oneko"
 import {
   buildPageFiles,
   flatFileForSource,
@@ -613,14 +617,13 @@ export function TerminalBody({
             pref === "off" ||
             (pref === "system" &&
               window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-          if (arg.trim() === "") {
-            term.write(onekoHelp(true))
-            if (motionReduced) term.write(onekoReduceMotionWarning())
-            return true
-          }
-          if (motionReduced) {
-            term.write(onekoReduceMotionWarning())
-            return true
+          if (motionReduced) term.write(onekoReduceMotionWarning())
+          const onekoArg = arg.trim() as (typeof ONEKO_COMMANDS)[number]
+          switch (onekoArg) {
+            case "" as typeof onekoArg:
+              term.write(onekoHelp(true))
+              return true
+            case "toggle":
           }
           return true
         }

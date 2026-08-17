@@ -6,7 +6,7 @@ export const ONEKO_COMMANDS = [
   "dog",
   "cat",
   "version",
-]
+] as const
 
 const ONEKO_HELP: (readonly [
   cmd: (typeof ONEKO_COMMANDS)[number],
@@ -23,7 +23,7 @@ const ONEKO_HELP: (readonly [
 // \x1b[38;5;214m is 256-colour orange — distinct from the yellow \x1b[33m used
 // elsewhere, so the warning reads as a caution-level notice at a glance.
 export const onekoReduceMotionWarning = (): string =>
-  `\r\n\x1b[38;5;214m⚠ reduced motion is enabled — oneko will not show\x1b[0m`
+  `\r\n\x1b[38;5;214m! reduced motion is enabled — oneko will not show\x1b[0m`
 
 export const onekoHelp = (showUsageLine: boolean): string => {
   const pad = ONEKO_HELP.reduce((n, [cmd]) => Math.max(n, cmd.length), 0)

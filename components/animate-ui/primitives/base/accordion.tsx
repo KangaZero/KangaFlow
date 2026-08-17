@@ -1,19 +1,31 @@
 "use client"
 
-import { Accordion as AccordionPrimitive } from "@base-ui-components/react/accordion"
-import { AnimatePresence, type HTMLMotionProps, motion } from "motion/react"
-import * as React from "react"
+import {
+  Accordion as AccordionPrimitive,
+  type AccordionRootChangeEventDetails,
+  type AccordionValue,
+} from "@base-ui/react/accordion"
+import {
+  AnimatePresence,
+  type HTMLMotionProps,
+  type MotionStyle,
+  motion,
+  type TargetAndTransition,
+} from "motion/react"
+import type * as React from "react"
 import { useControlledState } from "@/hooks/use-controlled-state"
 import { getStrictContext } from "@/lib/get-strict-context"
 
 type AccordionContextType = {
-  value: string | string[] | undefined
-  setValue: (value: string | string[] | undefined) => void
+  value: AccordionValue<unknown>
+  setValue: (
+    value: AccordionValue<unknown>,
+    eventDetails: AccordionRootChangeEventDetails
+  ) => void
 }
 
 type AccordionItemContextType = {
   isOpen: boolean
-  setIsOpen: (open: boolean) => void
 }
 
 const [AccordionProvider, useAccordion] =
@@ -22,15 +34,19 @@ const [AccordionProvider, useAccordion] =
 const [AccordionItemProvider, useAccordionItem] =
   getStrictContext<AccordionItemContextType>("AccordionItemContext")
 
+/** Stable identity so an uncontrolled root never re-seeds state with a new array. */
+const EMPTY_VALUE: AccordionValue<unknown> = []
+
 type AccordionProps = React.ComponentProps<typeof AccordionPrimitive.Root>
 
 function Accordion(props: AccordionProps) {
-  const [value, setValue] = useControlledState<string | string[] | undefined>({
-    defaultValue: props?.defaultValue,
-    onChange: props?.onValueChange as (
-      value: string | string[] | undefined
-    ) => void,
-    value: props?.value,
+  const [value, setValue] = useControlledState<
+    AccordionValue<unknown>,
+    [AccordionRootChangeEventDetails]
+  >({
+    defaultValue: props.defaultValue ?? EMPTY_VALUE,
+    onChange: props.onValueChange,
+    value: props.value,
   })
 
   return (
@@ -48,16 +64,10 @@ type AccordionItemProps = React.ComponentProps<typeof AccordionPrimitive.Item>
 
 function AccordionItem(props: AccordionItemProps) {
   const { value } = useAccordion()
-  const [isOpen, setIsOpen] = React.useState(
-    value?.includes(props?.value) ?? false
-  )
-
-  React.useEffect(() => {
-    setIsOpen(value?.includes(props?.value) ?? false)
-  }, [value, props?.value])
+  const isOpen = value.includes(props.value)
 
   return (
-    <AccordionItemProvider value={{ isOpen, setIsOpen }}>
+    <AccordionItemProvider value={{ isOpen }}>
       <AccordionPrimitive.Item data-slot="accordion-item" {...props} />
     </AccordionItemProvider>
   )
@@ -79,6 +89,29 @@ function AccordionTrigger(props: AccordionTriggerProps) {
   return <AccordionPrimitive.Trigger data-slot="accordion-trigger" {...props} />
 }
 
+const PANEL_MASK =
+  "linear-gradient(black var(--mask-stop), transparent var(--mask-stop))"
+
+const PANEL_STYLE: MotionStyle = {
+  maskImage: PANEL_MASK,
+  overflow: "hidden",
+  WebkitMaskImage: PANEL_MASK,
+}
+
+const PANEL_COLLAPSED: TargetAndTransition = {
+  "--mask-stop": "0%",
+  height: 0,
+  opacity: 0,
+  y: 20,
+}
+
+const PANEL_EXPANDED: TargetAndTransition = {
+  "--mask-stop": "100%",
+  height: "auto",
+  opacity: 1,
+  y: 0,
+}
+
 type AccordionPanelProps = Omit<
   React.ComponentProps<typeof AccordionPrimitive.Panel>,
   "keepMounted" | "render"
@@ -95,67 +128,29 @@ function AccordionPanel({
 }: AccordionPanelProps) {
   const { isOpen } = useAccordionItem()
 
+  if (!(keepRendered || isOpen)) {
+    return <AnimatePresence />
+  }
+
   return (
     <AnimatePresence>
-      {keepRendered ? (
-        <AccordionPrimitive.Panel
-          hidden={false}
-          {...(hiddenUntilFound !== undefined ? { hiddenUntilFound } : {})}
-          keepMounted
-          render={
-            <motion.div
-              animate={
-                isOpen
-                  ? { "--mask-stop": "100%", height: "auto", opacity: 1, y: 0 }
-                  : { "--mask-stop": "0%", height: 0, opacity: 0, y: 20 }
-              }
-              data-slot="accordion-panel"
-              initial={{ "--mask-stop": "0%", height: 0, opacity: 0, y: 20 }}
-              key="accordion-panel"
-              style={{
-                maskImage:
-                  "linear-gradient(black var(--mask-stop), transparent var(--mask-stop))",
-                overflow: "hidden",
-                WebkitMaskImage:
-                  "linear-gradient(black var(--mask-stop), transparent var(--mask-stop))",
-              }}
-              transition={transition}
-              {...props}
-            />
-          }
-        />
-      ) : (
-        isOpen && (
-          <AccordionPrimitive.Panel
-            hidden={false}
-            {...(hiddenUntilFound !== undefined ? { hiddenUntilFound } : {})}
-            keepMounted
-            render={
-              <motion.div
-                animate={{
-                  "--mask-stop": "100%",
-                  height: "auto",
-                  opacity: 1,
-                  y: 0,
-                }}
-                data-slot="accordion-panel"
-                exit={{ "--mask-stop": "0%", height: 0, opacity: 0, y: 20 }}
-                initial={{ "--mask-stop": "0%", height: 0, opacity: 0, y: 20 }}
-                key="accordion-panel"
-                style={{
-                  maskImage:
-                    "linear-gradient(black var(--mask-stop), transparent var(--mask-stop))",
-                  overflow: "hidden",
-                  WebkitMaskImage:
-                    "linear-gradient(black var(--mask-stop), transparent var(--mask-stop))",
-                }}
-                transition={transition}
-                {...props}
-              />
-            }
+      <AccordionPrimitive.Panel
+        hidden={false}
+        {...(hiddenUntilFound !== undefined ? { hiddenUntilFound } : {})}
+        keepMounted
+        render={
+          <motion.div
+            animate={isOpen ? PANEL_EXPANDED : PANEL_COLLAPSED}
+            data-slot="accordion-panel"
+            exit={PANEL_COLLAPSED}
+            initial={PANEL_COLLAPSED}
+            key="accordion-panel"
+            style={PANEL_STYLE}
+            transition={transition}
+            {...props}
           />
-        )
-      )}
+        }
+      />
     </AnimatePresence>
   )
 }

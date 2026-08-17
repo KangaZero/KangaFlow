@@ -2,15 +2,14 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import { useEffect } from "react"
-import onekoSrc from "@/assets/oneko/default.png"
-import { Oneko } from "@/lib/oneko"
+import { Oneko, type OnekoOptions } from "@/lib/oneko"
 import { useLocale } from "@/providers/locale-provider"
 
 // Thin client wrapper: mounts the framework-agnostic Oneko once and tears it
 // down on unmount. The static import gives a bundler-resolved URL (basePath and
 // content hash applied), so nothing is hardcoded. Renders nothing itself — the
 // class appends its own fixed-position element to <body>.
-export function Neko({ followMouse }: { followMouse?: boolean }) {
+export function Neko(nekoOptions: Partial<OnekoOptions>) {
   const { translate } = useLocale()
   // Stable per-locale array reference (points into the dictionary), so the
   // effect only re-runs — and rebuilds the cat — when the language changes.
@@ -23,15 +22,9 @@ export function Neko({ followMouse }: { followMouse?: boolean }) {
       return
     }
     // Spawn in the middle of the viewport (window coords, top-left origin).
-    const neko = new Oneko({
-      followMouse: followMouse || true,
-      source: onekoSrc.src,
-      speechMessages: messages,
-      x: window.innerWidth / 2,
-      y: window.innerHeight / 2,
-    })
+    const neko = new Oneko({ ...nekoOptions, speechMessages: messages })
     return () => neko.destroy()
-  }, [messages, followMouse])
+  }, [messages, nekoOptions])
 
   return null
 }
