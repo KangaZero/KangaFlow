@@ -16,8 +16,9 @@ export type Track = {
   accentColor?: string // dominant hex/oklch colour for optional player tint
 }
 
-type Minutes = number & { _brand: "minutes" }
-type Seconds = number & { _brand: "seconds" }
+//TODO Move this to a helper.types.ts file
+export type Minutes = number & { _brand: "minutes" }
+export type Seconds = number & { _brand: "seconds" }
 
 // Non-empty tuple so PLAYLIST[0] is always Track (satisfies noUncheckedIndexedAccess).
 // Add more tracks: nix run nixpkgs#yt-dlp -- -x --audio-format mp3 --audio-quality 0 \

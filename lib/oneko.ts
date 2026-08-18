@@ -107,7 +107,7 @@ export const DEFAULT_ONEKO_OPTIONS: Omit<Required<OnekoOptions>, "element"> = {
   allowedTargetDistance: 48,
   anchorName: "--oneko",
   clickAlertDuration: 1000, //ms
-  followMouse: true,
+  followMouse: false,
   isToggledOn: true,
   maxAlertDuration: 4,
   scratchDuration: 5,
@@ -120,8 +120,8 @@ export const DEFAULT_ONEKO_OPTIONS: Omit<Required<OnekoOptions>, "element"> = {
   speechMessages: [], //Set at /components/neko.tsx as it needs `useLocale` provider
   speed: 10,
   updateSpeed: 100,
-  x: 16,
-  y: 16,
+  x: window.innerWidth / 2,
+  y: window.innerHeight / 2 - 200,
   yawnDuration: 8,
 } as const
 
@@ -234,6 +234,7 @@ export class Oneko extends EventTarget {
   private speechRolled = false
   private running = false
   private dragging = false
+  private stopRandomMoving = false
 
   constructor(rawOptions: Partial<OnekoOptions> = {}) {
     super()
@@ -329,8 +330,10 @@ export class Oneko extends EventTarget {
       return
     }
 
-    if (options.followMouse ?? true) {
+    if (options.followMouse) {
       document.addEventListener("mousemove", this.onMouseMove)
+    } else {
+      this.onRandomlyMove()
     }
     this.running = true
     window.requestAnimationFrame(this.onAnimationFrame)
@@ -376,7 +379,59 @@ export class Oneko extends EventTarget {
   }
 
   private readonly onMouseMove = (event: MouseEvent): void => {
+    if (event.y === 0) {
+      this.setTarget(this.x, this.y)
+      return
+    } //Stop following the Mouse, as it is currently out of bounds
     this.setTarget(event.clientX, event.clientY)
+  }
+
+  private readonly onRandomlyMove = async (): Promise<void> => {
+    const randInt = (min: number, max: number) =>
+      Math.floor(Math.random() * (max - min + 1)) + min
+    const sleep = (ms: number) =>
+      new Promise<void>((resolve) => setTimeout(resolve, ms))
+
+    const intervals = Array.from({ length: 100 }, () => randInt(1, 20))
+    let current = 0
+
+    while (!this.stopRandomMoving) {
+      const maxX = document.documentElement.clientWidth
+      const maxY = document.documentElement.clientHeight
+      const xs = randInt(1, maxX)
+      const ys = randInt(1, maxY)
+
+      this.setTarget(xs, ys)
+      await this.waitUntilArrived(xs, ys)
+      await sleep((intervals[current] ?? 1) * 1000)
+
+      current = (current + 1) % intervals.length
+    }
+  }
+
+  private waitUntilArrived(
+    tx: number,
+    ty: number,
+    epsilon = 0.5,
+    timeout = 5000
+  ): Promise<void> {
+    return new Promise((resolve) => {
+      const start = performance.now()
+      const check = () => {
+        const done =
+          Math.abs(this.x - tx) < epsilon && Math.abs(this.y - ty) < epsilon
+        if (
+          done ||
+          this.stopRandomMoving ||
+          performance.now() - start > timeout
+        ) {
+          resolve()
+        } else {
+          requestAnimationFrame(check)
+        }
+      }
+      requestAnimationFrame(check)
+    })
   }
 
   private readonly onClick = (): void => {
@@ -392,6 +447,7 @@ export class Oneko extends EventTarget {
     this.element.setPointerCapture(e.pointerId)
     this.setSprite("alert", 0)
     this.draw()
+    this.stopRandomMoving = true
   }
 
   private readonly onPointerMove = (e: PointerEvent): void => {
@@ -406,6 +462,7 @@ export class Oneko extends EventTarget {
     this.element.releasePointerCapture(e.pointerId)
     this.setSprite("scratchSelf", 0)
     this.draw()
+    this.stopRandomMoving = false
   }
 
   private createSpeechElement(className: string): HTMLElement | null {
