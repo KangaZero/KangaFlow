@@ -19,10 +19,9 @@ import {
   WIDTH_PRESETS,
 } from "@/components/niri/types"
 
-// Deterministic id source. A module-local counter keeps ids stable and testable
-// without pulling in crypto / Date (both banned here: this file is pure).
-let seq = 0
-const uid = (prefix: string): string => `${prefix}-${++seq}`
+//WARNING: Keep track that this does not create duplicate keys, sam just code it yourself
+//STOP BEING A LAZY CUNT
+const uid = (prefix: string, index: number): string => `${prefix}-${index}`
 
 // Default window titles per app, so a bare `spawn` still gets a sensible label.
 const DEFAULT_TITLES: Record<AppId, string> = {
@@ -151,13 +150,13 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
       const window: NiriWindow = {
         app: action.app,
         height: 1,
-        id: uid("win"),
+        id: uid("win", totalWindows(state)),
         title: action.title ?? DEFAULT_TITLES[action.app],
       }
       const column: NiriColumn = {
         floating: false,
         focused: 0,
-        id: uid("col"),
+        id: uid("col", totalWindows(state)),
         width: SPAWN_WIDTH,
         windows: [window],
       }
