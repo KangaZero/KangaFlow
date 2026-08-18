@@ -471,9 +471,17 @@ export function EnvironmentView() {
   // Focused column's position within the tiled subset (−1 when a floated column
   // holds focus — then keep the strip centred on its first column).
   const focusedTiledPos = tiled.findIndex(({ index }) => index === focusedCol)
-  const offsetX =
-    stripWidth / 2 -
-    (centers[focusedTiledPos === -1 ? 0 : focusedTiledPos] ?? stripWidth / 2)
+  const focusedPos = focusedTiledPos === -1 ? 0 : focusedTiledPos
+  const focusedCenter = centers[focusedPos] ?? stripWidth / 2
+  const focusedWidth = widths[focusedPos] ?? 0
+
+  // Both modes are the same subtraction — only the anchor differs. Centre mode
+  // pulls the column's midpoint to the viewport midpoint; non-centre pulls its
+  // left edge to the padding, so the focused column is always on screen instead
+  // of the strip staying pinned at x=0 with the column off to the right.
+  const offsetX = state.isCenterAligned
+    ? stripWidth / 2 - focusedCenter
+    : PAD - (focusedCenter - focusedWidth / 2)
 
   const focusedWin = getFocusedWindow(state)
   const pips = state.workspaces.map((w) => ({
@@ -629,9 +637,6 @@ export function EnvironmentView() {
                     key={ws.id}
                     layout
                     ref={ws.id === state.active ? activeTileRef : undefined}
-                    // style={{
-                    //   ...(state.overview ? { transform: "scale(0.5)" } : {}),
-                    // }}
                     transition={SPRING_PIP}
                   >
                     <button
@@ -730,7 +735,7 @@ export function EnvironmentView() {
             </h1>
           ) : (
             <motion.div
-              animate={{ x: state.isCenterAligned ? offsetX : 0 }}
+              animate={{ x: offsetX }}
               className="absolute inset-y-0 flex items-stretch"
               exit={{ opacity: 0, x: 80 }}
               style={{ gap: GAP, padding: PAD }}
