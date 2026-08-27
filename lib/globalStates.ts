@@ -1,6 +1,5 @@
 import type { Dispatch, SetStateAction } from "react"
 import type { EnvSettings } from "@/components/niri/settings"
-import type { Minutes } from "@/components/widgets/tracks"
 import type { Locale } from "@/lib/i18n"
 import type { OnekoOptions } from "@/lib/oneko"
 import type { Shortcut } from "@/lib/shortcuts"
@@ -76,8 +75,9 @@ export type GlobalStatesContextValue = {
   // relative (distance from the caret line).
   noteLineNumbers: NoteLineNumbers
   setNoteLineNumbers: (mode: NoteLineNumbers) => void
-  isLoggedIn: boolean
-  setIsLoggedIn: (state: boolean) => void
+  //Used to set the mode for Activity
+  isLoggedIn: "visible" | "hidden"
+  setIsLoggedIn: (state: "visible" | "hidden") => void
   // Niri environment desktop settings (wallpaper, accent, transparency, bar,
   // font, UI scale). Persisted so the whole site — including the media player's
   // glass surface — can share the chosen look.
@@ -90,14 +90,6 @@ export type GlobalStatesContextValue = {
   toggleTheme: (theme: Theme, duration?: number) => Promise<void>
   // element is excluded: it's browser-only and created by the constructor.
   onekoSettings: Omit<Required<OnekoOptions>, "element">
-  loginSettings:
-    | {
-        isShowLogin: false
-      }
-    | {
-        isShowLogin: true
-        timeOut: Minutes
-      }
 }
 
 export const ANIMATION_PREFS = ["system", "on", "off"] as const

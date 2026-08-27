@@ -1,7 +1,7 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import type { CSSProperties } from "react"
+import { Activity, type CSSProperties } from "react"
 import "./blue-sky.css"
 
 // Light-theme background: a self-authored CSS blue sky — warm sun, drifting
@@ -19,35 +19,43 @@ const BIRDS = [
   { delay: "3s", duration: "21s", scale: 0.6, top: "33%" },
 ] as const
 
-export function BlueSky({ className }: { className?: string }) {
+export function BlueSky({
+  className,
+  isReducedMotion,
+}: {
+  className?: string
+  isReducedMotion: boolean
+}) {
   return (
     <div aria-hidden className={`blue-sky ${className ?? ""}`}>
       <div className="blue-sky-sun" />
       <div className="blue-sky-clouds blue-sky-clouds-back" />
       <div className="blue-sky-clouds blue-sky-clouds-front" />
-      <div className="blue-sky-birds">
-        {BIRDS.map((bird) => (
-          <svg
-            className="blue-sky-bird"
-            key={`${bird.top}-${bird.delay}`}
-            style={
-              {
-                "--bird-scale": bird.scale,
-                animationDelay: bird.delay,
-                animationDuration: bird.duration,
-                top: bird.top,
-              } as CSSProperties
-            }
-            viewBox="0 0 24 10"
-          >
-            <title>bird</title>
-            <path
-              className="blue-sky-bird-wing"
-              d="M1 7 Q6 1 12 6 Q18 1 23 7"
-            />
-          </svg>
-        ))}
-      </div>
+      <Activity mode={isReducedMotion ? "hidden" : "visible"}>
+        <div className="blue-sky-birds">
+          {BIRDS.map((bird) => (
+            <svg
+              className="blue-sky-bird"
+              key={`${bird.top}-${bird.delay}`}
+              style={
+                {
+                  "--bird-scale": bird.scale,
+                  animationDelay: bird.delay,
+                  animationDuration: bird.duration,
+                  top: bird.top,
+                } as CSSProperties
+              }
+              viewBox="0 0 24 10"
+            >
+              <title>bird</title>
+              <path
+                className="blue-sky-bird-wing"
+                d="M1 7 Q6 1 12 6 Q18 1 23 7"
+              />
+            </svg>
+          ))}
+        </div>
+      </Activity>
     </div>
   )
 }

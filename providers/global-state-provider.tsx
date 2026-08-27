@@ -218,6 +218,10 @@ function loadEnvSettings(): EnvSettings {
         o.launcherRadius,
         DEFAULT_ENV_SETTINGS.launcherRadius
       ),
+      loginSettings:
+        o.loginSettings && typeof o.loginSettings === "object"
+          ? (o.loginSettings as EnvSettings["loginSettings"])
+          : DEFAULT_ENV_SETTINGS.loginSettings,
       showStartingHint:
         typeof o.showStartingHint === "boolean"
           ? o.showStartingHint
@@ -269,7 +273,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isCommandPaletteOpen: false,
   isHelloEffectAnimationComplete: false,
   isJavascriptFlipTechIconFlipped: false,
-  isLoggedIn: false,
+  isLoggedIn: "hidden",
   isMediaPlayerOpen: false,
   isMediaPlayerPlaying: false,
   isNotesOpen: false,
@@ -369,7 +373,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [animationPref, setAnimationPref] = useState<AnimationPref>("system")
   const [vimMode, setVimMode] = useState(false)
   const [noteLineNumbers, setNoteLineNumbers] = useState<NoteLineNumbers>("off")
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState<"hidden" | "visible">("hidden")
   const [envSettings, setEnvSettings] =
     useState<EnvSettings>(DEFAULT_ENV_SETTINGS)
 

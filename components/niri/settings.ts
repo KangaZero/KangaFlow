@@ -3,7 +3,7 @@
 // is a literal union or a bounded scalar — no bare strings/numbers where a
 // finite set applies. Pure data (no React/DOM).
 
-import type { TrackSrc } from "@/components/widgets/tracks"
+import type { Minutes, TrackSrc } from "@/components/widgets/tracks"
 
 export const DAIJI: Record<number, string> = {
   1: "壱",
@@ -164,6 +164,14 @@ export type EnvSettings = {
   toastPosition: ToastPosition
   toastDuration: ToastDuration
   toastMaxStack: ToastMaxStack
+  loginSettings:
+    | {
+        isShowLogin: false
+      }
+    | {
+        isShowLogin: true
+        timeOut: Minutes
+      }
   widgetDefaults: {
     [K in WidgetId]: WidgetStartup<K>
   }
@@ -178,6 +186,10 @@ export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   font: "mono",
   glass: "glass",
   launcherRadius: 16,
+  loginSettings: {
+    isShowLogin: true,
+    timeOut: 10 as Minutes,
+  },
   showStartingHint: true,
   showSystemMonitor: true,
   toastDuration: 5000,

@@ -120,8 +120,8 @@ export const DEFAULT_ONEKO_OPTIONS: Omit<Required<OnekoOptions>, "element"> = {
   speechMessages: [], //Set at /components/neko.tsx as it needs `useLocale` provider
   speed: 10,
   updateSpeed: 100,
-  x: window.innerWidth / 2,
-  y: window.innerHeight / 2 - 200,
+  x: 200,
+  y: 200,
   yawnDuration: 8,
 } as const
 

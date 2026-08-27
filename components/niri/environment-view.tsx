@@ -256,7 +256,7 @@ export function EnvironmentView() {
   }, [])
 
   function handleBurnComplete(): void {
-    setIsLoggedIn(true)
+    setIsLoggedIn("visible")
   }
   // Only one overlay panel opens at a time; opening while another is up is a
   // no-op (early return), matching a real compositor's modal panels.
@@ -558,141 +558,330 @@ export function EnvironmentView() {
         } as CSSProperties
       }
     >
-      {/* Wallpaper */}
-      {/*<div
-        className="absolute inset-0 -z-10"
-        style={{ ...wallpaperStyleProp, backgroundAttachment: "fixed" }}
-      />
-      */}
-
-      {/* Global cmatrix rain (`cmatrix -g`): covers the desktop above the
+      {isLoggedIn ? (
+        <>
+          {/* Global cmatrix rain (`cmatrix -g`): covers the desktop above the
           wallpaper but below the strip/windows and every UI band, so windows
           float over it and the bar stays clickable. pointer-events-none — it's
           a screensaver, not an input surface. */}
-      {globalMatrixOptions ? (
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{ zIndex: -1 }}
-        >
-          <GlyphRain
-            className="h-full w-full"
-            {...matrixToGlyphRain(globalMatrixOptions)}
+          {globalMatrixOptions ? (
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ zIndex: -1 }}
+            >
+              <GlyphRain
+                className="h-full w-full"
+                {...matrixToGlyphRain(globalMatrixOptions)}
+              >
+                <div className="h-full w-full" />
+              </GlyphRain>
+            </div>
+          ) : null}
+
+          <div
+            className={cn(
+              "flex min-h-0 min-w-0 flex-1",
+              isVerticalBar ? "flex-row" : "flex-col"
+            )}
           >
-            <div className="h-full w-full" />
-          </GlyphRain>
-        </div>
-      ) : null}
+            {barBefore && !settings.autoHideBar ? (
+              <div className="p-2 px-4">{bar}</div>
+            ) : null}
 
-      <div
-        className={cn(
-          "flex min-h-0 min-w-0 flex-1",
-          isVerticalBar ? "flex-row" : "flex-col"
-        )}
-      >
-        {barBefore && !settings.autoHideBar ? (
-          <div className="p-2 px-4">{bar}</div>
-        ) : null}
-
-        {/* Scrollable-tiling strip */}
-        {/* pointer-events-none so the raised strip doesn't swallow clicks over
+            {/* Scrollable-tiling strip */}
+            {/* pointer-events-none so the raised strip doesn't swallow clicks over
             its empty areas — only the actual windows (and overview) re-enable
             them, letting floats beneath stay clickable in the gaps. */}
-        <div
-          className="pointer-events-none relative min-h-0 min-w-0 flex-1"
-          ref={stripRef}
-          style={{
-            zIndex: stripZ,
-          }}
-        >
-          {state.overview ? (
-            // Overview (Alt+Shift+O): all workspaces stacked over a blurred
-            // wallpaper (backdrop-blur reads the desktop wallpaper behind).
-            // Alt+J/K move between them, Alt+Shift+J/K rearrange, click/Enter to
-            // enter. Each tile renders its windows' real content, live.
-            <motion.div
-              animate={{ opacity: 1 }}
-              className="scrollbar-none pointer-events-auto absolute inset-0 flex flex-col gap-3 overflow-hidden p-2"
-              initial={{ opacity: 0 }}
-              // Scroll container holding `layout`-animated tiles: without this,
-              // Motion's projection ignores our scrollTop, measures the tiles as
-              // having "moved", and FLIPs them straight back — the scroll lands
-              // but is visually cancelled.
-              layoutScroll
-              ref={overviewRef}
+            <div
+              className="pointer-events-none relative min-h-0 min-w-0 flex-1"
+              ref={stripRef}
+              style={{
+                zIndex: stripZ,
+              }}
             >
-              {state.workspaces.map((ws) => {
-                const wsLabel = `${translate("environment.bar.workspace")} ${ws.id}`
-                return (
-                  // `layout` + a spring FLIP the tiles when Alt+Shift+J/K reorders
-                  // the array (stable key = ws.id). A transparent overlay button
-                  // owns the click so the live window content can render without
-                  // nesting interactive elements inside a <button>.
-                  <motion.div
-                    className={cn(
-                      "relative flex min-h-[90vh] flex-1 flex-col gap-2 rounded-2xl border-2 bg-card/20 p-3",
-                      ws.id === state.active
-                        ? "border-primary"
-                        : "border-border/40 hover:border-border"
-                    )}
-                    key={ws.id}
-                    layout
-                    ref={ws.id === state.active ? activeTileRef : undefined}
-                    transition={SPRING_PIP}
-                  >
-                    <button
-                      aria-label={wsLabel}
-                      className="absolute top-[-7] right-0 z-10 rounded-full border bg-accent px-2 font-medium text-foreground text-xs hover:scale-105"
-                      onClick={() => {
-                        dispatch({ id: ws.id, type: "focusWorkspace" })
-                        dispatch({ type: "toggleOverview" })
-                      }}
-                      type="button"
-                    >
-                      {DAIJI[ws.id]}
-                    </button>
-                    {/* Horizontal scroller for the columns: `inline: "center"`
+              {state.overview ? (
+                // Overview (Alt+Shift+O): all workspaces stacked over a blurred
+                // wallpaper (backdrop-blur reads the desktop wallpaper behind).
+                // Alt+J/K move between them, Alt+Shift+J/K rearrange, click/Enter to
+                // enter. Each tile renders its windows' real content, live.
+                <motion.div
+                  animate={{ opacity: 1 }}
+                  className="scrollbar-none pointer-events-auto absolute inset-0 flex flex-col gap-3 overflow-hidden p-2"
+                  initial={{ opacity: 0 }}
+                  // Scroll container holding `layout`-animated tiles: without this,
+                  // Motion's projection ignores our scrollTop, measures the tiles as
+                  // having "moved", and FLIPs them straight back — the scroll lands
+                  // but is visually cancelled.
+                  layoutScroll
+                  ref={overviewRef}
+                >
+                  {state.workspaces.map((ws) => {
+                    const wsLabel = `${translate("environment.bar.workspace")} ${ws.id}`
+                    return (
+                      // `layout` + a spring FLIP the tiles when Alt+Shift+J/K reorders
+                      // the array (stable key = ws.id). A transparent overlay button
+                      // owns the click so the live window content can render without
+                      // nesting interactive elements inside a <button>.
+                      <motion.div
+                        className={cn(
+                          "relative flex min-h-[90vh] flex-1 flex-col gap-2 rounded-2xl border-2 bg-card/20 p-3",
+                          ws.id === state.active
+                            ? "border-primary"
+                            : "border-border/40 hover:border-border"
+                        )}
+                        key={ws.id}
+                        layout
+                        ref={ws.id === state.active ? activeTileRef : undefined}
+                        transition={SPRING_PIP}
+                      >
+                        <button
+                          aria-label={wsLabel}
+                          className="absolute top-[-7] right-0 z-10 rounded-full border bg-accent px-2 font-medium text-foreground text-xs hover:scale-105"
+                          onClick={() => {
+                            dispatch({ id: ws.id, type: "focusWorkspace" })
+                            dispatch({ type: "toggleOverview" })
+                          }}
+                          type="button"
+                        >
+                          {DAIJI[ws.id]}
+                        </button>
+                        {/* Horizontal scroller for the columns: `inline: "center"`
                         on the focused window resolves against this box. */}
-                    <div className="scrollbar-none flex min-h-0 flex-1 gap-0 overflow-x-hidden">
-                      {ws.columns.length === 0 ? (
-                        <span className="flex flex-1 items-center justify-center text-muted-foreground/50 text-xs">
-                          —
-                        </span>
-                      ) : (
-                        ws.columns.map((col, ci) => (
-                          <div
-                            className="mx-auto flex min-w-[80%] flex-col gap-2"
-                            key={col.id}
-                            // style={{ flex: 1}}
-                          >
-                            {col.windows.map((win, wi) => {
-                              const winFocused =
-                                ws.id === state.active &&
-                                ci === ws.focused &&
-                                wi === col.focused
-                              return (
-                                <div
-                                  className={cn(
-                                    "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border-2 bg-card transition-colors",
-                                    wi <= col.windows.length - 1 ? "mr-2" : "",
-                                    winFocused
-                                      ? "border-primary"
-                                      : "border-border hover:border-primary/60"
-                                  )}
-                                  id={String(col.windows.length)}
-                                  key={win.id}
-                                  // `winFocused` already requires the active
-                                  // workspace, so at most one window in the
-                                  // whole overview claims this ref.
-                                  ref={winFocused ? activeWinRef : undefined}
-                                >
-                                  <div className="flex items-center border-border border-b bg-muted/40 px-2 py-1">
-                                    <span className="truncate font-medium text-[10px] text-card-foreground">
-                                      {win.title}
-                                    </span>
-                                  </div>
-                                  {/* Live content; pointer-events-none so the
+                        <div className="scrollbar-none flex min-h-0 flex-1 gap-0 overflow-x-hidden">
+                          {ws.columns.length === 0 ? (
+                            <span className="flex flex-1 items-center justify-center text-muted-foreground/50 text-xs">
+                              —
+                            </span>
+                          ) : (
+                            ws.columns.map((col, ci) => (
+                              <div
+                                className="mx-auto flex min-w-[80%] flex-col gap-2"
+                                key={col.id}
+                                // style={{ flex: 1}}
+                              >
+                                {col.windows.map((win, wi) => {
+                                  const winFocused =
+                                    ws.id === state.active &&
+                                    ci === ws.focused &&
+                                    wi === col.focused
+                                  return (
+                                    <div
+                                      className={cn(
+                                        "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border-2 bg-card transition-colors",
+                                        wi <= col.windows.length - 1
+                                          ? "mr-2"
+                                          : "",
+                                        winFocused
+                                          ? "border-primary"
+                                          : "border-border hover:border-primary/60"
+                                      )}
+                                      id={String(col.windows.length)}
+                                      key={win.id}
+                                      // `winFocused` already requires the active
+                                      // workspace, so at most one window in the
+                                      // whole overview claims this ref.
+                                      ref={
+                                        winFocused ? activeWinRef : undefined
+                                      }
+                                    >
+                                      <div className="flex items-center border-border border-b bg-muted/40 px-2 py-1">
+                                        <span className="truncate font-medium text-[10px] text-card-foreground">
+                                          {win.title}
+                                        </span>
+                                      </div>
+                                      {/* Live content; pointer-events-none so the
                                     window's overlay button owns the click. */}
-                                  <div className="pointer-events-none min-h-0 flex-1 overflow-hidden">
+                                      <div className="pointer-events-none min-h-0 flex-1 overflow-hidden">
+                                        <WindowContent
+                                          dark={dark}
+                                          files={files}
+                                          onClose={() =>
+                                            dispatch({ type: "close" })
+                                          }
+                                          routePath={pathname}
+                                          win={win}
+                                        />
+                                      </div>
+                                      {/* Click a window to focus it, then exit. */}
+                                      <button
+                                        aria-label={win.title}
+                                        className="absolute inset-0 z-30"
+                                        onClick={() => {
+                                          dispatch({
+                                            column: ci,
+                                            type: "focusAt",
+                                            window: wi,
+                                            workspace: ws.id,
+                                          })
+                                          dispatch({ type: "toggleOverview" })
+                                        }}
+                                        type="button"
+                                      />
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </motion.div>
+              ) : columns.length === 0 && settings.showStartingHint ? (
+                <h1 className="flex h-full items-center justify-center text-center text-2xl [text-shadow:2px_1px_0_var(--color-sidebar-accent)]">
+                  {translate("environment.hint")}
+                </h1>
+              ) : (
+                <motion.div
+                  animate={{ x: offsetX }}
+                  className="absolute inset-y-0 flex items-stretch"
+                  exit={{ opacity: 0, x: 80 }}
+                  style={{ gap: GAP, padding: PAD }}
+                  transition={SPRING_WORKSPACE}
+                >
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {tiled.map(({ col, index: ci }, ti) => (
+                      <motion.div
+                        animate={{ opacity: ci === focusedCol ? 1 : 0.6, x: 0 }}
+                        className="flex flex-col"
+                        exit={{ opacity: 0, x: 80 }}
+                        // First window (empty workspace) fades in; later ones slide in
+                        // from the right, niri-style.
+                        initial={
+                          tiled.length === 1
+                            ? { opacity: 0, x: 0 }
+                            : { opacity: 0, x: 80 }
+                        }
+                        key={col.id}
+                        layout
+                        style={{ gap: GAP, width: widths[ti] }}
+                        transition={{
+                          damping: 30,
+                          duration: 100,
+                          stiffness: 260,
+                          type: "spring",
+                        }}
+                      >
+                        <AnimatePresence initial={false} mode="popLayout">
+                          {col.windows.map((win, wi) => {
+                            const isFocused =
+                              ci === focusedCol && wi === col.focused
+                            // Terminal/editor windows are translucent so the
+                            // wallpaper shows through their transparent content.
+                            const glassy =
+                              win.app === "terminal" || win.app === "editor"
+                            // "true" glass swaps the CSS blur for the WebGL
+                            // shader pane (canvasui/Glass) behind the content.
+                            const trueGlass =
+                              settings.glass === "true" && glassy
+                            return (
+                              <motion.button
+                                className={cn(
+                                  "pointer-events-auto flex min-h-0 flex-col overflow-hidden rounded-lg border text-left shadow-xl",
+                                  trueGlass
+                                    ? "bg-transparent shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_12px_44px_rgba(0,0,0,0.38)]"
+                                    : glassy
+                                      ? "bg-card/30 backdrop-blur-md"
+                                      : "bg-card",
+                                  isFocused ? "border-primary" : "border-border"
+                                )}
+                                data-win-id={win.id}
+                                // Close animation: shrink to nothing at the centre
+                                // (opacity-only when the user prefers reduced motion).
+                                exit={
+                                  reduceMotion
+                                    ? { opacity: 0 }
+                                    : { opacity: 0, scale: 0 }
+                                }
+                                initial={
+                                  tiled.length === 1
+                                    ? { opacity: 0 }
+                                    : { opacity: 0, y: 24 }
+                                }
+                                key={win.id}
+                                layout
+                                onPointerDown={() => {
+                                  // Clicking a tiled window raises the tiled layer
+                                  // above any floating widget, focuses it, and makes
+                                  // it the target of the unified close shortcut.
+                                  setStripZ(
+                                    bringToFront(
+                                      () => dispatch({ type: "close" }),
+                                      NIRI_TILE_ID
+                                    )
+                                  )
+                                  dispatch({
+                                    column: ci,
+                                    type: "focusAt",
+                                    window: wi,
+                                    workspace: state.active,
+                                  })
+                                }}
+                                // Vertical flex weight = the window's height (y-resize).
+                                style={{
+                                  flexBasis: 0,
+                                  flexGrow: win.height,
+                                  flexShrink: 1,
+                                }}
+                                transition={SPRING_TILE}
+                                type="button"
+                              >
+                                <div className="flex items-center gap-2 border-border border-b bg-muted/40 px-3 py-1.5">
+                                  <span className="flex-1 truncate font-medium text-xs">
+                                    {win.title}
+                                  </span>
+                                  <SquareIcon
+                                    className="size-3.5 text-muted-foreground hover:scale-110"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      dispatch({
+                                        type: "fullscreen",
+                                      })
+                                    }}
+                                  />
+
+                                  <X
+                                    className="size-3.5 text-muted-foreground hover:scale-110"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      dispatch({
+                                        column: ci,
+                                        type: "focusAt",
+                                        window: wi,
+                                        workspace: state.active,
+                                      })
+                                      dispatch({ type: "close" })
+                                    }}
+                                  />
+                                </div>
+                                <div className="relative min-h-0 flex-1 overflow-hidden">
+                                  {trueGlass ? (
+                                    // Full-pane frosted glass. The wallpaper is
+                                    // captured *inside* the pane so the shader has
+                                    // something to refract; the live content then
+                                    // renders crisp on top of the glass.
+                                    <div className="absolute inset-0">
+                                      <Glass
+                                        aberration={0.6}
+                                        blur={1.5}
+                                        className="h-full w-full"
+                                        corner={8}
+                                        fill
+                                        ior={1.35}
+                                        reflection={0.9}
+                                        shape="rectangle"
+                                        shine={0.08}
+                                      >
+                                        <div className="h-full w-full" />
+                                      </Glass>
+                                    </div>
+                                  ) : null}
+                                  <div
+                                    className={cn(
+                                      trueGlass && "absolute inset-0"
+                                    )}
+                                  >
                                     <WindowContent
                                       dark={dark}
                                       files={files}
@@ -703,284 +892,102 @@ export function EnvironmentView() {
                                       win={win}
                                     />
                                   </div>
-                                  {/* Click a window to focus it, then exit. */}
-                                  <button
-                                    aria-label={win.title}
-                                    className="absolute inset-0 z-30"
-                                    onClick={() => {
-                                      dispatch({
-                                        column: ci,
-                                        type: "focusAt",
-                                        window: wi,
-                                        workspace: ws.id,
-                                      })
-                                      dispatch({ type: "toggleOverview" })
-                                    }}
-                                    type="button"
-                                  />
                                 </div>
-                              )
-                            })}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </motion.div>
-          ) : columns.length === 0 && settings.showStartingHint ? (
-            <h1 className="flex h-full items-center justify-center text-center text-2xl [text-shadow:2px_1px_0_var(--color-sidebar-accent)]">
-              {translate("environment.hint")}
-            </h1>
-          ) : (
-            <motion.div
-              animate={{ x: offsetX }}
-              className="absolute inset-y-0 flex items-stretch"
-              exit={{ opacity: 0, x: 80 }}
-              style={{ gap: GAP, padding: PAD }}
-              transition={SPRING_WORKSPACE}
-            >
-              <AnimatePresence initial={false} mode="popLayout">
-                {tiled.map(({ col, index: ci }, ti) => (
-                  <motion.div
-                    animate={{ opacity: ci === focusedCol ? 1 : 0.6, x: 0 }}
-                    className="flex flex-col"
-                    exit={{ opacity: 0, x: 80 }}
-                    // First window (empty workspace) fades in; later ones slide in
-                    // from the right, niri-style.
-                    initial={
-                      tiled.length === 1
-                        ? { opacity: 0, x: 0 }
-                        : { opacity: 0, x: 80 }
-                    }
-                    key={col.id}
-                    layout
-                    style={{ gap: GAP, width: widths[ti] }}
-                    transition={{
-                      damping: 30,
-                      duration: 100,
-                      stiffness: 260,
-                      type: "spring",
-                    }}
-                  >
-                    <AnimatePresence initial={false} mode="popLayout">
-                      {col.windows.map((win, wi) => {
-                        const isFocused =
-                          ci === focusedCol && wi === col.focused
-                        // Terminal/editor windows are translucent so the
-                        // wallpaper shows through their transparent content.
-                        const glassy =
-                          win.app === "terminal" || win.app === "editor"
-                        // "true" glass swaps the CSS blur for the WebGL
-                        // shader pane (canvasui/Glass) behind the content.
-                        const trueGlass = settings.glass === "true" && glassy
-                        return (
-                          <motion.button
-                            className={cn(
-                              "pointer-events-auto flex min-h-0 flex-col overflow-hidden rounded-lg border text-left shadow-xl",
-                              trueGlass
-                                ? "bg-transparent shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_12px_44px_rgba(0,0,0,0.38)]"
-                                : glassy
-                                  ? "bg-card/30 backdrop-blur-md"
-                                  : "bg-card",
-                              isFocused ? "border-primary" : "border-border"
-                            )}
-                            data-win-id={win.id}
-                            // Close animation: shrink to nothing at the centre
-                            // (opacity-only when the user prefers reduced motion).
-                            exit={
-                              reduceMotion
-                                ? { opacity: 0 }
-                                : { opacity: 0, scale: 0 }
-                            }
-                            initial={
-                              tiled.length === 1
-                                ? { opacity: 0 }
-                                : { opacity: 0, y: 24 }
-                            }
-                            key={win.id}
-                            layout
-                            onPointerDown={() => {
-                              // Clicking a tiled window raises the tiled layer
-                              // above any floating widget, focuses it, and makes
-                              // it the target of the unified close shortcut.
-                              setStripZ(
-                                bringToFront(
-                                  () => dispatch({ type: "close" }),
-                                  NIRI_TILE_ID
-                                )
-                              )
-                              dispatch({
-                                column: ci,
-                                type: "focusAt",
-                                window: wi,
-                                workspace: state.active,
-                              })
-                            }}
-                            // Vertical flex weight = the window's height (y-resize).
-                            style={{
-                              flexBasis: 0,
-                              flexGrow: win.height,
-                              flexShrink: 1,
-                            }}
-                            transition={SPRING_TILE}
-                            type="button"
-                          >
-                            <div className="flex items-center gap-2 border-border border-b bg-muted/40 px-3 py-1.5">
-                              <span className="flex-1 truncate font-medium text-xs">
-                                {win.title}
-                              </span>
-                              <SquareIcon
-                                className="size-3.5 text-muted-foreground hover:scale-110"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  dispatch({
-                                    type: "fullscreen",
-                                  })
-                                }}
-                              />
+                              </motion.button>
+                            )
+                          })}
+                        </AnimatePresence>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </motion.div>
+              )}
+            </div>
 
-                              <X
-                                className="size-3.5 text-muted-foreground hover:scale-110"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  dispatch({
-                                    column: ci,
-                                    type: "focusAt",
-                                    window: wi,
-                                    workspace: state.active,
-                                  })
-                                  dispatch({ type: "close" })
-                                }}
-                              />
-                            </div>
-                            <div className="relative min-h-0 flex-1 overflow-hidden">
-                              {trueGlass ? (
-                                // Full-pane frosted glass. The wallpaper is
-                                // captured *inside* the pane so the shader has
-                                // something to refract; the live content then
-                                // renders crisp on top of the glass.
-                                <div className="absolute inset-0">
-                                  <Glass
-                                    aberration={0.6}
-                                    blur={1.5}
-                                    className="h-full w-full"
-                                    corner={8}
-                                    fill
-                                    ior={1.35}
-                                    reflection={0.9}
-                                    shape="rectangle"
-                                    shine={0.08}
-                                  >
-                                    <div className="h-full w-full" />
-                                  </Glass>
-                                </div>
-                              ) : null}
-                              <div
-                                className={cn(trueGlass && "absolute inset-0")}
-                              >
-                                <WindowContent
-                                  dark={dark}
-                                  files={files}
-                                  onClose={() => dispatch({ type: "close" })}
-                                  routePath={pathname}
-                                  win={win}
-                                />
-                              </div>
-                            </div>
-                          </motion.button>
-                        )
-                      })}
-                    </AnimatePresence>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </motion.div>
-          )}
-        </div>
+            {!barBefore && !settings.autoHideBar ? (
+              <div className="p-2">{bar}</div>
+            ) : null}
+          </div>
 
-        {!barBefore && !settings.autoHideBar ? (
-          <div className="p-2">{bar}</div>
-        ) : null}
-      </div>
+          {settings.autoHideBar ? (
+            <AutoHideBar position={settings.barPosition}>{bar}</AutoHideBar>
+          ) : null}
 
-      {settings.autoHideBar ? (
-        <AutoHideBar position={settings.barPosition}>{bar}</AutoHideBar>
-      ) : null}
-
-      {/* Floated niri columns (Alt+T) render as draggable, click-to-front
+          {/* Floated niri columns (Alt+T) render as draggable, click-to-front
           windows sharing the widgets' z-order band. Focusing one (click/open)
           makes Alt+T re-tile it and Alt+Shift+Q close it. */}
-      {floating.map(({ col, index: colIndex }, idx) => {
-        const win = col.windows[col.focused] ?? col.windows[0]
-        if (!win) return null
-        const focusThis = (): void =>
-          dispatch({
-            column: colIndex,
-            type: "focusAt",
-            window: col.focused,
-            workspace: state.active,
-          })
-        const closeThis = (): void => {
-          focusThis()
-          dispatch({ type: "close" })
-        }
-        return (
-          <DraggableWindow
-            defaultHeight={340}
-            defaultWidth={480}
-            isOpen
-            key={col.id}
-            onClose={closeThis}
-            onFocus={focusThis}
-            positionClassName={cn(
-              "top-16",
-              idx % 2 === 0 ? "left-16" : "right-16"
-            )}
-            storageKey={`niri-float-${col.id}`}
-            title={win.title}
-          >
-            <WindowContent
-              dark={dark}
-              files={files}
-              onClose={closeThis}
-              routePath={pathname}
-              win={win}
-            />
-          </DraggableWindow>
-        )
-      })}
+          {floating.map(({ col, index: colIndex }, idx) => {
+            const win = col.windows[col.focused] ?? col.windows[0]
+            if (!win) return null
+            const focusThis = (): void =>
+              dispatch({
+                column: colIndex,
+                type: "focusAt",
+                window: col.focused,
+                workspace: state.active,
+              })
+            const closeThis = (): void => {
+              focusThis()
+              dispatch({ type: "close" })
+            }
+            return (
+              <DraggableWindow
+                defaultHeight={340}
+                defaultWidth={480}
+                isOpen
+                key={col.id}
+                onClose={closeThis}
+                onFocus={focusThis}
+                positionClassName={cn(
+                  "top-16",
+                  idx % 2 === 0 ? "left-16" : "right-16"
+                )}
+                storageKey={`niri-float-${col.id}`}
+                title={win.title}
+              >
+                <WindowContent
+                  dark={dark}
+                  files={files}
+                  onClose={closeThis}
+                  routePath={pathname}
+                  win={win}
+                />
+              </DraggableWindow>
+            )
+          })}
 
-      <NoctaliaLauncher
-        apps={launcherApps}
-        launcherRadius={settings.launcherRadius}
-        onClose={closePanel}
-        onLaunch={launch}
-        onOpenSettings={() => openPanel("settings")}
-        onOpenWallpaper={() => openPanel("wallpaper")}
-        open={panel === "launcher"}
-      />
-      <NoctaliaSettings
-        onChange={setSettings}
-        onClose={closePanel}
-        open={panel === "settings"}
-        settings={settings}
-      />
-      <WallpaperDialog
-        glass={settings.glass}
-        onChange={(w) => setSettings({ ...settings, wallpaper: w })}
-        onOpenChange={(o) => setPanel(o ? "wallpaper" : null)}
-        open={panel === "wallpaper"}
-        value={settings.wallpaper}
-        windowRadius={settings.windowRadius}
-      />
-      <NiriHelpDialog
-        onOpenChange={(o) => setPanel(o ? "help" : null)}
-        open={panel === "help"}
-      />
-      <NotificationToast />
-      {!isLoggedIn ? <LoginScreen onBurnComplete={handleBurnComplete} /> : null}
+          <NoctaliaLauncher
+            apps={launcherApps}
+            launcherRadius={settings.launcherRadius}
+            onClose={closePanel}
+            onLaunch={launch}
+            onOpenSettings={() => openPanel("settings")}
+            onOpenWallpaper={() => openPanel("wallpaper")}
+            open={panel === "launcher"}
+          />
+          <NoctaliaSettings
+            onChange={setSettings}
+            onClose={closePanel}
+            open={panel === "settings"}
+            settings={settings}
+          />
+          <WallpaperDialog
+            glass={settings.glass}
+            onChange={(w) => setSettings({ ...settings, wallpaper: w })}
+            onOpenChange={(o) => setPanel(o ? "wallpaper" : null)}
+            open={panel === "wallpaper"}
+            value={settings.wallpaper}
+            windowRadius={settings.windowRadius}
+          />
+          <NiriHelpDialog
+            onOpenChange={(o) => setPanel(o ? "help" : null)}
+            open={panel === "help"}
+          />
+          <NotificationToast />
+        </>
+      ) : (
+        <LoginScreen onBurnComplete={handleBurnComplete} />
+      )}
     </main>
   )
 }

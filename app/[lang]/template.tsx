@@ -4,10 +4,12 @@
 import { motion, useReducedMotion } from "motion/react"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { useMemo } from "react"
+import { Activity, useMemo } from "react"
 import { BubbleWipe } from "@/components/bubble-wipe"
 import { hashString } from "@/lib/bubbles"
+import { isReducedMotion } from "@/lib/isReducedMotion"
 import { DEFAULT_THEME, isTheme, type Theme } from "@/lib/themes"
+import { useGlobalStates } from "@/providers/global-state-provider"
 
 // Route transition: a Next App Router `template.tsx` re-mounts on every
 // navigation, so this entrance replays each time. The bubble raft itself lives
@@ -16,6 +18,7 @@ import { DEFAULT_THEME, isTheme, type Theme } from "@/lib/themes"
 
 export default function Template({ children }: { children: React.ReactNode }) {
   const reduceMotion = useReducedMotion()
+  const { animationPref } = useGlobalStates()
   const { resolvedTheme } = useTheme()
   const theme: Theme = isTheme(resolvedTheme) ? resolvedTheme : DEFAULT_THEME
   const pathname = usePathname()
@@ -42,7 +45,13 @@ export default function Template({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      <BubbleWipe seed={seed} theme={theme} />
+      <Activity
+        mode={
+          isReducedMotion(animationPref, reduceMotion) ? "hidden" : "visible"
+        }
+      >
+        <BubbleWipe seed={seed} theme={theme} />
+      </Activity>
     </>
   )
 }

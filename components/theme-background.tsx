@@ -1,22 +1,22 @@
 "use client"
-
-// [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
-
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import dynamic from "next/dynamic"
 import { useTheme } from "next-themes"
-import { useEffect, useState } from "react"
-
+import { Activity, useEffect, useState } from "react"
 import { BlueSky } from "@/components/blue-sky"
 import { Clouds } from "@/components/canvasui/Clouds"
 import { SwimmingSchool } from "@/components/sea-creatures"
+import { isReducedMotion } from "@/lib/isReducedMotion"
+import { useGlobalStates } from "@/providers/global-state-provider"
 
 // The WebGL backgrounds pull heavy deps (ogl / three + postprocessing), so they
 // load only when their theme is active — a light-theme visitor never downloads
 // them. BlueSky is pure CSS, so it ships inline.
 const LightRays = dynamic(
   () => import("@/components/LightRays").then((m) => m.LightRays),
-  { ssr: false }
+  {
+    ssr: false,
+  }
 )
 const PixelBlast = dynamic(() => import("@/components/PixelBlast"), {
   ssr: false,
@@ -24,27 +24,33 @@ const PixelBlast = dynamic(() => import("@/components/PixelBlast"), {
 
 const FILL = "h-full w-full"
 
-function activeBackground(theme: string | undefined) {
+function activeBackground(theme: string | undefined, isReducedMotion: boolean) {
   switch (theme) {
     case "dark":
       return (
         <>
           <LightRays className={FILL} />
-          <SwimmingSchool />
+          <Activity mode={isReducedMotion ? "hidden" : "visible"}>
+            <SwimmingSchool />
+          </Activity>
         </>
       )
     case "terminal":
-      return <PixelBlast className={FILL} color="#a6e3a1" transparent />
+      return (
+        <Activity mode={isReducedMotion ? "hidden" : "visible"}>
+          <PixelBlast className={FILL} color="#a6e3a1" transparent />
+        </Activity>
+      )
     default:
       return (
         <Clouds
           className={FILL}
           cover={0.1}
           refraction={0.1}
-          speed={0.6}
+          speed={isReducedMotion ? 0 : 0.6}
           wind={0.2}
         >
-          <BlueSky className={FILL} />
+          <BlueSky className={FILL} isReducedMotion={isReducedMotion} />
         </Clouds>
       )
   }
@@ -55,6 +61,8 @@ function activeBackground(theme: string | undefined) {
 // correct background fills in.
 export function ThemeBackground() {
   const { resolvedTheme } = useTheme()
+  const reducedMotion = useReducedMotion()
+  const { animationPref } = useGlobalStates()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => setMounted(true), [])
@@ -74,7 +82,10 @@ export function ThemeBackground() {
             key={resolvedTheme ?? "light"}
             transition={{ duration: 0.6, ease: "easeInOut" }}
           >
-            {activeBackground(resolvedTheme)}
+            {activeBackground(
+              resolvedTheme,
+              isReducedMotion(animationPref, reducedMotion)
+            )}
           </motion.div>
         ) : null}
       </AnimatePresence>
