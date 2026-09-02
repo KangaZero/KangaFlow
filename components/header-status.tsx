@@ -3,7 +3,8 @@
 
 import { useReducedMotion } from "motion/react"
 import { useEffect, useMemo, useRef, useState } from "react"
-
+import { HoverPopover } from "@/components/ui/hover-popover"
+import { WorkplaceCard } from "@/components/workplace-card"
 import { person } from "@/lib/person"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
@@ -100,15 +101,29 @@ export function HeaderStatus({ className }: { className?: string }) {
   const reduceMotion = useReducedMotion()
   const display = useScrambleCycle(texts, reduceMotion)
 
+  // The rotating lines only *mention* the workplace; the card shows it. A
+  // <button> trigger (rather than a bare span) is what makes the card
+  // keyboard-reachable and tappable on touch.
   return (
-    <span
-      aria-live="polite"
-      className={cn(
-        "min-w-[15ch] text-right font-[family-name:var(--font-heading-ja)] text-muted-foreground text-sm tabular-nums",
-        className
-      )}
+    <HoverPopover
+      align="end"
+      className="w-auto"
+      trigger={
+        <button
+          aria-label={translate("headerCard.workplace")}
+          className={cn(
+            "min-w-[15ch] cursor-help text-right font-[family-name:var(--font-heading-ja)] text-muted-foreground text-sm tabular-nums",
+            className
+          )}
+          type="button"
+        >
+          {/* Hidden from assistive tech: the per-frame glyph churn is noise,
+              and the button's aria-label already names what it opens. */}
+          <span aria-hidden>{display}</span>
+        </button>
+      }
     >
-      {display}
-    </span>
+      <WorkplaceCard />
+    </HoverPopover>
   )
 }

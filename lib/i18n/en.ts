@@ -53,6 +53,10 @@ const en = {
         description: "Hovered the date & weather box.",
         title: "Snoopy Detective",
       },
+      "social-stalker": {
+        description: "Opened every one of the creator's socials.",
+        title: "Social Stalker",
+      },
       speedophile: {
         description: "Completed everything in under 67 seconds.",
         title: "Speedophile",
@@ -258,6 +262,11 @@ const en = {
   },
   headerCard: {
     basedIn: "Based in",
+    map: {
+      caption: "Hey, this is where I work!",
+      credit: "Map source: Global Map Japan (GSI)",
+      label: "Map of central Tokyo with the workplace marked",
+    },
     status: "Currently coding",
     workplace: "Working at Accenture",
   },

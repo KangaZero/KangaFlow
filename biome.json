@@ -16,7 +16,8 @@
     }
   },
   "files": {
-    "ignoreUnknown": true
+    "ignoreUnknown": true,
+    "includes": ["**", "!lib/tokyo-map-data.ts"]
   },
   "formatter": {
     "enabled": true,

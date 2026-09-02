@@ -10,6 +10,7 @@ import { FaGithub, FaLinkedin } from "react-icons/fa6"
 
 import { Button } from "@/components/ui/button"
 import { person } from "@/lib/person"
+import { useAchievements } from "@/providers/achievements-provider"
 
 const SOCIAL_ICONS: Record<string, IconType> = {
   github: FaGithub,
@@ -49,6 +50,7 @@ function useGithubFollowers(username: string) {
 export function SiteFooter() {
   const year = new Date().getFullYear()
   const followers = useGithubFollowers(person.githubUsername)
+  const { markSocialVisited } = useAchievements()
 
   return (
     <footer className="mt-16 flex w-full flex-col items-center gap-4 border-border/60 border-t py-6 text-muted-foreground text-xs sm:flex-row sm:justify-between">
@@ -69,7 +71,12 @@ export function SiteFooter() {
               size="sm"
               variant="ghost"
             >
-              <a href={social.href} rel="noreferrer" target="_blank">
+              <a
+                href={social.href}
+                onClick={() => markSocialVisited(social.name)}
+                rel="noreferrer"
+                target="_blank"
+              >
                 <Icon aria-hidden />
                 {isGithub && followers !== null && (
                   <span className="inline-flex items-center gap-1">

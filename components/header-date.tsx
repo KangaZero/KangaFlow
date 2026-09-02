@@ -5,12 +5,9 @@ import "./bounceIn.css"
 import { useEffect, useState } from "react"
 
 import { getDailyWeatherForecast } from "@/api/queries/getDailyWeatherForecast"
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/animate-ui/components/radix/hover-card"
+import { HoverPopover } from "@/components/ui/hover-popover"
 import { Skeleton } from "@/components/ui/skeleton"
+import { WorkplaceCard } from "@/components/workplace-card"
 import { person } from "@/lib/person"
 import {
   getTemperatureColor,
@@ -65,34 +62,26 @@ const HeaderDate = () => {
 
   const gradient = getTemperatureColor(temperature)
 
-  // Reveal the P5 date box on hover or click: open the card, replay the jelly
-  // animation, and grant the easter-egg achievement.
+  // Reveal the P5 date box: replay the jelly animation and grant the easter-egg
+  // achievement. Opening/closing the card itself is HoverPopover's job — this
+  // only mirrors its state into the CSS classes below.
   const handleReveal = () => {
-    setIsHovered(true)
     setIsJellyHoverAnimationOver(false)
     unlockAchievement("snoopy-detective")
   }
 
   return (
-    <HoverCard
-      closeDelay={0}
+    <HoverPopover
+      align="start"
+      className="w-auto"
       onOpenChange={setIsHovered}
-      open={isHovered}
-      openDelay={0}
-    >
-      <HoverCardTrigger asChild>
-        {/* biome-ignore lint/a11y/noStaticElementInteractions: hover/touch is a progressive-enhancement easter egg; the fallback text keeps the date accessible. */}
-        {/* biome-ignore lint/a11y/useKeyWithClickEvents: same easter-egg rationale — the fallback text keeps the date fully accessible without the click. */}
+      trigger={
+        // biome-ignore lint/a11y/noStaticElementInteractions: hover/touch is a progressive-enhancement easter egg; the fallback text keeps the date accessible.
+        // biome-ignore lint/a11y/useKeyWithClickEvents: same easter-egg rationale — the fallback text keeps the date fully accessible without the click.
         <div
           className="link-wrapper"
           onClick={handleReveal}
-          onMouseEnter={handleReveal}
-          onMouseLeave={() => setIsHovered(false)}
-          onTouchStart={() => {
-            setIsHovered(!isHovered)
-            setIsJellyHoverAnimationOver(false)
-            unlockAchievement("snoopy-detective")
-          }}
+          onPointerEnter={handleReveal}
         >
           <div className="fallback">
             {day} {month} {date}
@@ -178,13 +167,10 @@ const HeaderDate = () => {
             </div>
           </div>
         </div>
-      </HoverCardTrigger>
-      <HoverCardContent align="start" className="w-auto font-mono text-xs">
-        <p>{`${translate("headerCard.basedIn")} ${person.location}`}</p>
-        <p>{translate("headerCard.workplace")}</p>
-        <p>{translate("headerCard.status")}</p>
-      </HoverCardContent>
-    </HoverCard>
+      }
+    >
+      <WorkplaceCard />
+    </HoverPopover>
   )
 }
 

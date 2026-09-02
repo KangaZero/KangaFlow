@@ -68,6 +68,7 @@ terminal. Shipped fully static to GitHub Pages.
 - [Architecture Notes](#architecture-notes)
 - [Deployment](#deployment)
 - [AI Usage](#ai-usage)
+- [Credits](#credits)
 - [License](#license)
 
 ## Highlights
@@ -204,6 +205,71 @@ This repository is built with AI assistance under a disclosed policy — see
 [`AI_POLICY.md`](./AI_POLICY.md). AI-generated prose carries a *"Human review
 needed"* marker until a human confirms it (`just review` tracks the backlog), and
 AI-assisted commits disclose the tool via an `Assisted-by:` trailer.
+
+## Credits
+
+Everything below is someone else's work. npm dependencies are listed in
+[`package.json`](./package.json); this section covers third-party code copied
+into the repo, external data and services, fonts, and assets.
+
+### Vendored UI code
+
+| Source | License | Where |
+| --- | --- | --- |
+| [shadcn/ui](https://ui.shadcn.com/) (`radix-mira`) | MIT | `components/ui/` |
+| [animate-ui](https://animate-ui.com/) | MIT + Commons Clause | `components/animate-ui/` |
+| [React Bits](https://reactbits.dev/) | MIT + Commons Clause | `Carousel`, `BorderGlow`, `Counter`, `ElasticSlider`, `LightRays`, `Particles`, `PixelBlast`, the PillNav-style dock in `site-header`, the rolling `locale-transition` |
+| [animate.css](https://github.com/animate-css/animate.css) | MIT | `components/bounceIn.css` |
+| [oneko.js](https://github.com/adryd325/oneko.js) + the [lots-o-nekos](https://github.com/raynepaws/lots-o-nekos) fork | MIT | `lib/oneko.ts`, `assets/oneko/default.png` — sprite from the original *Neko* by Masayuki Koba |
+| [KanjiVG](https://github.com/KanjiVG/kanjivg) | CC BY-SA 3.0 | stroke paths in `components/ui/apple-hello-effect.tsx` |
+
+> [!NOTE]
+> **Commons Clause** (animate-ui, React Bits) permits personal and commercial
+> use but forbids selling or redistributing the components themselves — fine for
+> a portfolio, relevant if this code is ever lifted into a product.
+
+### Data & services
+
+| Source | Terms | Used for |
+| --- | --- | --- |
+| [Open-Meteo](https://open-meteo.com/) | Data [CC BY 4.0](https://open-meteo.com/en/license); free below 10k calls/day, non-commercial | live weather in the header date box |
+| 地球地図日本 (*Global Map of Japan*), [Geospatial Information Authority of Japan](https://www.gsi.go.jp/kankyochiri/globalmap.html), via [dataofjapan/land](https://github.com/dataofjapan/land) | Attribution to 地球地図日本 required; free for non-commercial use | ward geometry in `lib/tokyo-map-data.ts` (regenerate with `just map-data`) |
+| [GitHub REST API](https://docs.github.com/en/rest) | GitHub ToS | follower count in the footer |
+
+### Fonts
+
+| Font | License | Role |
+| --- | --- | --- |
+| [Geist](https://github.com/vercel/geist-font) — Vercel × basement.studio | SIL OFL 1.1 | body sans |
+| [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | SIL OFL 1.1 | monospace (self-hosted) |
+| [DotGothic16](https://github.com/fontworks-fonts/DotGothic16) — Fontworks | SIL OFL 1.1 | Japanese dot-matrix headings |
+| [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) (Symbols Only) | MIT | terminal / fastfetch glyphs |
+
+### Audio
+
+Media-player tracks in `public/tracks/` are third-party recordings, included for
+demonstration and not relicensed:
+
+- **MapleStory — Intro Theme** © Wizet / Nexon
+- **Bortkiewicz** — Nocturne *(Diana)*, Op. 24/1
+- **Kapustin** — Eight Concert Etudes, Op. 40/7 — *Nikolai Lugansky*
+- **Chopin** — Etude in A♭ major, Op. 10/10 — *Yunchan Lim*
+
+<!-- TODO(human): confirm you're happy shipping these recordings, or swap them
+     for public-domain / self-recorded performances. -->
+
+### Wallpapers
+
+<!-- TODO(human): `assets/wallpapers/{beach-path,cat-vibin,magma}.webp` have no
+     recorded source. Add the photographer / license, or replace them. -->
+
+### Inspiration (no code taken)
+
+- **[niri](https://github.com/YaLTeR/niri)** — the scrollable-tiling Wayland
+  compositor the desktop page imitates.
+- **[Noctalia](https://github.com/noctalia-dev/noctalia-shell)** — the shell the
+  top bar is modelled on.
+- ***Persona 5*** (Atlus) — the header date box's angular red/cyan styling.
 
 ## License
 

@@ -42,6 +42,12 @@ export const ACHIEVEMENTS = [
     secret: false,
     trigger: "reveal",
   },
+  {
+    id: "social-stalker",
+    rarity: "uncommon",
+    secret: false,
+    trigger: "reveal",
+  },
   { id: "puzzle-master", rarity: "rare", secret: false, trigger: "locked" },
   { id: "out-of-bounds", rarity: "rare", secret: false, trigger: "locked" },
   { id: "sand-mandala", rarity: "legendary", secret: true, trigger: "locked" },

@@ -47,6 +47,7 @@ import { useLocale } from "@/providers/locale-provider"
 import "./about-section.css"
 import { AppleHelloIntro } from "@/components/ui/apple-hello-effect"
 import type { Mutable } from "@/lib/typescript-hooks/mutable"
+import { useAchievements } from "@/providers/achievements-provider"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { KangaFlowLogo } from "./ui/kangaflow-logo"
 // Section ids + i18n labels — the single source shared with the scroll-spy
@@ -487,6 +488,7 @@ function useCarouselWidth() {
 
 export function AboutSection() {
   const { locale, translate } = useLocale()
+  const { markSocialVisited } = useAchievements()
   const { isHelloEffectAnimationComplete, setIsHelloEffectAnimationComplete } =
     useGlobalStates()
   const carouselWidth = useCarouselWidth()
@@ -601,7 +603,12 @@ export function AboutSection() {
                   const Icon = SOCIAL_ICONS[social.icon] ?? Mail
                   return (
                     <Button asChild key={social.name} variant="secondary">
-                      <a href={social.href} rel="noreferrer" target="_blank">
+                      <a
+                        href={social.href}
+                        onClick={() => markSocialVisited(social.name)}
+                        rel="noreferrer"
+                        target="_blank"
+                      >
                         <Icon aria-hidden />
                         {social.name}
                       </a>

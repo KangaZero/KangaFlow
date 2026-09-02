@@ -29,6 +29,10 @@ typecheck:
 test:
     pnpm exec vitest run
 
+# Regenerate the vendored Tokyo ward geometry (lib/tokyo-map-data.ts).
+map-data:
+    node scripts/build-tokyo-map.mjs
+
 # Full gate: everything CI runs, in the same order.
 verify: lint typecheck test build
 

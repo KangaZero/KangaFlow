@@ -52,6 +52,10 @@ const ja = {
         description: "日付と天気のボックスにカーソルを合わせた。",
         title: "スヌーピー探偵",
       },
+      "social-stalker": {
+        description: "制作者のSNSリンクをすべて開いた。",
+        title: "ソーシャルストーカー",
+      },
       speedophile: {
         description: "67秒未満ですべてを達成した。",
         title: "スピード狂",
@@ -258,6 +262,11 @@ const ja = {
   },
   headerCard: {
     basedIn: "現在地",
+    map: {
+      caption: "ここが職場です！",
+      credit: "地図出典: 地球地図日本（国土地理院）",
+      label: "東京都心の地図。職場の位置を示しています",
+    },
     status: "只今コーディング中",
     workplace: "アクセンチュアに在職中",
   },

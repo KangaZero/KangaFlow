@@ -15,8 +15,22 @@ import {
   reconcile,
   SPEEDRUN_THRESHOLD_MS,
 } from "@/lib/achievements"
+import { person } from "@/lib/person"
+import {
+  addVisitedSocial,
+  hasVisitedEverySocial,
+  isStringArray,
+  reconcileVisitedSocials,
+} from "@/lib/social-stalker"
 
 const STORAGE_KEY = "kangaflow.achievements"
+const SOCIALS_STORAGE_KEY = "kangaflow.socials-visited"
+
+// Derived from the single source of truth: add a social to `lib/person` and
+// Social Stalker automatically requires it too.
+const SOCIAL_NAMES: readonly string[] = person.socials.map(
+  (social) => social.name
+)
 
 // Overloaded so only Speedophile takes (and requires) a split time.
 type UnlockArgs =
@@ -29,6 +43,9 @@ type AchievementsContextValue = {
   unlockAchievement: (...args: UnlockArgs) => void
   currentUnlocked: Achievement | null
   dismissCurrent: () => void
+  /** Names (from `person.socials`) the visitor has opened at least once. */
+  visitedSocials: readonly string[]
+  markSocialVisited: (name: string) => void
 }
 
 const AchievementsContext =
@@ -59,6 +76,9 @@ export function AchievementsProvider({
   )
   const [currentUnlocked, setCurrentUnlocked] =
     React.useState<Achievement | null>(null)
+  const [visitedSocials, setVisitedSocials] = React.useState<readonly string[]>(
+    []
+  )
   const [hydrated, setHydrated] = React.useState(false)
 
   // Latest achievements, readable synchronously inside stable callbacks.
@@ -87,6 +107,13 @@ export function AchievementsProvider({
     setCurrentUnlocked(null)
   }, [])
 
+  // Same identity-as-dedupe contract as applyUnlock: addVisitedSocial returns
+  // the previous array when the name is already recorded, so a repeat click
+  // never schedules a render.
+  const markSocialVisited = React.useCallback((name: string) => {
+    setVisitedSocials((previous) => addVisitedSocial(previous, name))
+  }, [])
+
   // Hydrate from localStorage once on mount (avoids an SSR/first-paint mismatch
   // by starting from the locked baseline, then loading).
   React.useEffect(() => {
@@ -97,6 +124,12 @@ export function AchievementsProvider({
         if (isAchievementArray(parsed)) {
           setAchievements(reconcile(parsed))
         }
+      }
+      const storedSocials: unknown = JSON.parse(
+        window.localStorage.getItem(SOCIALS_STORAGE_KEY) ?? "null"
+      )
+      if (isStringArray(storedSocials)) {
+        setVisitedSocials(reconcileVisitedSocials(storedSocials, SOCIAL_NAMES))
       }
     } catch {
       // Corrupt storage → keep the locked baseline.
@@ -111,6 +144,23 @@ export function AchievementsProvider({
     }
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(achievements))
   }, [achievements, hydrated])
+
+  React.useEffect(() => {
+    if (!hydrated) {
+      return
+    }
+    window.localStorage.setItem(
+      SOCIALS_STORAGE_KEY,
+      JSON.stringify(visitedSocials)
+    )
+  }, [visitedSocials, hydrated])
+
+  // Trigger: Social Stalker once every social in `person.socials` is opened.
+  React.useEffect(() => {
+    if (hydrated && hasVisitedEverySocial(visitedSocials, SOCIAL_NAMES)) {
+      unlockAchievement("social-stalker")
+    }
+  }, [hydrated, visitedSocials, unlockAchievement])
 
   // Trigger: New Beginnings on first mount (after hydration, so returning
   // visitors are deduped and see no toast).
@@ -185,7 +235,9 @@ export function AchievementsProvider({
       countByRarity,
       currentUnlocked,
       dismissCurrent,
+      markSocialVisited,
       unlockAchievement,
+      visitedSocials,
     }),
     [
       achievements,
@@ -193,6 +245,8 @@ export function AchievementsProvider({
       unlockAchievement,
       currentUnlocked,
       dismissCurrent,
+      markSocialVisited,
+      visitedSocials,
     ]
   )
 
