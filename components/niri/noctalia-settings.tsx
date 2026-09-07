@@ -59,6 +59,7 @@ import {
   type WidgetStartup,
 } from "@/components/niri/settings"
 import { WallpaperPicker } from "@/components/niri/wallpaper-picker"
+import { StorageWarning } from "@/components/storage-warning"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -365,9 +366,9 @@ function SecuritySection(): React.JSX.Element {
     msg: string
     ok: boolean
   } | null>(null)
-  const [isSet, setIsSet] = useState(
-    () => typeof window !== "undefined" && hasStoredPassword()
-  )
+  // hasStoredPassword() goes through safeLocalStorage, which is already
+  // server-safe — no `typeof window` guard needed.
+  const [isSet, setIsSet] = useState(hasStoredPassword)
 
   async function handleSet(): Promise<void> {
     if (pwdInput !== confirmInput) {
@@ -675,6 +676,7 @@ export function NoctaliaSettings(props: {
 
               {/* Content pane */}
               <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-5">
+                <StorageWarning />
                 {section === "appearance" ? (
                   <>
                     <SettingCard

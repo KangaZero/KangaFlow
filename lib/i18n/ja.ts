@@ -381,6 +381,9 @@ const ja = {
     on: "オン",
     resetToDefaults: "デフォルトに戻す",
     showChromeInEnvironment: "環境ページでヘッダーを表示",
+    storageUnavailable:
+      "変更はすぐに反映されますが、再読み込みすると失われます。プライベートブラウジングやストレージのブロック設定が原因の場合がほとんどです。",
+    storageUnavailableTitle: "このブラウザではストレージがブロックされています",
     title: "キーボードショートカット",
   },
   terminal: {

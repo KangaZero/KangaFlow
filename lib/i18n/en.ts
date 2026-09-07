@@ -374,6 +374,9 @@ const en = {
     on: "On",
     resetToDefaults: "Reset to defaults",
     showChromeInEnvironment: "Show header on the environment page",
+    storageUnavailable:
+      "Changes apply right away but will be lost on reload. Private browsing or a blocked-storage setting usually causes this.",
+    storageUnavailableTitle: "This browser is blocking storage",
     title: "Keyboard shortcuts",
   },
   terminal: {

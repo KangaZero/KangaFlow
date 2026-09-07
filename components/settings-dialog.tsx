@@ -13,6 +13,7 @@ import {
 } from "@/components/animate-ui/components/radix/dialog"
 import { Switch } from "@/components/animate-ui/components/radix/switch"
 import { LocaleTransition } from "@/components/locale-transition"
+import { StorageWarning } from "@/components/storage-warning"
 import { Button } from "@/components/ui/button"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { ANIMATION_PREFS } from "@/lib/globalStates"
@@ -104,6 +105,8 @@ export function SettingsDialog() {
             {translate("settings.description")}
           </DialogDescription>
         </DialogHeader>
+
+        <StorageWarning />
 
         <LocaleTransition variant="fade">
           <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
