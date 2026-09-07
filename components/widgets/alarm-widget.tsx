@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { SPRING_LIST, SPRING_PILL, SPRING_TAP } from "@/lib/motion"
+import { safeLocalStorage } from "@/lib/safe-storage"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -147,19 +148,13 @@ type Alarm = {
 }
 
 function loadAlarms(): Alarm[] {
-  if (typeof window === "undefined") return []
-  try {
-    const raw: unknown = JSON.parse(
-      window.localStorage.getItem(STORAGE_KEY) ?? "[]"
-    )
-    return Array.isArray(raw) ? (raw as Alarm[]) : []
-  } catch {
-    return []
-  }
+  return safeLocalStorage.getJson<Alarm[]>(STORAGE_KEY, [], (raw) =>
+    Array.isArray(raw) ? (raw as Alarm[]) : null
+  )
 }
 
 function saveAlarms(alarms: Alarm[]): void {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(alarms))
+  safeLocalStorage.setJson(STORAGE_KEY, alarms)
 }
 
 // mm:ss(.cc) label for the stopwatch display, laps, and the "stopped at"

@@ -4,6 +4,7 @@
 // pattern used in `lib/notes.ts`.
 
 import { WIDGET_IDS, type WidgetId } from "@/components/niri/settings"
+import { safeLocalStorage } from "@/lib/safe-storage"
 
 // What kind of event produced a notification (drives the list icon + accent).
 export type NotificationType =
@@ -137,36 +138,21 @@ function normalizeReminder(raw: unknown): Reminder {
 }
 
 export function loadNotifications(): AppNotification[] {
-  if (typeof window === "undefined") return []
-  try {
-    const raw: unknown = JSON.parse(
-      window.localStorage.getItem(NOTIFICATIONS_STORAGE_KEY) ?? "[]"
-    )
-    return Array.isArray(raw) ? raw.map(normalizeNotification) : []
-  } catch {
-    return []
-  }
-}
-
-export function saveNotifications(notifications: AppNotification[]): void {
-  window.localStorage.setItem(
-    NOTIFICATIONS_STORAGE_KEY,
-    JSON.stringify(notifications)
+  return safeLocalStorage.getJson(NOTIFICATIONS_STORAGE_KEY, [], (raw) =>
+    Array.isArray(raw) ? raw.map(normalizeNotification) : null
   )
 }
 
+export function saveNotifications(notifications: AppNotification[]): void {
+  safeLocalStorage.setJson(NOTIFICATIONS_STORAGE_KEY, notifications)
+}
+
 export function loadReminders(): Reminder[] {
-  if (typeof window === "undefined") return []
-  try {
-    const raw: unknown = JSON.parse(
-      window.localStorage.getItem(REMINDERS_STORAGE_KEY) ?? "[]"
-    )
-    return Array.isArray(raw) ? raw.map(normalizeReminder) : []
-  } catch {
-    return []
-  }
+  return safeLocalStorage.getJson(REMINDERS_STORAGE_KEY, [], (raw) =>
+    Array.isArray(raw) ? raw.map(normalizeReminder) : null
+  )
 }
 
 export function saveReminders(reminders: Reminder[]): void {
-  window.localStorage.setItem(REMINDERS_STORAGE_KEY, JSON.stringify(reminders))
+  safeLocalStorage.setJson(REMINDERS_STORAGE_KEY, reminders)
 }

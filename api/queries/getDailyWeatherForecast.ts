@@ -1,6 +1,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import * as React from "react"
 
+import { safeLocalStorage } from "@/lib/safe-storage"
 import { isWmoCode, type WmoCode } from "@/lib/weather"
 
 // KangaFlow port of the portfolio query. The original used @tanstack/react-query;
@@ -44,32 +45,29 @@ type CachedForecast = { details: DailyWeatherForecast; lastUpdated: number }
 // undefined so the caller fetches fresh. Guarded: private mode / corrupt JSON
 // falls through to a network fetch rather than throwing.
 function readFreshForecast(key: string): DailyWeatherForecast | undefined {
-  try {
-    const raw = localStorage.getItem(key)
-    if (!raw) {
-      return undefined
+  return safeLocalStorage.getJson<DailyWeatherForecast | undefined>(
+    key,
+    undefined,
+    (raw) => {
+      const parsed = raw as Partial<CachedForecast> | null
+      if (
+        parsed == null ||
+        typeof parsed.lastUpdated !== "number" ||
+        parsed.details == null ||
+        Date.now() - parsed.lastUpdated > ONE_HOUR_MS
+      ) {
+        return null
+      }
+      return parsed.details
     }
-    const parsed = JSON.parse(raw) as Partial<CachedForecast>
-    if (
-      typeof parsed.lastUpdated !== "number" ||
-      parsed.details == null ||
-      Date.now() - parsed.lastUpdated > ONE_HOUR_MS
-    ) {
-      return undefined
-    }
-    return parsed.details
-  } catch {
-    return undefined
-  }
+  )
 }
 
+// Storage unavailable (private mode / quota) — caching is best-effort; the
+// in-memory fallback still spares repeat fetches within the same tab session.
 function writeForecast(key: string, data: DailyWeatherForecast): void {
-  try {
-    const entry: CachedForecast = { details: data, lastUpdated: Date.now() }
-    localStorage.setItem(key, JSON.stringify(entry))
-  } catch {
-    // Storage unavailable (private mode / quota) — caching is best-effort.
-  }
+  const entry: CachedForecast = { details: data, lastUpdated: Date.now() }
+  safeLocalStorage.setJson(key, entry)
 }
 
 export function getDailyWeatherForecast(props: GetWeatherParams): {

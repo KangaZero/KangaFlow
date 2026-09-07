@@ -1,3 +1,5 @@
+import { safeLocalStorage } from "@/lib/safe-storage"
+
 const STORAGE_KEY = "kangaflow:auth-hash"
 
 async function sha256(str: string): Promise<string> {
@@ -10,15 +12,18 @@ async function sha256(str: string): Promise<string> {
 
 export async function setStoredPassword(pwd: string): Promise<void> {
   if (!pwd) {
-    localStorage.removeItem(STORAGE_KEY)
+    safeLocalStorage.removeItem(STORAGE_KEY)
     return
   }
   const hash = await sha256(pwd)
-  localStorage.setItem(STORAGE_KEY, hash)
+  safeLocalStorage.setItem(STORAGE_KEY, hash)
 }
 
+// No stored hash means no lock was ever set, so an empty input passes. With
+// storage unavailable the hash lives in memory for the tab and is gone on
+// reload — the desktop unlocks rather than locking the user out of a demo.
 export async function verifyPassword(input: string): Promise<boolean> {
-  const stored = localStorage.getItem(STORAGE_KEY)
+  const stored = safeLocalStorage.getItem(STORAGE_KEY)
   if (!stored) return true
   if (!input) return false
   const hash = await sha256(input)
@@ -26,9 +31,9 @@ export async function verifyPassword(input: string): Promise<boolean> {
 }
 
 export function hasStoredPassword(): boolean {
-  return localStorage.getItem(STORAGE_KEY) !== null
+  return safeLocalStorage.getItem(STORAGE_KEY) !== null
 }
 
 export function clearStoredPassword(): void {
-  localStorage.removeItem(STORAGE_KEY)
+  safeLocalStorage.removeItem(STORAGE_KEY)
 }

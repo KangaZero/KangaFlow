@@ -44,6 +44,7 @@ import {
   type NoteLineNumbers,
 } from "@/lib/globalStates"
 import { DEFAULT_ONEKO_OPTIONS } from "@/lib/oneko"
+import { safeLocalStorage } from "@/lib/safe-storage"
 import {
   DEFAULT_SHORTCUTS,
   loadShortcuts,
@@ -59,22 +60,19 @@ const COLUMN_STORAGE_KEY = "kangaflow:columnCount"
 const ENV_CHROME_STORAGE_KEY = "kangaflow:envChrome"
 
 function loadEnvChrome(): boolean {
-  if (typeof window === "undefined") return false
-  return window.localStorage.getItem(ENV_CHROME_STORAGE_KEY) === "true"
+  return safeLocalStorage.getItem(ENV_CHROME_STORAGE_KEY) === "true"
 }
 
 const VIM_MODE_STORAGE_KEY = "kangaflow:vimMode"
 
 function loadVimMode(): boolean {
-  if (typeof window === "undefined") return false
-  return window.localStorage.getItem(VIM_MODE_STORAGE_KEY) === "true"
+  return safeLocalStorage.getItem(VIM_MODE_STORAGE_KEY) === "true"
 }
 
 const NOTE_LINE_NUMBERS_STORAGE_KEY = "kangaflow:noteLineNumbers"
 
 function loadNoteLineNumbers(): NoteLineNumbers {
-  if (typeof window === "undefined") return "off"
-  const raw = window.localStorage.getItem(NOTE_LINE_NUMBERS_STORAGE_KEY)
+  const raw = safeLocalStorage.getItem(NOTE_LINE_NUMBERS_STORAGE_KEY)
   return (NOTE_LINE_NUMBER_MODES as readonly string[]).includes(raw ?? "")
     ? (raw as NoteLineNumbers)
     : "off"
@@ -87,8 +85,7 @@ function isAnimationPref(value: string | null): value is AnimationPref {
 }
 
 function loadAnimationPref(): AnimationPref {
-  if (typeof window === "undefined") return "system"
-  const raw = window.localStorage.getItem(ANIMATION_STORAGE_KEY)
+  const raw = safeLocalStorage.getItem(ANIMATION_STORAGE_KEY)
   return isAnimationPref(raw) ? raw : "system"
 }
 
@@ -185,10 +182,9 @@ function pickWidgetDefaults(value: unknown): EnvSettings["widgetDefaults"] {
 }
 
 function loadEnvSettings(): EnvSettings {
-  if (typeof window === "undefined") return DEFAULT_ENV_SETTINGS
   try {
     const raw: unknown = JSON.parse(
-      window.localStorage.getItem(ENV_SETTINGS_STORAGE_KEY) ?? "{}"
+      safeLocalStorage.getItem(ENV_SETTINGS_STORAGE_KEY) ?? "{}"
     )
     const o = (raw && typeof raw === "object" ? raw : {}) as Record<
       string,
@@ -322,8 +318,7 @@ function isColumnCount(value: number): value is ColumnCount {
 }
 
 function loadColumnCount(): ColumnCount {
-  if (typeof window === "undefined") return DEFAULT_COLUMN_COUNT
-  const raw = window.localStorage.getItem(COLUMN_STORAGE_KEY)
+  const raw = safeLocalStorage.getItem(COLUMN_STORAGE_KEY)
   const parsed = Number(raw)
   return isColumnCount(parsed) ? parsed : DEFAULT_COLUMN_COUNT
 }
@@ -405,10 +400,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (hydrated.current) {
-      window.localStorage.setItem(
-        ENV_SETTINGS_STORAGE_KEY,
-        JSON.stringify(envSettings)
-      )
+      safeLocalStorage.setJson(ENV_SETTINGS_STORAGE_KEY, envSettings)
     }
   }, [envSettings])
 
@@ -418,13 +410,13 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (hydrated.current) {
-      window.localStorage.setItem(COLUMN_STORAGE_KEY, String(columnCount))
+      safeLocalStorage.setItem(COLUMN_STORAGE_KEY, String(columnCount))
     }
   }, [columnCount])
 
   useEffect(() => {
     if (hydrated.current) {
-      window.localStorage.setItem(
+      safeLocalStorage.setItem(
         ENV_CHROME_STORAGE_KEY,
         String(showChromeInEnvironment)
       )
@@ -433,16 +425,13 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (hydrated.current) {
-      window.localStorage.setItem(VIM_MODE_STORAGE_KEY, String(vimMode))
+      safeLocalStorage.setItem(VIM_MODE_STORAGE_KEY, String(vimMode))
     }
   }, [vimMode])
 
   useEffect(() => {
     if (hydrated.current) {
-      window.localStorage.setItem(
-        NOTE_LINE_NUMBERS_STORAGE_KEY,
-        noteLineNumbers
-      )
+      safeLocalStorage.setItem(NOTE_LINE_NUMBERS_STORAGE_KEY, noteLineNumbers)
     }
   }, [noteLineNumbers])
 
@@ -451,7 +440,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   // neutralise CSS transitions/animations too, not just motion/react.
   useEffect(() => {
     if (hydrated.current) {
-      window.localStorage.setItem(ANIMATION_STORAGE_KEY, animationPref)
+      safeLocalStorage.setItem(ANIMATION_STORAGE_KEY, animationPref)
     }
     const media = window.matchMedia("(prefers-reduced-motion: reduce)")
     const apply = () => {

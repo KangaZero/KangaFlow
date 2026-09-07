@@ -31,21 +31,16 @@ import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { TrackList } from "@/components/widgets/track-list"
 import { formatSecondsToMMSS, PLAYLIST } from "@/components/widgets/tracks"
 import { SPRING_TAP, TWEEN_FAST, TWEEN_TRACK } from "@/lib/motion"
+import { asArrayOf, isNumber, safeLocalStorage } from "@/lib/safe-storage"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
 const TRACK_FAVORITES_KEY = "kangaflow:trackFavorites"
 
 function loadFavorites(): ReadonlySet<number> {
-  if (typeof window === "undefined") return new Set()
-  try {
-    const raw: unknown = JSON.parse(
-      window.localStorage.getItem(TRACK_FAVORITES_KEY) ?? "[]"
-    )
-    return new Set(Array.isArray(raw) ? (raw as number[]) : [])
-  } catch {
-    return new Set()
-  }
+  return new Set(
+    safeLocalStorage.getJson(TRACK_FAVORITES_KEY, [], asArrayOf(isNumber))
+  )
 }
 
 export function MediaPlayer() {
@@ -233,10 +228,7 @@ export function MediaPlayer() {
       const next = new Set(prev)
       if (next.has(index)) next.delete(index)
       else next.add(index)
-      window.localStorage.setItem(
-        TRACK_FAVORITES_KEY,
-        JSON.stringify([...next])
-      )
+      safeLocalStorage.setJson(TRACK_FAVORITES_KEY, [...next])
       return next
     })
   }, [])

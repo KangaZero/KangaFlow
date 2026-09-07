@@ -22,6 +22,7 @@ import { CalendarDaysIcon } from "@/components/ui/calendar-days"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { SPRING_LIST, SPRING_TAP } from "@/lib/motion"
+import { safeLocalStorage } from "@/lib/safe-storage"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -49,19 +50,13 @@ function toDateKey(d: Date): string {
 }
 
 function loadEvents(): CalEvent[] {
-  if (typeof window === "undefined") return []
-  try {
-    const raw: unknown = JSON.parse(
-      window.localStorage.getItem(STORAGE_KEY) ?? "[]"
-    )
-    return Array.isArray(raw) ? (raw as CalEvent[]) : []
-  } catch {
-    return []
-  }
+  return safeLocalStorage.getJson<CalEvent[]>(STORAGE_KEY, [], (raw) =>
+    Array.isArray(raw) ? (raw as CalEvent[]) : null
+  )
 }
 
 function saveEvents(events: CalEvent[]): void {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
+  safeLocalStorage.setJson(STORAGE_KEY, events)
 }
 
 const MONTH_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const

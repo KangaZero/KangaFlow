@@ -28,6 +28,7 @@ import type { AppId } from "@/components/niri/types"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { LOCALES, type Locale } from "@/lib/i18n"
 import { SPRING_REORDER, TWEEN_QUICK } from "@/lib/motion"
+import { asArrayOf, isString, safeLocalStorage } from "@/lib/safe-storage"
 import { THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
@@ -65,15 +66,9 @@ const THEME_ICONS: Record<Theme, LucideIcon> = {
 const PINS_STORAGE_KEY = "kangaflow:launcherPins"
 
 function loadPins(): ReadonlySet<string> {
-  if (typeof window === "undefined") return new Set()
-  try {
-    const raw: unknown = JSON.parse(
-      window.localStorage.getItem(PINS_STORAGE_KEY) ?? "[]"
-    )
-    return new Set(Array.isArray(raw) ? (raw as string[]) : [])
-  } catch {
-    return new Set()
-  }
+  return new Set(
+    safeLocalStorage.getJson(PINS_STORAGE_KEY, [], asArrayOf(isString))
+  )
 }
 
 export function NoctaliaLauncher(props: {
@@ -128,7 +123,7 @@ export function NoctaliaLauncher(props: {
       const next = new Set(prev)
       if (next.has(resultId)) next.delete(resultId)
       else next.add(resultId)
-      window.localStorage.setItem(PINS_STORAGE_KEY, JSON.stringify([...next]))
+      safeLocalStorage.setJson(PINS_STORAGE_KEY, [...next])
       return next
     })
   }

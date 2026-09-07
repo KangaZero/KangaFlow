@@ -43,6 +43,7 @@ import type { AppId, NiriWindow } from "@/components/niri/types"
 import { wallpaperStyle } from "@/components/niri/wallpaper"
 import { WallpaperDialog } from "@/components/niri/wallpaper-dialog"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
+import { useStoredString } from "@/lib/hooks/use-safe-storage"
 import {
   SPRING_LAYOUT,
   SPRING_PIP,
@@ -196,8 +197,9 @@ export function EnvironmentView() {
   const { translate, locale } = useLocale()
   const { resolvedTheme } = useTheme()
   const dark = resolvedTheme !== "light"
-  const themeFromLocalStorage =
-    typeof window !== "undefined" ? localStorage.getItem("theme") : null
+  // next-themes' own storage key, read through the safe store: null on the
+  // server and in blocked-storage browsers, so DEFAULT_THEME wins there.
+  const themeFromLocalStorage = useStoredString("theme")
   const theme = isTheme(resolvedTheme)
     ? resolvedTheme
     : isTheme(themeFromLocalStorage)

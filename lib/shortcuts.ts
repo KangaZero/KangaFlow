@@ -5,6 +5,8 @@
 // user-overridable and persisted to localStorage; unknown/corrupt storage falls
 // back to DEFAULT_SHORTCUTS.
 
+import { safeLocalStorage } from "@/lib/safe-storage"
+
 // Every action a shortcut can trigger. Adding one here forces a matching entry
 // in DEFAULT_SHORTCUTS (exhaustive Record) and a case in the dispatcher.
 export type ShortcutAction =
@@ -216,51 +218,45 @@ function isShortcutAction(value: unknown): value is ShortcutAction {
 // truth for which actions exist) and adopt a stored binding only when it's
 // shape-valid. Drops unknown actions; new actions inherit their default.
 export function loadShortcuts(): Shortcut[] {
-  if (typeof window === "undefined") return [...DEFAULT_SHORTCUTS]
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return [...DEFAULT_SHORTCUTS]
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return [...DEFAULT_SHORTCUTS]
+  return safeLocalStorage.getJson(
+    STORAGE_KEY,
+    [...DEFAULT_SHORTCUTS],
+    (parsed) => {
+      if (!Array.isArray(parsed)) return null
 
-    const stored = new Map<ShortcutAction, Shortcut>()
-    for (const entry of parsed) {
-      if (
-        typeof entry === "object" &&
-        entry !== null &&
-        "action" in entry &&
-        isShortcutAction(entry.action) &&
-        "character" in entry &&
-        typeof entry.character === "string" &&
-        "hasMetaOrCtrlKey" in entry &&
-        typeof entry.hasMetaOrCtrlKey === "boolean" &&
-        "hasAltOrOptionKey" in entry &&
-        typeof entry.hasAltOrOptionKey === "boolean" &&
-        "hasShiftKey" in entry &&
-        typeof entry.hasShiftKey === "boolean"
-      ) {
-        stored.set(entry.action, {
-          action: entry.action,
-          character: entry.character.slice(0, 1).toLowerCase(),
-          hasAltOrOptionKey: entry.hasAltOrOptionKey,
-          hasMetaOrCtrlKey: entry.hasMetaOrCtrlKey,
-          hasShiftKey: entry.hasShiftKey,
-        })
+      const stored = new Map<ShortcutAction, Shortcut>()
+      for (const entry of parsed) {
+        if (
+          typeof entry === "object" &&
+          entry !== null &&
+          "action" in entry &&
+          isShortcutAction(entry.action) &&
+          "character" in entry &&
+          typeof entry.character === "string" &&
+          "hasMetaOrCtrlKey" in entry &&
+          typeof entry.hasMetaOrCtrlKey === "boolean" &&
+          "hasAltOrOptionKey" in entry &&
+          typeof entry.hasAltOrOptionKey === "boolean" &&
+          "hasShiftKey" in entry &&
+          typeof entry.hasShiftKey === "boolean"
+        ) {
+          stored.set(entry.action, {
+            action: entry.action,
+            character: entry.character.slice(0, 1).toLowerCase(),
+            hasAltOrOptionKey: entry.hasAltOrOptionKey,
+            hasMetaOrCtrlKey: entry.hasMetaOrCtrlKey,
+            hasShiftKey: entry.hasShiftKey,
+          })
+        }
       }
-    }
 
-    return DEFAULT_SHORTCUTS.map((def) => stored.get(def.action) ?? { ...def })
-  } catch {
-    // Corrupt or unavailable storage → defaults.
-    return [...DEFAULT_SHORTCUTS]
-  }
+      return DEFAULT_SHORTCUTS.map(
+        (def) => stored.get(def.action) ?? { ...def }
+      )
+    }
+  )
 }
 
 export function saveShortcuts(shortcuts: Shortcut[]): void {
-  if (typeof window === "undefined") return
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(shortcuts))
-  } catch {
-    // Storage full / disabled — a non-persisted session is acceptable.
-  }
+  safeLocalStorage.setJson(STORAGE_KEY, shortcuts)
 }

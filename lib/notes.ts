@@ -3,6 +3,7 @@
 // metadata (title/tags/color/pin/timestamps) live alongside it.
 
 import type { TextAlign } from "@/lib/rich-text"
+import { asArrayOf, isString, safeLocalStorage } from "@/lib/safe-storage"
 
 export type NoteColor =
   | "yellow"
@@ -149,35 +150,25 @@ export function normalizeNote(raw: unknown): Note {
 }
 
 export function loadNotes(): Note[] {
-  if (typeof window === "undefined") return []
-  try {
-    const raw: unknown = JSON.parse(
-      window.localStorage.getItem(NOTES_STORAGE_KEY) ?? "[]"
-    )
-    return Array.isArray(raw) ? raw.map(normalizeNote) : []
-  } catch {
-    return []
-  }
+  return safeLocalStorage.getJson(NOTES_STORAGE_KEY, [], (raw) =>
+    Array.isArray(raw) ? raw.map(normalizeNote) : null
+  )
 }
 
 export function saveNotes(notes: Note[]): void {
-  window.localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes))
+  safeLocalStorage.setJson(NOTES_STORAGE_KEY, notes)
 }
 
 // Persisted set of note ids whose editor windows are open (so they reopen after
 // a reload). Filtered against live notes on load to drop stale ids.
 export function loadOpenIds(): string[] {
-  if (typeof window === "undefined") return []
-  try {
-    const raw: unknown = JSON.parse(
-      window.localStorage.getItem(NOTES_OPEN_STORAGE_KEY) ?? "[]"
-    )
-    return Array.isArray(raw) ? (raw as string[]) : []
-  } catch {
-    return []
-  }
+  return safeLocalStorage.getJson(
+    NOTES_OPEN_STORAGE_KEY,
+    [],
+    asArrayOf(isString)
+  )
 }
 
 export function saveOpenIds(ids: string[]): void {
-  window.localStorage.setItem(NOTES_OPEN_STORAGE_KEY, JSON.stringify(ids))
+  safeLocalStorage.setJson(NOTES_OPEN_STORAGE_KEY, ids)
 }

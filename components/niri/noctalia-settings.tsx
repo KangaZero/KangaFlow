@@ -82,6 +82,7 @@ import {
   TWEEN_QUICK,
   TWEEN_SMOOTH,
 } from "@/lib/motion"
+import { safeLocalStorage } from "@/lib/safe-storage"
 import { THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
@@ -117,26 +118,23 @@ const NOTE_LINE_NUMBER_LABEL = {
 
 // Read the live drag offset a widget persisted (for "apply current position").
 function readWidgetOffset(storageKey: string): { x: number; y: number } | null {
-  if (typeof window === "undefined") return null
-  try {
-    const raw: unknown = JSON.parse(
-      window.localStorage.getItem(WIDGET_STATE_STORAGE_PREFIX + storageKey) ??
-        "{}"
-    )
-    const pos =
-      raw && typeof raw === "object"
-        ? (raw as Record<string, unknown>).position
-        : null
-    if (pos && typeof pos === "object") {
-      const p = pos as Record<string, unknown>
-      if (typeof p.x === "number" && typeof p.y === "number") {
-        return { x: p.x, y: p.y }
+  return safeLocalStorage.getJson<{ x: number; y: number } | null>(
+    WIDGET_STATE_STORAGE_PREFIX + storageKey,
+    null,
+    (raw) => {
+      const pos =
+        raw && typeof raw === "object"
+          ? (raw as Record<string, unknown>).position
+          : null
+      if (pos && typeof pos === "object") {
+        const p = pos as Record<string, unknown>
+        if (typeof p.x === "number" && typeof p.y === "number") {
+          return { x: p.x, y: p.y }
+        }
       }
+      return null
     }
-    return null
-  } catch {
-    return null
-  }
+  )
 }
 
 // Sidebar sections, Noctalia v5-style (icon + label; content pane on the right).

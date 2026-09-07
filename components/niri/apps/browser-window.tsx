@@ -12,6 +12,7 @@ import {
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { getWindowContent, setWindowContent } from "@/lib/niri-window-cache"
+import { isString, safeLocalStorage } from "@/lib/safe-storage"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -20,17 +21,9 @@ import { useLocale } from "@/providers/locale-provider"
 const STORAGE_KEY = "kangaflow:niri-bookmarks"
 
 function loadBookmarks(): string[] {
-  if (typeof window === "undefined") return []
-  try {
-    const parsed: unknown = JSON.parse(
-      window.localStorage.getItem(STORAGE_KEY) ?? "[]"
-    )
-    return Array.isArray(parsed)
-      ? parsed.filter((u): u is string => typeof u === "string")
-      : []
-  } catch {
-    return []
-  }
+  return safeLocalStorage.getJson(STORAGE_KEY, [], (parsed) =>
+    Array.isArray(parsed) ? parsed.filter(isString) : null
+  )
 }
 
 // Short label for a bookmark/tab chip.
@@ -142,7 +135,7 @@ export function BrowserWindow({
 
   // Persist favourites whenever they change.
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks))
+    safeLocalStorage.setJson(STORAGE_KEY, bookmarks)
   }, [bookmarks])
 
   // Mirror this window's tabs/address into the per-window content cache so they

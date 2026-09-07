@@ -16,6 +16,7 @@ import {
   SPEEDRUN_THRESHOLD_MS,
 } from "@/lib/achievements"
 import { person } from "@/lib/person"
+import { safeLocalStorage } from "@/lib/safe-storage"
 import {
   addVisitedSocial,
   hasVisitedEverySocial,
@@ -117,22 +118,22 @@ export function AchievementsProvider({
   // Hydrate from localStorage once on mount (avoids an SSR/first-paint mismatch
   // by starting from the locked baseline, then loading).
   React.useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY)
-      if (raw != null) {
-        const parsed: unknown = JSON.parse(raw)
-        if (isAchievementArray(parsed)) {
-          setAchievements(reconcile(parsed))
-        }
-      }
-      const storedSocials: unknown = JSON.parse(
-        window.localStorage.getItem(SOCIALS_STORAGE_KEY) ?? "null"
-      )
-      if (isStringArray(storedSocials)) {
-        setVisitedSocials(reconcileVisitedSocials(storedSocials, SOCIAL_NAMES))
-      }
-    } catch {
-      // Corrupt storage → keep the locked baseline.
+    // Corrupt or unavailable storage → keep the locked baseline.
+    const stored = safeLocalStorage.getJson<Achievement[] | null>(
+      STORAGE_KEY,
+      null,
+      (raw) => (isAchievementArray(raw) ? raw : null)
+    )
+    if (stored !== null) {
+      setAchievements(reconcile(stored))
+    }
+    const storedSocials = safeLocalStorage.getJson<string[] | null>(
+      SOCIALS_STORAGE_KEY,
+      null,
+      (raw) => (isStringArray(raw) ? raw : null)
+    )
+    if (storedSocials !== null) {
+      setVisitedSocials(reconcileVisitedSocials(storedSocials, SOCIAL_NAMES))
     }
     setHydrated(true)
   }, [])
@@ -142,17 +143,14 @@ export function AchievementsProvider({
     if (!hydrated) {
       return
     }
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(achievements))
+    safeLocalStorage.setJson(STORAGE_KEY, achievements)
   }, [achievements, hydrated])
 
   React.useEffect(() => {
     if (!hydrated) {
       return
     }
-    window.localStorage.setItem(
-      SOCIALS_STORAGE_KEY,
-      JSON.stringify(visitedSocials)
-    )
+    safeLocalStorage.setJson(SOCIALS_STORAGE_KEY, visitedSocials)
   }, [visitedSocials, hydrated])
 
   // Trigger: Social Stalker once every social in `person.socials` is opened.

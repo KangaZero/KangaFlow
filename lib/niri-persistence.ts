@@ -35,6 +35,7 @@ import {
   pruneWindowContent,
   setWindowContent,
 } from "@/lib/niri-window-cache"
+import { safeLocalStorage } from "@/lib/safe-storage"
 import type { MatrixOptions } from "@/lib/terminal/cmatrix"
 
 export const NIRI_WORKSPACES_STORAGE_KEY = "kangaflow:niriWorkspaces"
@@ -250,16 +251,12 @@ function hasWindow(workspaces: NiriWorkspace[], id: string): boolean {
  * when nothing usable is stored (fresh desktop / corrupted data).
  */
 export function loadNiriState(): NiriState | null {
-  if (typeof window === "undefined") return null
-  let raw: unknown
-  try {
-    raw = JSON.parse(
-      window.localStorage.getItem(NIRI_WORKSPACES_STORAGE_KEY) ?? "null"
-    )
-  } catch {
-    return null
-  }
-  if (!isRecord(raw)) return null
+  const raw = safeLocalStorage.getJson<Record<string, unknown> | null>(
+    NIRI_WORKSPACES_STORAGE_KEY,
+    null,
+    (parsed) => (isRecord(parsed) ? parsed : null)
+  )
+  if (raw === null) return null
   const stored = Array.isArray(raw.workspaces) ? raw.workspaces : []
   if (stored.length === 0) return null
 
@@ -310,7 +307,6 @@ export function loadNiriState(): NiriState | null {
  * in-session cache. Orphaned cache entries (closed windows) are pruned.
  */
 export function saveNiriState(state: NiriState): void {
-  if (typeof window === "undefined") return
   const ids = new Set<string>()
   const workspaces = state.workspaces.map((ws) => ({
     ...ws,
@@ -327,12 +323,10 @@ export function saveNiriState(state: NiriState): void {
     })),
   }))
   pruneWindowContent(ids)
-  try {
-    window.localStorage.setItem(
-      NIRI_WORKSPACES_STORAGE_KEY,
-      JSON.stringify({ ...state, workspaces })
-    )
-  } catch {
-    // Quota / unavailable storage — the in-session cache still holds the data.
-  }
+  // Quota / unavailable storage degrades to memory — the in-session cache still
+  // holds the data, so the layout survives workspace switches, just not a reload.
+  safeLocalStorage.setJson(NIRI_WORKSPACES_STORAGE_KEY, {
+    ...state,
+    workspaces,
+  })
 }

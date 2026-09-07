@@ -18,6 +18,7 @@ import {
 } from "@/components/niri/settings"
 import { Button } from "@/components/ui/button"
 import { SPRING_CONTENT } from "@/lib/motion"
+import { safeLocalStorage } from "@/lib/safe-storage"
 import { cn } from "@/lib/utils"
 import { RESIZE_STEP, snapDelta, vimWindowAction } from "@/lib/vim-window"
 import { Z_LAYERS } from "@/lib/z-order"
@@ -33,22 +34,16 @@ type StoredState = {
 }
 
 function loadState(key: string): StoredState {
-  if (typeof window === "undefined") return {}
-  try {
-    return JSON.parse(
-      window.localStorage.getItem(STORAGE_PREFIX + key) ?? "{}"
-    ) as StoredState
-  } catch {
-    return {}
-  }
+  return safeLocalStorage.getJson<StoredState>(
+    STORAGE_PREFIX + key,
+    {},
+    (raw) => (raw && typeof raw === "object" ? (raw as StoredState) : null)
+  )
 }
 
 function saveState(key: string, patch: Partial<StoredState>): void {
   const current = loadState(key)
-  window.localStorage.setItem(
-    STORAGE_PREFIX + key,
-    JSON.stringify({ ...current, ...patch })
-  )
+  safeLocalStorage.setJson(STORAGE_PREFIX + key, { ...current, ...patch })
 }
 
 export type DraggableWindowProps = {
