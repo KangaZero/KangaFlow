@@ -1,7 +1,16 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { describe, expect, it, vi } from "vitest"
 import { PAGE, PAGE_NAMES } from "@/lib/pages"
-import { buildNavigationTools, findPage } from "@/lib/webmcp"
+import { buildSiteTools, findPage } from "@/lib/webmcp"
+
+// One place the bridge shape is built, so adding a capability does not mean
+// editing every case.
+const bridge = (over: Partial<Parameters<typeof buildSiteTools>[0]> = {}) => ({
+  currentLocale: () => "en" as const,
+  navigate: vi.fn(),
+  setLocale: vi.fn(),
+  ...over,
+})
 
 const run = async (
   tool: {
@@ -31,24 +40,24 @@ describe("findPage", () => {
   })
 })
 
-describe("buildNavigationTools", () => {
+describe("buildSiteTools", () => {
   it("lists exactly the pages PAGE declares", async () => {
     // Both read PAGE; this fails the moment a second list appears.
-    const [list] = buildNavigationTools(vi.fn())
+    const [list] = buildSiteTools(bridge())
     expect(await run(list)).toBe(PAGE_NAMES.join(", "))
   })
 
   it("navigates by ROUTE, not by display name", async () => {
     // home's route is "" — pushing "/en/home/" would 404.
     const navigate = vi.fn()
-    const [, go] = buildNavigationTools(navigate)
+    const [, go] = buildSiteTools(bridge({ navigate }))
     await run(go, { page: "home" })
     expect(navigate).toHaveBeenCalledWith(PAGE.home.route)
   })
 
   it("opens a real page", async () => {
     const navigate = vi.fn()
-    const [, go] = buildNavigationTools(navigate)
+    const [, go] = buildSiteTools(bridge({ navigate }))
     expect(await run(go, { page: "timeline" })).toContain("timeline")
     expect(navigate).toHaveBeenCalledWith("timeline")
   })
@@ -56,7 +65,7 @@ describe("buildNavigationTools", () => {
   it("names the real options when the page is unknown", async () => {
     // Cheaper than "not found": the model retries without calling list-pages.
     const navigate = vi.fn()
-    const [, go] = buildNavigationTools(navigate)
+    const [, go] = buildSiteTools(bridge({ navigate }))
     expect(await run(go, { page: "contact" })).toContain("achievements")
     expect(navigate).not.toHaveBeenCalled()
   })
@@ -64,8 +73,39 @@ describe("buildNavigationTools", () => {
   it("does not navigate when `page` is not a string", async () => {
     // The args come from a model, so the guard is the real validation.
     const navigate = vi.fn()
-    const [, go] = buildNavigationTools(navigate)
+    const [, go] = buildSiteTools(bridge({ navigate }))
     await run(go, { page: 42 })
     expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it("reports the current language when `language` is omitted", async () => {
+    const setLocale = vi.fn()
+    const [, , lang] = buildSiteTools(bridge({ setLocale }))
+    expect(await run(lang)).toContain("en")
+    expect(setLocale).not.toHaveBeenCalled()
+  })
+
+  it("switches to a supported language", async () => {
+    const setLocale = vi.fn()
+    const [, , lang] = buildSiteTools(bridge({ setLocale }))
+    expect(await run(lang, { language: "ja" })).toContain("ja")
+    expect(setLocale).toHaveBeenCalledWith("ja")
+  })
+
+  it("refuses an unsupported language and names the real ones", async () => {
+    // Guarded here rather than in setLocale: an unknown locale would otherwise
+    // swap the URL segment and leave the dictionary behind — half-applied.
+    const setLocale = vi.fn()
+    const [, , lang] = buildSiteTools(bridge({ setLocale }))
+    const out = await run(lang, { language: "fr" })
+    expect(out).toContain("en, ja")
+    expect(setLocale).not.toHaveBeenCalled()
+  })
+
+  it("does not re-set the language it is already in", async () => {
+    const setLocale = vi.fn()
+    const [, , lang] = buildSiteTools(bridge({ setLocale }))
+    expect(await run(lang, { language: "en" })).toContain("Already")
+    expect(setLocale).not.toHaveBeenCalled()
   })
 })

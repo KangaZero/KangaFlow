@@ -18,6 +18,7 @@
 // and an agent's language is independent of the site locale. Kept out of i18n on
 // purpose; revisit if a tool result is ever surfaced in the UI.
 
+import { isLocale, LOCALES, type Locale } from "@/lib/i18n"
 import {
   PAGE_LINKS,
   PAGE_NAMES,
@@ -34,6 +35,7 @@ export type WebMcpToolResult = {
 export const WEBMCP_TOOL_NAMES = [
   "kangaflow-list-pages",
   "kangaflow-go-to-page",
+  "kangaflow-language",
 ] as const
 export type WebMcpToolName = (typeof WEBMCP_TOOL_NAMES)[number]
 
@@ -97,9 +99,28 @@ export function findPage(query: string): PageLink | undefined {
 
 export type NavigateFn = (route: PageRoute) => void
 
-export function buildNavigationTools(
+/**
+ * What the React layer lends the tools.
+ *
+ * `currentLocale` is a GETTER, not a value: `buildSiteTools` is called once
+ * when the component mounts, so a plain `locale` would be frozen at whatever
+ * language the page loaded in and every later answer would be wrong.
+ */
+export type SiteToolsBridge = {
   navigate: NavigateFn
-): readonly [WebMcpToolDescriptor, WebMcpToolDescriptor<"page">] {
+  currentLocale: () => Locale
+  setLocale: (locale: Locale) => void
+}
+
+export function buildSiteTools({
+  currentLocale,
+  navigate,
+  setLocale,
+}: SiteToolsBridge): readonly [
+  WebMcpToolDescriptor,
+  WebMcpToolDescriptor<"page">,
+  WebMcpToolDescriptor<"language">,
+] {
   // Declared separately so each gets its OWN argument-key parameter. Returning
   // an array literal collapses both to the default `never`, which silently
   // un-types every `execute` argument — the failure the generic exists to stop.
@@ -142,5 +163,35 @@ export function buildNavigationTools(
     name: "kangaflow-go-to-page",
   }
 
-  return [listPages, goToPage]
+  const language: WebMcpToolDescriptor<"language"> = {
+    description:
+      "Switch the site between its languages, or report the current one. " +
+      "Call with no arguments to read it.",
+    execute: async ({ language: next }) => {
+      // Omitted means READ — the same contract as every other optional
+      // argument here, so an agent does not have to learn two conventions.
+      if (next === undefined) return text(`The site is in ${currentLocale()}.`)
+      // `isLocale` is the project's own guard, so "fr" is refused here rather
+      // than reaching setLocale and half-applying (URL swapped, no dictionary).
+      if (typeof next !== "string" || !isLocale(next))
+        return text(
+          `I cannot switch to "${String(next)}". Available: ${LOCALES.join(", ")}.`
+        )
+      if (next === currentLocale()) return text(`Already in ${next}.`)
+      setLocale(next)
+      return text(`Switched to ${next}.`)
+    },
+    inputSchema: {
+      properties: {
+        language: {
+          description: `One of: ${LOCALES.join(", ")}. Omit to read the current one.`,
+          type: "string",
+        },
+      },
+      type: "object",
+    },
+    name: "kangaflow-language",
+  }
+
+  return [listPages, goToPage, language]
 }

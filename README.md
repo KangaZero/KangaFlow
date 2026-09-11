@@ -207,9 +207,11 @@ calls a tool.
 |---|---|---|---|
 | `kangaflow-list-pages` | — | Lists the pages that can be navigated to | Read-only |
 | `kangaflow-go-to-page` | `page` (string) | Navigates to a page by name; matching is case-insensitive and partial, so "the timeline page" works | Navigates |
+| `kangaflow-language` | `language` (string, optional) | Switches between `en` and `ja`, or reports the current one when called with no argument | Changes the language |
 
-An unknown `page` answers with the list of real ones, so the agent can retry
-without a second call.
+An unknown `page` — or an unsupported `language` — answers with the list of real
+ones, so the agent can retry without a second call. Omitting an optional
+argument means *read*, never *guess*.
 
 **Trying it.** WebMCP ships behind a flag today:
 
