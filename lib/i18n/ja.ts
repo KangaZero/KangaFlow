@@ -24,6 +24,10 @@ const ja = {
     heading: "実績",
     hidden: "???",
     items: {
+      "bleeding-edge": {
+        description: "AIエージェントにサイトを操作させた。",
+        title: "最先端",
+      },
       eos: {
         description: "ページのテーマを変更した。",
         title: "エオス",

@@ -20,6 +20,7 @@ export type Rarity = (typeof RARITIES)[number]
 export type AchievementTrigger =
   | "mount"
   | "theme"
+  | "webmcp"
   | "reveal"
   | "completion"
   | "speedrun"
@@ -50,6 +51,7 @@ export const ACHIEVEMENTS = [
   },
   { id: "puzzle-master", rarity: "rare", secret: false, trigger: "locked" },
   { id: "out-of-bounds", rarity: "rare", secret: false, trigger: "locked" },
+  { id: "bleeding-edge", rarity: "rare", secret: false, trigger: "webmcp" },
   { id: "sand-mandala", rarity: "legendary", secret: true, trigger: "locked" },
   {
     id: "go-touch-grass",
@@ -67,7 +69,8 @@ export const COMPLETION_IDS: readonly AchievementId[] = ACHIEVEMENTS.filter(
   (achievement) =>
     achievement.trigger === "mount" ||
     achievement.trigger === "theme" ||
-    achievement.trigger === "reveal"
+    achievement.trigger === "reveal" ||
+    achievement.trigger === "webmcp"
 ).map((achievement) => achievement.id)
 
 // Unlock everything in under this window to earn "Speedophile".

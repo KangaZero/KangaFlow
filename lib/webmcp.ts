@@ -26,8 +26,14 @@ import {
   type PageRoute,
 } from "@/lib/pages"
 
-export type WebMcpToolResult = {
-  content: ReadonlyArray<{ type: "text"; text: string }>
+type WebMcpContentBlock = {
+  text: { type: "text"; text: string }
+  // image: { type: "image"; data: string; mimeType: string };
+}
+
+export type WebMcpToolResult<T extends keyof WebMcpContentBlock = "text"> = {
+  content: ReadonlyArray<WebMcpContentBlock[T]>
+  isError?: boolean
 }
 
 // Every tool this site publishes. A literal union, so a typo in a `name` is a
@@ -82,8 +88,9 @@ declare global {
   }
 }
 
-const text = (value: string): WebMcpToolResult => ({
+const text = (value: string, isError: boolean = false): WebMcpToolResult => ({
   content: [{ text: value, type: "text" }],
+  isError: isError,
 })
 
 // The page a `route` belongs to, matched leniently: an agent asked for "the
@@ -139,13 +146,15 @@ export function buildSiteTools({
     execute: async ({ page }) => {
       // `page` is `unknown`: it comes from a model, so the guard is the real
       // validation and the type does not pretend otherwise.
-      if (typeof page !== "string") return text("Which page? Give me a name.")
+      if (typeof page !== "string")
+        return text("Which page? Give me a name.", true)
       const hit = findPage(page)
       // Naming the real options beats "not found" — the model can retry
       // without a second round trip through list-pages.
       if (!hit)
         return text(
-          `No page called "${page}". Available: ${PAGE_NAMES.join(", ")}.`
+          `No page called "${page}". Available: ${PAGE_NAMES.join(", ")}.`,
+          true
         )
       navigate(hit.route)
       return text(`Opened the ${hit.name} page.`)
@@ -170,14 +179,16 @@ export function buildSiteTools({
     execute: async ({ language: next }) => {
       // Omitted means READ — the same contract as every other optional
       // argument here, so an agent does not have to learn two conventions.
-      if (next === undefined) return text(`The site is in ${currentLocale()}.`)
+      if (next === undefined)
+        return text(`The site is in ${currentLocale()}.`, true)
       // `isLocale` is the project's own guard, so "fr" is refused here rather
       // than reaching setLocale and half-applying (URL swapped, no dictionary).
       if (typeof next !== "string" || !isLocale(next))
         return text(
-          `I cannot switch to "${String(next)}". Available: ${LOCALES.join(", ")}.`
+          `I cannot switch to "${String(next)}". Available: ${LOCALES.join(", ")}.`,
+          true
         )
-      if (next === currentLocale()) return text(`Already in ${next}.`)
+      if (next === currentLocale()) return text(`Already in ${next}.`, true)
       setLocale(next)
       return text(`Switched to ${next}.`)
     },

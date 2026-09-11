@@ -25,6 +25,10 @@ const en = {
     heading: "Achievements",
     hidden: "???",
     items: {
+      "bleeding-edge": {
+        description: "Let an AI agent drive the site for you.",
+        title: "Bleeding Edge",
+      },
       eos: {
         description: "Changed the theme of the page.",
         title: "Eos",

@@ -211,7 +211,13 @@ calls a tool.
 
 An unknown `page` — or an unsupported `language` — answers with the list of real
 ones, so the agent can retry without a second call. Omitting an optional
-argument means *read*, never *guess*.
+argument means *read*, never *guess*. A refusal also sets `isError: true` on the
+result alongside the message, so an agent that checks the flag and one that only
+reads the prose both get the same answer.
+
+Driving the site through a tool unlocks the **Bleeding Edge** achievement — it
+fires on the actions (navigate, switch language), not on the reads, so asking
+what page you are on does not earn it.
 
 **Trying it.** WebMCP ships behind a flag today:
 
