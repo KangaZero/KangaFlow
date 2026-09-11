@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/animate-ui/components/radix/dialog"
 import { paletteForTheme } from "@/lib/terminal/theme"
+import { DEFAULT_THEME } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -31,7 +32,9 @@ export function TerminalDialog({ files }: { files: Record<string, string> }) {
     <Dialog onOpenChange={setIsTerminalOpen} open={isTerminalOpen}>
       <DialogContent
         className="flex h-[90vh] w-[90vw] max-w-[90vw] flex-col overflow-y-hidden p-0 sm:max-w-[90vw]"
-        style={{ background: paletteForTheme(resolvedTheme).base }}
+        style={{
+          background: paletteForTheme(resolvedTheme ?? DEFAULT_THEME).base,
+        }}
       >
         <DialogTitle className="sr-only">
           {translate("terminal.title")}

@@ -2,9 +2,16 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
 import { useEffect, useRef } from "react"
+import type { Locale } from "@/lib/i18n"
 import { hrefForRoute } from "@/lib/pages"
-import { buildSiteTools } from "@/lib/webmcp"
+import { DEFAULT_THEME, type Theme } from "@/lib/themes"
+import {
+  buildSiteTools,
+  WEBMCP_INTERACTIVE_ELEMENTS,
+  webMcpToolResultConstructor,
+} from "@/lib/webmcp"
 import { useAchievements } from "@/providers/achievements-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -18,18 +25,23 @@ import { useLocale } from "@/providers/locale-provider"
 export function WebMcp() {
   const router = useRouter()
   const { locale, setLocale } = useLocale()
+  const { resolvedTheme, setTheme } = useTheme()
   const { unlockAchievement } = useAchievements()
 
   // Everything the tools reach is held in refs and the effect depends on
   // nothing. A tool's `execute` runs long after registration, so capturing
   // these directly would leave it acting on the language and router that
   // existed when the page loaded — wrong the moment the user switches.
-  const localeRef = useRef(locale)
+  const localeRef = useRef<Locale>(locale)
   localeRef.current = locale
+  const themeRef = useRef<Theme>(resolvedTheme as Theme)
+  themeRef.current = (resolvedTheme as Theme) ?? DEFAULT_THEME
   const routerRef = useRef(router)
   routerRef.current = router
   const setLocaleRef = useRef(setLocale)
   setLocaleRef.current = setLocale
+  const setThemeRef = useRef(setTheme)
+  setThemeRef.current = setTheme
   const unlockRef = useRef(unlockAchievement)
   unlockRef.current = unlockAchievement
 
@@ -61,19 +73,42 @@ export function WebMcp() {
       }
 
     const controller = new AbortController()
-    const [listPages, goToPage, language] = buildSiteTools({
-      // Deliberately NOT wrapped: the language tool calls this to READ the
-      // current locale, so unlocking here would fire on a question rather than
-      // on the agent doing something.
-      currentLocale: () => localeRef.current,
-      // `hrefForRoute`, not a hand-built template: it is the one place the
-      // trailing slash and the "no basePath" rule live, and it returns
-      // `PageHref` so this needs no cast.
-      navigate: withUnlock((route) =>
-        routerRef.current.push(hrefForRoute(localeRef.current, route))
-      ),
-      setLocale: withUnlock((next) => setLocaleRef.current(next)),
-    })
+    const [listPages, goToPage, language, theme, workLocation] = buildSiteTools(
+      {
+        // Deliberately NOT wrapped: the language/theme tool calls this to READ the
+        // current locale, so unlocking here would fire on a question rather than
+        // on the agent doing something.
+        currentLocale: () => localeRef.current,
+        currentTheme: () => themeRef.current,
+        // `hrefForRoute`, not a hand-built template: it is the one place the
+        // trailing slash and the "no basePath" rule live, and it returns
+        // `PageHref` so this needs no cast.
+        navigate: withUnlock((route) =>
+          routerRef.current.push(hrefForRoute(localeRef.current, route))
+        ),
+        setCurrentTheme: withUnlock((theme) => setThemeRef.current(theme)),
+        setLocale: withUnlock((next) => setLocaleRef.current(next)),
+        showWorkLocation: () => {
+          const headerDateTriggerEl = document.getElementById(
+            WEBMCP_INTERACTIVE_ELEMENTS.headerDatePopoverPrimitiveTrigger
+          )
+          if (!headerDateTriggerEl)
+            return webMcpToolResultConstructor(
+              "Not on the homepage, navigate to home via 'kangaflow-go-to-page' tool",
+              true
+            )
+          const isCurrentlyOpen =
+            headerDateTriggerEl?.getAttribute("data-state") === "open"
+
+          if (isCurrentlyOpen)
+            return webMcpToolResultConstructor(
+              "Work location component is already open"
+            )
+          headerDateTriggerEl?.click()
+          return webMcpToolResultConstructor("Work location component opened")
+        },
+      }
+    )
 
     // Registered one at a time, not in a loop: each descriptor is generic over
     // its OWN argument keys, and iterating unions them — so the loop variable
@@ -83,8 +118,10 @@ export function WebMcp() {
     void ctx.registerTool(listPages, opts)
     void ctx.registerTool(goToPage, opts)
     void ctx.registerTool(language, opts)
+    void ctx.registerTool(theme, opts)
+    void ctx.registerTool(workLocation, opts)
     // The spec's own unregister path: aborting the signal drops every tool.
-    return () => controller.abort()
+    return () => controller.abort("what reason, idk webmcp tool template")
   }, [])
 
   return null

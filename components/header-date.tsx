@@ -14,6 +14,7 @@ import {
   getWeatherIconKey,
   WEATHER_ICON,
 } from "@/lib/weather"
+import { WEBMCP_INTERACTIVE_ELEMENTS } from "@/lib/webmcp"
 import { useAchievements } from "@/providers/achievements-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -74,12 +75,13 @@ const HeaderDate = () => {
     <HoverPopover
       align="start"
       className="w-auto"
+      id={WEBMCP_INTERACTIVE_ELEMENTS.headerDatePopoverPrimitiveTrigger}
       onOpenChange={setIsHovered}
       trigger={
         // biome-ignore lint/a11y/noStaticElementInteractions: hover/touch is a progressive-enhancement easter egg; the fallback text keeps the date accessible.
         // biome-ignore lint/a11y/useKeyWithClickEvents: same easter-egg rationale — the fallback text keeps the date fully accessible without the click.
         <div
-          className="link-wrapper"
+          className="header-date-trigger"
           onClick={handleReveal}
           onPointerEnter={handleReveal}
         >

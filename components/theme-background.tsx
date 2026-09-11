@@ -7,6 +7,7 @@ import { BlueSky } from "@/components/blue-sky"
 import { Clouds } from "@/components/canvasui/Clouds"
 import { SwimmingSchool } from "@/components/sea-creatures"
 import { isReducedMotion } from "@/lib/isReducedMotion"
+import { DEFAULT_THEME } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
 
 // The WebGL backgrounds pull heavy deps (ogl / three + postprocessing), so they
@@ -79,11 +80,11 @@ export function ThemeBackground() {
             className="absolute inset-0"
             exit={{ opacity: 0, scale: 1.04 }}
             initial={{ opacity: 0, scale: 1.04 }}
-            key={resolvedTheme ?? "light"}
+            key={resolvedTheme ?? DEFAULT_THEME}
             transition={{ duration: 0.6, ease: "easeInOut" }}
           >
             {activeBackground(
-              resolvedTheme,
+              resolvedTheme ?? DEFAULT_THEME,
               isReducedMotion(animationPref, reducedMotion)
             )}
           </motion.div>

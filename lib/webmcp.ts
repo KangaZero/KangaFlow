@@ -25,6 +25,7 @@ import {
   type PageLink,
   type PageRoute,
 } from "@/lib/pages"
+import { isTheme, THEMES, type Theme } from "@/lib/themes"
 
 type WebMcpContentBlock = {
   text: { type: "text"; text: string }
@@ -42,7 +43,15 @@ export const WEBMCP_TOOL_NAMES = [
   "kangaflow-list-pages",
   "kangaflow-go-to-page",
   "kangaflow-language",
+  "kangaflow-theme",
+  "kangaflow-show-work-location",
 ] as const
+
+// Use good ol document.querySelector !
+export const WEBMCP_INTERACTIVE_ELEMENTS = {
+  headerDatePopoverPrimitiveTrigger: "header-date-popover-primitive-trigger",
+} as const
+
 export type WebMcpToolName = (typeof WEBMCP_TOOL_NAMES)[number]
 
 // The JSON-Schema subset these tools use. `unknown` here would let a malformed
@@ -88,7 +97,10 @@ declare global {
   }
 }
 
-const text = (value: string, isError: boolean = false): WebMcpToolResult => ({
+export const webMcpToolResultConstructor = (
+  value: string,
+  isError: boolean = false
+): WebMcpToolResult => ({
   content: [{ text: value, type: "text" }],
   isError: isError,
 })
@@ -117,16 +129,25 @@ export type SiteToolsBridge = {
   navigate: NavigateFn
   currentLocale: () => Locale
   setLocale: (locale: Locale) => void
+  currentTheme: () => Theme
+  setCurrentTheme: (theme: Theme) => void
+  showWorkLocation: () => WebMcpToolResult
 }
 
 export function buildSiteTools({
   currentLocale,
+  currentTheme,
   navigate,
   setLocale,
+  setCurrentTheme,
+  showWorkLocation,
 }: SiteToolsBridge): readonly [
+  // WebMcpToolDescriptor,
   WebMcpToolDescriptor,
   WebMcpToolDescriptor<"page">,
   WebMcpToolDescriptor<"language">,
+  WebMcpToolDescriptor<"theme">,
+  WebMcpToolDescriptor, //workLocation TODO: Make this more obvious
 ] {
   // Declared separately so each gets its OWN argument-key parameter. Returning
   // an array literal collapses both to the default `never`, which silently
@@ -134,7 +155,7 @@ export function buildSiteTools({
   const listPages: WebMcpToolDescriptor = {
     description:
       "List the pages of this site that can be navigated to. Read-only.",
-    execute: async () => text(PAGE_NAMES.join(", ")),
+    execute: async () => webMcpToolResultConstructor(PAGE_NAMES.join(", ")),
     inputSchema: { properties: {}, type: "object" },
     name: "kangaflow-list-pages",
   }
@@ -147,17 +168,17 @@ export function buildSiteTools({
       // `page` is `unknown`: it comes from a model, so the guard is the real
       // validation and the type does not pretend otherwise.
       if (typeof page !== "string")
-        return text("Which page? Give me a name.", true)
+        return webMcpToolResultConstructor("Which page? Give me a name.", true)
       const hit = findPage(page)
       // Naming the real options beats "not found" — the model can retry
       // without a second round trip through list-pages.
       if (!hit)
-        return text(
+        return webMcpToolResultConstructor(
           `No page called "${page}". Available: ${PAGE_NAMES.join(", ")}.`,
           true
         )
       navigate(hit.route)
-      return text(`Opened the ${hit.name} page.`)
+      return webMcpToolResultConstructor(`Opened the ${hit.name} page.`)
     },
     inputSchema: {
       properties: {
@@ -180,17 +201,18 @@ export function buildSiteTools({
       // Omitted means READ — the same contract as every other optional
       // argument here, so an agent does not have to learn two conventions.
       if (next === undefined)
-        return text(`The site is in ${currentLocale()}.`, true)
+        return webMcpToolResultConstructor(`The site is in ${currentLocale()}.`)
       // `isLocale` is the project's own guard, so "fr" is refused here rather
       // than reaching setLocale and half-applying (URL swapped, no dictionary).
       if (typeof next !== "string" || !isLocale(next))
-        return text(
+        return webMcpToolResultConstructor(
           `I cannot switch to "${String(next)}". Available: ${LOCALES.join(", ")}.`,
           true
         )
-      if (next === currentLocale()) return text(`Already in ${next}.`, true)
+      if (next === currentLocale())
+        return webMcpToolResultConstructor(`Already in ${next}.`, true)
       setLocale(next)
-      return text(`Switched to ${next}.`)
+      return webMcpToolResultConstructor(`Switched to ${next}.`)
     },
     inputSchema: {
       properties: {
@@ -204,5 +226,47 @@ export function buildSiteTools({
     name: "kangaflow-language",
   }
 
-  return [listPages, goToPage, language]
+  const theme: WebMcpToolDescriptor<"theme"> = {
+    description:
+      "Switch the site's theme, or report the current one. " +
+      "Call with no arguments to read it.",
+    execute: async ({ theme: next }) => {
+      // Omitted means READ — the same contract as every other optional
+      // argument here, so an agent does not have to learn two conventions.
+      if (next === undefined)
+        return webMcpToolResultConstructor(`The site is in ${currentTheme()}.`)
+      if (typeof next !== "string" || !isTheme(next))
+        return webMcpToolResultConstructor(
+          `I cannot switch to "${String(next)}". Available: ${THEMES.join(", ")}.`,
+          true
+        )
+      if (next === currentTheme())
+        return webMcpToolResultConstructor(`Already in ${next}.`, true)
+      setCurrentTheme(next)
+      return webMcpToolResultConstructor(`Switched to ${next}.`)
+    },
+    inputSchema: {
+      properties: {
+        theme: {
+          description: `One of: ${THEMES.join(", ")}. Omit to read the current one.`,
+          type: "string",
+        },
+      },
+      type: "object",
+    },
+    name: "kangaflow-theme",
+  }
+
+  const workLocation: WebMcpToolDescriptor = {
+    description:
+      "Show the HeaderDate popover component in its open state that shows KangaZero's work location " +
+      "If not on homepage navigate to it first, this component only exists on the homepage",
+    execute: async () => {
+      return showWorkLocation()
+    },
+    inputSchema: { properties: {}, type: "object" },
+    name: "kangaflow-show-work-location",
+  }
+
+  return [listPages, goToPage, language, theme, workLocation]
 }

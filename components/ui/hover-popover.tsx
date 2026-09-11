@@ -35,6 +35,7 @@ type HoverPopoverProps = {
   closeDelay?: number
   onOpenChange?: (open: boolean) => void
   openDelay?: number
+  id: string
   side?: PopoverContentProps["side"]
   sideOffset?: number
   trigger: React.ReactNode
@@ -42,6 +43,7 @@ type HoverPopoverProps = {
 
 export function HoverPopover({
   align = "center",
+  id,
   children,
   className,
   closeDelay = CLOSE_DELAY_MS,
@@ -128,6 +130,7 @@ export function HoverPopover({
     <Popover onOpenChange={handleOpenChange} open={open}>
       <PopoverTrigger
         asChild
+        id={id}
         onClick={handleTriggerClick}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}

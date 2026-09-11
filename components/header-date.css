@@ -1,5 +1,5 @@
 /* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
-.link-wrapper {
+.header-date-trigger {
   position: relative;
   cursor: pointer;
 }
@@ -68,7 +68,7 @@
 }
 
 /* Hover effect on cyan fill */
-.link-wrapper:hover .shape.cyan-fill {
+.header-date-trigger:hover .shape.cyan-fill {
   transform: scale(3, 0.1);
 }
 
@@ -251,7 +251,7 @@
 }
 
 /* Hover state enhancement */
-.link-wrapper:hover {
+.header-date-popover:hover {
   z-index: 9999;
 }
 
