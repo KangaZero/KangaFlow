@@ -43,12 +43,17 @@ describe("pageForRoute", () => {
 })
 
 describe("hrefForPage", () => {
-  it("drops the sub-path for home and keeps it otherwise", () => {
+  it("drops the sub-path for home and keeps it otherwise, with a trailing slash", () => {
+    // CHANGED: these used to be "/en" and "/ja/timeline". `next.config.ts` sets
+    // `trailingSlash: true`, so the canonical URLs are "/en/" and "/ja/timeline/"
+    // — and `AppPath` already said so (`/${Locale}/${Pages}` with Pages
+    // including ""), which the old return value quietly contradicted. Emitting
+    // the canonical form means the router no longer answers with a redirect.
     const home = pageByName("home")
     const timeline = pageByName("timeline")
     if (!(home && timeline)) throw new Error("missing fixture page")
-    expect(hrefForPage("en", home)).toBe("/en")
-    expect(hrefForPage("ja", timeline)).toBe("/ja/timeline")
+    expect(hrefForPage("en", home)).toBe("/en/")
+    expect(hrefForPage("ja", timeline)).toBe("/ja/timeline/")
   })
 })
 

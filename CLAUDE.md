@@ -25,6 +25,30 @@ static export to GitHub Pages under `/KangaFlow`.
    `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`,
    `noFallthroughCasesInSwitch` — write code that satisfies them.
 
+   **Type as narrowly as the value actually is.** The rule above kept being
+   satisfied by code that was still loose, so, concretely:
+
+   - **Never `string` where a literal union exists.** `route: string` let a page
+     name a route that does not exist; `PageRoute` does not. Same for `locale:
+     string` vs `Locale`.
+   - **Derive, never re-list.** A second spelling of a set is a second thing to
+     forget: `AppPath` is `` `/${Locale}/${PageSegment}` `` built from `PAGE`,
+     not a hand-written union that has to be widened whenever a page is added.
+   - **`as const satisfies` over a trailing `as` cast.** `satisfies` enforces
+     the shape AND keeps every value literal; a cast throws the literals away
+     and asserts a shape nobody checked.
+   - **Parameterise over keys.** A descriptor whose `execute` takes
+     `Record<string, unknown>` will accept a misspelled destructure forever.
+     Give it `<K extends string>` so the declared keys, the `required` list and
+     the destructure are one thing.
+   - **But do not type a value you have not validated.** Arguments arriving
+     from a model, the network or `localStorage` are `unknown`, and the runtime
+     guard is the real check. Typing them as `string` is a claim the compiler
+     cannot back, and it makes the guard look redundant enough to delete.
+
+   A type is only strict if breaking it fails the build — when you tighten one,
+   mutate a call site and confirm `just typecheck` actually reds.
+
 4. **No hardcoded UI labels.** Every user-visible string goes through i18n
    (`t` / `useLocale().translate`) with keys in BOTH `en` and `ja` (JA authored,
    not machine-guessed). Adding a key to `en` and omitting it in `ja` fails the

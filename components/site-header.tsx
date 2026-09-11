@@ -20,6 +20,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import type { AppPath } from "@/lib/globalStates"
+import { hrefForRoute, PAGE } from "@/lib/pages"
 import { formatShortcut, type ShortcutAction } from "@/lib/shortcuts"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -129,7 +130,9 @@ export function SiteHeader() {
   const rest = currentPath
     .replace(/^\/(?:en|ja)(?=\/|$)/, "")
     .replace(/\/$/, "")
-  const home = `/${locale}`
+  // Hrefs derive from PAGE_LINKS (lib/pages) — the header no longer spells
+  // its own routes, so adding a page cannot leave the nav behind.
+  const home = hrefForRoute(locale, PAGE.home.route)
   const isHome = rest === ""
   const isAchievements = rest.startsWith("/achievements")
   const isTimeline = rest.startsWith("/timeline")
@@ -192,7 +195,7 @@ export function SiteHeader() {
             size="icon"
             variant={isAchievements ? "secondary" : "ghost"}
           >
-            <Link href={`${home}/achievements`}>
+            <Link href={hrefForRoute(locale, PAGE.achievements.route)}>
               <PillHover>
                 <Trophy />
               </PillHover>
@@ -213,7 +216,7 @@ export function SiteHeader() {
             size="icon"
             variant={isTimeline ? "secondary" : "ghost"}
           >
-            <Link href={`${home}/timeline`}>
+            <Link href={hrefForRoute(locale, PAGE.timeline.route)}>
               <PillHover>
                 <GalleryVerticalEnd />
               </PillHover>
@@ -234,7 +237,7 @@ export function SiteHeader() {
             size="icon"
             variant={isEnvironment ? "secondary" : "ghost"}
           >
-            <Link href={`${home}/environment`}>
+            <Link href={hrefForRoute(locale, PAGE.environment.route)}>
               <PillHover>
                 <Monitor />
               </PillHover>

@@ -5,6 +5,7 @@ import { useTheme } from "next-themes"
 import { useEffect } from "react"
 import { type AppPath, COLUMN_OPTIONS } from "@/lib/globalStates"
 import { enterHints, isHintActive } from "@/lib/hint-store"
+import { hrefForRoute, PAGE } from "@/lib/pages"
 import { matchesShortcut } from "@/lib/shortcuts"
 import { DEFAULT_THEME, isTheme, nextTheme } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -48,16 +49,16 @@ export function ShortcutDispatcher() {
 
       switch (hit.action) {
         case "goHome":
-          router.push(`/${locale}`)
+          router.push(hrefForRoute(locale, PAGE.home.route))
           break
         case "goAchievements":
-          router.push(`/${locale}/achievements`)
+          router.push(hrefForRoute(locale, PAGE.achievements.route))
           break
         case "goTimeline":
-          router.push(`/${locale}/timeline`)
+          router.push(hrefForRoute(locale, PAGE.timeline.route))
           break
         case "goEnvironment":
-          router.push(`/${locale}/environment`)
+          router.push(hrefForRoute(locale, PAGE.environment.route))
           break
         case "cycleTheme": {
           const current = isTheme(theme) ? theme : DEFAULT_THEME

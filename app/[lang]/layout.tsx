@@ -8,6 +8,7 @@ import { ShortcutDispatcher } from "@/components/shortcut-dispatcher"
 import { SiteHeader } from "@/components/site-header"
 import { TerminalDialog } from "@/components/terminal-dialog"
 import { ThemeBackground } from "@/components/theme-background"
+import { WebMcp } from "@/components/webmcp"
 import { WidgetManagement } from "@/components/widgets/widget-management"
 import { isLocale, LOCALES } from "@/lib/i18n"
 import { readSourceFiles } from "@/lib/terminal/source"
@@ -55,6 +56,7 @@ export default async function LangLayout({
                 <SettingsDialog />
                 <TerminalDialog files={sourceFiles} />
                 <ShortcutDispatcher />
+                <WebMcp />
                 <HintOverlay />
                 <WidgetManagement />
                 <AchievementToast />

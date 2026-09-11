@@ -66,6 +66,7 @@ terminal. Shipped fully static to GitHub Pages.
 - [Tasks](#tasks)
 - [Project Layout](#project-layout)
 - [Architecture Notes](#architecture-notes)
+- [For Agents (WebMCP)](#for-agents-webmcp)
 - [Deployment](#deployment)
 - [AI Usage](#ai-usage)
 - [Credits](#credits)
@@ -168,6 +169,8 @@ components/          # app components (theme toggle, command menu, header date�
 hooks/               # use-weather (Open-Meteo)
 lib/
   i18n/              # typed dictionaries (en/ja) + t()
+  pages.ts           # routable pages + hrefs (single source of truth)
+  webmcp.ts          # WebMCP tool descriptors (pure; see For Agents)
   themes.ts          # theme union + cycle (single source of truth)
   weather.ts         # WMO → icon + temperature colour
   achievements.ts    # catalogue + pure unlock/reconcile reducer
@@ -192,6 +195,36 @@ providers/           # global state, locale, notifications, z-order (click-to-fr
   `/KangaFlow` base path with a `.nojekyll` marker.
 - **Strict, no escape hatches.** `any` is banned; every user-facing string flows
   through i18n (a missing translation fails the build).
+
+## For Agents (WebMCP)
+
+This site publishes its navigation to AI agents running **in the browser** via
+[WebMCP](https://github.com/webmachinelearning/webmcp) (W3C Web Machine
+Learning CG). Rather than an agent guessing at links or clicking around, it
+calls a tool.
+
+| Tool | Arguments | Does | Reads or writes |
+|---|---|---|---|
+| `kangaflow-list-pages` | — | Lists the pages that can be navigated to | Read-only |
+| `kangaflow-go-to-page` | `page` (string) | Navigates to a page by name; matching is case-insensitive and partial, so "the timeline page" works | Navigates |
+
+An unknown `page` answers with the list of real ones, so the agent can retry
+without a second call.
+
+**Trying it.** WebMCP ships behind a flag today:
+
+- **Chrome 149+** — enable `chrome://flags/#enable-webmcp-testing` and relaunch.
+  The [Model Context Tool Inspector extension](https://developer.chrome.com/docs/ai/webmcp)
+  lists the registered tools and calls them by hand, which is the quickest check.
+- **ChatGPT Desktop** — supported with no flag.
+- Everywhere else `document.modelContext` is undefined and this is inert.
+
+**How it is wired.** `lib/webmcp.ts` builds the descriptors and is pure, so it
+unit-tests without a DOM or a router; `components/webmcp.tsx` is a client
+component mounted in `app/[lang]/layout.tsx` that supplies the real navigation
+and unregisters on unmount. The page list comes from `lib/pages.ts` — the same
+source the header links, the keyboard shortcuts and the terminal's `cd` read —
+so adding a page there makes it agent-navigable with no further work.
 
 ## Deployment
 

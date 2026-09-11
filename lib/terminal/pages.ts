@@ -10,38 +10,41 @@
 // between the true path and the terminal's `<dir>/index.tsx` lives here and
 // nowhere else, so the two representations can't drift.
 
+import type { Locale } from "@/lib/i18n"
+import {
+  hrefForRoute,
+  PAGE_LINKS,
+  type PageHref,
+  type PageName,
+  type PageRoute,
+} from "@/lib/pages"
+
 export type TerminalPage = {
   // Terminal-only display path shown by ls/cat/nvim: `<dir>/index.tsx`.
   file: string
   // cd target + directory name; `home` is the root (`~`).
-  name: string
+  name: PageName
   // Route sub-path after the locale segment ("" = the locale root / home).
-  route: string
+  // Literal union, not `string`: these mirror PAGE, so widening here would let
+  // a hand-written entry name a route that does not exist.
+  route: PageRoute
   // Key into the real source-file map (source.ts) backing this page's content.
   source: string
 }
 
-export const TERMINAL_PAGES: readonly TerminalPage[] = [
-  { file: "index.tsx", name: "home", route: "", source: "app/[lang]/page.tsx" },
-  {
-    file: "achievements/index.tsx",
-    name: "achievements",
-    route: "achievements",
-    source: "app/[lang]/achievements/page.tsx",
-  },
-  {
-    file: "environment/index.tsx",
-    name: "environment",
-    route: "environment",
-    source: "app/[lang]/environment/page.tsx",
-  },
-  {
-    file: "timeline/index.tsx",
-    name: "timeline",
-    route: "timeline",
-    source: "app/[lang]/timeline/page.tsx",
-  },
-]
+// Derived from PAGE_LINKS — the route list is the SITE's, not the terminal's
+// (lib/pages.ts). Only `file` and `source` are terminal-only, and both follow
+// mechanically from the route, so adding a page to PAGE_LINKS is enough.
+export const TERMINAL_PAGES: readonly TerminalPage[] = PAGE_LINKS.map(
+  (page) => ({
+    file: page.route ? `${page.route}/index.tsx` : "index.tsx",
+    name: page.name,
+    route: page.route,
+    source: page.route
+      ? `app/[lang]/${page.route}/page.tsx`
+      : "app/[lang]/page.tsx",
+  })
+)
 
 // Page names, sorted — the completion pool for `cd`.
 export const TERMINAL_PAGE_NAMES: readonly string[] = TERMINAL_PAGES.map(
@@ -82,7 +85,8 @@ export function pageForRoute(pathname: string): TerminalPage | undefined {
   return TERMINAL_PAGES.find((page) => page.route === route)
 }
 
-// The route href to navigate to for a page under a given locale.
-export function hrefForPage(locale: string, page: TerminalPage): string {
-  return page.route ? `/${locale}/${page.route}` : `/${locale}`
+// The route href to navigate to for a page under a given locale. Delegates —
+// the path shape (trailing slash, no basePath) is decided once in lib/pages.
+export function hrefForPage(locale: Locale, page: TerminalPage): PageHref {
+  return hrefForRoute(locale, page.route)
 }

@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react"
 import type { EnvSettings } from "@/components/niri/settings"
-import type { Locale } from "@/lib/i18n"
 import type { OnekoOptions } from "@/lib/oneko"
+import type { PageHref } from "@/lib/pages"
 import type { Shortcut } from "@/lib/shortcuts"
 import type { MatrixOptions } from "@/lib/terminal/cmatrix"
 import type { Theme } from "@/lib/themes"
@@ -11,8 +11,10 @@ import type { Theme } from "@/lib/themes"
 export const COLUMN_OPTIONS = [1, 2, 3] as const
 export type ColumnCount = (typeof COLUMN_OPTIONS)[number]
 
-type Pages = "achievements/" | "" | "timeline/" | "environment/"
-export type AppPath = `/${Locale}/${Pages}`
+// Derived from PAGE (lib/pages), never re-listed: this union used to spell the
+// routes a second time, so adding a page meant remembering to widen a type in
+// an unrelated file — and forgetting it made every new `<Link href>` a cast.
+export type AppPath = PageHref
 
 export type GlobalStatesContextValue = {
   isCommandPaletteOpen: boolean
