@@ -105,9 +105,11 @@ export function HeaderStatus({ className }: { className?: string }) {
   // <button> trigger (rather than a bare span) is what makes the card
   // keyboard-reachable and tappable on touch.
   return (
+    // biome-ignore lint/correctness/useUniqueElementIds: <no real significance>
     <HoverPopover
       align="end"
       className="w-auto"
+      id="header-status-hover-popover"
       trigger={
         <button
           aria-label={translate("headerCard.workplace")}

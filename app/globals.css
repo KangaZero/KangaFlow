@@ -46,6 +46,9 @@
   --color-primary: var(--primary);
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
+  --color-tooltip-shadow: var(--tooltip-shadow);
+  --color-tooltip-foreground: var(--tooltip-foreground);
+  --color-tooltip: var(--tooltip);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
   --color-foreground: var(--foreground);
@@ -84,6 +87,22 @@
   --card-foreground: oklch(0.147 0.004 49.25);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.147 0.004 49.25);
+  /* AnimatedTooltip (neo-brutalist chip + hard 4px offset shadow).
+   *
+   * Deliberately NOT --popover: that token tracks the page surface, so in the
+   * light theme the tooltip would render near-white and the skew + clip-path
+   * silhouette would vanish. The chip stays a dark plate in every theme.
+   *
+   * One rule, three answers: the chip is a dark surface in that theme's OWN
+   * hue family, and the offset shadow is that theme's accent rather than
+   * black — a coloured hard shadow is the brutalist signature, and it is what
+   * makes each theme's tooltip read as belonging to it.
+   *
+   * Light: green-tinted ink plate (hue 165, the app's --primary hue) under a
+   * mid-green shadow that still separates against a white page. */
+  --tooltip: oklch(0.32 0.045 165);
+  --tooltip-foreground: oklch(0.979 0.021 166.113);
+  --tooltip-shadow: oklch(0.508 0.118 165.612);
   --primary: oklch(0.508 0.118 165.612);
   --primary-foreground: oklch(0.979 0.021 166.113);
   --secondary: oklch(0.967 0.001 286.375);
@@ -130,6 +149,13 @@
   --card-foreground: oklch(0.985 0.001 106.423);
   --popover: oklch(0.216 0.006 56.043);
   --popover-foreground: oklch(0.985 0.001 106.423);
+  /* Chip lifted to L=0.38 so it clears the dark base (L=0.147) — a darker
+     plate would disappear into the page. The shadow inverts the light theme's
+     move: against a near-black page a darker shadow is invisible, so it goes
+     BRIGHT, reusing the vivid dark-theme green (--sidebar-primary) for a neon
+     offset. Same rule as light, opposite direction. */
+  --tooltip: oklch(0.38 0.035 166);
+  --tooltip-shadow: oklch(0.696 0.17 162.48);
   --primary: oklch(0.432 0.095 166.913);
   --primary-foreground: oklch(0.979 0.021 166.113);
   --secondary: oklch(0.274 0.006 286.033);
@@ -180,6 +206,12 @@
   --card-foreground: #cdd6f4;
   --popover: #313244;
   --popover-foreground: #cdd6f4;
+  --tooltip: #45475a;
+  /* Surface1 — one step above --card, so the chip reads as raised */
+  --tooltip-foreground: #cdd6f4;
+  /* Text */
+  --tooltip-shadow: #a6e3a1;
+  /* Green — same accent-shadow rule as the other themes, kept inside Mocha */
   --primary: #a6e3a1;
   /* Green */
   --primary-foreground: #1e1e2e;

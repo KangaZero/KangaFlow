@@ -1,14 +1,25 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { describe, expect, it, vi } from "vitest"
 import { PAGE, PAGE_NAMES } from "@/lib/pages"
-import { buildSiteTools, findPage } from "@/lib/webmcp"
+import {
+  buildSiteTools,
+  findPage,
+  type SiteToolsBridge,
+  webMcpToolResultConstructor,
+} from "@/lib/webmcp"
 
 // One place the bridge shape is built, so adding a capability does not mean
-// editing every case.
-const bridge = (over: Partial<Parameters<typeof buildSiteTools>[0]> = {}) => ({
-  currentLocale: () => "en" as const,
+// editing every case. Annotated `SiteToolsBridge` rather than inferred: a new
+// capability then fails HERE once, instead of at every call site.
+const bridge = (over: Partial<SiteToolsBridge> = {}): SiteToolsBridge => ({
+  currentLocale: () => "en",
+  currentTheme: () => "light",
   navigate: vi.fn(),
+  setCurrentTheme: vi.fn(),
   setLocale: vi.fn(),
+  showWidgetsState: () => ({}),
+  showWorkLocation: () => webMcpToolResultConstructor("stub"),
+  toggleWidgets: () => webMcpToolResultConstructor("stub"),
   ...over,
 })
 
