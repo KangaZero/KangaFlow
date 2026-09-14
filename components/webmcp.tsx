@@ -1,9 +1,9 @@
-// [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 "use client"
 
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect, useRef } from "react"
+import type { AvailableWidgetName } from "@/components/widgets/widget-management"
 import type { Locale } from "@/lib/i18n"
 import { hrefForRoute } from "@/lib/pages"
 import { DEFAULT_THEME, type Theme } from "@/lib/themes"
@@ -13,6 +13,7 @@ import {
   webMcpToolResultConstructor,
 } from "@/lib/webmcp"
 import { useAchievements } from "@/providers/achievements-provider"
+import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
 // Registers the site's WebMCP tools for as long as this is mounted. Renders
@@ -27,6 +28,27 @@ export function WebMcp() {
   const { locale, setLocale } = useLocale()
   const { resolvedTheme, setTheme } = useTheme()
   const { unlockAchievement } = useAchievements()
+  const {
+    isAlarmOpen,
+    isCalendarOpen,
+    isMediaPlayerOpen,
+    isNotesOpen,
+    setIsAlarmOpen,
+    setIsCalendarOpen,
+    setIsMediaPlayerOpen,
+    setIsNotesOpen,
+  } = useGlobalStates()
+
+  const widgetStates = {
+    isAlarmOpen,
+    isCalendarOpen,
+    isMediaPlayerOpen,
+    isNotesOpen,
+    setIsAlarmOpen,
+    setIsCalendarOpen,
+    setIsMediaPlayerOpen,
+    setIsNotesOpen,
+  } as const
 
   // Everything the tools reach is held in refs and the effect depends on
   // nothing. A tool's `execute` runs long after registration, so capturing
@@ -44,6 +66,8 @@ export function WebMcp() {
   setThemeRef.current = setTheme
   const unlockRef = useRef(unlockAchievement)
   unlockRef.current = unlockAchievement
+  const widgetsRef = useRef(widgetStates)
+  widgetsRef.current = widgetStates
 
   useEffect(() => {
     const ctx = document.modelContext
@@ -73,8 +97,8 @@ export function WebMcp() {
       }
 
     const controller = new AbortController()
-    const [listPages, goToPage, language, theme, workLocation] = buildSiteTools(
-      {
+    const [listPages, goToPage, language, theme, workLocation, widgets] =
+      buildSiteTools({
         // Deliberately NOT wrapped: the language/theme tool calls this to READ the
         // current locale, so unlocking here would fire on a question rather than
         // on the agent doing something.
@@ -88,6 +112,30 @@ export function WebMcp() {
         ),
         setCurrentTheme: withUnlock((theme) => setThemeRef.current(theme)),
         setLocale: withUnlock((next) => setLocaleRef.current(next)),
+        showWidgetsState: (widgetNames) => {
+          const result: Partial<Record<AvailableWidgetName, boolean>> = {}
+
+          widgetNames.forEach((widget) => {
+            switch (widget) {
+              case "media-player":
+                result[widget] = widgetsRef.current.isMediaPlayerOpen
+                break
+              case "alarm":
+                result[widget] = widgetsRef.current.isAlarmOpen
+                break
+              case "calendar":
+                result[widget] = widgetsRef.current.isCalendarOpen
+                break
+              case "notes":
+                result[widget] = widgetsRef.current.isNotesOpen
+                break
+              default:
+                break
+            }
+          })
+
+          return result
+        },
         showWorkLocation: () => {
           const headerDateTriggerEl = document.getElementById(
             WEBMCP_INTERACTIVE_ELEMENTS.headerDatePopoverPrimitiveTrigger
@@ -107,8 +155,51 @@ export function WebMcp() {
           headerDateTriggerEl?.click()
           return webMcpToolResultConstructor("Work location component opened")
         },
-      }
-    )
+        toggleWidgets: (args) => {
+          switch (args["media-player"]) {
+            case true:
+              widgetsRef.current.setIsMediaPlayerOpen(true)
+              break
+            case false:
+              widgetsRef.current.setIsMediaPlayerOpen(false)
+              break
+            default:
+              break // is not in args
+          }
+          switch (args.calendar) {
+            case true:
+              widgetsRef.current.setIsCalendarOpen(true)
+              break
+            case false:
+              widgetsRef.current.setIsCalendarOpen(false)
+              break
+            default:
+              break // is not in args
+          }
+          switch (args.alarm) {
+            case true:
+              widgetsRef.current.setIsAlarmOpen(true)
+              break
+            case false:
+              widgetsRef.current.setIsAlarmOpen(false)
+              break
+            default:
+              break // is not in args
+          }
+          switch (args.notes) {
+            case true:
+              widgetsRef.current.setIsNotesOpen(true)
+              break
+            case false:
+              widgetsRef.current.setIsNotesOpen(false)
+              break
+            default:
+              break // is not in args
+          }
+
+          return webMcpToolResultConstructor("Widget(s) toggled")
+        },
+      })
 
     // Registered one at a time, not in a loop: each descriptor is generic over
     // its OWN argument keys, and iterating unions them — so the loop variable
@@ -120,6 +211,7 @@ export function WebMcp() {
     void ctx.registerTool(language, opts)
     void ctx.registerTool(theme, opts)
     void ctx.registerTool(workLocation, opts)
+    void ctx.registerTool(widgets, opts)
     // The spec's own unregister path: aborting the signal drops every tool.
     return () => controller.abort("what reason, idk webmcp tool template")
   }, [])

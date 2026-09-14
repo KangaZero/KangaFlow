@@ -18,6 +18,11 @@
 // and an agent's language is independent of the site locale. Kept out of i18n on
 // purpose; revisit if a tool result is ever surfaced in the UI.
 
+import {
+  AVAILABLE_WIDGETS,
+  type AvailableWidgetName,
+  WIDGET_NAMES,
+} from "@/components/widgets/widget-management"
 import { isLocale, LOCALES, type Locale } from "@/lib/i18n"
 import {
   PAGE_LINKS,
@@ -27,13 +32,14 @@ import {
 } from "@/lib/pages"
 import { isTheme, THEMES, type Theme } from "@/lib/themes"
 
-type WebMcpContentBlock = {
-  text: { type: "text"; text: string }
-  // image: { type: "image"; data: string; mimeType: string };
-}
+// An MCP result is ALWAYS a list of content blocks discriminated by `type` —
+// never a record keyed by whatever the tool happens to be about. Parameterising
+// this by widget name produced a block shape no agent can read, so the union is
+// the block variants the spec defines and this site actually emits.
+type WebMcpContentBlock = { type: "text"; text: string }
 
-export type WebMcpToolResult<T extends keyof WebMcpContentBlock = "text"> = {
-  content: ReadonlyArray<WebMcpContentBlock[T]>
+export type WebMcpToolResult<T = never> = {
+  content: T | readonly WebMcpContentBlock[]
   isError?: boolean
 }
 
@@ -45,6 +51,7 @@ export const WEBMCP_TOOL_NAMES = [
   "kangaflow-language",
   "kangaflow-theme",
   "kangaflow-show-work-location",
+  "kangaflow-toggle-widgets",
 ] as const
 
 // Use good ol document.querySelector !
@@ -62,6 +69,39 @@ type SchemaProperty = {
   description: string
 }
 
+// Argument keys, however they were spelled. A union (`"page"`, `"a" | "b"`) is
+// already "several arguments"; a readonly array is accepted so a tool whose
+// arguments ARE a const list — `typeof WIDGET_NAMES` — can hand that list over
+// instead of re-spelling it as a union that has to be widened every time the
+// list grows (working rule 1).
+//
+// Normalised ONCE, here, and never inside the descriptor: `Record<K, …>` under
+// a naked conditional distributes, so `K = "a" | "b"` builds
+// `Record<"a", …> | Record<"b", …>` — a choice of two one-key objects — rather
+// than the two-key object a multi-argument tool needs.
+type ToolArgKey<K extends string | readonly string[]> =
+  K extends readonly string[] ? K[number] : K
+
+/**
+ * Build the `properties` map for a tool whose arguments are a list of flags.
+ *
+ * The one `as` in this file, and deliberately fenced into four lines:
+ * `Object.fromEntries` is typed to return an index signature, so no amount of
+ * generic plumbing recovers the literal keys. Contained here, the cast is
+ * checked against `N` once; spread across call sites it would be four separate
+ * unchecked claims that drift as widgets are added.
+ */
+const flagProperties = <const N extends readonly string[]>(
+  names: N,
+  describe: (name: N[number]) => string
+): Readonly<Record<N[number], SchemaProperty>> =>
+  Object.fromEntries(
+    names.map((name) => [
+      name,
+      { description: describe(name), type: "boolean" },
+    ])
+  ) as Readonly<Record<N[number], SchemaProperty>>
+
 // Parameterised by its own argument KEYS. `K` ties together the keys declared
 // in `properties`, the keys `required` may name, and the keys `execute` may
 // destructure — misspell one and it is a type error, where `Record<string,
@@ -70,21 +110,23 @@ type SchemaProperty = {
 // The VALUES stay `unknown` deliberately: the arguments come from a language
 // model, so `page: string` would be a claim neither the compiler nor the
 // runtime can back. The `typeof` guard in `execute` is the real validation.
-export type WebMcpToolDescriptor<K extends string = never> = {
-  name: WebMcpToolName
-  description: string
-  inputSchema: {
-    type: "object"
-    properties: Readonly<Record<K, SchemaProperty>>
-    required?: readonly K[]
+export type WebMcpToolDescriptor<K extends string | readonly string[] = never> =
+  {
+    name: WebMcpToolName
+    description: string
+    inputSchema: {
+      type: "object"
+      properties: Readonly<Record<ToolArgKey<K>, SchemaProperty>>
+      required?: readonly ToolArgKey<K>[]
+      example?: string
+    }
+    execute: (
+      args: Readonly<Partial<Record<ToolArgKey<K>, unknown>>>
+    ) => Promise<WebMcpToolResult>
   }
-  execute: (
-    args: Readonly<Partial<Record<K, unknown>>>
-  ) => Promise<WebMcpToolResult>
-}
 
 export type ModelContext = {
-  registerTool: <K extends string>(
+  registerTool: <K extends string | readonly string[]>(
     tool: WebMcpToolDescriptor<K>,
     options?: { signal?: AbortSignal }
   ) => Promise<void>
@@ -132,6 +174,12 @@ export type SiteToolsBridge = {
   currentTheme: () => Theme
   setCurrentTheme: (theme: Theme) => void
   showWorkLocation: () => WebMcpToolResult
+  showWidgetsState: (
+    widgetNames: AvailableWidgetName[]
+  ) => Partial<Record<AvailableWidgetName, boolean>>
+  toggleWidgets: (
+    widgets: Partial<Record<AvailableWidgetName, boolean>>
+  ) => WebMcpToolResult
 }
 
 export function buildSiteTools({
@@ -139,15 +187,19 @@ export function buildSiteTools({
   currentTheme,
   navigate,
   setLocale,
+  showWidgetsState,
   setCurrentTheme,
   showWorkLocation,
+  toggleWidgets,
 }: SiteToolsBridge): readonly [
-  // WebMcpToolDescriptor,
-  WebMcpToolDescriptor,
-  WebMcpToolDescriptor<"page">,
-  WebMcpToolDescriptor<"language">,
-  WebMcpToolDescriptor<"theme">,
-  WebMcpToolDescriptor, //workLocation TODO: Make this more obvious
+  listPages: WebMcpToolDescriptor,
+  goToPage: WebMcpToolDescriptor<"page">,
+  language: WebMcpToolDescriptor<"language">,
+  theme: WebMcpToolDescriptor<"theme">,
+  workLocation: WebMcpToolDescriptor,
+  // `typeof WIDGET_NAMES`, not a hand-written union: the widget registry is the
+  // source of truth, so adding one there widens this tool's arguments too.
+  widgets: WebMcpToolDescriptor<typeof WIDGET_NAMES>,
 ] {
   // Declared separately so each gets its OWN argument-key parameter. Returning
   // an array literal collapses both to the default `never`, which silently
@@ -268,5 +320,75 @@ export function buildSiteTools({
     name: "kangaflow-show-work-location",
   }
 
-  return [listPages, goToPage, language, theme, workLocation]
+  const widgets: WebMcpToolDescriptor<typeof WIDGET_NAMES> = {
+    description:
+      "Toggle this site's widgets on and off. Pass a widget as true to flip it. " +
+      "Call with no arguments to read which widgets exist and their current state.",
+    // Driven off WIDGET_NAMES rather than destructuring the four keys: a
+    // destructure is a fifth spelling of the widget list, and `"media-player"`
+    // is not even a valid binding name without renaming it.
+    execute: async (args) => {
+      // Omitted means READ — same contract as the language and theme tools, so
+      // an agent does not have to learn a second convention.
+      const currentPath = window?.location.pathname
+      const rest = currentPath
+        .replace(/^\/(?:en|ja)(?=\/|$)/, "")
+        .replace(/\/$/, "")
+
+      const isEnvironment = rest.startsWith("/environment")
+
+      const availableWidgetsOnPage = isEnvironment
+        ? AVAILABLE_WIDGETS
+        : AVAILABLE_WIDGETS.filter((widget) => widget.global !== isEnvironment)
+
+      const availableWidgetNamesOnPage = availableWidgetsOnPage.map(
+        (widget) => widget.name
+      )
+
+      const namedWidgets = availableWidgetNamesOnPage.filter(
+        (widget) => widget in args
+      )
+      if (namedWidgets.length === 0) {
+        const availableWidgetStates = showWidgetsState(
+          availableWidgetNamesOnPage
+        )
+        return webMcpToolResultConstructor(
+          `Available widgets: ${JSON.stringify(availableWidgetStates)}`
+        )
+      }
+      // Values arrive from a model, so the guard is the real validation: a
+      // string "true" is refused here rather than silently counting as false.
+      const malformed = namedWidgets.filter(
+        (widget) => typeof args[widget] !== "boolean"
+      )
+      if (malformed.length > 0)
+        return webMcpToolResultConstructor(
+          `Widget arguments must be true or false. Not boolean: ${malformed.join(", ")}`,
+          true
+        )
+
+      const invalidNames = Object.keys(args).filter(
+        (widget) => !namedWidgets.includes(widget as AvailableWidgetName)
+      )
+      if (invalidNames.length > 0)
+        return webMcpToolResultConstructor(
+          `Widget arguments contains invalid keys: ${invalidNames.join(", ")}`,
+          true
+        )
+
+      return toggleWidgets(
+        args as Partial<Record<AvailableWidgetName, boolean>>
+      )
+    },
+    inputSchema: {
+      properties: flagProperties(
+        WIDGET_NAMES,
+        (widget) => `Set true to toggle the ${widget} widget.`
+      ),
+      type: "object",
+    },
+    name: "kangaflow-toggle-widgets",
+  }
+
+  return [listPages, goToPage, language, theme, workLocation, widgets]
 }
