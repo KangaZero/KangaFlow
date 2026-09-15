@@ -21,8 +21,8 @@ export function ShortcutDispatcher() {
   const { locale, setLocale } = useLocale()
   const {
     shortcuts,
-    isCommandPaletteOpen,
-    setIsCommandPaletteOpen,
+    // isCommandPaletteOpen,
+    // setIsCommandPaletteOpen,
     isSettingsOpen,
     setIsSettingsOpen,
     isMediaPlayerOpen,
@@ -65,9 +65,9 @@ export function ShortcutDispatcher() {
           setTheme(nextTheme(current))
           break
         }
-        case "openCommandMenu":
-          setIsCommandPaletteOpen(!isCommandPaletteOpen)
-          break
+        // case "openCommandMenu":
+        //   setIsCommandPaletteOpen(!isCommandPaletteOpen)
+        //   break
         case "openMediaPlayer":
           setIsMediaPlayerOpen(!isMediaPlayerOpen)
           break
@@ -110,8 +110,8 @@ export function ShortcutDispatcher() {
     setTheme,
     locale,
     setLocale,
-    isCommandPaletteOpen,
-    setIsCommandPaletteOpen,
+    // isCommandPaletteOpen,
+    // setIsCommandPaletteOpen,
     isSettingsOpen,
     setIsSettingsOpen,
     isMediaPlayerOpen,

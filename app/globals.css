@@ -16,6 +16,79 @@
   }
 }
 
+/* Tooltip tails. Defined as real utilities (not inline `[clip-path:…]` classes)
+   so Tailwind variants compose: `tail-top sm:tail-bottom` flips the tail at a
+   breakpoint, which a template-concatenated `sm:${…}` class can never do —
+   Tailwind scans source text at build time and never sees a runtime string.
+   `tail-top` / `tail-bottom` are exact vertical mirrors: every y is `100% - y`. */
+@utility tail-bottom {
+  /* tail on top edge → tooltip sits below trigger */
+  clip-path: polygon(
+    0 80%,
+    0 15px,
+    37% 9px,
+    30% 6px,
+    46% 4px,
+    50% 0,
+    39% 3px,
+    54% 6px,
+    47% 10px,
+    100% 10px,
+    100% calc(100% - 0px)
+  );
+}
+
+@utility tail-top {
+  /* tail on bottom edge → tooltip sits above trigger */
+  clip-path: polygon(
+    0 10,
+    0 calc(100% - 12px),
+    37% calc(100% - 15px),
+    30% calc(100% - 6px),
+    46% calc(100% - 4px),
+    50% 100%,
+    39% calc(100% - 3px),
+    54% calc(100% - 6px),
+    47% calc(100% - 10px),
+    100% calc(100% - 14px),
+    100% 8px
+  );
+}
+
+@utility tail-left {
+  /* tail on right edge → tooltip sits left of trigger */
+  clip-path: polygon(
+    0 0,
+    calc(100% - 22px) 0,
+    calc(100% - 16px) 44%,
+    calc(100% - 10px) 30%,
+    calc(100% - 6px) 62%,
+    100% 70%,
+    calc(100% - 5px) 48%,
+    calc(100% - 11px) 78%,
+    calc(100% - 18px) 64%,
+    calc(100% - 26px) 100%,
+    8px 100%
+  );
+}
+
+@utility tail-right {
+  /* tail on left edge → tooltip sits right of trigger */
+  clip-path: polygon(
+    22px 0,
+    100% 0,
+    calc(100% - 8px) 100%,
+    26px 100%,
+    18px 64%,
+    11px 78%,
+    5px 48%,
+    0 70%,
+    6px 62%,
+    10px 30%,
+    16px 44%
+  );
+}
+
 @theme inline {
   --font-heading: var(--font-mono);
   --font-mono: var(--font-mono);

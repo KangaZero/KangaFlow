@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 
 import { AchievementToast } from "@/components/achievement-toast"
-import { CommandMenu } from "@/components/command-menu"
 import { HintOverlay } from "@/components/hint-overlay"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { ShortcutDispatcher } from "@/components/shortcut-dispatcher"
@@ -52,7 +51,6 @@ export default async function LangLayout({
                 <ThemeBackground />
                 <SiteHeader />
                 {children}
-                <CommandMenu />
                 <SettingsDialog />
                 <TerminalDialog files={sourceFiles} />
                 <ShortcutDispatcher />
