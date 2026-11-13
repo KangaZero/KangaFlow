@@ -1,0 +1,234 @@
+<!doctype html>
+<!-- [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta content="width=device-width, initial-scale=1" name="viewport" />
+<title>KangaFlow UI overhaul — 01 Intro / welcome</title>
+<link href="https://fonts.googleapis.com" rel="preconnect" />
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500&family=Klee+One:wght@600&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0d0f14; --panel: #151922; --line: #262c3a; --fg: #e6e9ef; --muted: #8b93a7;
+    --accent: #89b4fa; --ok: #a6e3a1; --warn: #f9e2af; --bad: #f38ba8;
+    --ink-light: #1b1b1f; --ink-dark: #cfe3ff; --ink-term: #a6e3a1;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.6 Inter, system-ui, sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 48px 24px 120px; }
+  h1 { font-size: 40px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.02em; }
+  h2 { font-size: 22px; margin: 56px 0 12px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  h3 { font-size: 16px; margin: 24px 0 8px; color: var(--accent); }
+  code, pre { font-family: "JetBrains Mono", monospace; font-size: 13px; }
+  code { background: var(--panel); padding: 1px 6px; border-radius: 4px; }
+  pre { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; overflow-x: auto; }
+  .sub { color: var(--muted); margin: 0 0 32px; }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .tag { display: inline-block; font: 600 11px/1 "JetBrains Mono", monospace; padding: 4px 8px; border-radius: 999px; margin-right: 6px; }
+  .t-ok { background: #a6e3a122; color: var(--ok); } .t-warn { background: #f9e2af22; color: var(--warn); } .t-bad { background: #f38ba822; color: var(--bad); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; }
+  ol li, ul li { margin: 4px 0; }
+
+  /* ---------- Storyboard ---------- */
+  .board { display: grid; gap: 12px; grid-template-columns: repeat(5, 1fr); }
+  @media (max-width: 860px) { .board { grid-template-columns: repeat(2, 1fr); } }
+  .frame { aspect-ratio: 16/10; border-radius: 10px; border: 1px solid var(--line); position: relative; overflow: hidden;
+           display: grid; place-items: center; background: radial-gradient(120% 90% at 50% 40%, #1d2433, #0b0d12); }
+  .frame small { position: absolute; left: 8px; top: 6px; font: 600 11px "JetBrains Mono", monospace; color: var(--muted); }
+  .frame .hw { font-family: Caveat, cursive; font-size: 34px; color: var(--ink-dark); text-shadow: 0 0 12px #89b4fa88; }
+  .frame .hw.half { clip-path: inset(0 55% 0 0); }
+  .cap { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  /* ---------- Live mock ---------- */
+  .stage { height: 360px; border-radius: 14px; border: 1px solid var(--line); position: relative; overflow: hidden; cursor: pointer;
+           display: grid; place-items: center; transition: background .6s; }
+  .stage[data-theme="light"] { background: linear-gradient(#cfe6ff, #f5f9ff); --ink: var(--ink-light); --glow: transparent; }
+  .stage[data-theme="dark"] { background: radial-gradient(120% 90% at 50% 0%, #1f2a44, #07090d); --ink: var(--ink-dark); --glow: #89b4facc; }
+  .stage[data-theme="terminal"] { background: #11111b; --ink: var(--ink-term); --glow: #a6e3a1aa;
+           background-image: repeating-linear-gradient(0deg, #ffffff06 0 1px, transparent 1px 3px); }
+  .stage svg { width: min(80%, 620px); overflow: visible; }
+  .stage text { font-family: Caveat, cursive; font-size: 120px; fill: none; stroke: var(--ink); stroke-width: 2.4;
+                stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 6px var(--glow));
+                stroke-dasharray: 1400; stroke-dashoffset: 1400; }
+  .stage text.ja { font-family: "Klee One", serif; font-size: 96px; }
+  .stage.play text.l1 { animation: draw 2.1s cubic-bezier(.55,.1,.35,1) .3s forwards, fill 0.6s ease 2.1s forwards; }
+  .stage.play text.l2 { animation: draw 1.1s cubic-bezier(.55,.1,.35,1) 2.4s forwards, fill .5s ease 3.2s forwards; font-size: 44px; }
+  .stage.handoff svg { transform: translate(-38%, -42%) scale(.22); transition: transform .8s cubic-bezier(.7,0,.2,1); }
+  .stage .hero { position: absolute; inset: auto 0 22% 0; text-align: center; opacity: 0; filter: blur(10px); translate: 0 16px;
+                 transition: all .6s ease .5s; color: var(--ink); }
+  .stage.handoff .hero { opacity: 1; filter: blur(0); translate: 0 0; }
+  .hero-name { display: block; font: 800 34px Inter, sans-serif; }
+  .hero-role { display: block; opacity: .7; }
+  .controls { border: 0; padding: 0; }
+  .stage { width: 100%; padding: 0; font: inherit; }
+  .stage .skip { position: absolute; right: 12px; bottom: 10px; font: 12px "JetBrains Mono", monospace; color: var(--ink); opacity: .55; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  @keyframes fill { to { fill: var(--ink); stroke-width: 0.6; } }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  button { background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font: inherit; cursor: pointer; }
+  button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .note { border-left: 3px solid var(--warn); padding: 8px 12px; background: #f9e2af0d; border-radius: 0 8px 8px 0; margin: 12px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>01 · Intro / welcome</h1>
+  <p class="sub">UI overhaul phase 1 of 4 — intro → hero → header/nav → root splash. Handwritten greeting, once ever, any key/click skips.</p>
+
+  <h2>1. Current state — flaws</h2>
+  <table>
+    <tr><th>#</th><th>Where</th><th>Problem</th></tr>
+    <tr><td>1</td><td><code>components/about-section.tsx:511</code></td><td><span class="tag t-bad">bug</span>Intro <code>motion.div</code> has <code>exit</code> but no <code>&lt;AnimatePresence&gt;</code> parent → exit fade never runs; intro hard-cuts to content.</td></tr>
+    <tr><td>2</td><td><code>apple-hello-effect.tsx</code> + <code>apple-hello-paths.ts</code></td><td><span class="tag t-warn">quality</span>574 lines of hand-rolled, machine-generated KanjiVG paths drawn via <code>pathLength</code>. Uniform stroke width → reads as vector trace, not ink. No pressure, taper, nib.</td></tr>
+    <tr><td>3</td><td><code>providers/global-state-provider.tsx:332</code></td><td><span class="tag t-warn">ux</span><code>isHelloEffectAnimationComplete</code> is in-memory → intro replays every reload. Wanted: once ever.</td></tr>
+    <tr><td>4</td><td>intro</td><td><span class="tag t-warn">ux</span>No skip. No handoff — greeting vanishes, hero fades in unrelated. No continuity.</td></tr>
+    <tr><td>5</td><td><code>app/page.tsx</code></td><td><span class="tag t-warn">ux</span>Root returns <code>null</code> → blank white flash before locale redirect (phase 4).</td></tr>
+    <tr><td>6</td><td>intro</td><td><span class="tag t-warn">theme</span>Same look on all 3 themes; ignores light/dark/terminal identity.</td></tr>
+  </table>
+
+  <h2>2. Concept — "Ink greeting"</h2>
+  <p>Greeting is <b>written by a pen</b> — real stroke order, pressure-varied width, tapered ends — then the ink <b>flies into the header logo slot</b> (shared-element handoff) as the hero blurs in. One continuous motion, not two scenes.</p>
+
+  <div class="board">
+    <div><div class="frame"><small>0.0s</small></div><div class="cap">Theme bg settles. Page content hidden (<code>inert</code>).</div></div>
+    <div><div class="frame"><small>0.3s</small><span class="hw half">hello</span></div><div class="cap">Pen writes <i>hello</i> / こんにちは — pressure + taper + nib glow.</div></div>
+    <div><div class="frame"><small>2.4s</small><span class="hw">hello</span></div><div class="cap">Line 2: "welcome to KangaFlow" / カンガフロウへようこそ, faster.</div></div>
+    <div><div class="frame"><small>3.2s</small><span class="hw" style="font-size:18px;position:absolute;left:10px;top:24px">hello</span></div><div class="cap">Handoff: ink shrinks into header logo via Motion <code>layoutId</code>.</div></div>
+    <div><div class="frame"><small>3.8s</small><span style="font-weight:800">Samuel</span></div><div class="cap">Hero blur-fades in, staggered. Intro flag persisted.</div></div>
+  </div>
+
+  <h3>Live mock (CSS approximation — real build uses Tegaki canvas, far better ink)</h3>
+  <fieldset aria-label="mock controls" class="controls">
+    <button data-set-theme="light" type="button" >light</button>
+    <button aria-pressed="true" data-set-theme="dark" type="button" >dark</button>
+    <button data-set-theme="terminal" type="button" >terminal</button>
+    <button aria-pressed="true" data-set-lang="en" type="button" >en</button>
+    <button data-set-lang="ja" type="button" >ja</button>
+    <button id="replay" type="button" >replay</button>
+  </fieldset>
+  <button aria-label="intro mock, click or press a key to skip" class="stage" data-theme="dark" id="stage" type="button">
+    <svg aria-hidden="true" viewBox="0 0 700 260" >
+      <text class="l1" text-anchor="middle" x="350" y="130" >hello</text>
+      <text class="l2" text-anchor="middle" x="350" y="210" >welcome to KangaFlow</text>
+    </svg>
+    <span class="hero"><span class="hero-name">Samuel Yong</span><span class="hero-role">Fullstack developer</span></span>
+    <span class="skip">click / any key to skip</span>
+  </button>
+
+  <h3>Per-theme ink</h3>
+  <div class="grid">
+    <div class="card"><b>light</b><br/>Sumi ink, near-black, no glow. Slight <code>variationPlugin</code> "Subtle" → human wobble. Over clouds.</div>
+    <div class="card"><b>dark</b><br/>Luminous ink — <code>glowPlugin</code> tinted <code>--primary</code>; nib leaves bright head that cools. Matches LightRays.</div>
+    <div class="card"><b>terminal</b><br/>Phosphor green, <code>boilPlugin</code> low (CRT jitter), monospace-ish hand font, blinking cursor as nib.</div>
+  </div>
+  <p class="cap">Ink colours → new CSS tokens in <code>app/globals.css</code> (<code>--intro-ink</code>, <code>--intro-glow</code>) per theme. No inline hex (CLAUDE.md UI rule).</p>
+
+  <h2>3. Build options</h2>
+  <table>
+    <tr><th></th><th>A · Tegaki <span class="tag t-ok">recommended</span></th><th>B · Keep own KanjiVG paths, polish</th></tr>
+    <tr><td>What</td><td><a href="https://tegaki.ink/">tegaki</a> (MIT, v1.1.0, published 2026-10-11) — <code>&lt;TegakiRenderer&gt;</code>, canvas over real DOM text.</td><td>Keep <code>apple-hello-*</code>; fake pressure via SVG mask / multiple stroke widths.</td></tr>
+    <tr><td>Ink quality</td><td>Real centerline + recorded pressure (<code>pressure</code>), <code>taperPlugin</code>, <code>glowPlugin</code>, custom nib in <code>overlay</code> hook.</td><td>Dash-offset trace; pressure is a hack. Ceiling is low.</td></tr>
+    <tr><td>en + ja</td><td>Any Latin font bundle (Caveat, Parisienne, Italianno…); JA via <code>tegaki/fonts/klee-one</code> (kana + grade 1–2 kanji, KanjiVG order).</td><td>Must regenerate paths per string by script.</td></tr>
+    <tr><td>Change text</td><td>Edit i18n string. Done.</td><td>Re-run generator, 137-line data file churn.</td></tr>
+    <tr><td>a11y</td><td>Real DOM text stays selectable / screen-reader visible. <code>reducedMotion="user"</code>.</td><td>SVG paths → need manual <code>aria-label</code>.</td></tr>
+    <tr><td>Risk</td><td>New dep (single maintainer). Static-export + bundle size <b>unverified</b> → spike first.</td><td>Zero new deps. Deletes nothing.</td></tr>
+    <tr><td>Code delta</td><td>−574 lines (delete <code>apple-hello-*</code>), +~150.</td><td>+~200, keeps 574.</td></tr>
+  </table>
+  <div class="note"><b>Spike</b> [= short time-boxed experiment to answer one question before committing] for A: does <code>TegakiRenderer</code> survive <code>output: "export"</code> + TS7 strict (<code>exactOptionalPropertyTypes</code>)? Gzipped size of renderer + 2 font bundles? Does <code>klee-one</code> contain カンガフロウ + ようこそ glyphs? If any fails → fall back to B.</div>
+
+  <h2>4. Components (registry-first)</h2>
+  <table>
+    <tr><th>Piece</th><th>Source</th><th>Custom?</th></tr>
+    <tr><td>Handwriting</td><td><code>tegaki</code> npm (not a shadcn registry item)</td><td>Only nib plugin (~30 lines, docs ship a pen-tip example)</td></tr>
+    <tr><td>Hero text reveal</td><td>Motion Primitives <code>TextEffect</code> (per-word blur preset) or Magic UI <code>BlurFade</code></td><td>No</td></tr>
+    <tr><td>Ink → logo handoff</td><td>Motion <code>layoutId</code> shared layout (lib, not component)</td><td>Glue only</td></tr>
+    <tr><td>Skip hint</td><td>Magic UI <code>AnimatedShinyText</code> or plain muted text</td><td>No</td></tr>
+    <tr><td>Intro gate / persistence</td><td>—</td><td>Yes: pure <code>lib/intro.ts</code> + hook (tiny, testable)</td></tr>
+  </table>
+  <p class="cap">Registry names to be web-verified at install time (CLAUDE.md rule 2), not trusted from this doc.</p>
+
+  <h2>5. Architecture</h2>
+<pre>lib/intro.ts                 INTRO_STORAGE_KEY = "kangaflow:intro:v1" · readIntroSeen(storage: unknown) → boolean (guard)
+lib/intro.test.ts            Vitest: missing / malformed / seen / version bump
+hooks/use-intro-gate.ts      useSyncExternalStore over localStorage → { shouldPlay, markSeen, replay }
+components/intro/
+  ink-greeting.tsx           TegakiRenderer ×2 lines, per-theme plugins (useMemo'd), onComplete → handoff
+  intro-overlay.tsx          fixed overlay (Z_LAYERS.dialog), AnimatePresence, any-key/click/touch skip
+app/[lang]/layout.tsx        mount &lt;IntroOverlay/&gt;; page content gets `inert` while playing
+command palette              new ":intro" command → replay() (i18n label en + ja)</pre>
+
+  <h3>Key decisions</h3>
+  <ol>
+    <li><b>Overlay, not branch.</b> Today About renders <i>either</i> intro <i>or</i> content. New: content always rendered underneath (SEO/static HTML has real content, no layout jump), overlay on top, <code>inert</code> during play.</li>
+    <li><b>Once ever</b> → <code>localStorage</code> + versioned key. Bump <code>v1→v2</code> when intro redesigned → everyone sees new one once.</li>
+    <li><b>Skip</b> = jump Tegaki to controlled end time (<code>time = engine.duration</code>) then run handoff at 2× speed — skip still feels designed, not a cut. Ignore modifier keys + <code>:</code> so palette shortcut never eaten.</li>
+    <li><b>No-flash first paint:</b> tiny inline script in <code>&lt;head&gt;</code> sets <code>data-intro="pending"</code> on <code>&lt;html&gt;</code> if flag unset → CSS hides hero before hydration. Same pattern next-themes uses for theme.</li>
+    <li><b>Reduced motion</b> (OS or app <code>animationPref</code>, existing <code>isReducedMotion</code>) → never play, mark seen.</li>
+    <li><b>All text via i18n</b>: <code>intro.greeting</code>, <code>intro.welcome</code>, <code>intro.skip</code>, <code>command.intro</code> in en + ja.</li>
+  </ol>
+
+  <h2>6. Steps</h2>
+  <ol>
+    <li>Fix bug #1 standalone (wrap in <code>AnimatePresence</code>) — tiny commit.</li>
+    <li>Spike Tegaki (branch, throwaway) → go/no-go.</li>
+    <li><code>lib/intro.ts</code> + tests → <code>use-intro-gate</code>.</li>
+    <li><code>ink-greeting</code> + per-theme tokens.</li>
+    <li><code>intro-overlay</code> + skip + handoff.</li>
+    <li>Remove <code>apple-hello-*</code>, <code>isHelloEffectAnimationComplete</code> global state.</li>
+    <li><code>:intro</code> palette command; settings "replay intro".</li>
+    <li><code>just verify</code> + chrome-devtools MCP check all 3 themes × 2 locales × reduced-motion.</li>
+  </ol>
+
+  <h2>7. Open questions for you</h2>
+  <ol>
+    <li>Latin hand font: <b>Caveat</b> (casual), <b>Parisienne</b> (elegant script), <b>Italianno</b> (calligraphy)?</li>
+    <li>Greeting copy: "hello" + "welcome to KangaFlow"? Or your name signature as line 2?</li>
+    <li>Handoff target: header logo, or hero name (ink becomes <i>Samuel</i>)?</li>
+    <li>Option A (Tegaki) ok given spike-gated?</li>
+  </ol>
+</main>
+<script>
+  const stage = document.getElementById("stage");
+  const [l1, l2] = stage.querySelectorAll("text");
+  const copy = { en: ["hello", "welcome to KangaFlow"], ja: ["こんにちは", "カンガフロウへようこそ"] };
+  let lang = "en", timer;
+  function play() {
+    clearTimeout(timer);
+    stage.classList.remove("play", "handoff");
+    void stage.offsetWidth;
+    stage.classList.add("play");
+    timer = setTimeout(() => stage.classList.add("handoff"), 3800);
+  }
+  function skip() { clearTimeout(timer); stage.classList.add("handoff"); }
+  stage.addEventListener("click", skip);
+  stage.addEventListener("keydown", skip);
+  document.getElementById("replay").addEventListener("click", play);
+  function press(attr, val) {
+    for (const b of document.querySelectorAll(`[${attr}]`)) {
+      b.setAttribute("aria-pressed", String(b.getAttribute(attr) === val));
+    }
+  }
+  for (const b of document.querySelectorAll("[data-set-theme]")) {
+    b.addEventListener("click", () => {
+      stage.dataset.theme = b.dataset.setTheme;
+      press("data-set-theme", b.dataset.setTheme);
+      play();
+    });
+  }
+  for (const b of document.querySelectorAll("[data-set-lang]")) {
+    b.addEventListener("click", () => {
+      lang = b.dataset.setLang;
+      [l1.textContent, l2.textContent] = copy[lang];
+      l1.classList.toggle("ja", lang === "ja");
+      l2.classList.toggle("ja", lang === "ja");
+      press("data-set-lang", lang);
+      play();
+    });
+  }
+  play();
+</script>
+</body>
+</html>
