@@ -28,7 +28,7 @@ import { useLocale } from "@/providers/locale-provider"
 
 // Thin vertical divider between dock groups.
 function Divider() {
-  return <span aria-hidden className="mx-0.5 h-5 w-px bg-border" />
+  return <span aria-hidden className="bg-border mx-0.5 h-5 w-px" />
 }
 
 // Circle-reveal pill hover, adapted from reactbits PillNav (rebuilt in pure CSS
@@ -49,7 +49,7 @@ function PillHover({ children }: { children: ReactNode }) {
       <span
         aria-hidden
         className={cn(
-          "pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 rounded-full bg-primary",
+          "bg-primary pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 rounded-full",
           CIRCLE_REVEAL
         )}
       />
@@ -61,7 +61,7 @@ function PillHover({ children }: { children: ReactNode }) {
         </span>
         <span
           aria-hidden
-          className="col-start-1 row-start-1 translate-y-[150%] text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-y-0"
+          className="text-primary-foreground col-start-1 row-start-1 translate-y-[150%] transition-transform duration-300 ease-out group-hover:translate-y-0"
         >
           {children}
         </span>
@@ -85,7 +85,7 @@ function ThemePillHover({
       <span
         aria-hidden
         className={cn(
-          "pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 rounded-full bg-primary",
+          "bg-primary pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 rounded-full",
           CIRCLE_REVEAL
         )}
       />
@@ -95,7 +95,7 @@ function ThemePillHover({
         </span>
         <span
           aria-hidden
-          className="col-start-1 row-start-1 translate-y-[150%] text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-y-0"
+          className="text-primary-foreground col-start-1 row-start-1 translate-y-[150%] transition-transform duration-300 ease-out group-hover:translate-y-0"
         >
           <NextIcon />
         </span>
@@ -154,7 +154,7 @@ export function SiteHeader() {
       <motion.nav
         animate={{ width: "auto" }}
         className={cn(
-          "fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-full border border-border bg-card/80 p-1 shadow-lg backdrop-blur-sm sm:absolute sm:bottom-auto",
+          "border-border bg-card/80 fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-full border p-1 shadow-lg backdrop-blur-sm sm:absolute sm:bottom-auto",
           !loaded && "overflow-hidden"
         )}
         initial={{ width: 0 }}

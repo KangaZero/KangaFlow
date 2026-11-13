@@ -3,6 +3,7 @@
 ## Accessibility (a11y)
 
 ### Reduced motion audit — done
+
 `MotionConfig` in `global-state-provider.tsx` covers declarative `motion.*`
 transform/layout animations globally. CSS animations/transitions are suppressed
 via the `prefers-reduced-motion` media query **and** the `[data-animations="off"]`
@@ -18,6 +19,7 @@ MotionValues (which `MotionConfig.reducedMotion` does **not** govern).
 - [x] `components/Counter.tsx` — rolling-digit `useSpring` now feeds an instant `MotionValue` under reduced motion (used by the bar clock + alarm widget)
 
 ### ARIA / keyboard / focus
+
 - [ ] Audit all `role="option"` buttons for required listbox parent (`role="listbox"`)
 - [ ] Ensure all dialogs/overlays trap focus (`noctalia-settings`, `noctalia-launcher`, `media-player`)
 - [ ] Confirm drag handle in `media-player.tsx` is keyboard-accessible or hidden from assistive tech

@@ -94,7 +94,7 @@ function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
     <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger asChild>
         <button
-          className="flex items-center gap-1 rounded-md px-2 py-0.5 font-medium text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+          className="hover:bg-accent hover:text-accent-foreground flex items-center gap-1 rounded-md px-2 py-0.5 text-sm font-medium transition-colors"
           id={id}
           type="button"
         >
@@ -107,16 +107,16 @@ function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
         <div className="mb-3 flex items-center justify-between">
           <button
             aria-label="Previous year"
-            className="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground"
+            className="hover:bg-accent hover:text-accent-foreground rounded p-1 transition-colors"
             onClick={() => shiftYear(-1)}
             type="button"
           >
             <ChevronLeft className="size-4" />
           </button>
-          <span className="font-medium text-sm tabular-nums">{year}</span>
+          <span className="text-sm font-medium tabular-nums">{year}</span>
           <button
             aria-label="Next year"
-            className="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground"
+            className="hover:bg-accent hover:text-accent-foreground rounded p-1 transition-colors"
             onClick={() => shiftYear(1)}
             type="button"
           >
@@ -128,7 +128,7 @@ function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
           {monthNames.map((name, i) => (
             <button
               className={cn(
-                "rounded px-1 py-1.5 text-xs transition-colors hover:bg-accent hover:text-accent-foreground",
+                "hover:bg-accent hover:text-accent-foreground rounded px-1 py-1.5 text-xs transition-colors",
                 i === monthIdx &&
                   "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
               )}
@@ -238,8 +238,8 @@ export function CalendarWidget(): React.JSX.Element {
         </AnimatePresence>
 
         {/* Day event list */}
-        <div className="flex flex-col gap-2 border-border border-t p-3">
-          <p className="font-medium text-muted-foreground text-xs">
+        <div className="border-border flex flex-col gap-2 border-t p-3">
+          <p className="text-muted-foreground text-xs font-medium">
             {selected
               ? selected.toLocaleDateString(locale, {
                   day: "numeric",
@@ -265,7 +265,7 @@ export function CalendarWidget(): React.JSX.Element {
                 <span className="flex-1 truncate text-sm">{ev.title}</span>
                 <motion.button
                   aria-label={`Delete ${ev.title}`}
-                  className="rounded p-0.5 text-muted-foreground hover:text-destructive"
+                  className="text-muted-foreground hover:text-destructive rounded p-0.5"
                   onClick={() => deleteEvent(ev.id)}
                   transition={SPRING_TAP}
                   type="button"
@@ -286,7 +286,7 @@ export function CalendarWidget(): React.JSX.Element {
                   className={cn(
                     "size-4 rounded-full",
                     c,
-                    newColor === c && "scale-125 ring-2 ring-ring ring-offset-1"
+                    newColor === c && "ring-ring scale-125 ring-2 ring-offset-1"
                   )}
                   key={c}
                   onClick={() => setNewColor(c)}
@@ -298,7 +298,7 @@ export function CalendarWidget(): React.JSX.Element {
               ))}
             </div>
             <input
-              className="min-w-0 flex-1 rounded border border-border bg-muted/40 px-2 py-1 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="border-border bg-muted/40 placeholder:text-muted-foreground focus:ring-ring min-w-0 flex-1 rounded border px-2 py-1 text-xs focus:ring-1 focus:outline-none"
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") addEvent()
@@ -310,7 +310,7 @@ export function CalendarWidget(): React.JSX.Element {
             />
             <motion.button
               aria-label="Add event"
-              className="rounded border border-border bg-muted/40 p-1 hover:bg-muted"
+              className="border-border bg-muted/40 hover:bg-muted rounded border p-1"
               onClick={addEvent}
               transition={SPRING_TAP}
               type="button"

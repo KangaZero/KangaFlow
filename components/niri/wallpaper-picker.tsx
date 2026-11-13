@@ -51,7 +51,7 @@ export function WallpaperPicker({
               "relative aspect-video overflow-hidden rounded-md border-2 transition",
               selected
                 ? "border-primary"
-                : "border-transparent hover:border-border"
+                : "hover:border-border border-transparent"
             )}
             key={w}
             onClick={() => onChange(w)}
@@ -61,7 +61,7 @@ export function WallpaperPicker({
               className="absolute inset-0"
               style={wallpaperStyle(w, theme)}
             />
-            <span className="absolute inset-x-0 bottom-0 truncate bg-black/55 px-1 py-0.5 text-[10px] text-white leading-tight">
+            <span className="absolute inset-x-0 bottom-0 truncate bg-black/55 px-1 py-0.5 text-[10px] leading-tight text-white">
               {label}
             </span>
           </button>

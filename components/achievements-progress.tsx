@@ -21,7 +21,7 @@ export function AchievementsProgress({ className }: { className?: string }) {
 
   return (
     <div className={cn("flex w-full flex-col gap-1.5", className)}>
-      <div className="flex items-center justify-between text-muted-foreground text-xs">
+      <div className="text-muted-foreground flex items-center justify-between text-xs">
         <span>{translate("achievements.unlocked")}</span>
         <span className="tabular-nums">{count}</span>
       </div>

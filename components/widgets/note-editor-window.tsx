@@ -75,7 +75,7 @@ export function NoteEditorWindow({
       <div className="flex h-full min-h-0 flex-col">
         {/* Title */}
         <input
-          className="shrink-0 border-border border-b bg-transparent px-3 py-2 font-semibold text-sm outline-none placeholder:text-muted-foreground"
+          className="border-border placeholder:text-muted-foreground shrink-0 border-b bg-transparent px-3 py-2 text-sm font-semibold outline-none"
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder="Title"
           ref={titleRef}
@@ -95,7 +95,7 @@ export function NoteEditorWindow({
         />
 
         {/* Footer: colours, tags, timestamp */}
-        <div className="flex shrink-0 flex-col gap-2 border-border border-t p-2">
+        <div className="border-border flex shrink-0 flex-col gap-2 border-t p-2">
           <div className="flex items-center gap-2">
             <div className="flex gap-1">
               {NOTE_COLOR_KEYS.map((c) => (
@@ -105,7 +105,7 @@ export function NoteEditorWindow({
                   className={cn(
                     "size-4 rounded-full",
                     NOTE_COLORS[c].dot,
-                    note.color === c && "ring-2 ring-ring ring-offset-1"
+                    note.color === c && "ring-ring ring-2 ring-offset-1"
                   )}
                   key={c}
                   onClick={() => onChange({ color: c })}
@@ -117,10 +117,10 @@ export function NoteEditorWindow({
               ))}
             </div>
             <div className="flex w-full flex-col justify-end">
-              <span className="ml-auto text-[10px] text-muted-foreground">
+              <span className="text-muted-foreground ml-auto text-[10px]">
                 Created {formatNoteDate(note.createdOn)}
               </span>
-              <span className="ml-auto text-[10px] text-muted-foreground">
+              <span className="text-muted-foreground ml-auto text-[10px]">
                 Edited {formatNoteDate(note.updatedOn)}
               </span>
             </div>
@@ -151,7 +151,7 @@ export function NoteEditorWindow({
               ))}
             </AnimatePresence>
             <input
-              className="min-w-16 flex-1 bg-transparent px-1 py-0.5 text-xs outline-none placeholder:text-muted-foreground"
+              className="placeholder:text-muted-foreground min-w-16 flex-1 bg-transparent px-1 py-0.5 text-xs outline-none"
               onChange={(e) => setTagDraft(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") addTag()

@@ -127,12 +127,12 @@ export function SettingsDialog() {
 
               return (
                 <li
-                  className="flex flex-wrap items-center gap-3 rounded-md border border-border p-3"
+                  className="border-border flex flex-wrap items-center gap-3 rounded-md border p-3"
                   key={s.action}
                 >
                   <div className="min-w-40 flex-1">
-                    <p className="font-medium text-sm">{label}</p>
-                    <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                    <p className="text-sm font-medium">{label}</p>
+                    <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
                       {translate("settings.currentLabel")}
                       {tokens.length > 0 ? (
                         <KbdGroup>
@@ -180,7 +180,7 @@ export function SettingsDialog() {
                       aria-invalid={invalid}
                       aria-label={`${label} — ${translate("settings.keyLabel")}`}
                       className={cn(
-                        "h-9 w-10 rounded-md border bg-background text-center text-sm uppercase focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                        "bg-background focus-visible:ring-ring h-9 w-10 rounded-md border text-center text-sm uppercase focus-visible:ring-2 focus-visible:outline-hidden",
                         invalid ? "border-destructive" : "border-input"
                       )}
                       maxLength={1}
@@ -195,7 +195,7 @@ export function SettingsDialog() {
                   </div>
 
                   {invalid ? (
-                    <p className="w-full text-destructive text-xs" role="alert">
+                    <p className="text-destructive w-full text-xs" role="alert">
                       {empty
                         ? translate("settings.errors.empty")
                         : noModifier
@@ -209,8 +209,8 @@ export function SettingsDialog() {
           </ul>
         </LocaleTransition>
 
-        <div className="flex items-center justify-between gap-3 border-border border-t py-3">
-          <p className="font-medium text-sm">
+        <div className="border-border flex items-center justify-between gap-3 border-t py-3">
+          <p className="text-sm font-medium">
             {translate("settings.showChromeInEnvironment")}
           </p>
           <Switch
@@ -220,8 +220,8 @@ export function SettingsDialog() {
           />
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-border border-t py-3">
-          <p className="font-medium text-sm">
+        <div className="border-border flex items-center justify-between gap-3 border-t py-3">
+          <p className="text-sm font-medium">
             {translate("settings.enableVim")}
           </p>
           <Switch
@@ -231,8 +231,8 @@ export function SettingsDialog() {
           />
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-border border-t py-3">
-          <p className="font-medium text-sm">{translate("theme.label")}</p>
+        <div className="border-border flex items-center justify-between gap-3 border-t py-3">
+          <p className="text-sm font-medium">{translate("theme.label")}</p>
           <div className="flex items-center gap-1.5">
             {THEMES.map((t) => (
               <Button
@@ -249,8 +249,8 @@ export function SettingsDialog() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-border border-t py-3">
-          <p className="font-medium text-sm">
+        <div className="border-border flex items-center justify-between gap-3 border-t py-3">
+          <p className="text-sm font-medium">
             {translate("settings.animation")}
           </p>
           <div className="flex items-center gap-1.5">

@@ -69,18 +69,18 @@ function CarouselCard({
 
   return (
     <motion.div
-      className="relative flex shrink-0 cursor-grab flex-col items-start justify-between overflow-hidden rounded-xl border border-border bg-card text-card-foreground active:cursor-grabbing"
+      className="border-border bg-card text-card-foreground relative flex shrink-0 cursor-grab flex-col items-start justify-between overflow-hidden rounded-xl border active:cursor-grabbing"
       style={{ rotateY, width: itemWidth }}
       transition={transition}
     >
       <div className="p-5 pb-0">
-        <span className="flex size-9 items-center justify-center rounded-full bg-muted text-foreground">
+        <span className="bg-muted text-foreground flex size-9 items-center justify-center rounded-full">
           {item.icon}
         </span>
       </div>
       <div className="flex flex-col gap-3 p-5">
         <div>
-          <div className="mb-1 font-heading font-semibold text-lg">
+          <div className="font-heading mb-1 text-lg font-semibold">
             {item.title}
           </div>
           <p className="text-muted-foreground text-sm">{item.description}</p>
@@ -223,7 +223,7 @@ export function Carousel({
 
   return (
     <div
-      className="relative overflow-hidden rounded-3xl border border-border p-4"
+      className="border-border relative overflow-hidden rounded-3xl border p-4"
       ref={containerRef}
       style={{ width: `${baseWidth}px` }}
     >
@@ -263,7 +263,7 @@ export function Carousel({
             aria-current={activeIndex === index}
             aria-label={item.title}
             className={cn(
-              "size-2 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2",
+              "focus-visible:outline-ring size-2 rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2",
               activeIndex === index ? "bg-primary" : "bg-muted-foreground/40"
             )}
             key={item.id}

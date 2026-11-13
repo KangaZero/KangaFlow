@@ -102,12 +102,12 @@ function ToastItem({
           aria-hidden="true"
           className={cn("mt-0.5 size-4 shrink-0", iconColor)}
         />
-        <p className="flex-1 text-foreground text-sm leading-snug">
+        <p className="text-foreground flex-1 text-sm leading-snug">
           {toast.message}
         </p>
         <button
           aria-label="Dismiss"
-          className="mt-0.5 shrink-0 rounded p-0.5 text-muted-foreground transition-colors hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground mt-0.5 shrink-0 rounded p-0.5 transition-colors"
           onClick={() => onClose(toast.id)}
           type="button"
         >

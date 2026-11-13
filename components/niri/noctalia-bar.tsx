@@ -47,7 +47,7 @@ function BarClock({
   return (
     <span
       className={cn(
-        "flex items-center text-muted-foreground tabular-nums",
+        "text-muted-foreground flex items-center tabular-nums",
         vertical && "flex-col"
       )}
     >
@@ -126,7 +126,7 @@ export function NoctaliaBar(props: {
   return (
     <header
       className={cn(
-        "flex justify-between gap-3 border border-border px-2 py-1.5 text-foreground text-xs shadow-lg backdrop-blur",
+        "border-border text-foreground flex justify-between gap-3 border px-2 py-1.5 text-xs shadow-lg backdrop-blur",
         isV ? "h-full flex-col items-center" : "items-center"
       )}
       style={{
@@ -156,7 +156,7 @@ export function NoctaliaBar(props: {
         </AnimatedTooltip>
         <span
           className={cn(
-            "truncate text-muted-foreground",
+            "text-muted-foreground truncate",
             isV ? "max-h-36.25 [writing-mode:vertical-rl]" : "max-w-36.25"
           )}
         >
@@ -172,12 +172,12 @@ export function NoctaliaBar(props: {
               <button
                 aria-label={`${translate("environment.bar.workspace")} ${ws.id}`}
                 className={cn(
-                  "group relative flex size-5 items-center justify-center overflow-hidden rounded-full text-[0.625rem] tabular-nums leading-none transition-colors",
+                  "group relative flex size-5 items-center justify-center overflow-hidden rounded-full text-[0.625rem] leading-none tabular-nums transition-colors",
                   ws.active
                     ? "bg-primary text-primary-foreground"
                     : ws.occupied
                       ? "bg-muted text-foreground"
-                      : "border border-border/50 bg-transparent text-muted-foreground"
+                      : "border-border/50 text-muted-foreground border bg-transparent"
                 )}
                 onClick={() => onWorkspace(ws.id)}
                 type="button"
@@ -185,7 +185,7 @@ export function NoctaliaBar(props: {
                 <span
                   aria-hidden
                   className={cn(
-                    "pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 rounded-full bg-primary",
+                    "bg-primary pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 rounded-full",
                     CIRCLE_REVEAL
                   )}
                 />
@@ -195,7 +195,7 @@ export function NoctaliaBar(props: {
                   </span>
                   <span
                     aria-hidden
-                    className="col-start-1 row-start-1 translate-y-[150%] text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-y-0"
+                    className="text-primary-foreground col-start-1 row-start-1 translate-y-[150%] transition-transform duration-300 ease-out group-hover:translate-y-0"
                   >
                     {DAIJI[ws.id] ?? String(ws.id)}
                   </span>
@@ -210,7 +210,7 @@ export function NoctaliaBar(props: {
           <button
             aria-label={`${translate("nav.language")} → ${otherLayout.toUpperCase()}`}
             className={cn(
-              "group relative overflow-hidden rounded-sm border border-border/50 p-1 font-mono text-[0.625rem] text-muted-foreground uppercase leading-none transition-colors hover:border-primary",
+              "group border-border/50 text-muted-foreground hover:border-primary relative overflow-hidden rounded-sm border p-1 font-mono text-[0.625rem] leading-none uppercase transition-colors",
               isV && "[writing-mode:vertical-rl]"
             )}
             onClick={switchLocale}
@@ -219,7 +219,7 @@ export function NoctaliaBar(props: {
             <span
               aria-hidden
               className={cn(
-                "pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 bg-primary",
+                "bg-primary pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2",
                 CIRCLE_REVEAL
               )}
             />
@@ -237,7 +237,7 @@ export function NoctaliaBar(props: {
               <span
                 aria-hidden
                 className={cn(
-                  "col-start-1 row-start-1 text-primary-foreground transition-transform duration-300 ease-out group-hover:translate-x-0 group-hover:translate-y-0",
+                  "text-primary-foreground col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-x-0 group-hover:translate-y-0",
                   isV ? "translate-x-[150%]" : "translate-y-[150%]"
                 )}
               >

@@ -9,8 +9,10 @@ const basePath = process.env.NODE_ENV === "production" ? "/KangaFlow" : ""
 const nextConfig: NextConfig = {
   assetPrefix: basePath,
   basePath,
-  // TypeScript 7 (Go-native) ships only the `tsc` CLI, not the legacy
-  // programmatic compiler API, so Next must invoke the CLI for its type check.
+  // TypeScript 7 (Go-native) ships only the `tsc` CLI, not the JS compiler
+  // API. `next build` defaults to the CLI on 16.4, but `next dev` still loads
+  // the compiler API and throws "TypeScript 7.0.2 does not provide the compiler
+  // API" unless this is set explicitly.
   experimental: { useTypeScriptCli: true },
   // Pages has no Next.js Image Optimization server; serve images as-is.
   images: { unoptimized: true },

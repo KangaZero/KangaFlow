@@ -49,17 +49,17 @@ function ModeTabs({
   onChange: (m: Mode) => void
 }): React.JSX.Element {
   return (
-    <div className="flex gap-1 rounded-lg bg-muted/40 p-1">
+    <div className="bg-muted/40 flex gap-1 rounded-lg p-1">
       {MODES.map((m) => (
         <button
-          className="relative flex-1 rounded-md px-2 py-1.5 font-medium text-xs"
+          className="relative flex-1 rounded-md px-2 py-1.5 text-xs font-medium"
           key={m.key}
           onClick={() => onChange(m.key)}
           type="button"
         >
           {mode === m.key ? (
             <motion.span
-              className="absolute inset-0 rounded-md bg-background shadow-sm"
+              className="bg-background absolute inset-0 rounded-md shadow-sm"
               layoutId="alarm-mode-pill"
               transition={SPRING_PILL}
             />
@@ -129,7 +129,7 @@ function ClockDisplay({
       ))}
       {centis != null ? (
         <span
-          className="ml-0.5 self-end text-muted-foreground"
+          className="text-muted-foreground ml-0.5 self-end"
           style={{ fontSize: Math.round(fontSize * 0.45) }}
         >
           .{String(centis).padStart(2, "0")}
@@ -443,7 +443,7 @@ export function AlarmWidget(): React.JSX.Element {
               />
               <BellIcon
                 className={cn(
-                  "shrink-0 text-muted-foreground transition-colors",
+                  "text-muted-foreground shrink-0 transition-colors",
                   firing != null && "text-primary"
                 )}
                 ref={bellRef}
@@ -461,7 +461,7 @@ export function AlarmWidget(): React.JSX.Element {
                       alarm.id === firing
                         ? "border-primary/40 bg-primary/10"
                         : "border-border bg-muted/30",
-                      alarm.id === editingId && "ring-2 ring-ring",
+                      alarm.id === editingId && "ring-ring ring-2",
                       !alarm.enabled && "opacity-50"
                     )}
                     exit={{ opacity: 0, x: -8 }}
@@ -474,16 +474,16 @@ export function AlarmWidget(): React.JSX.Element {
                       onClick={() => toggleAlarm(alarm.id)}
                       type="button"
                     >
-                      <span className="font-mono font-semibold text-sm tabular-nums">
+                      <span className="font-mono text-sm font-semibold tabular-nums">
                         {alarm.time}
                       </span>
-                      <span className="truncate text-muted-foreground text-xs">
+                      <span className="text-muted-foreground truncate text-xs">
                         {alarm.label}
                       </span>
                     </button>
                     <motion.button
                       aria-label={translate("widgets.alarm.edit")}
-                      className="rounded p-1 text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground rounded p-1"
                       onClick={() => startEdit(alarm)}
                       transition={SPRING_TAP}
                       type="button"
@@ -493,7 +493,7 @@ export function AlarmWidget(): React.JSX.Element {
                     </motion.button>
                     <motion.button
                       aria-label={translate("widgets.alarm.delete")}
-                      className="rounded p-1 text-muted-foreground hover:text-destructive"
+                      className="text-muted-foreground hover:text-destructive rounded p-1"
                       onClick={() => deleteAlarm(alarm.id)}
                       transition={SPRING_TAP}
                       type="button"
@@ -506,15 +506,15 @@ export function AlarmWidget(): React.JSX.Element {
               </AnimatePresence>
             </div>
 
-            <div className="flex flex-col gap-1.5 border-border border-t pt-2">
+            <div className="border-border flex flex-col gap-1.5 border-t pt-2">
               <input
-                className="w-full rounded-md border border-border bg-muted/40 px-2 py-1.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="border-border bg-muted/40 focus:ring-ring w-full rounded-md border px-2 py-1.5 font-mono text-sm focus:ring-2 focus:outline-none"
                 onChange={(e) => setNewTime(e.target.value)}
                 type="time"
                 value={newTime}
               />
               <input
-                className="w-full rounded-md border border-border bg-muted/40 px-2 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="border-border bg-muted/40 placeholder:text-muted-foreground focus:ring-ring w-full rounded-md border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
                 onChange={(e) => setNewLabel(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") addAlarm()
@@ -561,7 +561,7 @@ export function AlarmWidget(): React.JSX.Element {
             </div>
 
             {/* Remind me in N minutes — schedules a one-shot reminder. */}
-            <div className="flex flex-wrap items-center gap-1.5 border-border border-t pt-2">
+            <div className="border-border flex flex-wrap items-center gap-1.5 border-t pt-2">
               <span className="text-muted-foreground text-xs">
                 {translate("notifications.remindMe")}
               </span>
@@ -574,7 +574,7 @@ export function AlarmWidget(): React.JSX.Element {
                 ] as const
               ).map((opt) => (
                 <motion.button
-                  className="rounded-md border border-border bg-muted/40 px-2 py-1 text-xs transition-colors hover:bg-muted"
+                  className="border-border bg-muted/40 hover:bg-muted rounded-md border px-2 py-1 text-xs transition-colors"
                   key={opt.minutes}
                   onClick={() =>
                     remind(
@@ -655,7 +655,7 @@ export function AlarmWidget(): React.JSX.Element {
                   {stopwatch.laps.map((lapMs, i) => (
                     <motion.div
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center justify-between rounded-md bg-muted/30 px-2.5 py-1 font-mono text-xs tabular-nums"
+                      className="bg-muted/30 flex items-center justify-between rounded-md px-2.5 py-1 font-mono text-xs tabular-nums"
                       exit={{ opacity: 0 }}
                       initial={{ opacity: 0, y: -6 }}
                       // biome-ignore lint/suspicious/noArrayIndexKey: laps are append-only and never reordered, so the index is a stable identity.
@@ -686,10 +686,10 @@ export function AlarmWidget(): React.JSX.Element {
             />
 
             {timer.running ? null : (
-              <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
+              <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 <input
                   aria-label="Minutes"
-                  className="w-14 rounded-md border border-border bg-muted/40 px-2 py-1 text-center font-mono text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="border-border bg-muted/40 text-foreground focus:ring-ring w-14 rounded-md border px-2 py-1 text-center font-mono text-sm focus:ring-2 focus:outline-none"
                   max={99}
                   min={0}
                   onChange={(e) =>
@@ -704,7 +704,7 @@ export function AlarmWidget(): React.JSX.Element {
                 min
                 <input
                   aria-label="Seconds"
-                  className="w-14 rounded-md border border-border bg-muted/40 px-2 py-1 text-center font-mono text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="border-border bg-muted/40 text-foreground focus:ring-ring w-14 rounded-md border px-2 py-1 text-center font-mono text-sm focus:ring-2 focus:outline-none"
                   max={59}
                   min={0}
                   onChange={(e) =>

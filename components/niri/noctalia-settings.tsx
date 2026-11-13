@@ -188,7 +188,7 @@ function SectionLabel(props: {
 }): React.JSX.Element {
   const { icon: Icon, children } = props
   return (
-    <h3 className="flex items-center gap-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+    <h3 className="text-muted-foreground flex items-center gap-2 text-xs font-medium tracking-wide uppercase">
       <Icon aria-hidden="true" className="size-3.5" />
       {children}
     </h3>
@@ -203,7 +203,7 @@ function SettingCard(props: {
 }): React.JSX.Element {
   const { icon, title, children } = props
   return (
-    <section className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/20 p-4">
+    <section className="border-border/60 bg-muted/20 flex flex-col gap-3 rounded-xl border p-4">
       <SectionLabel icon={icon}>{title}</SectionLabel>
       {children}
     </section>
@@ -229,14 +229,14 @@ function Segmented<T extends string | number>(props: {
   return (
     <fieldset
       aria-label={label}
-      className="inline-flex min-w-0 flex-wrap rounded-xl border border-border bg-muted/40 p-1"
+      className="border-border bg-muted/40 inline-flex min-w-0 flex-wrap rounded-xl border p-1"
     >
       {options.map((option) => {
         const selected = option === value
         return (
           <motion.button
             aria-pressed={selected}
-            className="relative rounded-lg px-3 py-1.5 font-medium text-sm"
+            className="relative rounded-lg px-3 py-1.5 text-sm font-medium"
             key={String(option)}
             onClick={() => onSelect(option)}
             type="button"
@@ -245,7 +245,7 @@ function Segmented<T extends string | number>(props: {
             {selected ? (
               <motion.span
                 aria-hidden
-                className="absolute inset-0 rounded-lg bg-primary shadow-sm"
+                className="bg-primary absolute inset-0 rounded-lg shadow-sm"
                 layoutId={layoutId}
                 transition={SPRING_SEGMENTED}
               />
@@ -278,7 +278,7 @@ function OptionSlider<T extends string | number>(props: {
   const index = Math.max(0, options.indexOf(value))
   return (
     <div className="flex flex-col gap-2">
-      <span className="ml-auto font-medium text-muted-foreground text-xs tabular-nums">
+      <span className="text-muted-foreground ml-auto text-xs font-medium tabular-nums">
         {format(value)}
       </span>
       <Slider
@@ -309,7 +309,7 @@ function NumericSlider(props: {
   const { label, min, max, step = 1, value, format, onSelect } = props
   return (
     <div className="flex flex-col gap-2">
-      <span className="ml-auto font-medium text-muted-foreground text-xs tabular-nums">
+      <span className="text-muted-foreground ml-auto text-xs font-medium tabular-nums">
         {format(value)}
       </span>
       <Slider
@@ -342,7 +342,7 @@ function AccentRow(props: {
             aria-label={accent}
             aria-pressed={selected}
             className={cn(
-              "size-8 rounded-full border border-border/60 ring-primary ring-offset-2 ring-offset-card transition",
+              "border-border/60 ring-primary ring-offset-card size-8 rounded-full border ring-offset-2 transition",
               selected && "ring-2"
             )}
             key={accent}
@@ -422,14 +422,14 @@ function SecuritySection(): React.JSX.Element {
 
       <div className="flex gap-2">
         <button
-          className="flex-1 rounded-lg border border-primary/60 bg-primary/10 py-2 font-medium text-primary text-sm transition-colors hover:bg-primary/20"
+          className="border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 flex-1 rounded-lg border py-2 text-sm font-medium transition-colors"
           onClick={() => void handleSet()}
           type="button"
         >
           Set Password
         </button>
         <button
-          className="rounded-lg border border-border px-3 py-2 text-muted-foreground text-sm transition-colors hover:bg-muted/60 hover:text-destructive disabled:opacity-40"
+          className="border-border text-muted-foreground hover:bg-muted/60 hover:text-destructive rounded-lg border px-3 py-2 text-sm transition-colors disabled:opacity-40"
           disabled={!isSet}
           onClick={handleClear}
           type="button"
@@ -526,7 +526,7 @@ export function NoctaliaSettings(props: {
           {/* Overlay — click anywhere outside the panel to dismiss. */}
           <button
             aria-label={translate("environment.settings.close")}
-            className="fixed inset-0 cursor-default bg-background/40"
+            className="bg-background/40 fixed inset-0 cursor-default"
             onClick={onClose}
             type="button"
           />
@@ -535,7 +535,7 @@ export function NoctaliaSettings(props: {
             aria-label={translate("environment.settings.title")}
             aria-modal="true"
             className={cn(
-              "relative z-10 flex h-[min(32rem,88vh)] w-[min(52rem,94vw)] flex-col overflow-hidden text-foreground",
+              "text-foreground relative z-10 flex h-[min(32rem,88vh)] w-[min(52rem,94vw)] flex-col overflow-hidden",
               GLASS_SURFACE[settings.glass]
             )}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -545,13 +545,13 @@ export function NoctaliaSettings(props: {
             transition={TWEEN_QUICK}
           >
             {/* Header — always visible; mobile shows dropdown + close, desktop shows title + sidebar toggle */}
-            <div className="flex shrink-0 items-center gap-2 border-border/60 border-b px-4 py-2.5">
+            <div className="border-border/60 flex shrink-0 items-center gap-2 border-b px-4 py-2.5">
               {/* Mobile: section dropdown picker */}
               <div className="flex flex-1 items-center md:hidden">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 font-medium text-sm hover:bg-muted/60"
+                      className="hover:bg-muted/60 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium"
                       type="button"
                     >
                       {(() => {
@@ -563,7 +563,7 @@ export function NoctaliaSettings(props: {
                           <>
                             <Icon aria-hidden className="size-4" />
                             {translate(s.labelKey)}
-                            <ChevronDown className="size-3.5 text-muted-foreground" />
+                            <ChevronDown className="text-muted-foreground size-3.5" />
                           </>
                         )
                       })()}
@@ -587,14 +587,14 @@ export function NoctaliaSettings(props: {
               </div>
 
               {/* Desktop: settings title */}
-              <h2 className="hidden flex-1 px-1 font-semibold text-sm md:block">
+              <h2 className="hidden flex-1 px-1 text-sm font-semibold md:block">
                 {translate("environment.settings.title")}
               </h2>
 
               {/* Mobile: ArrowLeft closes the dialog */}
               <button
                 aria-label={translate("environment.settings.close")}
-                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground md:hidden"
+                className="text-muted-foreground hover:bg-muted/60 hover:text-foreground rounded-lg p-1.5 transition-colors md:hidden"
                 onClick={onClose}
                 type="button"
               >
@@ -604,7 +604,7 @@ export function NoctaliaSettings(props: {
               {/* Desktop: ArrowLeft toggles sidebar open/closed */}
               <button
                 aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-                className="hidden rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground md:inline-flex"
+                className="text-muted-foreground hover:bg-muted/60 hover:text-foreground hidden rounded-lg p-1.5 transition-colors md:inline-flex"
                 onClick={() => setSidebarOpen((prev) => !prev)}
                 type="button"
               >
@@ -627,7 +627,7 @@ export function NoctaliaSettings(props: {
                 {sidebarOpen ? (
                   <motion.nav
                     animate={{ opacity: 1, width: 176 }}
-                    className="hidden shrink-0 flex-col gap-1 overflow-hidden border-border/60 border-r bg-muted/20 py-3 md:flex"
+                    className="border-border/60 bg-muted/20 hidden shrink-0 flex-col gap-1 overflow-hidden border-r py-3 md:flex"
                     exit={{ opacity: 0, width: 0 }}
                     initial={{ opacity: 0, width: 0 }}
                     key="sidebar"
@@ -643,7 +643,7 @@ export function NoctaliaSettings(props: {
                           <button
                             aria-current={active}
                             className={cn(
-                              "relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-left font-medium text-sm transition-colors",
+                              "relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
                               active
                                 ? "text-primary"
                                 : "text-muted-foreground hover:bg-muted/60"
@@ -654,7 +654,7 @@ export function NoctaliaSettings(props: {
                           >
                             {active ? (
                               <motion.span
-                                className="absolute inset-0 rounded-lg bg-primary/15"
+                                className="bg-primary/15 absolute inset-0 rounded-lg"
                                 layoutId="settings-nav-pill"
                                 transition={TWEEN_SMOOTH}
                               />
@@ -775,7 +775,7 @@ export function NoctaliaSettings(props: {
                       <button
                         aria-pressed={settings.showStartingHint}
                         className={cn(
-                          "inline-flex w-fit items-center gap-2 rounded-xl border border-border px-3 py-1.5 font-medium text-sm transition-colors",
+                          "border-border inline-flex w-fit items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors",
                           settings.showStartingHint
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted/40 text-foreground hover:bg-muted/70"
@@ -869,7 +869,7 @@ export function NoctaliaSettings(props: {
                       <button
                         aria-pressed={settings.showSystemMonitor}
                         className={cn(
-                          "inline-flex w-fit items-center gap-2 rounded-xl border border-border px-3 py-1.5 font-medium text-sm transition-colors",
+                          "border-border inline-flex w-fit items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors",
                           settings.showSystemMonitor
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted/40 text-foreground hover:bg-muted/70"
@@ -892,7 +892,7 @@ export function NoctaliaSettings(props: {
                       <button
                         aria-pressed={settings.autoHideBar}
                         className={cn(
-                          "inline-flex w-fit items-center gap-2 rounded-xl border border-border px-3 py-1.5 font-medium text-sm transition-colors",
+                          "border-border inline-flex w-fit items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors",
                           settings.autoHideBar
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted/40 text-foreground hover:bg-muted/70"
@@ -1005,7 +1005,7 @@ export function NoctaliaSettings(props: {
                         <button
                           aria-pressed={wd.show}
                           className={cn(
-                            "inline-flex w-fit items-center gap-2 rounded-xl border border-border px-3 py-1.5 font-medium text-sm transition-colors",
+                            "border-border inline-flex w-fit items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors",
                             wd.show
                               ? "bg-primary text-primary-foreground"
                               : "bg-muted/40 text-foreground hover:bg-muted/70"
@@ -1039,7 +1039,7 @@ export function NoctaliaSettings(props: {
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             className={cn(
-                              "inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 font-medium text-sm transition-colors",
+                              "border-border inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-medium transition-colors",
                               isOpen
                                 ? "bg-muted/40 hover:bg-muted/70"
                                 : "cursor-not-allowed opacity-50"
@@ -1060,7 +1060,7 @@ export function NoctaliaSettings(props: {
                           </button>
                           {wd.offset ? (
                             <button
-                              className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-muted-foreground text-sm hover:text-foreground"
+                              className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm"
                               onClick={() => setWidget(id, { offset: null })}
                               type="button"
                             >

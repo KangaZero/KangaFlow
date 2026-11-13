@@ -11,12 +11,12 @@ function Progress({ className, ...props }: ProgressProps) {
   return (
     <ProgressPrimitive
       className={cn(
-        "relative h-2 w-full overflow-hidden rounded-full bg-primary/20",
+        "bg-primary/20 relative h-2 w-full overflow-hidden rounded-full",
         className
       )}
       {...props}
     >
-      <ProgressIndicatorPrimitive className="h-full w-full flex-1 rounded-full bg-primary" />
+      <ProgressIndicatorPrimitive className="bg-primary h-full w-full flex-1 rounded-full" />
     </ProgressPrimitive>
   )
 }

@@ -65,7 +65,7 @@ function BlinkingCaret(): React.JSX.Element {
   return (
     <span
       aria-hidden
-      className="h-[1.25em] w-0.5 shrink-0 animate-caret-blink bg-primary"
+      className="animate-caret-blink bg-primary h-[1.25em] w-0.5 shrink-0"
     />
   )
 }
@@ -208,7 +208,7 @@ export function LoginScreen({
         <HexFloat style={{ inset: 0, position: "absolute" }}>
           {/* Dark overlay with scanlines */}
           <div
-            className="absolute inset-0 bg-background/85"
+            className="bg-background/85 absolute inset-0"
             style={{
               backgroundImage:
                 "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px)",
@@ -250,7 +250,7 @@ export function LoginScreen({
           >
             <motion.div
               animate={{ opacity: 1, scale: burning ? 0 : 1 }}
-              className="flex h-full w-full flex-col justify-center rounded-xl border border-primary/30 bg-background/60 px-8 py-10 backdrop-blur-md"
+              className="border-primary/30 bg-background/60 flex h-full w-full flex-col justify-center rounded-xl border px-8 py-10 backdrop-blur-md"
               initial={{ opacity: 0 }}
               style={{
                 boxShadow: "0 0 40px -8px var(--primary)",
@@ -270,19 +270,19 @@ export function LoginScreen({
               {/* Title */}
               <div className="mb-8 text-center">
                 <h1
-                  className="font-bold font-mono text-3xl text-foreground uppercase tracking-[0.25em]"
+                  className="text-foreground font-mono text-3xl font-bold tracking-[0.25em] uppercase"
                   style={{ textShadow: "0 0 20px var(--primary)" }}
                 >
                   KANGAFLOW
                 </h1>
-                <p className="mt-1 font-mono text-[0.6rem] text-muted-foreground uppercase tracking-[0.3em]">
+                <p className="text-muted-foreground mt-1 font-mono text-[0.6rem] tracking-[0.3em] uppercase">
                   SYSTEM ACCESS REQUIRED
                 </p>
               </div>
 
               {/* Username */}
-              <div className="mb-4 flex items-center gap-3 border border-border/60 bg-muted/20 px-3 py-2.5">
-                <span className="select-none font-mono text-primary text-xs">
+              <div className="border-border/60 bg-muted/20 mb-4 flex items-center gap-3 border px-3 py-2.5">
+                <span className="text-primary font-mono text-xs select-none">
                   USER ›
                 </span>
                 <input
@@ -299,8 +299,8 @@ export function LoginScreen({
               </div>
 
               {/* Password */}
-              <div className="mb-6 flex items-center gap-3 border border-border/60 bg-muted/20 px-3 py-2.5">
-                <span className="select-none font-mono text-primary text-xs">
+              <div className="border-border/60 bg-muted/20 mb-6 flex items-center gap-3 border px-3 py-2.5">
+                <span className="text-primary font-mono text-xs select-none">
                   PASS ›
                 </span>
 
@@ -321,7 +321,7 @@ export function LoginScreen({
                       <BlinkingCaret />
                     ) : null}
                     {password.length === 0 ? (
-                      <span className="font-mono text-muted-foreground/50 text-sm">
+                      <span className="text-muted-foreground/50 font-mono text-sm">
                         access key
                       </span>
                     ) : (
@@ -360,7 +360,7 @@ export function LoginScreen({
 
                 <button
                   aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="shrink-0 text-muted-foreground transition-colors hover:text-foreground"
+                  className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
                   onClick={() => setShowPassword((p) => !p)}
                   tabIndex={0}
                   type="button"
@@ -378,7 +378,7 @@ export function LoginScreen({
                 {error ? (
                   <motion.p
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-4 text-center font-mono text-destructive text-xs tracking-widest"
+                    className="text-destructive mb-4 text-center font-mono text-xs tracking-widest"
                     exit={{ opacity: 0, y: -4 }}
                     initial={{ opacity: 0, y: 4 }}
                     transition={{ duration: 0.2 }}
@@ -390,7 +390,7 @@ export function LoginScreen({
 
               {/* Submit */}
               <button
-                className="w-full border border-primary/60 bg-primary/10 py-2.5 font-mono font-semibold text-primary text-sm uppercase tracking-[0.2em] transition-all hover:bg-primary/20 disabled:opacity-40"
+                className="border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 w-full border py-2.5 font-mono text-sm font-semibold tracking-[0.2em] uppercase transition-all disabled:opacity-40"
                 disabled={loading}
                 onClick={() => void handleSubmit()}
                 style={{
@@ -402,7 +402,7 @@ export function LoginScreen({
               </button>
 
               {/* Footer hint */}
-              <p className="mt-5 text-center font-mono text-[0.6rem] text-muted-foreground/50 uppercase tracking-[0.2em]">
+              <p className="text-muted-foreground/50 mt-5 text-center font-mono text-[0.6rem] tracking-[0.2em] uppercase">
                 CTRL + ALT + Q · FORCE ENTRY
               </p>
             </motion.div>

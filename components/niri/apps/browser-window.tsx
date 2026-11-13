@@ -253,9 +253,9 @@ export function BrowserWindow({
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-background text-foreground">
+    <div className="bg-background text-foreground flex h-full w-full flex-col">
       {/* Tab strip */}
-      <div className="flex items-center gap-1 overflow-x-auto border-border border-b bg-card px-2 py-1">
+      <div className="border-border bg-card flex items-center gap-1 overflow-x-auto border-b px-2 py-1">
         {tabs.map((t) => {
           const tabUrl = t.history[t.index] ?? FALLBACK_URL
           const active = t.id === activeId
@@ -280,7 +280,7 @@ export function BrowserWindow({
               {tabs.length > 1 ? (
                 <button
                   aria-label={translate("environment.browser.closeTab")}
-                  className="rounded p-0.5 opacity-0 transition-opacity hover:bg-background/60 group-hover:opacity-100"
+                  className="hover:bg-background/60 rounded p-0.5 opacity-0 transition-opacity group-hover:opacity-100"
                   onClick={() => closeTab(t.id)}
                   type="button"
                 >
@@ -301,7 +301,7 @@ export function BrowserWindow({
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-2 border-border border-b bg-card px-3 py-2 text-card-foreground">
+      <div className="border-border bg-card text-card-foreground flex items-center gap-2 border-b px-3 py-2">
         <div className="flex items-center gap-1">
           <button
             aria-label={translate("environment.browser.back")}
@@ -350,7 +350,7 @@ export function BrowserWindow({
               aria-controls={listboxId}
               aria-expanded={comboOpen}
               aria-label={translate("environment.browser.address")}
-              className="w-full truncate rounded-full border border-border bg-muted px-3 py-1.5 text-foreground text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-border bg-muted text-foreground focus-visible:ring-ring w-full truncate rounded-full border px-3 py-1.5 text-sm outline-none focus-visible:ring-2"
               onBlur={() => setComboOpen(false)}
               onChange={(event) => {
                 setAddress(event.target.value)
@@ -381,7 +381,7 @@ export function BrowserWindow({
 
           {comboOpen && options.length > 0 ? (
             <div
-              className="absolute top-full right-0 left-0 z-10 mt-1 max-h-72 overflow-y-auto rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg"
+              className="border-border bg-popover text-popover-foreground absolute top-full right-0 left-0 z-10 mt-1 max-h-72 overflow-y-auto rounded-xl border p-1 shadow-lg"
               id={listboxId}
               role="listbox"
             >
@@ -409,7 +409,7 @@ export function BrowserWindow({
                     <Star aria-hidden className="size-3.5 shrink-0" />
                   )}
                   <span className="truncate">{option.label}</span>
-                  <span className="ml-auto shrink-0 text-muted-foreground text-xs">
+                  <span className="text-muted-foreground ml-auto shrink-0 text-xs">
                     {option.sublabel}
                   </span>
                 </div>
@@ -436,10 +436,10 @@ export function BrowserWindow({
       </div>
 
       {bookmarks.length > 0 ? (
-        <div className="flex items-center gap-1 overflow-x-auto border-border border-b bg-card px-3 py-1.5">
+        <div className="border-border bg-card flex items-center gap-1 overflow-x-auto border-b px-3 py-1.5">
           {bookmarks.map((bm) => (
             <button
-              className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-accent-foreground"
+              className="text-muted-foreground hover:bg-accent hover:text-accent-foreground flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs transition-colors"
               key={bm}
               onClick={() => navigate(bm)}
               title={bm}
@@ -457,11 +457,11 @@ export function BrowserWindow({
 
       {/* One iframe per tab; inactive tabs stay mounted (hidden) so their page
           state survives a tab switch. */}
-      <div className="relative min-h-0 w-full flex-1 bg-background">
+      <div className="bg-background relative min-h-0 w-full flex-1">
         {tabs.map((t) => (
           <iframe
             className={cn(
-              "absolute inset-0 h-full w-full border-0 bg-background",
+              "bg-background absolute inset-0 h-full w-full border-0",
               t.id !== activeId && "hidden"
             )}
             key={`${t.id}-${t.nonce}`}

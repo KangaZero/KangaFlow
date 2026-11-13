@@ -65,7 +65,7 @@ export function SystemStatus({
   return (
     <span
       className={cn(
-        "flex items-center gap-2 text-muted-foreground",
+        "text-muted-foreground flex items-center gap-2",
         vertical && "flex-col"
       )}
     >

@@ -288,7 +288,7 @@ export function MediaPlayer() {
         <div className="flex flex-col gap-3 p-4">
           {/* Track meta */}
           <div className="flex items-center gap-3">
-            <div className="relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary/10 text-primary">
+            <div className="bg-primary/10 text-primary relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md">
               {track.coverSrc ? (
                 // biome-ignore lint/performance/noImgElement: static export — next/image optimization unavailable
                 <img
@@ -317,8 +317,8 @@ export function MediaPlayer() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold text-sm">{track.title}</p>
-              <p className="truncate text-muted-foreground text-xs">
+              <p className="truncate text-sm font-semibold">{track.title}</p>
+              <p className="text-muted-foreground truncate text-xs">
                 {track.composer}
                 {track.album ? ` · ${track.album}` : ""}
               </p>
@@ -359,7 +359,7 @@ export function MediaPlayer() {
               step={1}
               value={[Math.min(currentTimeSec, duration || 1)]}
             />
-            <div className="flex justify-between font-mono text-[10px] text-muted-foreground tabular-nums">
+            <div className="text-muted-foreground flex justify-between font-mono text-[10px] tabular-nums">
               <span>{formatSecondsToMMSS(currentTimeSec)}</span>
               <span>{formatSecondsToMMSS(duration)}</span>
             </div>
@@ -450,7 +450,7 @@ export function MediaPlayer() {
                       <motion.span
                         animate={{ opacity: [0.55, 0], scale: [1, 1.8] }}
                         aria-hidden
-                        className="absolute inset-0 rounded-full border border-primary-foreground/40"
+                        className="border-primary-foreground/40 absolute inset-0 rounded-full border"
                         key={delay}
                         transition={{
                           delay,

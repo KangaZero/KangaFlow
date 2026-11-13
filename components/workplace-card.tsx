@@ -17,7 +17,7 @@ export function WorkplaceCard({ className }: { className?: string }) {
   return (
     <div className={cn("space-y-1 font-mono text-xs", className)}>
       <p>{`${translate("headerCard.basedIn")} ${person.location}`}</p>
-      <p className="font-semibold text-foreground">
+      <p className="text-foreground font-semibold">
         {translate("headerCard.workplace")}
       </p>
       <p>{translate("headerCard.status")}</p>
@@ -27,13 +27,13 @@ export function WorkplaceCard({ className }: { className?: string }) {
         point={person.locationCoordinates}
       />
       <p className="mt-2">{translate("headerCard.map.caption")}</p>
-      <p className="text-[0.65rem] text-muted-foreground/70 tabular-nums">
+      <p className="text-muted-foreground/70 text-[0.65rem] tabular-nums">
         {formatCoordinates(person.locationCoordinates)}
       </p>
       {/* Required attribution for the ward geometry. GSI asks for 出典元の明記,
           which is what 地図出典 renders; the source name (地球地図日本 / Global Map
           Japan) stays recognisable in both locales. */}
-      <p className="text-[0.6rem] text-muted-foreground/60">
+      <p className="text-muted-foreground/60 text-[0.6rem]">
         {translate("headerCard.map.credit")}
       </p>
     </div>

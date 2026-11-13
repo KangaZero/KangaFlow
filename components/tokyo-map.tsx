@@ -44,7 +44,7 @@ export function TokyoMap({
   return (
     <svg
       aria-label={label}
-      className={cn("h-auto w-full rounded-sm bg-muted/40", className)}
+      className={cn("bg-muted/40 h-auto w-full rounded-sm", className)}
       role="img"
       viewBox={`0 0 ${projection.width} ${projection.height}`}
     >
@@ -52,7 +52,7 @@ export function TokyoMap({
         ward.paths.map((path) => (
           <path
             className={cn(
-              "stroke-[1.5] stroke-border",
+              "stroke-border stroke-[1.5]",
               // The ward the office sits in reads as the figure; the rest is ground.
               ward.name === home?.name
                 ? "fill-primary/25"
@@ -70,7 +70,7 @@ export function TokyoMap({
         r={PULSE_RADIUS}
       />
       <circle
-        className="fill-primary stroke-[3] stroke-background"
+        className="fill-primary stroke-background stroke-[3]"
         cx={marker.x}
         cy={marker.y}
         r={MARKER_RADIUS}

@@ -107,7 +107,7 @@ export function NotificationCenter({
           >
             <Bell />
             {unreadCount > 0 ? (
-              <span className="absolute -top-0.5 -right-0.5 flex min-w-4 items-center justify-center rounded-full bg-primary px-1 font-medium text-[0.5625rem] text-primary-foreground tabular-nums leading-none ring-2 ring-card">
+              <span className="bg-primary text-primary-foreground ring-card absolute -top-0.5 -right-0.5 flex min-w-4 items-center justify-center rounded-full px-1 text-[0.5625rem] leading-none font-medium tabular-nums ring-2">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             ) : null}
@@ -122,13 +122,13 @@ export function NotificationCenter({
         sideOffset={8}
         transition={SPRING_CONTENT}
       >
-        <div className="flex items-center justify-between border-border border-b px-3 py-2">
-          <span className="font-semibold text-sm">
+        <div className="border-border flex items-center justify-between border-b px-3 py-2">
+          <span className="text-sm font-semibold">
             {translate("notifications.title")}
           </span>
           {notifications.length > 0 ? (
             <button
-              className="rounded px-1.5 py-0.5 text-muted-foreground text-xs transition-colors hover:text-foreground disabled:opacity-40"
+              className="text-muted-foreground hover:text-foreground rounded px-1.5 py-0.5 text-xs transition-colors disabled:opacity-40"
               disabled={clearing}
               onClick={handleClearAll}
               type="button"
@@ -139,7 +139,7 @@ export function NotificationCenter({
         </div>
 
         {notifications.length === 0 ? (
-          <p className="px-3 py-6 text-center text-muted-foreground text-xs">
+          <p className="text-muted-foreground px-3 py-6 text-center text-xs">
             {translate("notifications.empty")}
           </p>
         ) : (
@@ -185,21 +185,21 @@ export function NotificationCenter({
                               : undefined
                           }
                         >
-                          <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg bg-background text-muted-foreground">
+                          <span className="bg-background text-muted-foreground mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg">
                             <Icon className="size-4" />
                           </span>
                           <div className="min-w-0 flex-1">
-                            <p className="break-words text-sm leading-snug">
+                            <p className="text-sm leading-snug break-words">
                               {n.message}
                             </p>
-                            <span className="text-[0.6875rem] text-muted-foreground tabular-nums">
+                            <span className="text-muted-foreground text-[0.6875rem] tabular-nums">
                               {formatRelativeTime(n.createdAt, now)}
                             </span>
                           </div>
                         </div>
                         <motion.button
                           aria-label={translate("notifications.dismiss")}
-                          className="rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
+                          className="text-muted-foreground hover:text-destructive rounded p-1 transition-colors"
                           onClick={() => dismiss(n.id)}
                           transition={SPRING_CARD}
                           type="button"
@@ -211,12 +211,12 @@ export function NotificationCenter({
 
                       {n.type === "alarm" ? (
                         <div className="flex items-center gap-1 pl-9">
-                          <span className="text-[0.6875rem] text-muted-foreground">
+                          <span className="text-muted-foreground text-[0.6875rem]">
                             {translate("notifications.remindMe")}
                           </span>
                           {SNOOZE_OPTIONS.map((opt) => (
                             <button
-                              className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-[0.6875rem] transition-colors hover:bg-muted"
+                              className="border-border bg-muted/40 hover:bg-muted rounded-md border px-1.5 py-0.5 text-[0.6875rem] transition-colors"
                               key={opt.minutes}
                               onClick={() => {
                                 remind(opt.minutes, n.message, n.target, n.type)

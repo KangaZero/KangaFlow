@@ -87,7 +87,7 @@ export function AchievementsView() {
     <main className="mx-auto flex min-h-svh max-w-5xl flex-col gap-6 p-6">
       <motion.h1
         animate="show"
-        className="flex font-medium text-2xl"
+        className="flex text-2xl font-medium"
         initial="hidden"
         variants={titleContainer}
       >

@@ -53,7 +53,7 @@ export function SiteFooter() {
   const { markSocialVisited } = useAchievements()
 
   return (
-    <footer className="mt-16 flex w-full flex-col items-center gap-4 border-border/60 border-t py-6 text-muted-foreground text-xs sm:flex-row sm:justify-between">
+    <footer className="border-border/60 text-muted-foreground mt-16 flex w-full flex-col items-center gap-4 border-t py-6 text-xs sm:flex-row sm:justify-between">
       <p suppressHydrationWarning>
         © {year} <span className="text-foreground">{person.name}</span> /
         KangaWorks
@@ -93,7 +93,7 @@ export function SiteFooter() {
         })}
         <Image
           alt="KangaZero"
-          className="ml-2 h-5 w-auto opacity-80 terminal:invert dark:invert"
+          className="terminal:invert ml-2 h-5 w-auto opacity-80 dark:invert"
           height={20}
           src="/trademarks/kanga-zero.svg"
           width={90}

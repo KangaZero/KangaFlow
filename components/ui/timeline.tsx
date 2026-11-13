@@ -44,16 +44,16 @@ export function Timeline({ data }: { data: TimelineEntry[] }) {
         {entries.map(({ id, item }) => (
           <div className="flex justify-start pt-10 md:gap-10 md:pt-40" key={id}>
             <div className="sticky top-40 z-40 flex max-w-xs flex-col items-center self-start md:w-full md:flex-row lg:max-w-sm">
-              <div className="absolute left-3 flex h-10 w-10 items-center justify-center rounded-full bg-background">
-                <div className="h-4 w-4 rounded-full border border-border bg-primary/40 p-2" />
+              <div className="bg-background absolute left-3 flex h-10 w-10 items-center justify-center rounded-full">
+                <div className="border-border bg-primary/40 h-4 w-4 rounded-full border p-2" />
               </div>
-              <h3 className="hidden font-bold text-muted-foreground text-xl md:block md:pl-20 md:text-5xl">
+              <h3 className="text-muted-foreground hidden text-xl font-bold md:block md:pl-20 md:text-5xl">
                 {item.title}
               </h3>
             </div>
 
             <div className="relative w-full pr-4 pl-20 md:pl-4">
-              <h3 className="mb-4 block text-left font-bold text-2xl text-muted-foreground md:hidden">
+              <h3 className="text-muted-foreground mb-4 block text-left text-2xl font-bold md:hidden">
                 {item.title}
               </h3>
               {item.content}
@@ -63,13 +63,13 @@ export function Timeline({ data }: { data: TimelineEntry[] }) {
         <div
           className={cn(
             "absolute top-0 left-8 w-[2px] overflow-hidden",
-            "bg-linear-to-b from-transparent via-border to-transparent",
+            "via-border bg-linear-to-b from-transparent to-transparent",
             "[mask-image:linear-gradient(to_bottom,transparent_0%,black_10%,black_90%,transparent_100%)]"
           )}
           style={{ height: `${height}px` }}
         >
           <motion.div
-            className="absolute inset-x-0 top-0 w-[2px] rounded-full bg-linear-to-t from-primary via-primary to-transparent"
+            className="from-primary via-primary absolute inset-x-0 top-0 w-[2px] rounded-full bg-linear-to-t to-transparent"
             // Scroll-LINKED transforms aren't gated by MotionConfig; under
             // reduced motion draw the beam fully and statically instead of
             // scrubbing it with scroll.

@@ -72,7 +72,7 @@ export function NiriHelpDialog({
         <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
           {SHORTCUTS.map((s) => (
             <li
-              className="flex flex-col items-center justify-between gap-3 rounded-md border border-border p-3 sm:flex-row"
+              className="border-border flex flex-col items-center justify-between gap-3 rounded-md border p-3 sm:flex-row"
               key={s.label}
             >
               <span className="text-sm">{translate(s.label)}</span>

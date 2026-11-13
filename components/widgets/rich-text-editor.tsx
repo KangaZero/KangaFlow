@@ -190,7 +190,7 @@ export function RichTextEditor({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 border-border border-b p-1.5">
+      <div className="border-border flex flex-wrap items-center gap-0.5 border-b p-1.5">
         <ToolbarToggle
           active={fmt.bold}
           icon={Bold}
@@ -238,7 +238,7 @@ export function RichTextEditor({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <span className="mx-0.5 h-4 w-px bg-border" />
+        <span className="bg-border mx-0.5 h-4 w-px" />
 
         {/* Alignment (document-level) */}
         {ALIGNMENTS.map(({ icon: Icon, value }) => (
@@ -259,7 +259,7 @@ export function RichTextEditor({
           </Button>
         ))}
 
-        <span className="mx-0.5 h-4 w-px bg-border" />
+        <span className="bg-border mx-0.5 h-4 w-px" />
 
         {/* Spacing (document-level: line + letter) */}
         <DropdownMenu>
@@ -276,7 +276,7 @@ export function RichTextEditor({
           <DropdownMenuContent align="start" className="w-56 p-3">
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1.5">
-                <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <MoveVertical className="size-3.5" />
                   Line height
                   <span className="ml-auto font-mono tabular-nums">
@@ -292,7 +292,7 @@ export function RichTextEditor({
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <MoveHorizontal className="size-3.5" />
                   Letter spacing
                   <span className="ml-auto font-mono tabular-nums">
@@ -311,7 +311,7 @@ export function RichTextEditor({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <span className="mx-0.5 h-4 w-px bg-border" />
+        <span className="bg-border mx-0.5 h-4 w-px" />
 
         {/* Raw HTML view toggle */}
         <ToolbarToggle
@@ -327,7 +327,7 @@ export function RichTextEditor({
           survive; the raw <textarea> overlays it. */}
       <div className={cn("relative flex min-h-0 flex-1", showRaw && "hidden")}>
         {noteLineNumbers !== "off" ? (
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 overflow-hidden border-border/40 border-r bg-muted/10 font-mono text-[0.7rem] text-muted-foreground tabular-nums">
+          <div className="border-border/40 bg-muted/10 text-muted-foreground pointer-events-none absolute inset-y-0 left-0 z-10 w-8 overflow-hidden border-r font-mono text-[0.7rem] tabular-nums">
             <div style={{ transform: `translateY(${-scrollTop}px)` }}>
               {gutterLines.map((line, i) => (
                 <span
@@ -348,7 +348,7 @@ export function RichTextEditor({
           aria-label="Note content"
           aria-multiline="true"
           className={cn(
-            "min-h-0 flex-1 overflow-auto p-3 text-sm leading-relaxed outline-none [&_a]:text-primary [&_a]:underline",
+            "[&_a]:text-primary min-h-0 flex-1 overflow-auto p-3 text-sm leading-relaxed outline-none [&_a]:underline",
             noteLineNumbers !== "off" && "pl-11"
           )}
           contentEditable
@@ -369,7 +369,7 @@ export function RichTextEditor({
       {showRaw ? (
         <textarea
           aria-label="Raw note HTML"
-          className="fade-in min-h-0 flex-1 animate-in resize-none overflow-auto bg-muted/10 p-3 font-mono text-muted-foreground text-xs outline-none duration-50"
+          className="fade-in animate-in bg-muted/10 text-muted-foreground min-h-0 flex-1 resize-none overflow-auto p-3 font-mono text-xs duration-50 outline-none"
           onChange={(e) => setRawHtml(e.target.value)}
           spellCheck={false}
           value={rawHtml}
@@ -378,7 +378,7 @@ export function RichTextEditor({
 
       {/* Vim-style ruler: line,column · total lines. Numeric, so no i18n label
           needed (matches vim's bottom-right ruler). */}
-      <div className="flex justify-end border-border border-t px-3 py-1 font-mono text-muted-foreground text-xs tabular-nums">
+      <div className="border-border text-muted-foreground flex justify-end border-t px-3 py-1 font-mono text-xs tabular-nums">
         {caret ? `${caret.row},${caret.col}` : "1,1"}
         <span className="ml-2 opacity-60">
           {caret ? `${caret.lines}L` : "1L"}

@@ -608,7 +608,7 @@ export function EnvironmentView() {
                 // enter. Each tile renders its windows' real content, live.
                 <motion.div
                   animate={{ opacity: 1 }}
-                  className="scrollbar-none pointer-events-auto absolute inset-0 flex flex-col gap-3 overflow-hidden p-2"
+                  className="pointer-events-auto absolute inset-0 flex scrollbar-none flex-col gap-3 overflow-hidden p-2"
                   initial={{ opacity: 0 }}
                   // Scroll container holding `layout`-animated tiles: without this,
                   // Motion's projection ignores our scrollTop, measures the tiles as
@@ -626,7 +626,7 @@ export function EnvironmentView() {
                       // nesting interactive elements inside a <button>.
                       <motion.div
                         className={cn(
-                          "relative flex min-h-[90vh] flex-1 flex-col gap-2 rounded-2xl border-2 bg-card/20 p-3",
+                          "bg-card/20 relative flex min-h-[90vh] flex-1 flex-col gap-2 rounded-2xl border-2 p-3",
                           ws.id === state.active
                             ? "border-primary"
                             : "border-border/40 hover:border-border"
@@ -638,7 +638,7 @@ export function EnvironmentView() {
                       >
                         <button
                           aria-label={wsLabel}
-                          className="absolute top-[-7] right-0 z-10 rounded-full border bg-accent px-2 font-medium text-foreground text-xs hover:scale-105"
+                          className="bg-accent text-foreground absolute top-[-7] right-0 z-10 rounded-full border px-2 text-xs font-medium hover:scale-105"
                           onClick={() => {
                             dispatch({ id: ws.id, type: "focusWorkspace" })
                             dispatch({ type: "toggleOverview" })
@@ -649,9 +649,9 @@ export function EnvironmentView() {
                         </button>
                         {/* Horizontal scroller for the columns: `inline: "center"`
                         on the focused window resolves against this box. */}
-                        <div className="scrollbar-none flex min-h-0 flex-1 gap-0 overflow-x-hidden">
+                        <div className="flex min-h-0 flex-1 scrollbar-none gap-0 overflow-x-hidden">
                           {ws.columns.length === 0 ? (
-                            <span className="flex flex-1 items-center justify-center text-muted-foreground/50 text-xs">
+                            <span className="text-muted-foreground/50 flex flex-1 items-center justify-center text-xs">
                               —
                             </span>
                           ) : (
@@ -669,7 +669,7 @@ export function EnvironmentView() {
                                   return (
                                     <div
                                       className={cn(
-                                        "relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border-2 bg-card transition-colors",
+                                        "bg-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border-2 transition-colors",
                                         wi <= col.windows.length - 1
                                           ? "mr-2"
                                           : "",
@@ -686,8 +686,8 @@ export function EnvironmentView() {
                                         winFocused ? activeWinRef : undefined
                                       }
                                     >
-                                      <div className="flex items-center border-border border-b bg-muted/40 px-2 py-1">
-                                        <span className="truncate font-medium text-[10px] text-card-foreground">
+                                      <div className="border-border bg-muted/40 flex items-center border-b px-2 py-1">
+                                        <span className="text-card-foreground truncate text-[10px] font-medium">
                                           {win.title}
                                         </span>
                                       </div>
@@ -829,12 +829,12 @@ export function EnvironmentView() {
                                 transition={SPRING_TILE}
                                 type="button"
                               >
-                                <div className="flex items-center gap-2 border-border border-b bg-muted/40 px-3 py-1.5">
-                                  <span className="flex-1 truncate font-medium text-xs">
+                                <div className="border-border bg-muted/40 flex items-center gap-2 border-b px-3 py-1.5">
+                                  <span className="flex-1 truncate text-xs font-medium">
                                     {win.title}
                                   </span>
                                   <SquareIcon
-                                    className="size-3.5 text-muted-foreground hover:scale-110"
+                                    className="text-muted-foreground size-3.5 hover:scale-110"
                                     onClick={(e) => {
                                       e.stopPropagation()
                                       dispatch({
@@ -844,7 +844,7 @@ export function EnvironmentView() {
                                   />
 
                                   <X
-                                    className="size-3.5 text-muted-foreground hover:scale-110"
+                                    className="text-muted-foreground size-3.5 hover:scale-110"
                                     onClick={(e) => {
                                       e.stopPropagation()
                                       dispatch({

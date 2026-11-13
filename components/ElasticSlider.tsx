@@ -124,7 +124,7 @@ const Slider: React.FC<SliderProps> = ({
   return (
     <>
       <motion.div
-        className="flex w-full touch-none select-none items-center justify-center gap-4"
+        className="flex w-full touch-none items-center justify-center gap-4 select-none"
         onHoverEnd={() => animate(scale, 1)}
         onHoverStart={() => animate(scale, 1.2)}
         onTouchEnd={() => animate(scale, 1)}
@@ -149,7 +149,7 @@ const Slider: React.FC<SliderProps> = ({
          </motion.div>
         */}
         <div
-          className="relative flex w-full max-w-xs grow cursor-grab touch-none select-none items-center py-4"
+          className="relative flex w-full max-w-xs grow cursor-grab touch-none items-center py-4 select-none"
           onLostPointerCapture={handlePointerUp}
           onPointerCancel={handlePointerUp}
           onPointerDown={handlePointerDown}
@@ -181,16 +181,16 @@ const Slider: React.FC<SliderProps> = ({
               }),
             }}
           >
-            <div className="relative h-full grow overflow-hidden rounded-full bg-muted">
+            <div className="bg-muted relative h-full grow overflow-hidden rounded-full">
               <div
-                className="absolute h-full rounded-full bg-primary"
+                className="bg-primary absolute h-full rounded-full"
                 style={{ width: `${getRangePercentage()}%` }}
               />
             </div>
           </motion.div>
         </div>
       </motion.div>
-      <p className="absolute -translate-y-4 transform font-medium text-muted-foreground text-xs tracking-wide">
+      <p className="text-muted-foreground absolute -translate-y-4 transform text-xs font-medium tracking-wide">
         {Math.round(value)}
       </p>
     </>

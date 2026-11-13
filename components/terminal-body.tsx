@@ -1002,7 +1002,7 @@ export function TerminalBody({
             still lets the wallpaper through (light theme only; dark = none). */}
         {/* TODO find out how to resize automaticaly */}
         <div
-          className={`${isVerticalBar ? "h-[92.8vh]" : "h-[86.6vh]"} w-full rounded-t-m`}
+          className={`${isVerticalBar ? "h-[92.8vh]" : "h-[86.6vh]"} rounded-t-m w-full`}
           ref={ref}
           style={{ background: palette.scrim }}
         />

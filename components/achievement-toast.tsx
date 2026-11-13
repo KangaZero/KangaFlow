@@ -27,7 +27,7 @@ function ToastCard({ achievement }: { achievement: Achievement }) {
   return (
     <motion.div
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="pointer-events-auto flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-xl border bg-popover p-3 shadow-lg"
+      className="bg-popover pointer-events-auto flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-xl border p-3 shadow-lg"
       exit={{ opacity: 0, scale: 0.9, y: -80 }}
       initial={{ opacity: 0, scale: 0.9, y: -80 }}
       style={{ borderColor: color }}
@@ -36,7 +36,7 @@ function ToastCard({ achievement }: { achievement: Achievement }) {
       <div className="flex items-center gap-3">
         <Icon style={{ color }} />
         <span className="flex flex-1 flex-col">
-          <span className="font-medium text-sm">
+          <span className="text-sm font-medium">
             {translate("achievements.toast.unlocked")}
           </span>
           <span className="text-muted-foreground text-xs">

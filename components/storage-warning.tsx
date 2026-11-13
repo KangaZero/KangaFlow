@@ -25,17 +25,17 @@ export function StorageWarning(props: {
   return (
     <div
       className={cn(
-        "flex items-start gap-2.5 rounded-lg border border-destructive/40 bg-destructive/10 p-3",
+        "border-destructive/40 bg-destructive/10 flex items-start gap-2.5 rounded-lg border p-3",
         className
       )}
       role="status"
     >
       <TriangleAlert
         aria-hidden="true"
-        className="mt-0.5 size-4 shrink-0 text-destructive"
+        className="text-destructive mt-0.5 size-4 shrink-0"
       />
       <div className="flex flex-col gap-0.5">
-        <p className="font-medium text-destructive text-xs">
+        <p className="text-destructive text-xs font-medium">
           {translate("settings.storageUnavailableTitle")}
         </p>
         <p className="text-muted-foreground text-xs">

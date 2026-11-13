@@ -114,7 +114,7 @@ export function HeaderStatus({ className }: { className?: string }) {
         <button
           aria-label={translate("headerCard.workplace")}
           className={cn(
-            "min-w-[15ch] cursor-help text-right font-[family-name:var(--font-heading-ja)] text-muted-foreground text-sm tabular-nums",
+            "text-muted-foreground min-w-[15ch] cursor-help text-right font-[family-name:var(--font-heading-ja)] text-sm tabular-nums",
             className
           )}
           type="button"

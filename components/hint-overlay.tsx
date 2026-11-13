@@ -72,7 +72,7 @@ export function HintOverlay() {
       style={{ zIndex: Z_LAYERS.hint }}
     >
       {/* Faint glass wash so the hints read as an overlay layer. */}
-      <div className="absolute inset-0 bg-background/5 backdrop-blur-[0.5px]" />
+      <div className="bg-background/5 absolute inset-0 backdrop-blur-[0.5px]" />
 
       <AnimatePresence>
         {visible.map((hint) => (
@@ -86,7 +86,7 @@ export function HintOverlay() {
             transition={{ duration: 0.12 }}
           >
             {/* Glass chip: translucent, blurred, primary-accent ring. */}
-            <kbd className="inline-flex -translate-x-1 -translate-y-1/2 items-center rounded-md border border-primary/50 bg-background/70 px-1.5 py-0.5 font-bold font-mono text-[11px] uppercase leading-none shadow-black/30 shadow-lg backdrop-blur-md">
+            <kbd className="border-primary/50 bg-background/70 inline-flex -translate-x-1 -translate-y-1/2 items-center rounded-md border px-1.5 py-0.5 font-mono text-[11px] leading-none font-bold uppercase shadow-lg shadow-black/30 backdrop-blur-md">
               <span className="text-muted-foreground/70">{typed}</span>
               <span className="text-primary">
                 {hint.label.slice(typed.length)}

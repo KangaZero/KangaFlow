@@ -421,7 +421,7 @@ export function NoctaliaLauncher(props: {
             />
           </div>
           <span className="flex min-w-0 flex-col">
-            <span className="truncate font-medium text-sm">{label}</span>
+            <span className="truncate text-sm font-medium">{label}</span>
             <span
               className={cn(
                 "truncate text-xs",
@@ -434,7 +434,7 @@ export function NoctaliaLauncher(props: {
             </span>
           </span>
           {isActive ? (
-            <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+            <span className="bg-primary ml-auto h-1.5 w-1.5 shrink-0 rounded-full" />
           ) : null}
         </button>
         <button
@@ -471,7 +471,7 @@ export function NoctaliaLauncher(props: {
         >
           <button
             aria-label={translate("environment.launcher.close")}
-            className="fixed inset-0 cursor-default bg-background/40"
+            className="bg-background/40 fixed inset-0 cursor-default"
             onClick={onClose}
             type="button"
           />
@@ -479,7 +479,7 @@ export function NoctaliaLauncher(props: {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             aria-label={translate("environment.launcher.title")}
             aria-modal="true"
-            className="relative z-10 w-[min(32rem,90vw)] overflow-hidden border border-border bg-card/90 text-foreground shadow-2xl backdrop-blur-xl"
+            className="border-border bg-card/90 text-foreground relative z-10 w-[min(32rem,90vw)] overflow-hidden border shadow-2xl backdrop-blur-xl"
             exit={{ opacity: 0, scale: 0.96, y: -8 }}
             initial={{ opacity: 0, scale: 0.96, y: -8 }}
             role="dialog"
@@ -489,7 +489,7 @@ export function NoctaliaLauncher(props: {
             <div className="border-border/60 border-b p-3">
               <input
                 aria-label={translate("environment.launcher.search")}
-                className="wwfull bg-transparent px-2 py-1.5 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
+                className="wwfull text-foreground placeholder:text-muted-foreground bg-transparent px-2 py-1.5 text-base focus:outline-none"
                 onChange={handleQueryChange}
                 onKeyDown={handleKeyDown}
                 placeholder={translate(
@@ -506,14 +506,14 @@ export function NoctaliaLauncher(props: {
               ref={scrollContainerRef}
             >
               {showEmpty ? (
-                <p className="px-3 py-6 text-center text-muted-foreground text-sm">
+                <p className="text-muted-foreground px-3 py-6 text-center text-sm">
                   {translate("environment.launcher.empty")}
                 </p>
               ) : (
                 <LayoutGroup>
                   {pinnedResults.length > 0 ? (
                     <div>
-                      <p className="px-3 py-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                      <p className="text-muted-foreground px-3 py-1.5 text-xs font-medium tracking-wide uppercase">
                         {translate("environment.launcher.pinned")}
                       </p>
                       {pinnedResults.map(renderRow)}
@@ -524,11 +524,11 @@ export function NoctaliaLauncher(props: {
                     <div
                       className={
                         pinnedResults.length > 0
-                          ? "mt-1 border-border/40 border-t pt-1"
+                          ? "border-border/40 mt-1 border-t pt-1"
                           : ""
                       }
                     >
-                      <p className="px-3 py-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                      <p className="text-muted-foreground px-3 py-1.5 text-xs font-medium tracking-wide uppercase">
                         {translate("environment.launcher.applications")}
                       </p>
                       {unpinnedAppResults.map(renderRow)}
@@ -540,11 +540,11 @@ export function NoctaliaLauncher(props: {
                       className={
                         pinnedResults.length > 0 ||
                         unpinnedAppResults.length > 0
-                          ? "mt-1 border-border/40 border-t pt-1"
+                          ? "border-border/40 mt-1 border-t pt-1"
                           : ""
                       }
                     >
-                      <p className="px-3 py-1.5 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                      <p className="text-muted-foreground px-3 py-1.5 text-xs font-medium tracking-wide uppercase">
                         {translate("environment.launcher.system")}
                       </p>
                       {unpinnedActionResults.map(renderRow)}

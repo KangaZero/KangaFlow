@@ -48,7 +48,7 @@ export const TrackList = memo(function TrackList({
         <LayoutGroup>
           {favoritedIndices.length > 0 ? (
             <div>
-              <p className="px-2.5 py-1 font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
+              <p className="text-muted-foreground px-2.5 py-1 text-[10px] font-medium tracking-wide uppercase">
                 {translate("mediaPlayer.favorites")}
               </p>
               {favoritedIndices.map((i) => {
@@ -70,7 +70,7 @@ export const TrackList = memo(function TrackList({
                   >
                     {isActive ? (
                       <motion.span
-                        className="absolute inset-0 rounded-lg bg-primary"
+                        className="bg-primary absolute inset-0 rounded-lg"
                         layoutId="track-list-active"
                         transition={SPRING_PILL}
                       />
@@ -82,7 +82,7 @@ export const TrackList = memo(function TrackList({
                     >
                       <span className="flex min-w-0 flex-col">
                         <div className="grid grid-cols-2 gap-x-3">
-                          <span className="truncate font-medium text-sm">
+                          <span className="truncate text-sm font-medium">
                             {t.title}
                           </span>
                           <span
@@ -143,12 +143,12 @@ export const TrackList = memo(function TrackList({
             <div
               className={
                 favoritedIndices.length > 0
-                  ? "mt-1 border-border/40 border-t pt-1"
+                  ? "border-border/40 mt-1 border-t pt-1"
                   : ""
               }
             >
               {favoritedIndices.length > 0 ? (
-                <p className="px-2.5 py-1 font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
+                <p className="text-muted-foreground px-2.5 py-1 text-[10px] font-medium tracking-wide uppercase">
                   {translate("mediaPlayer.allTracks")}
                 </p>
               ) : null}
@@ -171,7 +171,7 @@ export const TrackList = memo(function TrackList({
                   >
                     {isActive ? (
                       <motion.span
-                        className="absolute inset-0 rounded-lg bg-primary"
+                        className="bg-primary absolute inset-0 rounded-lg"
                         layoutId="track-list-active"
                         transition={SPRING_PILL}
                       />
@@ -183,7 +183,7 @@ export const TrackList = memo(function TrackList({
                     >
                       <span className="flex min-w-0 flex-col">
                         <div className="grid grid-cols-2 gap-x-3">
-                          <span className="truncate font-medium text-sm">
+                          <span className="truncate text-sm font-medium">
                             {t.title}
                           </span>
                           <span

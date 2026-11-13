@@ -261,7 +261,7 @@ export function BorderGlow({
 
   return (
     <div
-      className={cn("relative isolate grid border border-border/40", className)}
+      className={cn("border-border/40 relative isolate grid border", className)}
       onPointerEnter={() => setIsHovered(true)}
       onPointerLeave={() => setIsHovered(false)}
       onPointerMove={handlePointerMove}

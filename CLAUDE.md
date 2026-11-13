@@ -27,7 +27,6 @@ static export to GitHub Pages under `/KangaFlow`.
 
    **Type as narrowly as the value actually is.** The rule above kept being
    satisfied by code that was still loose, so, concretely:
-
    - **Never `string` where a literal union exists.** `route: string` let a page
      name a route that does not exist; `PageRoute` does not. Same for `locale:
      string` vs `Locale`.
@@ -63,17 +62,22 @@ static export to GitHub Pages under `/KangaFlow`.
 
 ## Toolchain (verified facts — do not regress)
 
-- **Biome 2.4.16 only** (pinned to nixpkgs). No ESLint/Prettier. One binary for
-  the git hook, CI, and `just` — run from `node_modules/.bin/biome`. 2.4.16 has
-  no `linter.rules.preset`; strictness = `recommended` + `nursery.recommended` +
-  `linter.domains` all + `useSortedClasses` (error). `noUnresolvedImports` /
-  `useImportExtensions` are OFF (they live in `correctness`), and Tailwind v4
-  needs `css.parser.tailwindDirectives: true`.
-- **TypeScript 7** (Go-native `tsc`) from `node_modules`. Requires **Next
-  16.3** (`experimental.useTypeScriptCli: true`); stable Next 16.2 crashes on
-  TS7. Next is pinned to a `16.3.0-preview` — deliberate, to keep TS7.
-- **Node 26**, **pnpm** (version from `packageManager`), **just**. `nodejs_26`
-  in the flake; matches CI.
+- **Biome 2.6.5 only** (exact-pinned to the nixpkgs version). No
+  ESLint/Prettier. One binary for the git hook, CI, and `just` — run from
+  `node_modules/.bin/biome`. Strictness = `rules.preset: "recommended"` +
+  `nursery.preset: "recommended"` + `linter.domains` all +
+  `useTailwindSortedClasses` (error; class fns in top-level `tailwind`).
+  `noUnresolvedImports` / `useImportExtensions` are OFF (they live in
+  `correctness`), and Tailwind v4 needs `css.parser.tailwindDirectives: true`.
+  2.6 also formats/lints Markdown, HTML, YAML and SVG — `pnpm-lock.yaml` and
+  `.playwright-mcp` are excluded in `files.includes`.
+- **TypeScript 7** (Go-native `tsc`) from `node_modules`. **Next 16.4** stable
+  runs the project-local `tsc` CLI by default (`experimental.useTypeScriptCli`
+  defaults on — do not set it to `false`). Next 16.2 crashes on TS7.
+- **Node 26**, **pnpm 12** (version from `packageManager`, matches nixpkgs),
+  **just**. `nodejs_26` in the flake; matches CI. pnpm 12 is a native binary:
+  a pnpm 11 install cannot self-switch to it (runs the ELF through node and
+  crashes) — use the flake's pnpm (`nix develop`).
 - Imports use the `@/` alias, **extensionless**, no relative `./`.
 
 ## Static-export constraints

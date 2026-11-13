@@ -144,9 +144,9 @@ export function AnimatedTooltip({
             >
               <div
                 className={cn(
-                  "flex -skew-x-6 items-center gap-1.5 whitespace-nowrap bg-tooltip",
+                  "bg-tooltip flex -skew-x-6 items-center gap-1.5 whitespace-nowrap",
                   placement.pad,
-                  "font-black text-[11px] text-tooltip-foreground uppercase tracking-wide",
+                  "text-tooltip-foreground text-[11px] font-black tracking-wide uppercase",
                   placement.tail
                 )}
               >

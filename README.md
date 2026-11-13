@@ -30,7 +30,7 @@ terminal. Shipped fully static to GitHub Pages.
 
 [![Deploy](https://github.com/KangaZero/KangaFlow/actions/workflows/deploy.yml/badge.svg)](https://github.com/KangaZero/KangaFlow/actions/workflows/deploy.yml)
 ![Last commit](https://img.shields.io/github/last-commit/KangaZero/KangaFlow?style=flat-square&color=58839b)
-![Next.js](https://img.shields.io/badge/Next.js-16.3-000000?style=flat-square&logo=nextdotjs&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-16.4-000000?style=flat-square&logo=nextdotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178c6?style=flat-square&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)
@@ -74,22 +74,22 @@ terminal. Shipped fully static to GitHub Pages.
 
 ## Highlights
 
-| | |
-| --- | --- |
-| ⌨️ **Vim command palette** | Press <kbd>:</kbd> to open, type `:q` (or <kbd>Esc</kbd> / click-away / ✕) to close. Jump to any theme, page, or language. |
-| 🎨 **Three themes** | Light · Dark · Terminal, with a View-Transition **circular reveal** on switch. Cycle with <kbd>d</kbd> or the toggle. |
-| 🌏 **Bilingual (EN / 日本語)** | End-to-end **type-safe** i18n — invalid keys don't compile. Locale lives in the URL (`/en`, `/ja`). |
-| 🏆 **Achievements** | Unlockable with rarities, secrets, a localStorage save, and an animated toast. |
-| 🌤️ **Live weather + date** | Client-side [Open-Meteo](https://open-meteo.com/) fetch with a skeleton while loading. |
-| 🖥️ **niri desktop (NNN)** | A scrollable-tiling window manager with a Noctalia-style bar, workspaces, overview, and Alt-based keybinds (`Alt+H/J/K/L` focus, `Alt+T` float, `Alt+Z` align, `Alt+Shift+Q` close). |
-| 🪟 **Floating widgets** | Draggable, resizable Notes (rich text), Clock (alarm / timer / stopwatch + laps), Calendar, and Media player — with click-to-front and a unified z-order. |
-| 🔔 **Notifications** | Bell popover with a dismissible, data-driven list; fires on alarm / timer / stopwatch and supports "remind me in N min" reminders that persist across reloads. |
-| ⌨️ **In-browser terminal** | An [xterm.js](https://xtermjs.org/) shell over a virtual filesystem (`ls`/`cat`/`cd`/`nvim`), fastfetch, and a CodeMirror editor — plus a launcher (`Alt+D`) and a desktop-settings panel. |
-| ⚡ **Fully static** | No server — exported to GitHub Pages and deployed on every push to `main`. |
+|                                |                                                                                                                                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ⌨️ **Vim command palette**     | Press <kbd>:</kbd> to open, type `:q` (or <kbd>Esc</kbd> / click-away / ✕) to close. Jump to any theme, page, or language.                                                                 |
+| 🎨 **Three themes**            | Light · Dark · Terminal, with a View-Transition **circular reveal** on switch. Cycle with <kbd>d</kbd> or the toggle.                                                                      |
+| 🌏 **Bilingual (EN / 日本語)** | End-to-end **type-safe** i18n — invalid keys don't compile. Locale lives in the URL (`/en`, `/ja`).                                                                                        |
+| 🏆 **Achievements**            | Unlockable with rarities, secrets, a localStorage save, and an animated toast.                                                                                                             |
+| 🌤️ **Live weather + date**     | Client-side [Open-Meteo](https://open-meteo.com/) fetch with a skeleton while loading.                                                                                                     |
+| 🖥️ **niri desktop (NNN)**      | A scrollable-tiling window manager with a Noctalia-style bar, workspaces, overview, and Alt-based keybinds (`Alt+H/J/K/L` focus, `Alt+T` float, `Alt+Z` align, `Alt+Shift+Q` close).       |
+| 🪟 **Floating widgets**        | Draggable, resizable Notes (rich text), Clock (alarm / timer / stopwatch + laps), Calendar, and Media player — with click-to-front and a unified z-order.                                  |
+| 🔔 **Notifications**           | Bell popover with a dismissible, data-driven list; fires on alarm / timer / stopwatch and supports "remind me in N min" reminders that persist across reloads.                             |
+| ⌨️ **In-browser terminal**     | An [xterm.js](https://xtermjs.org/) shell over a virtual filesystem (`ls`/`cat`/`cd`/`nvim`), fastfetch, and a CodeMirror editor — plus a launcher (`Alt+D`) and a desktop-settings panel. |
+| ⚡ **Fully static**            | No server — exported to GitHub Pages and deployed on every push to `main`.                                                                                                                 |
 
 ## Tech Stack
 
-- **Next.js 16.3** (App Router, `output: "export"`) · **React 19** · **Tailwind CSS v4**
+- **Next.js 16.4** (App Router, `output: "export"`) · **React 19** · **Tailwind CSS v4**
 - **TypeScript 7** (the Go-native `tsc`), strict — `noUncheckedIndexedAccess`,
   `exactOptionalPropertyTypes`, and friends
 - **[Biome](https://biomejs.dev/) 2.4** — one binary for the git hook, CI, and `just` (no ESLint/Prettier)
@@ -100,10 +100,9 @@ terminal. Shipped fully static to GitHub Pages.
 ## Requirements
 
 > [!IMPORTANT]
-> KangaFlow rides the bleeding edge on purpose: **Next.js 16.3 (preview)** and
-> **TypeScript 7** (Go-native `tsc`). Stable Next.js 16.2 crashes on TS 7, so
-> Next is pinned to a preview release via `experimental.useTypeScriptCli` —
-> expect churn until 16.3 is GA.
+> KangaFlow rides the bleeding edge on purpose: **Next.js 16.4** and
+> **TypeScript 7** (Go-native `tsc`). Next.js 16.2 crashes on TS 7; from 16.3
+> on, `next build` type-checks with the project-local `tsc` CLI by default.
 
 - **Node.js 26** and **pnpm 11** — or simply run `nix develop`, which pins both
   (plus `just` and the git hooks) for a reproducible environment.
@@ -139,18 +138,18 @@ Without Nix, you'll need Node 26 + pnpm 11 yourself, then `pnpm install && just 
 
 Everything runs through `just`:
 
-| Recipe | What it does |
-| --- | --- |
-| `just dev` | Start the dev server |
-| `just build` | Production static export → `./out` |
-| `just fix` | Auto-fix + format (Biome, writes) |
-| `just lint` | Lint + format check, no writes (what CI runs) |
-| `just typecheck` | Type-check with native TS 7 |
-| `just test` | Run the Vitest suite |
-| `just verify` | The full gate: lint + typecheck + test + build |
-| `just preview` | Serve `./out` under the `/KangaFlow` base path |
-| `just review` / `just review-count` | List / count files pending human review |
-| `just push` | `verify`, then push (CI deploys) |
+| Recipe                              | What it does                                   |
+| ----------------------------------- | ---------------------------------------------- |
+| `just dev`                          | Start the dev server                           |
+| `just build`                        | Production static export → `./out`             |
+| `just fix`                          | Auto-fix + format (Biome, writes)              |
+| `just lint`                         | Lint + format check, no writes (what CI runs)  |
+| `just typecheck`                    | Type-check with native TS 7                    |
+| `just test`                         | Run the Vitest suite                           |
+| `just verify`                       | The full gate: lint + typecheck + test + build |
+| `just preview`                      | Serve `./out` under the `/KangaFlow` base path |
+| `just review` / `just review-count` | List / count files pending human review        |
+| `just push`                         | `verify`, then push (CI deploys)               |
 
 ## Project Layout
 
@@ -203,15 +202,15 @@ This site publishes its navigation to AI agents running **in the browser** via
 Learning CG). Rather than an agent guessing at links or clicking around, it
 calls a tool.
 
-| Tool | Arguments | Does | Reads or writes |
-|---|---|---|---|
-| `kangaflow-list-pages` | — | Lists the pages that can be navigated to | Read-only |
-| `kangaflow-go-to-page` | `page` (string) | Navigates to a page by name; matching is case-insensitive and partial, so "the timeline page" works | Navigates |
-| `kangaflow-language` | `language` (string, optional) | Switches between `en` and `ja`, or reports the current one when called with no argument | Changes the language |
+| Tool                   | Arguments                     | Does                                                                                                | Reads or writes      |
+| ---------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------- | -------------------- |
+| `kangaflow-list-pages` | —                             | Lists the pages that can be navigated to                                                            | Read-only            |
+| `kangaflow-go-to-page` | `page` (string)               | Navigates to a page by name; matching is case-insensitive and partial, so "the timeline page" works | Navigates            |
+| `kangaflow-language`   | `language` (string, optional) | Switches between `en` and `ja`, or reports the current one when called with no argument             | Changes the language |
 
 An unknown `page` — or an unsupported `language` — answers with the list of real
 ones, so the agent can retry without a second call. Omitting an optional
-argument means *read*, never *guess*. A refusal also sets `isError: true` on the
+argument means _read_, never _guess_. A refusal also sets `isError: true` on the
 result alongside the message, so an agent that checks the flag and one that only
 reads the prose both get the same answer.
 
@@ -243,8 +242,8 @@ first. Live at **<https://kangazero.github.io/KangaFlow/>**.
 ## AI Usage
 
 This repository is built with AI assistance under a disclosed policy — see
-[`AI_POLICY.md`](./AI_POLICY.md). AI-generated prose carries a *"Human review
-needed"* marker until a human confirms it (`just review` tracks the backlog), and
+[`AI_POLICY.md`](./AI_POLICY.md). AI-generated prose carries a _"Human review
+needed"_ marker until a human confirms it (`just review` tracks the backlog), and
 AI-assisted commits disclose the tool via an `Assisted-by:` trailer.
 
 ## Credits
@@ -255,14 +254,14 @@ into the repo, external data and services, fonts, and assets.
 
 ### Vendored UI code
 
-| Source | License | Where |
-| --- | --- | --- |
-| [shadcn/ui](https://ui.shadcn.com/) (`radix-mira`) | MIT | `components/ui/` |
-| [animate-ui](https://animate-ui.com/) | MIT + Commons Clause | `components/animate-ui/` |
-| [React Bits](https://reactbits.dev/) | MIT + Commons Clause | `Carousel`, `BorderGlow`, `Counter`, `ElasticSlider`, `LightRays`, `Particles`, `PixelBlast`, the PillNav-style dock in `site-header`, the rolling `locale-transition` |
-| [animate.css](https://github.com/animate-css/animate.css) | MIT | `components/bounceIn.css` |
-| [oneko.js](https://github.com/adryd325/oneko.js) + the [lots-o-nekos](https://github.com/raynepaws/lots-o-nekos) fork | MIT | `lib/oneko.ts`, `assets/oneko/default.png` — sprite from the original *Neko* by Masayuki Koba |
-| [KanjiVG](https://github.com/KanjiVG/kanjivg) | CC BY-SA 3.0 | stroke paths in `components/ui/apple-hello-effect.tsx` |
+| Source                                                                                                                | License              | Where                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [shadcn/ui](https://ui.shadcn.com/) (`radix-mira`)                                                                    | MIT                  | `components/ui/`                                                                                                                                                       |
+| [animate-ui](https://animate-ui.com/)                                                                                 | MIT + Commons Clause | `components/animate-ui/`                                                                                                                                               |
+| [React Bits](https://reactbits.dev/)                                                                                  | MIT + Commons Clause | `Carousel`, `BorderGlow`, `Counter`, `ElasticSlider`, `LightRays`, `Particles`, `PixelBlast`, the PillNav-style dock in `site-header`, the rolling `locale-transition` |
+| [animate.css](https://github.com/animate-css/animate.css)                                                             | MIT                  | `components/bounceIn.css`                                                                                                                                              |
+| [oneko.js](https://github.com/adryd325/oneko.js) + the [lots-o-nekos](https://github.com/raynepaws/lots-o-nekos) fork | MIT                  | `lib/oneko.ts`, `assets/oneko/default.png` — sprite from the original _Neko_ by Masayuki Koba                                                                          |
+| [KanjiVG](https://github.com/KanjiVG/kanjivg)                                                                         | CC BY-SA 3.0         | stroke paths in `components/ui/apple-hello-effect.tsx`                                                                                                                 |
 
 > [!NOTE]
 > **Commons Clause** (animate-ui, React Bits) permits personal and commercial
@@ -271,20 +270,20 @@ into the repo, external data and services, fonts, and assets.
 
 ### Data & services
 
-| Source | Terms | Used for |
-| --- | --- | --- |
-| [Open-Meteo](https://open-meteo.com/) | Data [CC BY 4.0](https://open-meteo.com/en/license); free below 10k calls/day, non-commercial | live weather in the header date box |
-| 地球地図日本 (*Global Map of Japan*), [Geospatial Information Authority of Japan](https://www.gsi.go.jp/kankyochiri/globalmap.html), via [dataofjapan/land](https://github.com/dataofjapan/land) | Attribution to 地球地図日本 required; free for non-commercial use | ward geometry in `lib/tokyo-map-data.ts` (regenerate with `just map-data`) |
-| [GitHub REST API](https://docs.github.com/en/rest) | GitHub ToS | follower count in the footer |
+| Source                                                                                                                                                                                           | Terms                                                                                         | Used for                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [Open-Meteo](https://open-meteo.com/)                                                                                                                                                            | Data [CC BY 4.0](https://open-meteo.com/en/license); free below 10k calls/day, non-commercial | live weather in the header date box                                        |
+| 地球地図日本 (_Global Map of Japan_), [Geospatial Information Authority of Japan](https://www.gsi.go.jp/kankyochiri/globalmap.html), via [dataofjapan/land](https://github.com/dataofjapan/land) | Attribution to 地球地図日本 required; free for non-commercial use                             | ward geometry in `lib/tokyo-map-data.ts` (regenerate with `just map-data`) |
+| [GitHub REST API](https://docs.github.com/en/rest)                                                                                                                                               | GitHub ToS                                                                                    | follower count in the footer                                               |
 
 ### Fonts
 
-| Font | License | Role |
-| --- | --- | --- |
-| [Geist](https://github.com/vercel/geist-font) — Vercel × basement.studio | SIL OFL 1.1 | body sans |
-| [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | SIL OFL 1.1 | monospace (self-hosted) |
+| Font                                                                      | License     | Role                         |
+| ------------------------------------------------------------------------- | ----------- | ---------------------------- |
+| [Geist](https://github.com/vercel/geist-font) — Vercel × basement.studio  | SIL OFL 1.1 | body sans                    |
+| [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono)              | SIL OFL 1.1 | monospace (self-hosted)      |
 | [DotGothic16](https://github.com/fontworks-fonts/DotGothic16) — Fontworks | SIL OFL 1.1 | Japanese dot-matrix headings |
-| [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) (Symbols Only) | MIT | terminal / fastfetch glyphs |
+| [Nerd Fonts](https://github.com/ryanoasis/nerd-fonts) (Symbols Only)      | MIT         | terminal / fastfetch glyphs  |
 
 ### Audio
 
@@ -292,9 +291,9 @@ Media-player tracks in `public/tracks/` are third-party recordings, included for
 demonstration and not relicensed:
 
 - **MapleStory — Intro Theme** © Wizet / Nexon
-- **Bortkiewicz** — Nocturne *(Diana)*, Op. 24/1
-- **Kapustin** — Eight Concert Etudes, Op. 40/7 — *Nikolai Lugansky*
-- **Chopin** — Etude in A♭ major, Op. 10/10 — *Yunchan Lim*
+- **Bortkiewicz** — Nocturne _(Diana)_, Op. 24/1
+- **Kapustin** — Eight Concert Etudes, Op. 40/7 — _Nikolai Lugansky_
+- **Chopin** — Etude in A♭ major, Op. 10/10 — _Yunchan Lim_
 
 <!-- TODO(human): confirm you're happy shipping these recordings, or swap them
      for public-domain / self-recorded performances. -->
@@ -310,7 +309,7 @@ demonstration and not relicensed:
   compositor the desktop page imitates.
 - **[Noctalia](https://github.com/noctalia-dev/noctalia-shell)** — the shell the
   top bar is modelled on.
-- ***Persona 5*** (Atlus) — the header date box's angular red/cyan styling.
+- _**Persona 5**_ (Atlus) — the header date box's angular red/cyan styling.
 
 ## License
 

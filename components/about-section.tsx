@@ -138,7 +138,7 @@ function Avatar() {
     <div className="avatar-wrapper">
       <div className="avatar-polygon-container" />
       {failed ? (
-        <span className="absolute inset-0 flex items-center justify-center font-heading font-medium text-muted-foreground text-xl">
+        <span className="font-heading text-muted-foreground absolute inset-0 flex items-center justify-center text-xl font-medium">
           {`${person.firstName.at(0) ?? ""}${person.lastName.at(0) ?? ""}`}
         </span>
       ) : (
@@ -368,7 +368,7 @@ function RubyName({ isJapanese }: { isJapanese: boolean }) {
       >)
     : person.rubyName
   return (
-    <h1 className="text-center font-heading font-semibold text-3xl leading-relaxed sm:text-4xl">
+    <h1 className="font-heading text-center text-3xl leading-relaxed font-semibold sm:text-4xl">
       {rubyNameOrdered.map((part) => (
         <motion.span
           className="inline-block"
@@ -380,7 +380,7 @@ function RubyName({ isJapanese }: { isJapanese: boolean }) {
             {part.romaji}
             <rt
               className={cn(
-                "text-[0.4em] text-muted-foreground",
+                "text-muted-foreground text-[0.4em]",
                 "ruby-furigana",
                 isJapanese ? "fade-in" : "fade-out"
               )}
@@ -540,7 +540,7 @@ export function AboutSection() {
               <p className="text-muted-foreground text-sm">
                 {person.role} @ {person.workplace}
               </p>
-              <div className="flex flex-col gap-2 text-pretty text-sm/relaxed">
+              <div className="flex flex-col gap-2 text-sm/relaxed text-pretty">
                 {person.intro.map((line) => (
                   <p key={line}>{line}</p>
                 ))}
@@ -651,7 +651,7 @@ export function AboutSection() {
             >
               {/* Technical skills — plain text, top of the résumé. */}
               <div className="flex flex-col gap-1">
-                <h3 className="font-heading font-medium text-sm">
+                <h3 className="font-heading text-sm font-medium">
                   {translate("about.technical")}
                 </h3>
                 <p className="text-muted-foreground text-sm">
@@ -668,7 +668,7 @@ export function AboutSection() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ul className="flex list-disc flex-col gap-2 pl-4 marker:text-muted-foreground">
+                    <ul className="marker:text-muted-foreground flex list-disc flex-col gap-2 pl-4">
                       {job.achievements.map((achievement) => (
                         <li key={achievement}>{achievement}</li>
                       ))}
@@ -681,7 +681,7 @@ export function AboutSection() {
             <Section
               id={educationSection.id}
               title={
-                <h2 className="font-heading font-semibold text-2xl sm:text-3xl">
+                <h2 className="font-heading text-2xl font-semibold sm:text-3xl">
                   {translate("about.education")}
                 </h2>
               }

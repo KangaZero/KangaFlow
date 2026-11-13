@@ -105,7 +105,7 @@ export function MediaMiniPill({
         <motion.div
           animate={{ opacity: 1, scale: 1 }}
           className={cn(
-            "flex items-center gap-0.5 overflow-hidden border border-border/50 bg-card/80 px-1.5 py-0.5 backdrop-blur",
+            "border-border/50 bg-card/80 flex items-center gap-0.5 overflow-hidden border px-1.5 py-0.5 backdrop-blur",
             vertical && "flex-col"
           )}
           exit={{ opacity: 0, scale: 0 }}
@@ -122,7 +122,7 @@ export function MediaMiniPill({
                 <motion.div
                   animate={vertical ? { y: [0, "-50%"] } : { x: [0, "-50%"] }}
                   className={cn(
-                    "flex text-[10px] text-foreground",
+                    "text-foreground flex text-[10px]",
                     vertical ? "flex-col" : ""
                   )}
                   exit={{ opacity: 1 }}
@@ -153,7 +153,7 @@ export function MediaMiniPill({
                 <motion.span
                   animate={{ opacity: 1 }}
                   className={cn(
-                    "block truncate text-[10px] text-foreground",
+                    "text-foreground block truncate text-[10px]",
                     vertical && "[writing-mode:vertical-rl]"
                   )}
                   exit={{ opacity: 0 }}
@@ -170,7 +170,7 @@ export function MediaMiniPill({
           {/* Divider */}
           <div
             className={cn(
-              "shrink-0 bg-border/50",
+              "bg-border/50 shrink-0",
               vertical ? "h-px w-3" : "h-3 w-px"
             )}
           />

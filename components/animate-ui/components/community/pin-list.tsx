@@ -100,12 +100,12 @@ function PinList({
                   transition={transition}
                 >
                   <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-background p-2">
+                    <div className="bg-background rounded-lg p-2">
                       <item.icon className="size-5 text-neutral-500 dark:text-neutral-400" />
                     </div>
                     <div>
-                      <div className="font-semibold text-sm">{item.name}</div>
-                      <div className="font-medium text-neutral-500 text-xs dark:text-neutral-400">
+                      <div className="text-sm font-semibold">{item.name}</div>
+                      <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
                         {item.info}
                       </div>
                     </div>
@@ -124,7 +124,7 @@ function PinList({
             {unpinned.length > 0 && (
               <motion.p
                 className={cn(
-                  "mb-2 px-3 font-medium text-neutral-500 text-sm dark:text-neutral-300",
+                  "mb-2 px-3 text-sm font-medium text-neutral-500 dark:text-neutral-300",
                   labelClassName
                 )}
                 key="all-label"
@@ -152,12 +152,12 @@ function PinList({
                   transition={transition}
                 >
                   <div className="flex items-center gap-2">
-                    <div className="rounded-lg bg-background p-2">
+                    <div className="bg-background rounded-lg p-2">
                       <item.icon className="size-5 text-neutral-500 dark:text-neutral-400" />
                     </div>
                     <div>
-                      <div className="font-semibold text-sm">{item.name}</div>
-                      <div className="font-medium text-neutral-500 text-xs dark:text-neutral-400">
+                      <div className="text-sm font-semibold">{item.name}</div>
+                      <div className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
                         {item.info}
                       </div>
                     </div>

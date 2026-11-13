@@ -87,7 +87,7 @@ function PortfolioCard({ portfolio }: { portfolio: Portfolio }) {
   return (
     <div className="flex flex-col gap-4 pb-4">
       <div className="flex items-center gap-3">
-        <h3 className="font-heading font-semibold text-lg">{portfolio.name}</h3>
+        <h3 className="font-heading text-lg font-semibold">{portfolio.name}</h3>
         {portfolio.current ? (
           <Badge variant="secondary">{translate("timeline.current")}</Badge>
         ) : null}
@@ -121,7 +121,7 @@ function PortfolioCard({ portfolio }: { portfolio: Portfolio }) {
             >
               <Image
                 alt={portfolio.name}
-                className="h-auto w-full rounded-xl border border-border object-cover shadow-md"
+                className="border-border h-auto w-full rounded-xl border object-cover shadow-md"
                 src={portfolio.image}
               />
             </a>
@@ -145,16 +145,16 @@ export function TimelineView() {
       {/* Reading-progress bar: fills as you scroll the page. */}
       <ScrollProgressProvider global>
         <ScrollProgress
-          className="fixed inset-x-0 top-0 z-50 h-1 origin-left bg-primary"
+          className="bg-primary fixed inset-x-0 top-0 z-50 h-1 origin-left"
           mode="scaleX"
         />
       </ScrollProgressProvider>
       <header className="mx-auto max-w-7xl px-6 pt-16 pb-2 md:px-10">
         <LocaleTransition>
-          <h1 className="font-heading font-semibold text-3xl sm:text-4xl">
+          <h1 className="font-heading text-3xl font-semibold sm:text-4xl">
             {translate("timeline.heading")}
           </h1>
-          <p className="mt-2 text-muted-foreground text-sm">
+          <p className="text-muted-foreground mt-2 text-sm">
             {translate("timeline.subtitle")}
           </p>
         </LocaleTransition>

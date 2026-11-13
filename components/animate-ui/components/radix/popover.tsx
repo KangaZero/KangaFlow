@@ -38,7 +38,7 @@ function PopoverContent({
       <PopoverContentPrimitive
         align={align}
         className={cn(
-          "w-72 origin-(--radix-popover-content-transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden",
+          "bg-popover text-popover-foreground w-72 origin-(--radix-popover-content-transform-origin) rounded-md border p-4 shadow-md outline-hidden",
           className
         )}
         sideOffset={sideOffset}

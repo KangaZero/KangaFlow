@@ -239,7 +239,7 @@ export function DraggableWindow({
           <motion.div
             animate={{ opacity: 1, scale: 1, y: 0 }}
             className={cn(
-              "scrollbar-none pointer-events-auto fixed flex flex-col overflow-hidden text-card-foreground",
+              "text-card-foreground pointer-events-auto fixed flex scrollbar-none flex-col overflow-hidden",
               GLASS_SURFACE[envSettings.glass],
               anchorClass
             )}
@@ -269,17 +269,17 @@ export function DraggableWindow({
           >
             {/* Title bar — drag handle */}
             <div
-              className="flex cursor-grab items-center gap-2 border-border border-b bg-muted/40 px-3 py-2 active:cursor-grabbing"
+              className="border-border bg-muted/40 flex cursor-grab items-center gap-2 border-b px-3 py-2 active:cursor-grabbing"
               onPointerDown={(e) => dragControls.start(e)}
             >
               <GripHorizontal
                 aria-hidden
-                className="size-4 shrink-0 text-muted-foreground"
+                className="text-muted-foreground size-4 shrink-0"
               />
               {icon != null ? (
-                <span className="shrink-0 text-muted-foreground">{icon}</span>
+                <span className="text-muted-foreground shrink-0">{icon}</span>
               ) : null}
-              <span className="flex-1 truncate font-medium text-muted-foreground text-xs">
+              <span className="text-muted-foreground flex-1 truncate text-xs font-medium">
                 {title}
               </span>
               <Button
@@ -357,7 +357,7 @@ export function DraggableWindow({
               {/* Corner indicator */}
               <svg
                 aria-hidden={true}
-                className="absolute right-1 bottom-1 text-muted-foreground/40"
+                className="text-muted-foreground/40 absolute right-1 bottom-1"
                 fill="none"
                 height={8}
                 viewBox="0 0 8 8"
