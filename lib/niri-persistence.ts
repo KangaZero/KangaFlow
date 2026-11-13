@@ -37,6 +37,7 @@ import {
 } from "@/lib/niri-window-cache"
 import { safeLocalStorage } from "@/lib/safe-storage"
 import type { MatrixOptions } from "@/lib/terminal/cmatrix"
+import { isRecord } from "@/lib/typescript-hooks/is-record"
 
 export const NIRI_WORKSPACES_STORAGE_KEY = "kangaflow:niriWorkspaces"
 
@@ -49,10 +50,6 @@ const DEFAULT_TITLES: Record<AppId, string> = {
 }
 const MATRIX_THEMES = ["light", "dark", "terminal"] as const
 const SPAWN_WIDTH = 1 / 2
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null
-}
 
 function isAppId(value: unknown): value is AppId {
   return (

@@ -2,9 +2,10 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import "./header-date.css"
 import "./bounceIn.css"
+import { CloudOff } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { getDailyWeatherForecast } from "@/api/queries/getDailyWeatherForecast"
+import { useWeatherForecast } from "@/api/queries/useWeatherForecast"
 import { HoverPopover } from "@/components/ui/hover-popover"
 import { Skeleton } from "@/components/ui/skeleton"
 import { WorkplaceCard } from "@/components/workplace-card"
@@ -22,12 +23,13 @@ const HeaderDate = () => {
   const { unlockAchievement } = useAchievements()
   const { translate } = useLocale()
   const [latitude, longitude] = person.locationCoordinates
-  const { data } = getDailyWeatherForecast({
+  const weatherState = useWeatherForecast({
     forecastDays: 1,
     latitude,
     longitude,
-    timezone: person.location,
   })
+  const weather =
+    weatherState.status === "success" ? weatherState.weather : null
   const [isHovered, setIsHovered] = useState(false)
   const [isJellyHoverAnimationOver, setIsJellyHoverAnimationOver] =
     useState(false)
@@ -43,19 +45,19 @@ const HeaderDate = () => {
   const lastDayChar = day.slice(-1)
   const date = now?.getDate() ?? null
   const hour = now?.getHours() ?? null
-  const isDay = data
-    ? Boolean(data.current.is_day)
+  const isDay = weather
+    ? weather.isDay
     : hour !== null
       ? hour >= 6 && hour < 18
       : true
   const month = now
     ? (translate("headerDate.months")[now.getMonth()] ?? "")
     : ""
-  const temperature = data ? Math.round(data.current.temperature_2m) : 0
+  const temperature = weather ? Math.round(weather.temperature) : 0
 
   // WMOCodeDescriptions -> lib/weather + i18n (the KangaFlow equivalent).
   // Defaults to the clear-sky (code 0) icon/description when data is missing.
-  const code = data?.current.weather_code ?? 0
+  const code = weather?.code ?? 0
   const WeatherIcon = WEATHER_ICON[getWeatherIconKey(code, isDay)]
   const weatherDescription = translate(
     `weather.conditions.${code}.${isDay ? "day" : "night"}`
@@ -128,22 +130,37 @@ const HeaderDate = () => {
               <div className="p5DateDay">
                 <span className="p5Day bounceIn">{allButLastCharDay}</span>
                 <span className="p5Day2 bounceIn">{lastDayChar}</span>
-                {data ? (
+                {weatherState.status === "success" && (
                   <span
                     className="p5DateWeatherIcon bounceIn"
                     title={weatherDescription}
                   >
                     <WeatherIcon className="size-8" />
                   </span>
-                ) : (
-                  <Skeleton className="p5DateWeatherIcon bounceIn size-8 rounded-full" />
+                )}
+                {weatherState.status === "loading" && (
+                  <Skeleton
+                    aria-label={translate("weather.loading")}
+                    className="p5DateWeatherIcon bounceIn size-8 rounded-full"
+                    role="status"
+                  />
+                )}
+                {weatherState.status === "error" && (
+                  <span
+                    aria-label={translate("weather.unavailable")}
+                    className="p5DateWeatherIcon bounceIn text-muted-foreground"
+                    role="img"
+                    title={translate("weather.unavailable")}
+                  >
+                    <CloudOff aria-hidden="true" className="size-8" />
+                  </span>
                 )}
               </div>
               <div className="p5DateMonthDay">
                 <span className="p5Month bounceIn">{month}</span>
                 <span className="p5DateMonthDaySeparator bounceIn">/</span>
                 <span className="p5Date bounceIn">{date}</span>
-                {data && (
+                {weather && (
                   <>
                     <span
                       className="p5Temperature bounceIn"
