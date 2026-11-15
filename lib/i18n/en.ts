@@ -4,6 +4,7 @@
 // `as const` is required so nested string literals become the typed key surface.
 const en = {
   about: {
+    achievements: "Achievements",
     education: "Education",
     intro: {
       brand: "KangaFlow",

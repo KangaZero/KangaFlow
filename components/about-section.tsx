@@ -2,7 +2,13 @@
 
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { Coins, ExternalLink, Mail, MousePointer2 } from "lucide-react"
+import {
+  ChevronRight,
+  Coins,
+  ExternalLink,
+  Mail,
+  MousePointer2,
+} from "lucide-react"
 import {
   AnimatePresence,
   motion,
@@ -10,7 +16,7 @@ import {
   useReducedMotion,
   useScroll,
 } from "motion/react"
-import Image from "next/image"
+import Image, { type StaticImageData } from "next/image"
 import { useEffect, useRef, useState } from "react"
 import type { IconType } from "react-icons"
 import { FaGithub, FaLinkedin } from "react-icons/fa6"
@@ -27,17 +33,12 @@ import {
   SiTypescript,
   SiVuedotjs,
 } from "react-icons/si"
+import accentureMark from "@/assets/accenture-mark.svg"
 import avatarSrc from "@/assets/avatar.png"
+import usydCrest from "@/assets/usyd-crest.svg"
 import { LocaleTransition } from "@/components/locale-transition"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Carousel, type CarouselItem } from "@/components/ui/carousel"
 import { GradientText } from "@/components/ui/gradient-text"
 import type { TranslationKey } from "@/lib/i18n"
@@ -97,6 +98,14 @@ const SOCIAL_ICONS: Record<string, IconType> = {
   linkedin: FaLinkedin,
 }
 
+// Employer marks for the Work rows, keyed by the `logo` slug in person.ts.
+// `label` is a text monogram for employers without a glyph worth shrinking;
+// `mono` marks are single-colour art that has to invert on dark themes.
+const WORK_LOGOS = {
+  accenture: { src: accentureMark },
+  timewitch: { label: "TW" },
+} as const
+
 // One shared reveal, played as each block scrolls into view.
 //TODO consider moving all motion variants to their own lib file
 const reveal = {
@@ -128,6 +137,40 @@ function Section({
       {title}
       {children}
     </motion.section>
+  )
+}
+
+// Brand marks (employers, school) share one frosted capsule instead of a solid
+// plate: the glass surface adapts to every theme, and only the artwork itself
+// carries colour.
+const BrandMark = ({
+  src,
+  label,
+  mono = false,
+}: {
+  src?: StaticImageData
+  label?: string
+  mono?: boolean
+}) => {
+  return (
+    <span className="bg-foreground/5 ring-foreground/10 relative flex size-10 shrink-0 items-center justify-center rounded-full shadow-sm ring-1 backdrop-blur-md">
+      {src ? (
+        <Image
+          alt=""
+          className={cn(
+            "object-contain p-2.5",
+            mono && "terminal:invert dark:invert"
+          )}
+          fill
+          sizes="40px"
+          src={src}
+        />
+      ) : (
+        <span className="font-heading text-[13px] font-semibold tracking-[0.08em]">
+          {label}
+        </span>
+      )}
+    </span>
   )
 }
 
@@ -667,23 +710,41 @@ export function AboutSection() {
                   </p>
                 </div>
 
-                {person.work.experiences.map((job) => (
-                  <Card key={`${job.company}-${job.role}`}>
-                    <CardHeader>
-                      <CardTitle className="text-base">{job.company}</CardTitle>
-                      <CardDescription>
-                        {job.role} · {job.timeframe}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="marker:text-muted-foreground flex list-disc flex-col gap-2 pl-4">
-                        {job.achievements.map((achievement) => (
-                          <li key={achievement}>{achievement}</li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                  </Card>
-                ))}
+                <div className="flex flex-col gap-6">
+                  {person.work.experiences.map((job) => (
+                    <div
+                      className="flex items-start gap-4"
+                      key={`${job.company}-${job.role}`}
+                    >
+                      <BrandMark {...WORK_LOGOS[job.logo]} />
+                      <div className="flex min-w-0 flex-col">
+                        <p className="font-heading text-sm font-medium">
+                          {job.company}
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          {job.role} · {job.timeframe}
+                        </p>
+                        <details className="group mt-1.5">
+                          <summary className="text-muted-foreground flex w-fit cursor-pointer items-center gap-1 text-[10px] tracking-wide uppercase select-none [&::-webkit-details-marker]:hidden">
+                            <ChevronRight
+                              aria-hidden
+                              className="size-3 transition-transform group-open:rotate-90"
+                            />
+                            {translate("about.achievements")}
+                            <span className="tabular-nums">
+                              ({job.achievements.length})
+                            </span>
+                          </summary>
+                          <ul className="marker:text-muted-foreground mt-2 flex list-disc flex-col gap-1.5 pl-4 text-xs">
+                            {job.achievements.map((achievement) => (
+                              <li key={achievement}>{achievement}</li>
+                            ))}
+                          </ul>
+                        </details>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </Section>
               {/* Education */}
               <Section
@@ -695,13 +756,17 @@ export function AboutSection() {
                 }
               >
                 {person.studies.map((study) => (
-                  <Card key={study.name}>
-                    <CardHeader>
-                      <CardTitle className="text-base">{study.name}</CardTitle>
-                      <CardDescription>{study.title}</CardDescription>
-                    </CardHeader>
-                    <CardContent>{study.description}</CardContent>
-                  </Card>
+                  <div className="flex items-center gap-4" key={study.name}>
+                    <BrandMark mono src={usydCrest} />
+                    <div className="flex min-w-0 flex-col">
+                      <p className="font-heading text-sm font-medium">
+                        {study.name}
+                      </p>
+                      <p className="text-muted-foreground text-xs text-pretty">
+                        {study.title} · {study.description}
+                      </p>
+                    </div>
+                  </div>
                 ))}
               </Section>
             </LocaleTransition>

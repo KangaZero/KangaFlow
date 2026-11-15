@@ -20,7 +20,6 @@ export function WorkplaceCard({ className }: { className?: string }) {
       <p className="text-foreground font-semibold">
         {translate("headerCard.workplace")}
       </p>
-      <p>{translate("headerCard.status")}</p>
       <TokyoMap
         className="mt-2 w-64"
         label={translate("headerCard.map.label")}

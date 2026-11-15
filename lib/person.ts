@@ -103,6 +103,7 @@ export const person = {
 
   // Work section. `subtitle`/`subtitleBlur` drive the TrueFocus heading: the
   // first word reads "Backend" while blurred and "Frontend" while focused.
+  // `logo` keys the mark shown next to the employer.
   work: {
     experiences: [
       {
@@ -113,6 +114,7 @@ export const person = {
           "Transformed the Developer Experience (DX) by replacing slow, manual documentation processes with automated tools, significantly reducing project delivery times and operational costs.",
         ],
         company: "Accenture",
+        logo: "accenture",
         role: "Frontend Developer",
         timeframe: "2023 - Present",
       },
@@ -121,6 +123,7 @@ export const person = {
           "Developed a design system that unified the brand across multiple platforms, improving design consistency by 40%.",
         ],
         company: "Timewitch",
+        logo: "timewitch",
         role: "Fullstack intern",
         timeframe: "2023",
       },

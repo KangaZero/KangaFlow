@@ -3,6 +3,7 @@
 // compiler enforces that this object is assignable to the English base shape.
 const ja = {
   about: {
+    achievements: "実績",
     education: "学歴",
     intro: {
       brand: "KangaFlow",
