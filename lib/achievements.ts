@@ -26,7 +26,7 @@ export type AchievementTrigger =
   | "speedrun"
   | "locked"
 
-type AchievementDef = {
+export type AchievementDef = {
   id: string
   rarity: Rarity
   trigger: AchievementTrigger
@@ -152,3 +152,87 @@ export const RARITY_ICON: Record<Rarity, LucideIcon> = {
 export function rarityColorVar(rarity: Rarity): string {
   return `var(--rarity-${rarity})`
 }
+
+// Collector "grade" printed on a slab label, one per rarity. Mirrors the PSA
+// 1–10 scale purely for flavour; the label text lives in i18n
+// (`achievements.grades.<rarity>`).
+export const RARITY_GRADE = {
+  common: 6,
+  legendary: 9,
+  mythic: 10,
+  rare: 8,
+  uncommon: 7,
+} as const satisfies Record<Rarity, number>
+
+// 1-based position in the catalogue, printed as "#03/10" on each card.
+export function setNumber(id: AchievementId): number {
+  return ACHIEVEMENTS.findIndex((achievement) => achievement.id === id) + 1
+}
+
+// An unlock counts as "new" for this long after it happened.
+export const NEW_UNLOCK_WINDOW_MS = 24 * 60 * 60 * 1000
+
+export function isNewlyUnlocked(
+  achievement: Achievement,
+  now: number
+): boolean {
+  if (!achievement.isUnlocked) return false
+  const age = now - Date.parse(achievement.unlockedAt)
+  return age >= 0 && age < NEW_UNLOCK_WINDOW_MS
+}
+
+export const ACHIEVEMENT_SORTS = ["set", "rarity", "recent"] as const
+export type AchievementSort = (typeof ACHIEVEMENT_SORTS)[number]
+
+const unlockedTime = (achievement: Achievement): number =>
+  achievement.isUnlocked ? Date.parse(achievement.unlockedAt) : -1
+
+// Pure, non-mutating sort. `set` = catalogue order; `rarity` = rarest first;
+// `recent` = latest unlock first, locked last. Ties fall back to set order.
+export function sortAchievements(
+  achievements: readonly Achievement[],
+  sort: AchievementSort
+): Achievement[] {
+  const bySet = (a: Achievement, b: Achievement) =>
+    setNumber(a.id) - setNumber(b.id)
+  const compare: Record<
+    AchievementSort,
+    (a: Achievement, b: Achievement) => number
+  > = {
+    rarity: (a, b) =>
+      RARITIES.indexOf(getAchievementDef(b.id).rarity) -
+        RARITIES.indexOf(getAchievementDef(a.id).rarity) || bySet(a, b),
+    recent: (a, b) => unlockedTime(b) - unlockedTime(a) || bySet(a, b),
+    set: bySet,
+  }
+  return achievements.toSorted(compare[sort])
+}
+
+// Speedrun split (ms) as a stopwatch string, e.g. 58_420 → "0:58.42".
+export function formatSplit(ms: number): string {
+  const totalCentis = Math.max(0, Math.round(ms / 10))
+  const minutes = Math.floor(totalCentis / 6000)
+  const seconds = Math.floor((totalCentis % 6000) / 100)
+  const centis = totalCentis % 100
+  return `${minutes}:${String(seconds).padStart(2, "0")}.${String(centis).padStart(2, "0")}`
+}
+
+// One star per rarity tier, derived from RARITIES order (common ★ … mythic ★★★★★).
+export function rarityStars(rarity: Rarity): string {
+  return "★".repeat(RARITIES.indexOf(rarity) + 1)
+}
+
+// How many achievements of each rarity exist in the catalogue (collection
+// totals for "Rare 1/3"). Counts are derived from ACHIEVEMENTS; `satisfies`
+// fails the build if a rarity is added without a row here (no cast needed,
+// unlike Object.fromEntries which forgets the key type).
+const countInCatalogue = (rarity: Rarity): number =>
+  ACHIEVEMENTS.filter((achievement) => achievement.rarity === rarity).length
+
+export const CATALOGUE_COUNT_BY_RARITY = {
+  common: countInCatalogue("common"),
+  legendary: countInCatalogue("legendary"),
+  mythic: countInCatalogue("mythic"),
+  rare: countInCatalogue("rare"),
+  uncommon: countInCatalogue("uncommon"),
+} as const satisfies Record<Rarity, number>

@@ -23,6 +23,13 @@ const en = {
     filter: {
       label: "Filter by rarity",
     },
+    grades: {
+      common: "EX-MT",
+      legendary: "MINT",
+      mythic: "GEM MT",
+      rare: "NM-MT",
+      uncommon: "NM",
+    },
     heading: "Achievements",
     hidden: "???",
     items: {
@@ -81,6 +88,24 @@ const en = {
       results: "result(s)",
     },
     share: "Share",
+    slab: {
+      new: "New",
+      notPulled: "Not yet pulled",
+      rarityLabel: "Rarity",
+      sealed: "Sealed",
+      secret: "Secret",
+      secretHint: "A secret achievement. Keep exploring.",
+      series: "KangaFlow 2026",
+      setLabel: "Set",
+      splitLabel: "Split",
+      statusLabel: "Status",
+    },
+    sort: {
+      label: "Sort by",
+      rarity: "Rarity",
+      recent: "Recent",
+      set: "Set #",
+    },
     toast: {
       dismiss: "Dismiss",
       unlocked: "Achievement unlocked!",

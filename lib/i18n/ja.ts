@@ -22,6 +22,13 @@ const ja = {
     filter: {
       label: "レア度で絞り込み",
     },
+    grades: {
+      common: "EX-MT",
+      legendary: "MINT",
+      mythic: "GEM MT",
+      rare: "NM-MT",
+      uncommon: "NM",
+    },
     heading: "実績",
     hidden: "???",
     items: {
@@ -80,6 +87,24 @@ const ja = {
       results: "件",
     },
     share: "共有",
+    slab: {
+      new: "NEW",
+      notPulled: "未入手",
+      rarityLabel: "レア度",
+      sealed: "未開封",
+      secret: "シークレット",
+      secretHint: "シークレット実績。探索を続けよう。",
+      series: "KangaFlow 2026",
+      setLabel: "番号",
+      splitLabel: "タイム",
+      statusLabel: "状態",
+    },
+    sort: {
+      label: "並び替え",
+      rarity: "レア度順",
+      recent: "新着順",
+      set: "番号順",
+    },
     toast: {
       dismiss: "閉じる",
       unlocked: "実績を解除しました！",
