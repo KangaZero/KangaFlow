@@ -1,5 +1,7 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+import "@/components/widgets/widgets.css"
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -253,7 +255,7 @@ export function BrowserWindow({
   }
 
   return (
-    <div className="bg-background text-foreground flex h-full w-full flex-col">
+    <div className="env-app bg-background text-foreground flex h-full w-full flex-col">
       {/* Tab strip */}
       <div className="border-border bg-card flex items-center gap-1 overflow-x-auto border-b px-2 py-1">
         {tabs.map((t) => {

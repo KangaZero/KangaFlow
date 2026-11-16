@@ -13,7 +13,7 @@ import {
 } from "motion/react"
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { GLASS_SURFACE, WINDOW_ELEVATION } from "@/components/niri/glass"
+import { GLASS_SURFACE } from "@/components/niri/glass"
 import {
   WIDGET_STATE_STORAGE_PREFIX as STORAGE_PREFIX,
   WIDGET_ANCHOR_CLASS,
@@ -83,23 +83,17 @@ export type DraggableWindowProps = {
   children: React.ReactNode
 }
 
-// Where a closing window "minimises" to: bottom-centre of the viewport (the
-// dock area). Expressed as a transform-origin relative to the window, so a
-// scale-down visibly flies toward that point without touching the drag x/y
-// motion values (those persist across open/close and must keep the position).
-function minimiseOrigin(el: HTMLElement | null): {
-  originX: number
-  originY: number
-} {
-  if (el == null) return { originX: 0.5, originY: 1 }
-  const rect = el.getBoundingClientRect()
-  const dockX = window.innerWidth / 2
-  const dockY = window.innerHeight - 24
-  return {
-    originX: rect.width > 0 ? (dockX - rect.left) / rect.width : 0.5,
-    originY: rect.height > 0 ? (dockY - rect.top) / rect.height : 1,
-  }
-}
+// "Tiled shell" corners: low radius even if the user's window radius setting is
+// larger (the setting still applies below this cap).
+const MAX_TILE_RADIUS = 10
+
+// Top-down reveal on open, folding back up on close. Percent insets on both
+// ends so Motion can interpolate them; the open state reaches past the edges
+// so the focus halo (box-shadow outside the frame) is never clipped.
+const revealClip = (radius: number, open: boolean): string =>
+  open
+    ? `inset(-8% -8% -14% -8% round ${radius}px)`
+    : `inset(0% 0% 100% 0% round ${radius}px)`
 
 export function DraggableWindow({
   isOpen,
@@ -123,6 +117,7 @@ export function DraggableWindow({
 }: DraggableWindowProps): React.JSX.Element | null {
   const { envSettings, animationPref } = useGlobalStates()
   const reduceMotion = isReducedMotion(animationPref, useReducedMotion())
+  const radius = Math.min(envSettings.windowRadius, MAX_TILE_RADIUS)
   const { bringToFront, activeId } = useZOrder()
   // Latest handlers read through refs so the focus effect can stay off them
   // (their identity changes each render; depending on them would re-raise every
@@ -318,16 +313,14 @@ export function DraggableWindow({
                 ? { ...growMargins, height: totalHeight, opacity: 1 }
                 : {
                     ...growMargins,
-                    filter: "blur(0px)",
+                    clipPath: revealClip(radius, true),
                     height: totalHeight,
                     opacity: 1,
-                    scale: 1,
                   }
             }
             className={cn(
-              "text-card-foreground pointer-events-auto fixed flex scrollbar-none flex-col overflow-hidden transition-shadow duration-300",
+              "env-tile text-card-foreground pointer-events-auto fixed flex scrollbar-none flex-col overflow-hidden",
               GLASS_SURFACE[envSettings.glass],
-              isActive ? WINDOW_ELEVATION.focused : WINDOW_ELEVATION.rest,
               attention && !reduceMotion && "window-attention",
               anchorClass
             )}
@@ -338,15 +331,14 @@ export function DraggableWindow({
             dragElastic={0.06}
             dragListener={false}
             dragMomentum={false}
-            exit="minimise"
+            exit="fold"
             initial={
               reduceMotion
                 ? { height: totalHeight, opacity: 0 }
                 : {
-                    filter: "blur(8px)",
+                    clipPath: revealClip(radius, false),
                     height: totalHeight,
                     opacity: 0,
-                    scale: 0.94,
                   }
             }
             onDragEnd={() =>
@@ -357,41 +349,38 @@ export function DraggableWindow({
             onPointerDownCapture={focus}
             ref={windowRef}
             style={{
-              borderRadius: envSettings.windowRadius,
+              borderRadius: radius,
               width: size.width,
               x,
               y,
             }}
             transition={{
               ...SPRING_CONTENT,
-              filter: { duration: 0.26, ease: "easeOut" },
+              clipPath: { duration: 0.36, ease: [0.2, 0.8, 0.2, 1] },
               height:
                 isResizing || reduceMotion ? { duration: 0 } : SPRING_ACCORDION,
               marginBottom: reduceMotion ? { duration: 0 } : SPRING_ACCORDION,
               marginTop: reduceMotion ? { duration: 0 } : SPRING_ACCORDION,
+              opacity: { duration: 0.2 },
             }}
-            // Exit: squeeze, then shrink toward the dock (bottom-centre).
+            // Exit: fold back up (mirror of the open reveal).
             variants={{
-              minimise: () =>
-                reduceMotion
-                  ? { opacity: 0, transition: { duration: 0.12 } }
-                  : {
-                      ...minimiseOrigin(windowRef.current),
-                      opacity: [1, 0.9, 0],
-                      scaleX: [1, 0.7, 0.06],
-                      scaleY: [1, 0.55, 0.06],
-                      transition: {
-                        duration: 0.38,
-                        ease: [0.5, 0, 0.75, 0],
-                        times: [0, 0.45, 1],
-                      },
+              fold: reduceMotion
+                ? { opacity: 0, transition: { duration: 0.12 } }
+                : {
+                    clipPath: revealClip(radius, false),
+                    opacity: 0,
+                    transition: {
+                      clipPath: { duration: 0.24, ease: [0.5, 0, 0.75, 0] },
+                      opacity: { delay: 0.12, duration: 0.12 },
                     },
+                  },
             }}
           >
-            {/* Title bar — drag handle. Native-style: icon, centred title,
-                close; the title brightens when the window is active. */}
+            {/* Title bar — drag handle. Quiet tile chrome: icon, left-aligned
+                small title, close; the title brightens when the window is active. */}
             <div
-              className="grid cursor-grab grid-cols-[1.5rem_1fr_1.5rem] items-center gap-2 px-3 py-2 select-none active:cursor-grabbing"
+              className="flex h-8 shrink-0 cursor-grab items-center gap-2 pr-1.5 pl-3 select-none active:cursor-grabbing"
               onPointerDown={(e) => {
                 const el = windowRef.current
                 if (el != null) {
@@ -410,7 +399,7 @@ export function DraggableWindow({
               </span>
               <span
                 className={cn(
-                  "truncate text-center text-xs font-semibold tracking-tight transition-colors duration-300",
+                  "flex-1 truncate text-[11.5px] font-medium tracking-wide transition-colors duration-300",
                   isActive ? "text-foreground" : "text-muted-foreground"
                 )}
               >
@@ -418,7 +407,7 @@ export function DraggableWindow({
               </span>
               <Button
                 aria-label={`Close ${title}`}
-                className="size-6 justify-self-end transition-transform active:scale-90"
+                className="size-6 shrink-0 transition-transform active:scale-90"
                 onClick={onClose}
                 size="icon"
                 variant="ghost"

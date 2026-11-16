@@ -1,5 +1,7 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+import "@/components/widgets/widgets.css"
+
 import { User } from "lucide-react"
 import { person } from "@/lib/person"
 import { useLocale } from "@/providers/locale-provider"
@@ -12,7 +14,7 @@ export function AboutWindow(): React.JSX.Element {
   const techNames = person.technologies.map((tech) => tech.name).join(", ")
 
   return (
-    <div className="bg-background text-foreground flex h-full w-full flex-col">
+    <div className="env-app bg-background text-foreground flex h-full w-full flex-col">
       <div className="border-border bg-card text-card-foreground flex items-center gap-2 border-b px-4 py-3">
         <User aria-hidden className="text-muted-foreground size-5" />
         <span className="font-heading text-sm font-semibold">

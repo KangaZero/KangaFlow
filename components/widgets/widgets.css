@@ -2,6 +2,42 @@
 /* Environment window chrome extras ("frosted glass"). Colours come from the
    theme tokens (--primary, --card), so every theme gets its own accent. */
 
+/* "Tiled shell" look (visual only — floating windows keep every behaviour).
+   Quiet chrome, low radii, flat translucent surface with a hairline border;
+   the active window gets a crisp accent border + soft halo. Unlayered CSS, so
+   it overrides GLASS_SURFACE's rim border/shadow utilities while keeping the
+   user's glass level (background opacity + blur). */
+.env-tile,
+.env-app {
+  /* Sharpen every rounded-* utility inside windows in one place. */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 7px;
+  --radius-2xl: 8px;
+  --radius-3xl: 9px;
+  --radius-4xl: 10px;
+}
+.env-tile {
+  border: 1px solid color-mix(in oklch, var(--foreground) 9%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, white 5%, transparent);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+.env-tile[data-focused="true"] {
+  border-color: var(--primary);
+  box-shadow:
+    0 0 0 3px color-mix(in oklch, var(--primary) 16%, transparent),
+    0 14px 36px -18px rgb(0 0 0 / 0.55);
+}
+
+/* Flat surfaces inside tiles: inner drop shadows become hairlines. */
+.env-tile :is(.shadow-sm, .shadow),
+.env-app :is(.shadow-sm, .shadow) {
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--foreground) 10%, transparent);
+}
+
 /* Attention state (e.g. a ringing alarm): the frame breathes a soft accent
    glow every 2s (0.5 Hz, far below any flashing threshold). Layered on top of
    the elevation shadow so the depth stays. */

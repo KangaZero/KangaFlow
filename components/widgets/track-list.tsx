@@ -50,7 +50,7 @@ export const TrackList = memo(function TrackList({
                   className={cn(
                     "group relative flex items-center rounded-lg",
                     isActive
-                      ? "text-primary-foreground"
+                      ? "text-foreground"
                       : "text-foreground hover:bg-muted/60"
                   )}
                   initial={{ opacity: 0, y: -6 }}
@@ -66,7 +66,7 @@ export const TrackList = memo(function TrackList({
                 >
                   {isActive ? (
                     <motion.span
-                      className="bg-primary absolute inset-0 rounded-lg"
+                      className="bg-primary/15 ring-primary/30 absolute inset-0 rounded-lg ring-1"
                       layoutId="track-list-active"
                       transition={SPRING_PILL}
                     />
@@ -84,9 +84,7 @@ export const TrackList = memo(function TrackList({
                         <span
                           className={cn(
                             "ml-auto shrink-0 font-mono text-[10px] tabular-nums",
-                            isActive
-                              ? "text-primary-foreground/70"
-                              : "text-muted-foreground"
+                            isActive ? "text-primary" : "text-muted-foreground"
                           )}
                         >
                           {formatSecondsToMMSS(t.duration)}
@@ -96,7 +94,7 @@ export const TrackList = memo(function TrackList({
                         className={cn(
                           "truncate text-xs",
                           isActive
-                            ? "text-primary-foreground/80"
+                            ? "text-muted-foreground"
                             : "text-muted-foreground"
                         )}
                       >
@@ -106,7 +104,7 @@ export const TrackList = memo(function TrackList({
                         className={cn(
                           "truncate text-xs",
                           isActive
-                            ? "text-primary-foreground/80"
+                            ? "text-muted-foreground"
                             : "text-muted-foreground"
                         )}
                       >
@@ -119,7 +117,7 @@ export const TrackList = memo(function TrackList({
                     className={cn(
                       "relative mr-1 flex size-7 shrink-0 items-center justify-center rounded-lg opacity-100 transition-opacity",
                       isActive
-                        ? "text-primary-foreground/70 hover:text-primary-foreground"
+                        ? "text-primary hover:text-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                     onClick={(e) => {
@@ -159,7 +157,7 @@ export const TrackList = memo(function TrackList({
                   className={cn(
                     "group relative flex items-center rounded-lg",
                     isActive
-                      ? "text-primary-foreground"
+                      ? "text-foreground"
                       : "text-foreground hover:bg-muted/60"
                   )}
                   initial={{ opacity: 0, y: -6 }}
@@ -175,7 +173,7 @@ export const TrackList = memo(function TrackList({
                 >
                   {isActive ? (
                     <motion.span
-                      className="bg-primary absolute inset-0 rounded-lg"
+                      className="bg-primary/15 ring-primary/30 absolute inset-0 rounded-lg ring-1"
                       layoutId="track-list-active"
                       transition={SPRING_PILL}
                     />
@@ -193,9 +191,7 @@ export const TrackList = memo(function TrackList({
                         <span
                           className={cn(
                             "ml-auto shrink-0 font-mono text-[10px] tabular-nums",
-                            isActive
-                              ? "text-primary-foreground/70"
-                              : "text-muted-foreground"
+                            isActive ? "text-primary" : "text-muted-foreground"
                           )}
                         >
                           {formatSecondsToMMSS(t.duration)}
@@ -205,7 +201,7 @@ export const TrackList = memo(function TrackList({
                         className={cn(
                           "truncate text-xs",
                           isActive
-                            ? "text-primary-foreground/80"
+                            ? "text-muted-foreground"
                             : "text-muted-foreground"
                         )}
                       >
@@ -215,7 +211,7 @@ export const TrackList = memo(function TrackList({
                         className={cn(
                           "truncate text-xs",
                           isActive
-                            ? "text-primary-foreground/80"
+                            ? "text-muted-foreground"
                             : "text-muted-foreground"
                         )}
                       >
@@ -228,7 +224,7 @@ export const TrackList = memo(function TrackList({
                     className={cn(
                       "relative mr-1 flex size-7 shrink-0 items-center justify-center rounded-lg transition-opacity",
                       isActive
-                        ? "text-primary-foreground/70 hover:text-primary-foreground"
+                        ? "text-primary hover:text-foreground"
                         : "text-muted-foreground hover:text-foreground",
                       "opacity-0 group-hover:opacity-100"
                     )}
