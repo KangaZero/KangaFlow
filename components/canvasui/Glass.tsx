@@ -695,7 +695,7 @@ export function Glass({ children, className, style, ...options }: GlassProps) {
   return (
     <div className={className} style={{ position: "relative", ...style }}>
       <canvas
-        // @ts-expect-error experimental html-in-canvas attribute
+        content="drawable"
         layoutsubtree="true"
         ref={sourceRef}
         style={
@@ -707,6 +707,7 @@ export function Glass({ children, className, style, ...options }: GlassProps) {
       >
         {native ? (
           <div
+            drawable=""
             ref={contentRef}
             style={{
               height: "100%",
