@@ -14,5 +14,8 @@ export default defineConfig({
     // Keep the defaults and also skip build/nix artifacts (the nix devshell
     // stages a repo copy under .direnv/ that would be discovered twice).
     exclude: [...configDefaults.exclude, ".direnv/**", "out/**", ".next/**"],
+    // jsdom suites run in parallel workers; under CPU contention (a build or a
+    // headless browser alongside) the 5s default flaked unrelated tests.
+    testTimeout: 15_000,
   },
 })

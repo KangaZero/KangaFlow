@@ -16,11 +16,12 @@ describe("hintLabels", () => {
 
   it("is prefix-free — no label is a prefix of another", () => {
     const labels = hintLabels(120)
-    for (const a of labels) {
-      for (const b of labels) {
-        if (a !== b) expect(b.startsWith(a)).toBe(false)
-      }
-    }
+    // One assertion over all pairs (14,400 expect() calls was slow enough to
+    // time out under parallel CPU load); a failure lists the offending pairs.
+    const prefixPairs = labels.flatMap((a) =>
+      labels.filter((b) => a !== b && b.startsWith(a)).map((b) => `${a}→${b}`)
+    )
+    expect(prefixPairs).toEqual([])
   })
 
   it("uses single characters while they suffice", () => {
