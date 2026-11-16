@@ -72,6 +72,15 @@ export const SPRING_PANEL = {
 } as const
 
 // General layout reveal (environment overlay).
+// Environment overview zoom out/in: every workspace tile, the backdrop and the
+// bar's slide share THIS spring, so the whole scene moves as one. A hint of
+// overshoot; retargeting mid-flight (toggle twice) reverses smoothly.
+export const SPRING_OVERVIEW = {
+  damping: 27,
+  stiffness: 220,
+  type: "spring",
+} as const
+
 export const SPRING_LAYOUT = {
   damping: 30,
   stiffness: 320,

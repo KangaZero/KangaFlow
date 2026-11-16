@@ -239,6 +239,10 @@ const en = {
       title: "Application launcher",
       unpin: "Unpin",
     },
+    overview: {
+      region: "Workspace overview",
+      selected: "selected",
+    },
     settings: {
       accent: "Accent",
       appearance: "Appearance",

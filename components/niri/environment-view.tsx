@@ -44,12 +44,22 @@ import { wallpaperStyle } from "@/components/niri/wallpaper"
 import { WallpaperDialog } from "@/components/niri/wallpaper-dialog"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useStoredString } from "@/lib/hooks/use-safe-storage"
+import { isReducedMotion } from "@/lib/isReducedMotion"
 import {
   SPRING_LAYOUT,
-  SPRING_PIP,
+  SPRING_OVERVIEW,
   SPRING_TILE,
   SPRING_WORKSPACE,
 } from "@/lib/motion"
+import {
+  desktopTransform,
+  OVERVIEW_RADIUS,
+  OVERVIEW_SCALE,
+  overviewTransform,
+  type StripLayout,
+  stripLayout,
+  type Viewport,
+} from "@/lib/niri-overview"
 import { loadNiriState, saveNiriState } from "@/lib/niri-persistence"
 import { matrixToGlyphRain } from "@/lib/terminal/cmatrix"
 import { readSourceFiles } from "@/lib/terminal/source"
@@ -100,9 +110,12 @@ function clockNowInHHMM(): `${Hour}:${Minute}` {
 // quick cursor movements across the edge don't flicker the bar.
 function AutoHideBar({
   position,
+  suppressed,
   children,
 }: {
   position: BarPosition
+  /** Overview open: stay tucked away and ignore hover reveals. */
+  suppressed: boolean
   children: React.ReactNode
 }): React.JSX.Element {
   const [revealed, setRevealed] = useState(false)
@@ -138,17 +151,171 @@ function AutoHideBar({
         position === "left" && "inset-y-0 left-0",
         position === "right" && "inset-y-0 right-0"
       )}
-      onPointerEnter={reveal}
-      onPointerLeave={scheduleHide}
+      inert={suppressed}
+      onPointerEnter={suppressed ? undefined : reveal}
+      onPointerLeave={suppressed ? undefined : scheduleHide}
     >
       <motion.div
-        animate={revealed ? visible : hidden}
+        animate={revealed && !suppressed ? visible : hidden}
         initial={hidden}
         transition={shouldReduceMotion ? { duration: 0 } : SPRING_LAYOUT}
       >
         <div className="p-2">{children}</div>
       </motion.div>
     </div>
+  )
+}
+
+// In-flow bar slot. Entering the overview slides the bar out toward its own
+// edge while the slot collapses (so the strip grows into the freed space);
+// exiting brings it back. Same spring as the overview zoom so the scene moves
+// as one; reduced motion = a short fade. Bar logic/settings are untouched.
+function BarSlot({
+  position,
+  hidden,
+  reduced,
+  className,
+  children,
+}: {
+  position: BarPosition
+  hidden: boolean
+  reduced: boolean
+  className: string
+  children: React.ReactNode
+}): React.JSX.Element {
+  const isH = position === "top" || position === "bottom"
+  const offscreen = isH
+    ? { y: position === "top" ? "-100%" : "100%" }
+    : { x: position === "left" ? "-100%" : "100%" }
+  const onscreen = isH ? { y: 0 } : { x: 0 }
+  const size = isH
+    ? { height: hidden ? 0 : "auto" }
+    : { width: hidden ? 0 : "auto" }
+  const transition = reduced
+    ? { duration: 0.15, height: { duration: 0 }, width: { duration: 0 } }
+    : SPRING_OVERVIEW
+  return (
+    <motion.div
+      animate={{ ...size, opacity: hidden ? 0 : 1 }}
+      className="shrink-0 overflow-hidden"
+      inert={hidden}
+      initial={false}
+      transition={transition}
+    >
+      <motion.div
+        animate={hidden && !reduced ? offscreen : onscreen}
+        className={className}
+        initial={false}
+        transition={transition}
+      >
+        {children}
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// One workspace in the overview: a full-strip-sized box laid out exactly like
+// the live strip, moved only by transform. It starts at the desktop placement
+// (active = fullscreen, others stacked just off-screen) and springs to its
+// slot in the zoomed-out vertical strip; exit reverses it. Rings/labels are
+// divided by the scale so they read crisp at any zoom.
+function OverviewTile({
+  index,
+  selectedIndex,
+  viewport,
+  layout,
+  selected,
+  empty,
+  label,
+  reduced,
+  onEnter,
+  children,
+}: {
+  index: number
+  selectedIndex: number
+  viewport: Viewport
+  layout: StripLayout
+  selected: boolean
+  empty: boolean
+  label: string
+  reduced: boolean
+  onEnter: () => void
+  children: React.ReactNode
+}): React.JSX.Element {
+  const desk = desktopTransform(index, selectedIndex, viewport)
+  const over = overviewTransform(index, selectedIndex, viewport)
+  const ring = (px: number) => `${px / OVERVIEW_SCALE}px`
+  const transition = reduced ? { duration: 0 } : SPRING_OVERVIEW
+  return (
+    <motion.div
+      animate={{ ...over, borderRadius: OVERVIEW_RADIUS / OVERVIEW_SCALE }}
+      className="absolute top-0 left-0 overflow-hidden"
+      exit={{ ...desk, borderRadius: 0 }}
+      initial={{ ...desk, borderRadius: 0 }}
+      style={{
+        height: viewport.height,
+        transformOrigin: "0 0",
+        width: viewport.width,
+      }}
+      transition={transition}
+    >
+      {/* The whole tile is the "enter this workspace" target; windows sit
+      above it with their own focus-and-enter buttons. */}
+      <button
+        aria-current={selected ? "true" : undefined}
+        aria-label={label}
+        className="absolute inset-0 z-0 cursor-pointer"
+        onClick={onEnter}
+        tabIndex={selected ? 0 : -1}
+        type="button"
+      />
+      {empty ? (
+        <span className="text-muted-foreground/50 pointer-events-none absolute inset-0 flex items-center justify-center text-4xl tracking-[0.3em]">
+          —
+        </span>
+      ) : (
+        <div
+          className="pointer-events-none absolute inset-y-0 z-10 flex items-stretch"
+          style={{
+            gap: GAP,
+            padding: PAD,
+            transform: `translateX(${layout.offsetX}px)`,
+          }}
+        >
+          {children}
+        </div>
+      )}
+      {/* Selection ring / hairline + label: fade in with the zoom. */}
+      <motion.div
+        animate={{ opacity: 1 }}
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-20 rounded-[inherit]"
+        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }}
+        style={{
+          boxShadow: selected
+            ? `inset 0 0 0 ${ring(3)} var(--color-primary)`
+            : `inset 0 0 0 ${ring(1)} var(--color-border)`,
+        }}
+        transition={transition}
+      />
+      <motion.span
+        animate={{ opacity: 1 }}
+        aria-hidden
+        className="bg-card/70 text-foreground border-border pointer-events-none absolute z-30 rounded-full border font-medium whitespace-nowrap backdrop-blur-md"
+        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }}
+        style={{
+          fontSize: ring(12),
+          left: ring(12),
+          padding: `${ring(3)} ${ring(10)}`,
+          top: ring(12),
+        }}
+        transition={transition}
+      >
+        {label}
+      </motion.span>
+    </motion.div>
   )
 }
 
@@ -217,7 +384,10 @@ export function EnvironmentView() {
     globalMatrixOptions,
     globalMatrixRunning,
     setGlobalMatrixOptions,
+    animationPref,
   } = useGlobalStates()
+  // App animation preference + OS setting (drives the overview zoom / bar).
+  const reduced = isReducedMotion(animationPref, reduceMotion)
 
   // Hydrate the persisted layout after mount (reading storage during the initial
   // render would mismatch the server HTML). `hydratedRef` gates the persist
@@ -274,7 +444,11 @@ export function EnvironmentView() {
   )
   const closePanel = useCallback(() => setPanel(null), [])
   const [clock, setClock] = useState(clockNowInHHMM)
-  const [stripWidth, setStripWidth] = useState(0)
+  const [stripSize, setStripSize] = useState<Viewport>({ height: 0, width: 0 })
+  const stripWidth = stripSize.width
+  // Overview layer still mounted (true from opening until its exit zoom has
+  // finished), so the live strip stays hidden underneath until then.
+  const [overviewLayer, setOverviewLayer] = useState(false)
   const [wallpaperStyleProp, setWallpaperStylePro] = useState<CSSProperties>(
     wallpaperStyle(settings.wallpaper, theme)
   )
@@ -289,9 +463,6 @@ export function EnvironmentView() {
 
   const files = useMemo(() => readSourceFiles(), [])
   const stripRef = useRef<HTMLDivElement>(null)
-  const overviewRef = useRef<HTMLDivElement>(null)
-  const activeTileRef = useRef<HTMLDivElement>(null)
-  const activeWinRef = useRef<HTMLDivElement>(null)
 
   // Launcher entries, localised. `name`/`subtitle` framing is translated; brand
   // and binary names (kitty/nvim/firefox/KangaZero) stay literal inside the JA
@@ -331,35 +502,47 @@ export function EnvironmentView() {
   useEffect(() => {
     const el = stripRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => setStripWidth(el.clientWidth))
+    const measure = () =>
+      setStripSize({ height: el.clientHeight, width: el.clientWidth })
+    const ro = new ResizeObserver(measure)
     ro.observe(el)
-    setStripWidth(el.clientWidth)
+    measure()
     return () => ro.disconnect()
   }, [])
 
-  // Overview auto-scroll. Both refs live inside the one scroll container
-  // (`overviewRef`), and `scrollIntoView` walks *every* scroll ancestor — so
-  // scrolling the focused window also drags its workspace tile into view;
-  // scrolling both is redundant. Refs (not ids) because only one node can ever
-  // be the active tile / focused window, so React re-points them on commit and
-  // there is nothing to collide. Deps are state-derived: ref mutations don't
-  // re-run effects, so `state.workspaces` is what tells us focus moved.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <needed for auto-scroll>
+  useEffect(() => {
+    if (state.overview) setOverviewLayer(true)
+  }, [state.overview])
+
+  // Roving focus: while the overview is open, DOM focus follows the selected
+  // workspace (↑/↓ already change the selection via the engine).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: state.active is the trigger; the query reads the DOM it produces.
   useEffect(() => {
     if (!state.overview) return
-    // Focused window when the workspace has one, else the tile itself (empty
-    // workspace) — one call, since the window's ancestors include the tile.
-    const target = activeWinRef.current ?? activeTileRef.current
-    if (!target) return
-    target.scrollIntoView({
-      behavior: reduceMotion ? "instant" : "smooth",
-      // `block` is consumed by the vertical root scroller (workspace tiles),
-      // `inline` by the horizontal column row — centring both mirrors the live
-      // strip's centre-aligned focus.
-      block: "center",
-      inline: "center",
+    const frame = requestAnimationFrame(() => {
+      document
+        .querySelector<HTMLElement>(
+          '[data-niri-overview] button[aria-current="true"]'
+        )
+        ?.focus({ preventScroll: true })
     })
-  }, [state.overview, state.active, state.workspaces, reduceMotion])
+    return () => cancelAnimationFrame(frame)
+  }, [state.overview, state.active])
+
+  // After the exit zoom, hand focus back to the focused window's input surface
+  // (the overview's buttons are gone and the live strip is visible again).
+  const restoreWindowFocus = useCallback(() => {
+    setOverviewLayer(false)
+    requestAnimationFrame(() => {
+      const id = getFocusedWindow(state)?.id
+      if (!id) return
+      const el = document.querySelector<HTMLElement>(`[data-win-id="${id}"]`)
+      const inner = el?.querySelector<HTMLElement>(
+        ".xterm-helper-textarea, .cm-content"
+      )
+      ;(inner ?? el)?.focus({ preventScroll: true })
+    })
+  }, [state])
 
   // Compositor-level key capture: panel toggles always work; otherwise niri
   // tiling binds are intercepted (preventDefault + stopPropagation) before the
@@ -462,28 +645,17 @@ export function EnvironmentView() {
     .map((col, index) => ({ col, index }))
     .filter((entry) => entry.col.floating)
 
-  // Column pixel widths + the x offset that centres the focused tiled column.
-  const widths = tiled.map(({ col }) => Math.max(240, col.width * stripWidth))
-  let cursor = PAD
-  const centers = widths.map((w) => {
-    const center = cursor + w / 2
-    cursor += w + GAP
-    return center
-  })
-  // Focused column's position within the tiled subset (−1 when a floated column
-  // holds focus — then keep the strip centred on its first column).
-  const focusedTiledPos = tiled.findIndex(({ index }) => index === focusedCol)
-  const focusedPos = focusedTiledPos === -1 ? 0 : focusedTiledPos
-  const focusedCenter = centers[focusedPos] ?? stripWidth / 2
-  const focusedWidth = widths[focusedPos] ?? 0
-
-  // Both modes are the same subtraction — only the anchor differs. Centre mode
-  // pulls the column's midpoint to the viewport midpoint; non-centre pulls its
-  // left edge to the padding, so the focused column is always on screen instead
-  // of the strip staying pinned at x=0 with the column off to the right.
-  const offsetX = state.isCenterAligned
-    ? stripWidth / 2 - focusedCenter
-    : PAD - (focusedCenter - focusedWidth / 2)
+  // Column pixel widths + the x offset that brings the focused tiled column
+  // into place (centre mode: midpoint to the viewport midpoint; otherwise its
+  // left edge to the padding). Shared with the overview tiles (lib/niri-overview).
+  const { widths, offsetX } = stripLayout(
+    columns,
+    focusedCol,
+    stripWidth,
+    state.isCenterAligned,
+    PAD,
+    GAP
+  )
 
   const focusedWin = getFocusedWindow(state)
   const pips = state.workspaces.map((w) => ({
@@ -522,7 +694,7 @@ export function EnvironmentView() {
   const barBefore =
     settings.barPosition === "top" || settings.barPosition === "left"
 
-  const bar = state.overview ? null : (
+  const bar = (
     <NoctaliaBar
       activeWindowTitle={focusedWin?.title ?? ""}
       barPosition={settings.barPosition}
@@ -587,7 +759,14 @@ export function EnvironmentView() {
             )}
           >
             {barBefore && !settings.autoHideBar ? (
-              <div className="p-2 px-4">{bar}</div>
+              <BarSlot
+                className="p-2 px-4"
+                hidden={state.overview}
+                position={settings.barPosition}
+                reduced={reduced}
+              >
+                {bar}
+              </BarSlot>
             ) : null}
 
             {/* Scrollable-tiling strip */}
@@ -601,137 +780,14 @@ export function EnvironmentView() {
                 zIndex: stripZ,
               }}
             >
-              {state.overview ? (
-                // Overview (Alt+Shift+O): all workspaces stacked over a blurred
-                // wallpaper (backdrop-blur reads the desktop wallpaper behind).
-                // Alt+J/K move between them, Alt+Shift+J/K rearrange, click/Enter to
-                // enter. Each tile renders its windows' real content, live.
-                <motion.div
-                  animate={{ opacity: 1 }}
-                  className="pointer-events-auto absolute inset-0 flex scrollbar-none flex-col gap-3 overflow-hidden p-2"
-                  initial={{ opacity: 0 }}
-                  // Scroll container holding `layout`-animated tiles: without this,
-                  // Motion's projection ignores our scrollTop, measures the tiles as
-                  // having "moved", and FLIPs them straight back — the scroll lands
-                  // but is visually cancelled.
-                  layoutScroll
-                  ref={overviewRef}
+              {state.overview ? null : columns.length === 0 &&
+                settings.showStartingHint ? (
+                <h1
+                  className={cn(
+                    "flex h-full items-center justify-center text-center text-2xl [text-shadow:2px_1px_0_var(--color-sidebar-accent)]",
+                    overviewLayer && "invisible"
+                  )}
                 >
-                  {state.workspaces.map((ws) => {
-                    const wsLabel = `${translate("environment.bar.workspace")} ${ws.id}`
-                    return (
-                      // `layout` + a spring FLIP the tiles when Alt+Shift+J/K reorders
-                      // the array (stable key = ws.id). A transparent overlay button
-                      // owns the click so the live window content can render without
-                      // nesting interactive elements inside a <button>.
-                      <motion.div
-                        className={cn(
-                          "bg-card/20 relative flex min-h-[90vh] flex-1 flex-col gap-2 rounded-2xl border-2 p-3",
-                          ws.id === state.active
-                            ? "border-primary"
-                            : "border-border/40 hover:border-border"
-                        )}
-                        key={ws.id}
-                        layout
-                        ref={ws.id === state.active ? activeTileRef : undefined}
-                        transition={SPRING_PIP}
-                      >
-                        <button
-                          aria-label={wsLabel}
-                          className="bg-accent text-foreground absolute top-[-7] right-0 z-10 rounded-full border px-2 text-xs font-medium hover:scale-105"
-                          onClick={() => {
-                            dispatch({ id: ws.id, type: "focusWorkspace" })
-                            dispatch({ type: "toggleOverview" })
-                          }}
-                          type="button"
-                        >
-                          {DAIJI[ws.id]}
-                        </button>
-                        {/* Horizontal scroller for the columns: `inline: "center"`
-                        on the focused window resolves against this box. */}
-                        <div className="flex min-h-0 flex-1 scrollbar-none gap-0 overflow-x-hidden">
-                          {ws.columns.length === 0 ? (
-                            <span className="text-muted-foreground/50 flex flex-1 items-center justify-center text-xs">
-                              —
-                            </span>
-                          ) : (
-                            ws.columns.map((col, ci) => (
-                              <div
-                                className="mx-auto flex min-w-[80%] flex-col gap-2"
-                                key={col.id}
-                                // style={{ flex: 1}}
-                              >
-                                {col.windows.map((win, wi) => {
-                                  const winFocused =
-                                    ws.id === state.active &&
-                                    ci === ws.focused &&
-                                    wi === col.focused
-                                  return (
-                                    <div
-                                      className={cn(
-                                        "bg-card relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border-2 transition-colors",
-                                        wi <= col.windows.length - 1
-                                          ? "mr-2"
-                                          : "",
-                                        winFocused
-                                          ? "border-primary"
-                                          : "border-border hover:border-primary/60"
-                                      )}
-                                      id={String(col.windows.length)}
-                                      key={win.id}
-                                      // `winFocused` already requires the active
-                                      // workspace, so at most one window in the
-                                      // whole overview claims this ref.
-                                      ref={
-                                        winFocused ? activeWinRef : undefined
-                                      }
-                                    >
-                                      <div className="border-border bg-muted/40 flex items-center border-b px-2 py-1">
-                                        <span className="text-card-foreground truncate text-[10px] font-medium">
-                                          {win.title}
-                                        </span>
-                                      </div>
-                                      {/* Live content; pointer-events-none so the
-                                    window's overlay button owns the click. */}
-                                      <div className="pointer-events-none min-h-0 flex-1 overflow-hidden">
-                                        <WindowContent
-                                          dark={dark}
-                                          files={files}
-                                          onClose={() =>
-                                            dispatch({ type: "close" })
-                                          }
-                                          routePath={pathname}
-                                          win={win}
-                                        />
-                                      </div>
-                                      {/* Click a window to focus it, then exit. */}
-                                      <button
-                                        aria-label={win.title}
-                                        className="absolute inset-0 z-30"
-                                        onClick={() => {
-                                          dispatch({
-                                            column: ci,
-                                            type: "focusAt",
-                                            window: wi,
-                                            workspace: ws.id,
-                                          })
-                                          dispatch({ type: "toggleOverview" })
-                                        }}
-                                        type="button"
-                                      />
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </motion.div>
-                    )
-                  })}
-                </motion.div>
-              ) : columns.length === 0 && settings.showStartingHint ? (
-                <h1 className="flex h-full items-center justify-center text-center text-2xl [text-shadow:2px_1px_0_var(--color-sidebar-accent)]">
                   {translate("environment.hint")}
                 </h1>
               ) : (
@@ -739,7 +795,13 @@ export function EnvironmentView() {
                   animate={{ x: offsetX }}
                   className="absolute inset-y-0 flex items-stretch"
                   exit={{ opacity: 0, x: 80 }}
-                  style={{ gap: GAP, padding: PAD }}
+                  // Hidden (not unmounted) while the overview's exit zoom is
+                  // still playing on top, so the two never show at once.
+                  style={{
+                    gap: GAP,
+                    padding: PAD,
+                    visibility: overviewLayer ? "hidden" : undefined,
+                  }}
                   transition={SPRING_WORKSPACE}
                 >
                   <AnimatePresence initial={false} mode="popLayout">
@@ -904,15 +966,174 @@ export function EnvironmentView() {
                   </AnimatePresence>
                 </motion.div>
               )}
+
+              {/* Overview (Alt+Shift+O): zoom out to a vertical strip of every
+              workspace. Same engine actions as always (↑/↓ select, Alt+Shift+
+              J/K reorder, Enter/Esc/click enter); only the presentation is a
+              transform-driven zoom instead of a fade. */}
+              <AnimatePresence onExitComplete={restoreWindowFocus}>
+                {state.overview ? (
+                  <motion.div
+                    animate={{ opacity: 1 }}
+                    aria-label={translate("environment.overview.region")}
+                    className="pointer-events-auto absolute inset-0 overflow-hidden"
+                    data-niri-overview
+                    exit={{ opacity: reduced ? 0 : 1 }}
+                    initial={{ opacity: reduced ? 0 : 1 }}
+                    key="overview"
+                    role="region"
+                    transition={
+                      reduced ? { duration: 0.15 } : { duration: 0.01 }
+                    }
+                  >
+                    {/* Backdrop: blurs and dims the wallpaper with the zoom. */}
+                    <motion.div
+                      animate={{ opacity: 1 }}
+                      aria-hidden
+                      className="bg-background/25 absolute inset-0 backdrop-blur-xl"
+                      exit={{ opacity: 0 }}
+                      initial={{ opacity: 0 }}
+                      transition={reduced ? { duration: 0 } : SPRING_OVERVIEW}
+                    />
+                    {state.workspaces.map((ws, index) => {
+                      const selectedIndex = state.workspaces.findIndex(
+                        (w) => w.id === state.active
+                      )
+                      const wsLayout = stripLayout(
+                        ws.columns,
+                        ws.focused,
+                        stripSize.width,
+                        state.isCenterAligned,
+                        PAD,
+                        GAP
+                      )
+                      const wsLabel = `${DAIJI[ws.id] ?? ""} ${translate("environment.bar.workspace")} ${ws.id}`
+                      return (
+                        <OverviewTile
+                          empty={wsLayout.tiled.length === 0}
+                          index={index}
+                          key={ws.id}
+                          label={wsLabel}
+                          layout={wsLayout}
+                          onEnter={() => {
+                            dispatch({ id: ws.id, type: "focusWorkspace" })
+                            dispatch({ type: "toggleOverview" })
+                          }}
+                          reduced={reduced}
+                          selected={ws.id === state.active}
+                          selectedIndex={Math.max(0, selectedIndex)}
+                          viewport={stripSize}
+                        >
+                          {wsLayout.tiled.map((ci, ti) => {
+                            const col = ws.columns[ci]
+                            if (!col) return null
+                            return (
+                              <div
+                                className="flex flex-col"
+                                key={col.id}
+                                style={{ gap: GAP, width: wsLayout.widths[ti] }}
+                              >
+                                {col.windows.map((win, wi) => {
+                                  const winFocused =
+                                    ws.id === state.active &&
+                                    ci === ws.focused &&
+                                    wi === col.focused
+                                  const glassy =
+                                    win.app === "terminal" ||
+                                    win.app === "editor"
+                                  return (
+                                    <div
+                                      className={cn(
+                                        "pointer-events-auto relative flex min-h-0 flex-col overflow-hidden rounded-lg border shadow-xl",
+                                        glassy
+                                          ? "bg-card/30 backdrop-blur-md"
+                                          : "bg-card",
+                                        winFocused
+                                          ? "border-primary"
+                                          : "border-border"
+                                      )}
+                                      key={win.id}
+                                      style={{
+                                        flexBasis: 0,
+                                        flexGrow: win.height,
+                                        flexShrink: 1,
+                                      }}
+                                    >
+                                      <div className="border-border bg-muted/40 flex items-center gap-2 border-b px-3 py-1.5">
+                                        <span className="flex-1 truncate text-xs font-medium">
+                                          {win.title}
+                                        </span>
+                                      </div>
+                                      {/* Live content (same component, no
+                                      clone); the overlay button owns clicks. */}
+                                      <div className="pointer-events-none relative min-h-0 flex-1 overflow-hidden">
+                                        <WindowContent
+                                          dark={dark}
+                                          files={files}
+                                          onClose={() =>
+                                            dispatch({ type: "close" })
+                                          }
+                                          routePath={pathname}
+                                          win={win}
+                                        />
+                                      </div>
+                                      {/* Click a window to focus it, then exit. */}
+                                      <button
+                                        aria-label={win.title}
+                                        className="absolute inset-0 z-30"
+                                        onClick={() => {
+                                          dispatch({
+                                            column: ci,
+                                            type: "focusAt",
+                                            window: wi,
+                                            workspace: ws.id,
+                                          })
+                                          dispatch({ type: "toggleOverview" })
+                                        }}
+                                        tabIndex={
+                                          ws.id === state.active ? 0 : -1
+                                        }
+                                        type="button"
+                                      />
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )
+                          })}
+                        </OverviewTile>
+                      )
+                    })}
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+              {/* Announces the selected workspace while the overview is open. */}
+              <span aria-live="polite" className="sr-only">
+                {state.overview
+                  ? `${translate("environment.bar.workspace")} ${state.active} ${translate("environment.overview.selected")}`
+                  : ""}
+              </span>
             </div>
 
             {!barBefore && !settings.autoHideBar ? (
-              <div className="p-2">{bar}</div>
+              <BarSlot
+                className="p-2"
+                hidden={state.overview}
+                position={settings.barPosition}
+                reduced={reduced}
+              >
+                {bar}
+              </BarSlot>
             ) : null}
           </div>
 
           {settings.autoHideBar ? (
-            <AutoHideBar position={settings.barPosition}>{bar}</AutoHideBar>
+            <AutoHideBar
+              position={settings.barPosition}
+              suppressed={state.overview}
+            >
+              {bar}
+            </AutoHideBar>
           ) : null}
 
           {/* Floated niri columns (Alt+T) render as draggable, click-to-front

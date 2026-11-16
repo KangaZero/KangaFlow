@@ -239,6 +239,10 @@ const ja = {
       title: "アプリケーションランチャー",
       unpin: "ピン解除",
     },
+    overview: {
+      region: "ワークスペース一覧",
+      selected: "選択中",
+    },
     settings: {
       accent: "アクセント",
       appearance: "外観",
