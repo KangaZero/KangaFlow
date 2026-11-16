@@ -840,7 +840,13 @@ export function EnvironmentView() {
                             const trueGlass =
                               settings.glass === "true" && glassy
                             return (
-                              <motion.button
+                              // A div, not a <button>: the window wraps live app
+                              // content (the browser's tabs, address <input>,
+                              // buttons…) and interactive content may not nest
+                              // inside a <button> (invalid HTML; the outer button
+                              // can swallow the inner controls' keys/clicks).
+                              <motion.div
+                                aria-label={win.title}
                                 className={cn(
                                   "pointer-events-auto flex min-h-0 flex-col overflow-hidden rounded-lg border text-left shadow-xl",
                                   trueGlass
@@ -882,6 +888,7 @@ export function EnvironmentView() {
                                     workspace: state.active,
                                   })
                                 }}
+                                role="group"
                                 // Vertical flex weight = the window's height (y-resize).
                                 style={{
                                   flexBasis: 0,
@@ -889,7 +896,6 @@ export function EnvironmentView() {
                                   flexShrink: 1,
                                 }}
                                 transition={SPRING_TILE}
-                                type="button"
                               >
                                 <div className="border-border bg-muted/40 flex items-center gap-2 border-b px-3 py-1.5">
                                   <span className="flex-1 truncate text-xs font-medium">
@@ -941,8 +947,15 @@ export function EnvironmentView() {
                                       </Glass>
                                     </div>
                                   ) : null}
+                                  {/* h-full in BOTH modes: apps size themselves
+                                      with h-full (the browser's iframe is
+                                      absolutely positioned, so it has no in-flow
+                                      height). Without it this wrapper collapses
+                                      to 0px when true glass is off and the page
+                                      area renders 0px tall. */}
                                   <div
                                     className={cn(
+                                      "h-full",
                                       trueGlass && "absolute inset-0"
                                     )}
                                   >
@@ -957,7 +970,7 @@ export function EnvironmentView() {
                                     />
                                   </div>
                                 </div>
-                              </motion.button>
+                              </motion.div>
                             )
                           })}
                         </AnimatePresence>
