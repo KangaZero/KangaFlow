@@ -732,7 +732,7 @@ export function EnvironmentView() {
         } as CSSProperties
       }
     >
-      {isLoggedIn ? (
+      {isLoggedIn === "visible" ? (
         <>
           {/* Global cmatrix rain (`cmatrix -g`): covers the desktop above the
           wallpaper but below the strip/windows and every UI band, so windows
