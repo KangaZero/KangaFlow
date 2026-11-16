@@ -2,8 +2,8 @@
 // Ambient life: a schooling fish swarm (boids), pulse-driven jellyfish and
 // marine snow. Bubbles are NOT here — they are pure CSS (components/deep-sea.css).
 
-import { BIO } from "@/lib/bubbles"
 import {
+  BIO,
   clamp,
   item,
   lerp,

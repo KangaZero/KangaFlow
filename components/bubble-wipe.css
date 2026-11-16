@@ -1,0 +1,65 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* Cartoon bubble swarm (route transition). Flat fill + bold outline + a flat
+   offset crescent (inset shadow, 0 blur) for two-tone shading + a tilted shine
+   blob and a small dot. No gradients or blur, so it is cheap to paint. The
+   per-theme palette lives in globals.css (--swarm-* tokens). */
+
+.bubble-swarm {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: auto; /* swallow clicks while the screen is covered */
+  contain: strict;
+}
+.bubble-swarm__sheet {
+  position: absolute;
+  inset: 0;
+  background: var(--swarm-sheet);
+  opacity: 0;
+}
+
+.bubble-swarm__bubble {
+  position: absolute;
+  border: var(--bw) solid var(--swarm-outline);
+  border-radius: 50%;
+  background: var(--swarm-fill);
+  box-shadow: inset calc(var(--d) * -0.11) calc(var(--d) * -0.13) 0 0
+    var(--swarm-shade);
+  will-change: transform, opacity;
+}
+.bubble-swarm__bubble::before,
+.bubble-swarm__bubble::after {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--swarm-shine);
+  content: "";
+}
+.bubble-swarm__bubble::before {
+  top: 15%;
+  left: 17%;
+  width: 30%;
+  height: 18%;
+  rotate: -38deg;
+}
+.bubble-swarm__bubble::after {
+  top: 15%;
+  left: 52%;
+  width: 9%;
+  height: 9%;
+}
+
+.bubble-swarm__burst {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+.bubble-swarm__line {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 4px;
+  border-radius: 4px;
+  background: var(--swarm-outline);
+  opacity: 0;
+  transform-origin: 50% 0;
+}

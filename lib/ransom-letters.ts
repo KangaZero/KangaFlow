@@ -3,7 +3,7 @@
 // tag style, tilt, nudge and size. Seeded from the label, so a tooltip looks
 // the same on every hover (random-per-render would read as a glitch).
 
-import { hashString, mulberry32 } from "@/lib/bubbles"
+import { hashString, mulberry32 } from "@/lib/seeded-random"
 
 export const RANSOM_KINDS = ["ink", "paper", "accent", "plain"] as const
 export type RansomKind = (typeof RANSOM_KINDS)[number]

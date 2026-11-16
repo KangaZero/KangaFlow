@@ -9,6 +9,7 @@
 //   dialog            radix dialogs (wallpaper, help, settings, terminal, command)
 //   popover           bar dropdowns (notifications) — always on top
 //   hint              link-hint ("f") overlay — above everything hintable
+//   transition        route-transition bubble swarm — covers the whole app
 //
 // The bands are spaced (not adjacent) so the click-to-front counter, clamped at
 // `windowMax`, can never push a widget up into the panel/dialog band.
@@ -19,6 +20,7 @@ export const Z_LAYERS = {
   panel: 900,
   popover: 1100,
   toast: 1150,
+  transition: 1300,
   window: 100,
   windowMax: 800,
 } as const

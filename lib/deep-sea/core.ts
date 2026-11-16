@@ -5,6 +5,10 @@
 
 export const TAU = Math.PI * 2
 
+// Bioluminescent accent: a literal on purpose (canvas draws it every frame and
+// it IS the deep-sea identity, not a theme token).
+export const BIO = "#39e6cf"
+
 export type Range = readonly [min: number, max: number]
 /** Vertical band as fractions of the stage height (0 = top, 1 = bottom). */
 export type Band = Range

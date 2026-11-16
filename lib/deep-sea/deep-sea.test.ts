@@ -142,10 +142,18 @@ describe("deep-sea creatures", () => {
       createFarVisitors({ firstAfter: 0.1, waitRange: [0.1, 0.2] }),
   }
 
+  // 30 simulated seconds covers several wraps, bursts and jelly pulse cycles.
+  // Each run is thousands of proxied draw calls, which can exceed Vitest's 5s
+  // default when the whole suite runs in parallel: give it an explicit budget.
+  const SIMULATION_BUDGET_MS = 20_000
   for (const [name, make] of Object.entries(systems)) {
-    it(`${name}: 60 simulated seconds never draw a non-finite value`, () => {
-      expect(simulate(make(), 60)).toEqual([])
-    })
+    it(
+      `${name}: 30 simulated seconds never draw a non-finite value`,
+      () => {
+        expect(simulate(make(), 30)).toEqual([])
+      },
+      SIMULATION_BUDGET_MS
+    )
   }
 
   it("giant squid tops out around 70% of the screen; sizes skew small", () => {

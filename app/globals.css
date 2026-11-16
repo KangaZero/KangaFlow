@@ -179,6 +179,13 @@
   --tooltip: oklch(0.32 0.045 165);
   --tooltip-foreground: oklch(0.979 0.021 166.113);
   --tooltip-shadow: oklch(0.508 0.118 165.612);
+  /* Cartoon bubble-swarm route transition (components/bubble-wipe.css):
+     bold outline, flat fill, flat offset shade, shine, and a backing sheet. */
+  --swarm-outline: #16324f;
+  --swarm-fill: #c9ecff;
+  --swarm-shade: #8fd0f0;
+  --swarm-shine: #ffffff;
+  --swarm-sheet: #b3e3fb;
   --primary: oklch(0.508 0.118 165.612);
   --primary-foreground: oklch(0.979 0.021 166.113);
   --secondary: oklch(0.967 0.001 286.375);
@@ -232,6 +239,11 @@
      offset. Same rule as light, opposite direction. */
   --tooltip: oklch(0.38 0.035 166);
   --tooltip-shadow: oklch(0.696 0.17 162.48);
+  --swarm-outline: #39e6cf;
+  --swarm-fill: #0f3a46;
+  --swarm-shade: #08242d;
+  --swarm-shine: #e9fffb;
+  --swarm-sheet: #0d313b;
   --primary: oklch(0.432 0.095 166.913);
   --primary-foreground: oklch(0.979 0.021 166.113);
   --secondary: oklch(0.274 0.006 286.033);
@@ -287,6 +299,11 @@
   --tooltip-foreground: #cdd6f4;
   /* Text */
   --tooltip-shadow: #a6e3a1;
+  --swarm-outline: #a6e3a1;
+  --swarm-fill: #1d2e1e;
+  --swarm-shade: #111d12;
+  --swarm-shine: #e3ffe0;
+  --swarm-sheet: #182719;
   /* Green — same accent-shadow rule as the other themes, kept inside Mocha */
   --primary: #a6e3a1;
   /* Green */

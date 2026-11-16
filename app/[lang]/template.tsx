@@ -3,55 +3,40 @@
 
 import { motion, useReducedMotion } from "motion/react"
 import { usePathname } from "next/navigation"
-import { useTheme } from "next-themes"
-import { Activity, useMemo } from "react"
-import { BubbleWipe } from "@/components/bubble-wipe"
-import { hashString } from "@/lib/bubbles"
+import { BubbleSwarmTransition } from "@/components/bubble-wipe"
 import { isReducedMotion } from "@/lib/isReducedMotion"
-import { DEFAULT_THEME, isTheme, type Theme } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
 
 // Route transition: a Next App Router `template.tsx` re-mounts on every
-// navigation, so this entrance replays each time. The bubble raft itself lives
-// in `components/bubble-wipe`; here we only pick the theme + per-route seed and
-// decide whether to play the wipe. Gated on prefers-reduced-motion.
+// navigation. The cartoon bubble swarm (components/bubble-wipe) covers the
+// screen BEFORE navigation (it intercepts internal link clicks) and pops away
+// once this template re-mounts with the new route. Here we only report whether
+// motion is allowed (app animation preference + OS reduced-motion) and signal
+// the mount. Reduced motion → no interception, plain instant navigation.
 
 export default function Template({ children }: { children: React.ReactNode }) {
   const reduceMotion = useReducedMotion()
   const { animationPref } = useGlobalStates()
-  const { resolvedTheme } = useTheme()
-  const theme: Theme = isTheme(resolvedTheme) ? resolvedTheme : DEFAULT_THEME
   const pathname = usePathname()
-  // The environment page IS the desktop — the wipe would just cover it.
+  const motionAllowed = !isReducedMotion(animationPref, reduceMotion)
+  // The environment page IS the desktop: keep its gentle fade-in under the
+  // swarm (harmless — the swarm pops away within ~0.5s either way).
   const isEnvironment = /\/environment\/?$/.test(pathname ?? "")
-  const seed = useMemo(() => hashString(pathname ?? ""), [pathname])
-
-  if (reduceMotion) return <>{children}</>
-
-  // The environment page is the desktop — the bubble wipe would just cover it,
-  // so use a simple fade-in instead.
-  if (isEnvironment) {
-    return (
-      <motion.div
-        animate={{ opacity: 1 }}
-        initial={{ opacity: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
-      >
-        {children}
-      </motion.div>
-    )
-  }
 
   return (
     <>
-      {children}
-      <Activity
-        mode={
-          isReducedMotion(animationPref, reduceMotion) ? "hidden" : "visible"
-        }
-      >
-        <BubbleWipe seed={seed} theme={theme} />
-      </Activity>
+      <BubbleSwarmTransition enabled={motionAllowed} />
+      {motionAllowed && isEnvironment ? (
+        <motion.div
+          animate={{ opacity: 1 }}
+          initial={{ opacity: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
+          {children}
+        </motion.div>
+      ) : (
+        children
+      )}
     </>
   )
 }
