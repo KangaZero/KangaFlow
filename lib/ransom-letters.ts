@@ -25,6 +25,10 @@ export type RansomToken =
     }
   | { type: "space"; key: string }
 
+/** Tag font size range in px: single source for ransomLetters + ransomEmScale. */
+const SIZE_MIN = 12
+const SIZE_MAX = 17
+
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" })
 
 /**
@@ -46,8 +50,21 @@ export function ransomLetters(label: string): RansomToken[] {
       key,
       kind,
       rotate: Math.round((random() * 16 - 8) * 10) / 10,
-      size: Math.round((12 + random() * 5) * 10) / 10,
+      size: Math.round((SIZE_MIN + random() * (SIZE_MAX - SIZE_MIN)) * 10) / 10,
       type: "glyph",
     }
   })
+}
+
+const EM_MIN = 0.74
+const EM_MAX = 0.92
+
+/**
+ * A glyph's pixel `size` (12..17) as an em multiplier (0.74..0.92), for tags
+ * laid over text of arbitrary size (the header date morph): they keep the
+ * seeded size variety while always fitting inside the glyph they cover.
+ */
+export function ransomEmScale(size: number): number {
+  const t = Math.min(1, Math.max(0, (size - SIZE_MIN) / (SIZE_MAX - SIZE_MIN)))
+  return Math.round((EM_MIN + t * (EM_MAX - EM_MIN)) * 100) / 100
 }

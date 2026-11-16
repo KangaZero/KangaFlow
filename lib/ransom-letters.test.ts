@@ -1,7 +1,11 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { describe, expect, it } from "vitest"
 
-import { RANSOM_KINDS, ransomLetters } from "@/lib/ransom-letters"
+import {
+  RANSOM_KINDS,
+  ransomEmScale,
+  ransomLetters,
+} from "@/lib/ransom-letters"
 
 const glyphs = (label: string) =>
   ransomLetters(label).flatMap((token) =>
@@ -45,5 +49,13 @@ describe("ransomLetters", () => {
       expect(g.size).toBeGreaterThanOrEqual(12)
       expect(g.size).toBeLessThanOrEqual(17)
     }
+  })
+
+  it("maps glyph px size onto a bounded em scale", () => {
+    expect(ransomEmScale(12)).toBe(0.74)
+    expect(ransomEmScale(17)).toBe(0.92)
+    expect(ransomEmScale(14.5)).toBe(0.83)
+    expect(ransomEmScale(2)).toBe(0.74)
+    expect(ransomEmScale(99)).toBe(0.92)
   })
 })

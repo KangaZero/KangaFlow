@@ -1,40 +1,6 @@
 /* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
-/* Ransom-note letter tags for AnimatedTooltip. The plate is a dark surface in
-   every theme (--tooltip), so each tag kind is built from the same three
-   tokens for contrast: plate, plate foreground, accent (--tooltip-shadow). */
-
-.ransom-glyph {
-  display: inline-block;
-  margin: 0 -0.5px; /* tags touch / slightly overlap */
-  padding: 1px 3px 2px;
-  font-size: var(--glyph-size);
-  line-height: 1;
-}
-.ransom-glyph[data-kind="ink"] {
-  background: color-mix(in oklch, var(--tooltip) 45%, black);
-  color: var(--tooltip-foreground);
-  font-family: Impact, "Haettenschweiler", "Arial Black", sans-serif;
-  font-weight: 900;
-}
-.ransom-glyph[data-kind="paper"] {
-  background: var(--tooltip-foreground);
-  color: var(--tooltip);
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 700;
-}
-.ransom-glyph[data-kind="accent"] {
-  background: var(--tooltip-shadow);
-  color: var(--tooltip);
-  font-family: "Courier New", ui-monospace, monospace;
-  font-weight: 800;
-}
-.ransom-glyph[data-kind="plain"] {
-  color: var(--tooltip-foreground);
-  font-family: system-ui, sans-serif;
-  font-style: italic;
-  font-weight: 900;
-  text-decoration: underline 2px var(--tooltip-shadow);
-}
+/* Tooltip-only motion. The ransom tag styles live in ransom-glyph.css (shared
+   with the header date + workplace card). */
 
 /* Two-step colour-split glitch as the letters land. Stepped on purpose (a
    glitch should jump, not ease), and CSS because Motion cannot interpolate

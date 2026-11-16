@@ -6,15 +6,28 @@ import "@/components/ui/animated-tooltip.css"
 import {
   AnimatePresence,
   motion,
-  type Transition,
   useMotionValue,
   useSpring,
   useTransform,
 } from "motion/react"
-import { useMemo, useState } from "react"
+import { useState } from "react"
 
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
-import { ransomLetters } from "@/lib/ransom-letters"
+import { RansomWord } from "@/components/ui/ransom-word"
+import {
+  SHARD,
+  SHARD_DELAY,
+  SHARD_HIDDEN,
+  SHARD_SHOWN,
+  SLAM,
+  SLAM_HIDDEN,
+  SLAM_SHOWN,
+  WIPE_DURATION,
+  WIPE_EASE,
+  WIPE_GONE,
+  WIPE_HIDDEN,
+  WIPE_SHOWN,
+} from "@/lib/rebel-motion"
 import { cn } from "@/lib/utils"
 
 export interface AnimatedTooltipProps {
@@ -75,24 +88,13 @@ const SIDE_STYLES = {
 } as const
 
 /*
- * Entrance = diagonal wipe + slam, run together:
+ * Entrance = diagonal wipe + slam, run together (presets in lib/rebel-motion):
  * - a diagonal clip-path wipe reveals shard + plate;
  * - the plate slams in (mild scale/rotate overshoot) and the accent shard
  *   springs in 50ms later from the opposite corner;
  * - letters pop in after the plate lands, with a stepped colour-split glitch.
  * Exit slices the tooltip out to the right.
- * The wipe polygons reach far past the box (−60%/160%) so the shard overflow
- * is never clipped, and keep the same point count so Motion can interpolate.
  */
-const WIPE_HIDDEN = "polygon(-20% -60%, -20% -60%, -40% 160%, -40% 160%)"
-const WIPE_SHOWN = "polygon(-20% -60%, 140% -60%, 120% 160%, -40% 160%)"
-const WIPE_GONE = "polygon(140% -60%, 140% -60%, 120% 160%, 120% 160%)"
-// A literal tuple matches Motion's cubic-bezier type (readonly [n, n, n, n]).
-const WIPE_EASE = [0.6, 0, 0.2, 1] as const
-const SLAM: Transition = { damping: 15, stiffness: 420, type: "spring" }
-const SHARD: Transition = { damping: 14, stiffness: 380, type: "spring" }
-const GLYPH_DELAY = 0.12
-const GLYPH_STAGGER = 0.022
 
 // Generalised from the Aceternity "animated tooltip": the mouse-follow spring
 // (rotate + translateX) is preserved on the outer layer; the entrance runs on
@@ -114,7 +116,6 @@ export function AnimatedTooltip({
   )
   const placement = SIDE_STYLES[side]
   const isHorizontal = side === "left" || side === "right"
-  const letters = useMemo(() => ransomLetters(label), [label])
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: presentational wrapper; the real control is the interactive child, this only drives the decorative tooltip.
@@ -145,10 +146,10 @@ export function AnimatedTooltip({
             >
               {/* Layer 2: slam in, slice out. */}
               <motion.div
-                animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                animate={SLAM_SHOWN}
                 className={placement.origin}
                 exit={{ opacity: 0, transition: { duration: 0.16 }, x: 14 }}
-                initial={{ opacity: 0, rotate: -9, scale: 1.3 }}
+                initial={SLAM_HIDDEN}
                 transition={{ ...SLAM, opacity: { duration: 0.12 } }}
               >
                 {/* Layer 3: diagonal wipe (clip-path) around shard + plate. */}
@@ -160,24 +161,18 @@ export function AnimatedTooltip({
                     transition: { duration: 0.16, ease: "easeIn" },
                   }}
                   initial={{ clipPath: WIPE_HIDDEN }}
-                  transition={{ duration: 0.3, ease: WIPE_EASE }}
+                  transition={{ duration: WIPE_DURATION, ease: WIPE_EASE }}
                 >
                   {/* Accent shard: same silhouette, offset like a hard shadow. */}
                   <motion.div
-                    animate={{ opacity: 1, rotate: -3, scale: 1, x: 6, y: 5 }}
+                    animate={SHARD_SHOWN}
                     aria-hidden
                     className={cn(
                       "bg-tooltip-shadow absolute -inset-x-2.5 -top-1.5 -bottom-2",
                       placement.shape
                     )}
-                    initial={{
-                      opacity: 0,
-                      rotate: 10,
-                      scale: 0.6,
-                      x: -26,
-                      y: -14,
-                    }}
-                    transition={{ ...SHARD, delay: 0.05 }}
+                    initial={SHARD_HIDDEN}
+                    transition={{ ...SHARD, delay: SHARD_DELAY }}
                   />
                   {/* Plate: skewed, text counter-skewed back to upright. */}
                   <div
@@ -188,38 +183,10 @@ export function AnimatedTooltip({
                     )}
                   >
                     <span className="sr-only">{label}</span>
-                    <span
-                      aria-hidden
+                    <RansomWord
                       className="tooltip-glitch inline-flex skew-x-[9deg] items-end"
-                    >
-                      {letters.map((token) =>
-                        token.type === "space" ? (
-                          <span className="w-1.5" key={token.key} />
-                        ) : (
-                          <motion.span
-                            animate={{
-                              opacity: 1,
-                              rotate: token.rotate,
-                              scale: 1,
-                              y: token.dy,
-                            }}
-                            className="ransom-glyph"
-                            data-kind={token.kind}
-                            initial={{ opacity: 0, rotate: 40, scale: 0, y: 0 }}
-                            key={token.key}
-                            style={{ "--glyph-size": `${token.size}px` }}
-                            transition={{
-                              damping: 14,
-                              delay: GLYPH_DELAY + token.index * GLYPH_STAGGER,
-                              stiffness: 520,
-                              type: "spring",
-                            }}
-                          >
-                            {token.char}
-                          </motion.span>
-                        )
-                      )}
-                    </span>
+                      text={label}
+                    />
                     {shortcut?.length ? (
                       <KbdGroup className="skew-x-[9deg]">
                         {shortcut.map((token) => (

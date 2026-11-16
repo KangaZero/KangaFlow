@@ -1,0 +1,150 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* Workplace card ("rebel plate"). Colours come only from the tooltip tokens
+   (--tooltip plate, --tooltip-foreground, --tooltip-shadow accent) so the card
+   matches AnimatedTooltip in every theme. The silhouette (body + bolt tip) is
+   the tooltip-shape-bottom-start utility in globals.css, shared by plate and
+   shard so the tip reads as part of the card. */
+
+.workplace-card {
+  width: 18.5rem;
+  transform-origin: 48px 0;
+}
+
+.workplace-card__shard {
+  position: absolute;
+  inset: -6px -12px -10px -6px;
+  background: var(--tooltip-shadow);
+}
+
+.workplace-card__plate {
+  position: relative;
+  padding: 30px 18px 16px;
+  background: var(--tooltip);
+  color: var(--tooltip-foreground);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.workplace-card__city {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px;
+  margin: 0;
+}
+
+.workplace-card__label {
+  translate: 0 -3px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+  text-transform: uppercase;
+}
+
+/* Round decorative sticker (aria-hidden) with a peeling corner. */
+.workplace-card__sticker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-left: 2px;
+  border-radius: 50%;
+  background: var(--tooltip-shadow);
+  box-shadow: 2px 2px 0 color-mix(in oklch, var(--tooltip) 45%, black);
+  color: var(--tooltip);
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 0.7rem;
+  font-weight: 900;
+  rotate: 12deg;
+}
+
+.workplace-card__sticker::after {
+  position: absolute;
+  right: 2px;
+  bottom: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 0 0 50% 0;
+  background: linear-gradient(
+    135deg,
+    transparent 50%,
+    color-mix(in oklch, var(--tooltip-foreground) 70%, transparent) 50%
+  );
+  content: "";
+}
+
+.workplace-card__work {
+  margin: 10px 0 12px;
+  font-weight: 700;
+}
+
+.workplace-card__work b {
+  display: inline-block;
+  padding: 1px 5px;
+  background: var(--tooltip-shadow);
+  color: var(--tooltip);
+  rotate: -2deg;
+}
+
+/* The real TokyoMap, mounted like a taped-on photo cut-out. The "paper" is
+   the page background, i.e. the surface TokyoMap's own tokens are designed
+   for, so the wards keep their contrast in every theme. */
+.workplace-card__photo {
+  position: relative;
+  margin: 0;
+  padding: 6px 6px 20px;
+  background: var(--background);
+  box-shadow: 4px 4px 0 color-mix(in oklch, black 50%, transparent);
+  rotate: 1.6deg;
+}
+
+.workplace-card__photo::before,
+.workplace-card__photo::after {
+  position: absolute;
+  top: -7px;
+  width: 52px;
+  height: 16px;
+  background: color-mix(in oklch, var(--tooltip-shadow) 55%, transparent);
+  content: "";
+}
+
+.workplace-card__photo::before {
+  left: -10px;
+  rotate: -28deg;
+}
+
+.workplace-card__photo::after {
+  right: -10px;
+  rotate: 24deg;
+}
+
+.workplace-card__photo figcaption {
+  position: absolute;
+  bottom: 3px;
+  left: 8px;
+  color: var(--foreground);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.7rem;
+  font-style: italic;
+  font-weight: 700;
+}
+
+.workplace-card__coords {
+  display: inline-block;
+  margin: 12px 0 0;
+  padding: 3px 7px;
+  border-left: 4px solid var(--tooltip-shadow);
+  background: color-mix(in oklch, var(--tooltip) 45%, black);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  rotate: -1.5deg;
+}
+
+.workplace-card__credit {
+  margin: 6px 0 0;
+  font-size: 0.6rem;
+  opacity: 0.6;
+}

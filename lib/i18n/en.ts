@@ -5,6 +5,11 @@
 const en = {
   about: {
     achievements: "Achievements",
+    avatar: {
+      boop: "BOOP",
+      boopLabel: "Boop the avatar",
+      hello: "HELLO!",
+    },
     education: "Education",
     intro: {
       brand: "KangaFlow",
@@ -108,6 +113,7 @@ const en = {
     },
     toast: {
       dismiss: "Dismiss",
+      stamp: "UNLOCKED!",
       unlocked: "Achievement unlocked!",
     },
     toggleColumns: "Toggle layout",
@@ -292,6 +298,8 @@ const en = {
   },
   headerCard: {
     basedIn: "Based in",
+    city: "Tokyo",
+    citySticker: "東京",
     map: {
       caption: "Hey, this is where I work!",
       credit: "Map source: Global Map Japan (GSI)",
@@ -404,6 +412,9 @@ const en = {
     on: "On",
     resetToDefaults: "Reset to defaults",
     showChromeInEnvironment: "Show header on the environment page",
+    soundEffects: "Sound effects",
+    soundEffectsHint:
+      "Play a short synthesised sound when you unlock an achievement.",
     storageUnavailable:
       "Changes apply right away but will be lost on reload. Private browsing or a blocked-storage setting usually causes this.",
     storageUnavailableTitle: "This browser is blocking storage",
@@ -435,6 +446,12 @@ const en = {
     },
     heading: "Timeline",
     subtitle: "Every portfolio I've shipped — oldest to newest.",
+    viewer: {
+      close: "Close",
+      expand: "Enlarge screenshot",
+      next: "Next portfolio",
+      previous: "Previous portfolio",
+    },
     viewSource: "View source",
     visitSite: "Visit site",
   },
@@ -487,7 +504,10 @@ const en = {
       edit: "Edit",
       labelPlaceholder: "Label (optional)",
       lap: "Lap",
+      ringing: "Alarm ringing",
       save: "Save",
+      snooze: "Snooze 5 min",
+      stop: "Stop",
       sublabel: "Set and manage alarms",
       title: "Alarm",
     },

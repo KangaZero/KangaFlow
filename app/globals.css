@@ -41,6 +41,24 @@
   );
 }
 
+@utility tooltip-shape-bottom-start {
+  /* tip on the top edge, near the start (48px in) → card under a left-aligned
+     trigger (HoverPopover align="start"), pointing up at it */
+  clip-path: polygon(
+    0 20px,
+    30px 18px,
+    41px 8px,
+    36px 9px,
+    48px 0,
+    46px 9px,
+    52px 8px,
+    58px 17px,
+    97% 17px,
+    100% 96%,
+    3% 100%
+  );
+}
+
 @utility tooltip-shape-top {
   /* tip on bottom edge → tooltip sits above the trigger */
   clip-path: polygon(

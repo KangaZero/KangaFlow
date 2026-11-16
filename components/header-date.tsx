@@ -2,11 +2,13 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import "./header-date.css"
 import "./bounceIn.css"
+
 import { CloudOff } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { useWeatherForecast } from "@/api/queries/useWeatherForecast"
 import { HoverPopover } from "@/components/ui/hover-popover"
+import { MorphText, morphGlyphCount } from "@/components/ui/morph-text"
 import { Skeleton } from "@/components/ui/skeleton"
 import { WorkplaceCard } from "@/components/workplace-card"
 import { person } from "@/lib/person"
@@ -54,6 +56,18 @@ const HeaderDate = () => {
     ? (translate("headerDate.months")[now.getMonth()] ?? "")
     : ""
   const temperature = weather ? Math.round(weather.temperature) : 0
+  const dateText = date === null ? "" : String(date)
+  // Stagger offsets: day → last char → month → date, one running index.
+  const morphRuns = useMemo(() => {
+    const lengths = [allButLastCharDay, lastDayChar, month, dateText].map(
+      morphGlyphCount
+    )
+    const offsets = lengths.map((_, i) =>
+      lengths.slice(0, i).reduce((sum, n) => sum + n, 0)
+    )
+    return { offsets, total: lengths.reduce((sum, n) => sum + n, 0) }
+  }, [allButLastCharDay, lastDayChar, month, dateText])
+  const runOffset = (i: number) => morphRuns.offsets[i] ?? 0
 
   // WMOCodeDescriptions -> lib/weather + i18n (the KangaFlow equivalent).
   // Defaults to the clear-sky (code 0) icon/description when data is missing.
@@ -76,7 +90,9 @@ const HeaderDate = () => {
   return (
     <HoverPopover
       align="start"
-      className="w-auto"
+      // The card draws its own plate + shard silhouette; the popover shell
+      // only positions it (transparent, unpadded, no border/shadow).
+      className="w-auto border-0 bg-transparent p-0 shadow-none"
       id={WEBMCP_INTERACTIVE_ELEMENTS.headerDatePopoverPrimitiveTrigger}
       onOpenChange={setIsHovered}
       trigger={
@@ -126,10 +142,24 @@ const HeaderDate = () => {
           </div>
 
           <div className="img-wrapper">
-            <div className={`p5DateBox ${isHovered ? "hover-active" : ""}`}>
+            <div
+              className={`p5DateBox ransom-on-page ${isHovered ? "hover-active morph-on" : ""}`}
+            >
               <div className="p5DateDay">
-                <span className="p5Day bounceIn">{allButLastCharDay}</span>
-                <span className="p5Day2 bounceIn">{lastDayChar}</span>
+                <span className="p5Day bounceIn">
+                  <MorphText
+                    offset={runOffset(0)}
+                    text={allButLastCharDay}
+                    total={morphRuns.total}
+                  />
+                </span>
+                <span className="p5Day2 bounceIn">
+                  <MorphText
+                    offset={runOffset(1)}
+                    text={lastDayChar}
+                    total={morphRuns.total}
+                  />
+                </span>
                 {weatherState.status === "success" && (
                   <span
                     className="p5DateWeatherIcon bounceIn"
@@ -157,17 +187,35 @@ const HeaderDate = () => {
                 )}
               </div>
               <div className="p5DateMonthDay">
-                <span className="p5Month bounceIn">{month}</span>
+                <span className="p5Month bounceIn">
+                  <MorphText
+                    offset={runOffset(2)}
+                    text={month}
+                    total={morphRuns.total}
+                  />
+                </span>
                 <span className="p5DateMonthDaySeparator bounceIn">/</span>
-                <span className="p5Date bounceIn">{date}</span>
+                <span className="p5Date bounceIn">
+                  <MorphText
+                    offset={runOffset(3)}
+                    text={dateText}
+                    total={morphRuns.total}
+                  />
+                </span>
                 {weather && (
                   <>
                     <span
                       className="p5Temperature bounceIn"
-                      style={{
-                        textShadow: `0 0 3px ${gradient}`,
-                        WebkitTextFillColor: gradient,
-                      }}
+                      // Idle: temperature-coloured glow. Hovered: the inline
+                      // fill is dropped so the CSS accent sticker can show.
+                      style={
+                        isHovered
+                          ? undefined
+                          : {
+                              textShadow: `0 0 3px ${gradient}`,
+                              WebkitTextFillColor: gradient,
+                            }
+                      }
                     >
                       {temperature}
                     </span>

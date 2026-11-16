@@ -310,3 +310,23 @@
       rotateY(-10deg) rotateZ(-15deg);
   }
 }
+
+/* Hover morph (glyph ⇄ ransom tag): shared styles live in
+   components/ui/morph-text.css. */
+
+/* Temperature turns into an accent sticker while hovered (the inline
+   temperature-colour fill is dropped in the component for that state). */
+.p5Temperature {
+  transition:
+    background-color 0.25s,
+    color 0.25s,
+    padding 0.25s;
+}
+
+.morph-on .p5Temperature {
+  padding: 0 3px;
+  background: var(--tooltip-shadow);
+  color: var(--tooltip);
+  -webkit-text-fill-color: var(--tooltip);
+  text-shadow: none;
+}

@@ -4,6 +4,11 @@
 const ja = {
   about: {
     achievements: "実績",
+    avatar: {
+      boop: "ツン",
+      boopLabel: "アバターをつつく",
+      hello: "やあ！",
+    },
     education: "学歴",
     intro: {
       brand: "KangaFlow",
@@ -107,6 +112,7 @@ const ja = {
     },
     toast: {
       dismiss: "閉じる",
+      stamp: "解除！",
       unlocked: "実績を解除しました！",
     },
     toggleColumns: "レイアウト切替",
@@ -292,6 +298,8 @@ const ja = {
   },
   headerCard: {
     basedIn: "現在地",
+    city: "東京",
+    citySticker: "TOKYO",
     map: {
       caption: "ここが職場です！",
       credit: "地図出典: 地球地図日本（国土地理院）",
@@ -411,6 +419,8 @@ const ja = {
     on: "オン",
     resetToDefaults: "デフォルトに戻す",
     showChromeInEnvironment: "環境ページでヘッダーを表示",
+    soundEffects: "効果音",
+    soundEffectsHint: "実績を解除したときに短い効果音を鳴らします。",
     storageUnavailable:
       "変更はすぐに反映されますが、再読み込みすると失われます。プライベートブラウジングやストレージのブロック設定が原因の場合がほとんどです。",
     storageUnavailableTitle: "このブラウザではストレージがブロックされています",
@@ -441,6 +451,12 @@ const ja = {
     },
     heading: "タイムライン",
     subtitle: "これまで公開したポートフォリオを、古い順に。",
+    viewer: {
+      close: "閉じる",
+      expand: "スクリーンショットを拡大",
+      next: "次のポートフォリオ",
+      previous: "前のポートフォリオ",
+    },
     viewSource: "ソースを見る",
     visitSite: "サイトを見る",
   },
@@ -487,7 +503,10 @@ const ja = {
       edit: "編集",
       labelPlaceholder: "ラベル（任意）",
       lap: "ラップ",
+      ringing: "アラーム鳴動中",
       save: "保存",
+      snooze: "5分スヌーズ",
+      stop: "停止",
       sublabel: "アラームの設定と管理",
       title: "アラーム",
     },
