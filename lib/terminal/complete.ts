@@ -15,6 +15,7 @@ export const SHELL_COMMANDS = [
   "clear",
   "cmatrix",
   "code",
+  "crt",
   "exit",
   "ff",
   "help",

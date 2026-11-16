@@ -31,7 +31,9 @@ export function TerminalDialog({ files }: { files: Record<string, string> }) {
   return (
     <Dialog onOpenChange={setIsTerminalOpen} open={isTerminalOpen}>
       <DialogContent
-        className="flex h-[90vh] w-[90vw] max-w-[90vw] flex-col overflow-y-hidden p-0 sm:max-w-[90vw]"
+        // gap-0: DialogContent's base classes include gap-4, which pushed the
+        // zjstatus bar out of the fixed-height dialog (squeezed to 0px).
+        className="flex h-[90vh] w-[90vw] max-w-[90vw] flex-col gap-0 overflow-y-hidden p-0 sm:max-w-[90vw]"
         style={{
           background: paletteForTheme(resolvedTheme ?? DEFAULT_THEME).base,
         }}

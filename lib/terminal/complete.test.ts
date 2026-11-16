@@ -7,7 +7,14 @@ const FILES = ["app/page.tsx", "app/layout.tsx", "lib/themes.ts"]
 describe("completeLine", () => {
   it("completes command names on the first token", () => {
     const result = completeLine("c", FILES)
-    expect(result.candidates).toEqual(["cat", "cd", "clear", "cmatrix", "code"])
+    expect(result.candidates).toEqual([
+      "cat",
+      "cd",
+      "clear",
+      "cmatrix",
+      "code",
+      "crt",
+    ])
     expect(result.commonPrefix).toBe("c")
     expect(result.word).toBe("c")
   })

@@ -1,0 +1,49 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* CRT look for the web terminal, drawn as a DOM overlay on the screen wrapper
+   (never inside xterm's renderer): faint scanlines + a soft phosphor glow on
+   the text. Static by default; only a rare, tiny flicker is animated, and that
+   is switched off under reduced motion (app setting via data-crt-flicker, or
+   the OS media query). The scanlines darken by 7% at most, so text contrast
+   stays well within WCAG AA on both Catppuccin flavours. */
+
+.terminal-screen[data-crt="on"]::after {
+  position: absolute;
+  inset: 0;
+  z-index: 4; /* above the xterm screen + editor, below the cmatrix overlay (z-10) */
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0.07) 0 1px,
+    transparent 1px 3px
+  );
+  content: "";
+  pointer-events: none;
+}
+
+.terminal-screen[data-crt="on"] .xterm-rows {
+  text-shadow: 0 0 3px var(--crt-glow);
+}
+
+.terminal-screen[data-crt="on"][data-crt-flicker="on"]::after {
+  animation: terminal-crt-flicker 7s steps(1) infinite;
+}
+
+@keyframes terminal-crt-flicker {
+  0%,
+  95%,
+  97%,
+  100% {
+    opacity: 1;
+  }
+  96% {
+    opacity: 0.82;
+  }
+  98% {
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .terminal-screen[data-crt="on"]::after {
+    animation: none;
+  }
+}

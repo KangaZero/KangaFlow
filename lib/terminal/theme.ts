@@ -17,6 +17,10 @@ export type TerminalPalette = {
   text: string
   mauve: string
   pink: string
+  // Segment / logo accents (prompt pills, fastfetch NixOS mark).
+  lavender: string
+  sapphire: string
+  surface: string
   red: string
   blue: string
   teal: string
@@ -38,11 +42,14 @@ export const MOCHA: TerminalPalette = {
   brightWhite: "#a6adc8",
   cursor: "#f5e0dc",
   green: "#a6e3a1",
+  lavender: "#b4befe",
   mauve: "#cba6f7",
   overlay: "#6c7086",
   pink: "#f5c2e7",
   red: "#f38ba8",
+  sapphire: "#74c7ec",
   scrim: "transparent", // light text over the dark wallpaper needs no backing
+  surface: "#313244",
   teal: "#94e2d5",
   text: "#cdd6f4",
   white: "#bac2de",
@@ -57,11 +64,14 @@ export const LATTE: TerminalPalette = {
   brightWhite: "#bcc0cc",
   cursor: "#dc8a78",
   green: "#40a02b",
+  lavender: "#7287fd",
   mauve: "#8839ef",
   overlay: "#9ca0b0",
   pink: "#ea76cb",
   red: "#d20f39",
+  sapphire: "#209fb5",
   scrim: "rgba(239,241,245,0.7)", // base #eff1f5 @ 70% — dark text + fastfetch accents stay legible over the photo
+  surface: "#ccd0da",
   teal: "#179299",
   text: "#4c4f69",
   white: "#acb0be",

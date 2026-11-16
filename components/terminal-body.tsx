@@ -32,6 +32,9 @@ import type {
   ITerminalInitOnlyOptions,
   ITerminalOptions,
 } from "@xterm/xterm"
+import "@/components/terminal-crt.css"
+
+import { useReducedMotion } from "motion/react"
 import localFont from "next/font/local"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
@@ -39,6 +42,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useXTerm } from "react-xtermjs"
 import { GlyphRain } from "@/components/canvasui/GlyphRain"
 import { CodeEditor } from "@/components/code-editor"
+import { isReducedMotion } from "@/lib/isReducedMotion"
 import { getWindowContent, setWindowContent } from "@/lib/niri-window-cache"
 import {
   isMatrixTheme,
@@ -52,6 +56,7 @@ import {
   suggestLine,
 } from "@/lib/terminal/complete"
 import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
+import { MENU_MAX_ROWS, renderMenu } from "@/lib/terminal/menu"
 import {
   type ONEKO_COMMANDS,
   onekoHelp,
@@ -69,6 +74,7 @@ import {
   buildPrompt,
   buildTransientPrompt,
   detectOs,
+  PROMPT_LINES,
 } from "@/lib/terminal/prompt"
 import {
   paletteForTheme,
@@ -122,7 +128,13 @@ type Session = {
   exitCode: number
   promptPrefix: string
   // Active zsh-style completion menu (null when not cycling candidates).
-  menu: { base: string; candidates: string[]; index: number } | null
+  menu: {
+    base: string
+    candidates: string[]
+    index: number
+    // Rows the highlighted list occupies above the prompt (0 = one-line fallback).
+    rows: number
+  } | null
   // Current ghost-text suggestion (full predicted line), or null.
   suggestion: string | null
   // True while the nvim editor overlay has control (xterm ignores input).
@@ -182,12 +194,69 @@ function modeSegment(
 
 // A DOM status bar under the xterm canvas that reproduces the user's zjstatus
 // look (Catppuccin segments, kanji mode indicator, active tab, git branch).
+// "13:02" — refreshed every 15s (minute precision is all the bar shows).
+const formatBarClock = (): string =>
+  new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })
+
+function useClock(): string {
+  const [time, setTime] = useState(formatBarClock)
+  useEffect(() => {
+    const id = window.setInterval(() => setTime(formatBarClock()), 15_000)
+    return () => window.clearInterval(id)
+  }, [])
+  return time
+}
+
+const GIT_ICON = "\ue725"
+
+// Slim tab strip above the dialog terminal: the active zsh tab, an nvim tab
+// while the editor is open, and the session title. The dialog's own close
+// button sits at the top-right, so the strip leaves room for it.
+function TerminalTabStrip({
+  tab,
+  editorOpen,
+  palette,
+}: {
+  tab: string
+  editorOpen: boolean
+  palette: TerminalPalette
+}) {
+  return (
+    <div
+      className="flex h-8 shrink-0 items-center gap-1.5 pr-12 pl-2 font-mono text-xs"
+      style={{
+        background: palette.base,
+        borderBottom: `1px solid color-mix(in srgb, ${palette.text} 8%, transparent)`,
+        color: palette.overlay,
+      }}
+    >
+      <span
+        className="flex h-6 items-center gap-2 rounded-md px-2.5"
+        style={{
+          background: `color-mix(in srgb, ${palette.text} 8%, transparent)`,
+          color: palette.text,
+        }}
+      >
+        <span
+          aria-hidden
+          className="size-1.5 rounded-full"
+          style={{ background: palette.green }}
+        />
+        1 {tab}
+      </span>
+      {editorOpen ? <span className="px-2">2 nvim</span> : null}
+      <span className="mx-auto truncate">kangazero@kangaflow</span>
+    </div>
+  )
+}
+
 function ZjStatusBar({
   mode,
   tab,
   palette,
 }: BarState & { palette: TerminalPalette }) {
   const segment = modeSegment(mode, palette)
+  const clock = useClock()
   return (
     <div
       className="flex items-stretch overflow-hidden font-mono text-xs"
@@ -213,10 +282,19 @@ function ZjStatusBar({
         kangaflow
       </span>
       <span
-        className="flex items-center px-2 font-bold"
+        className="flex items-center gap-1.5 px-2"
+        style={{ background: palette.surface, color: palette.text }}
+      >
+        <span aria-hidden style={{ fontFamily: nerdSymbols.style.fontFamily }}>
+          {GIT_ICON}
+        </span>
+        main
+      </span>
+      <span
+        className="flex items-center px-2 font-bold tabular-nums"
         style={{ background: palette.red, color: palette.base }}
       >
-        main
+        {clock}
       </span>
     </div>
   )
@@ -238,6 +316,7 @@ const HELP: readonly (readonly [
   ["nvim <file>", "edit a file in vim"],
   ["theme <name>", "switch theme (light | dark | terminal)"],
   ["oneko", "your sticky pet"],
+  ["crt [on|off]", "toggle the CRT scanline effect"],
   ["clear", "clear the screen"],
   ["whoami", "print the current user"],
   ["exit", "close the terminal"],
@@ -250,6 +329,15 @@ function helpText(): string {
       `  \x1b[1;35m${cmd.padEnd(pad)}\x1b[0m  \x1b[90m${desc}\x1b[0m`
   )
   return `\r\n\x1b[1mCommands\x1b[0m\r\n${rows.join("\r\n")}`
+}
+
+// Description column for the completion menu: a page's folder, or a command's
+// help text.
+function describeCandidate(candidate: string): string {
+  if (TERMINAL_PAGE_NAMES.includes(candidate)) {
+    return candidate === "home" ? "~" : `~/${candidate}`
+  }
+  return HELP.find(([cmd]) => cmd.split(" ")[0] === candidate)?.[1] ?? ""
 }
 
 export function TerminalBody({
@@ -332,6 +420,18 @@ export function TerminalBody({
     envSettings.barPosition === "left" || envSettings.barPosition === "right"
 
   const dark = resolvedTheme !== "light"
+  // Live palette for the once-bound data handler (the prompt is themed per
+  // site theme and must follow a theme switch mid-session).
+  const paletteRef = useRef(palette)
+  paletteRef.current = palette
+  // Wall-clock duration of the last command, shown in the prompt.
+  const execMsRef = useRef(0)
+  // CRT look (scanlines + glow) — on by default, toggled with `crt on|off`.
+  // Only its flicker is animated, and that stops under reduced motion.
+  const [crtOn, setCrtOn] = useState(true)
+  const crtRef = useRef(crtOn)
+  crtRef.current = crtOn
+  const reduceMotion = isReducedMotion(animationPref, useReducedMotion())
   // Live theme for the once-bound data handler (ff reads it on each run).
   const darkRef = useRef(dark)
   darkRef.current = dark
@@ -448,9 +548,11 @@ export function TerminalBody({
       cols,
       cores: machine.cores,
       cwd: displayCwd(cwd),
+      execMs: execMsRef.current,
       exitCode,
       now: new Date(),
       os: machine.os,
+      palette: paletteRef.current,
       ramGB: machine.ramGB,
     })
     session.current.promptPrefix = inputPrefix
@@ -710,6 +812,17 @@ export function TerminalBody({
             term.write(`\r\ntheme: choose one of ${THEMES.join(", ")}`)
           }
           return true
+        case "crt": {
+          const next = arg === "on" ? true : arg === "off" ? false : null
+          if (arg !== "" && next === null) {
+            term.write("\r\nusage: crt [on|off]")
+            return true
+          }
+          const value = next ?? !crtRef.current
+          setCrtOn(value)
+          term.write(`\r\ncrt → ${value ? "on" : "off"}`)
+          return true
+        }
         case "clear":
           term.write("\x1b[2J\x1b[H")
           return true
@@ -752,8 +865,8 @@ export function TerminalBody({
       term.write(`\r${s.promptPrefix}\x1b[K${s.line}`)
     }
 
-    // Transient prompt (oh-my-posh transient_prompt): the input sits on the 3rd
-    // line of its prompt block. On submit, jump to the block's top, clear it,
+    // Transient prompt (oh-my-posh transient_prompt): the input sits on the last
+    // line of its PROMPT_LINES-tall block. On submit, jump to the block's top, clear it,
     // and redraw a compact one-line prompt echoing the command — so scrollback
     // keeps only single-line prompts and just the *active* prompt stays full.
     const collapsePrompt = (cmd: string) => {
@@ -761,8 +874,10 @@ export function TerminalBody({
       const transient = buildTransientPrompt({
         cwd: displayCwd(s.cwd),
         exitCode: s.exitCode,
+        palette: paletteRef.current,
       })
-      term.write(`\r\x1b[2A\x1b[0J${transient}${cmd}`)
+      const up = PROMPT_LINES - 1
+      term.write(`\r${up > 0 ? `\x1b[${up}A` : ""}\x1b[0J${transient}${cmd}`)
     }
 
     // Fill the current ghost suggestion (Tab / →). Returns whether it applied.
@@ -790,11 +905,22 @@ export function TerminalBody({
       if (candidates.length <= 1) return
       const base = line.slice(0, wordStart)
       const next = base + (candidates[0] ?? "")
-      s.menu = { base, candidates, index: 0 }
+      const rows = renderMenu(
+        candidates,
+        0,
+        describeCandidate,
+        paletteRef.current
+      )
+      s.menu = {
+        base,
+        candidates,
+        index: 0,
+        rows: candidates.length > MENU_MAX_ROWS ? 0 : rows.length,
+      }
       s.line = next
       s.suggestion = null
       term.write(
-        `\r\n${candidates.join("  ")}\r\n${makePrompt(s.cwd, s.exitCode, term.cols)}${next}`
+        `\r\n${rows.join("\r\n")}\r\n${makePrompt(s.cwd, s.exitCode, term.cols)}${next}`
       )
     }
 
@@ -803,6 +929,20 @@ export function TerminalBody({
       if (!menu) return
       const len = menu.candidates.length
       menu.index = (menu.index + dir + len) % len
+      if (menu.rows > 0) {
+        // Redraw the list in place: up to its first row, rewrite every row with
+        // the new selection, then back down to the input line.
+        const rows = renderMenu(
+          menu.candidates,
+          menu.index,
+          describeCandidate,
+          paletteRef.current
+        )
+        const back = PROMPT_LINES - 1
+        term.write(
+          `\r\x1b[${back + menu.rows}A${rows.map((row) => `\x1b[2K${row}\r\n`).join("")}${back > 0 ? `\x1b[${back}B` : ""}`
+        )
+      }
       replaceLine(menu.base + (menu.candidates[menu.index] ?? ""))
     }
 
@@ -846,7 +986,9 @@ export function TerminalBody({
           s.history.push(line)
           s.histIndex = s.history.length
         }
+        const started = performance.now()
         const reprompt = runCommand(line)
+        execMsRef.current = performance.now() - started
         persistRef.current()
         if (reprompt && !s.editorOpen) prompt()
         return
@@ -995,14 +1137,40 @@ export function TerminalBody({
     }
   }, [instance])
 
+  // The standalone dialog gets a slim tab strip on top; as a niri window the
+  // compositor already draws a title bar, so it is omitted there.
+  const showTabStrip = !windowId
+  const screenHeight = showTabStrip
+    ? isVerticalBar
+      ? "h-[calc(92.8vh-2rem)]"
+      : "h-[calc(86.6vh-2rem)]"
+    : isVerticalBar
+      ? "h-[92.8vh]"
+      : "h-[86.6vh]"
+
   return (
     <>
-      <div className="relative h-full w-full flex-1">
+      {showTabStrip ? (
+        <TerminalTabStrip
+          editorOpen={editor !== null}
+          palette={palette}
+          tab={bar.tab}
+        />
+      ) : null}
+      <div
+        className="terminal-screen relative h-full w-full flex-1"
+        data-crt={crtOn ? "on" : "off"}
+        data-crt-flicker={reduceMotion ? "off" : "on"}
+        style={{
+          // Phosphor glow tint: softer on the light theme so text stays crisp.
+          "--crt-glow": `color-mix(in srgb, ${palette.mauve} ${dark ? 45 : 20}%, transparent)`,
+        }}
+      >
         {/* Scrim behind the transparent xterm canvas: readability backing that
             still lets the wallpaper through (light theme only; dark = none). */}
         {/* TODO find out how to resize automaticaly */}
         <div
-          className={`${isVerticalBar ? "h-[92.8vh]" : "h-[86.6vh]"} rounded-t-m w-full`}
+          className={`${screenHeight} rounded-t-m w-full`}
           ref={ref}
           style={{ background: palette.scrim }}
         />
