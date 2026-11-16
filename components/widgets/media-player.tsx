@@ -30,6 +30,7 @@ import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { TrackList } from "@/components/widgets/track-list"
 import { formatSecondsToMMSS, PLAYLIST } from "@/components/widgets/tracks"
 import { WidgetTooltip } from "@/components/widgets/widget-tooltip"
+import { withBasePath } from "@/lib/base-path"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import {
   SPRING_ACCORDION,
@@ -208,7 +209,9 @@ export function MediaPlayer() {
     if (!audio || !track.src) return
     setAudioDuration(null)
     setCurrentTimeSec(0)
-    audio.src = track.src
+    // Stored/compared track ids stay root-relative; only the URL the browser
+    // fetches gets the base path (raw strings aren't prefixed by Next).
+    audio.src = withBasePath(track.src)
     audio.load()
     if (isPlayingRef.current) void audio.play().catch(() => setIsPlaying(false))
   }, [mounted, currentIndex, track.src])

@@ -9,6 +9,9 @@ const basePath = process.env.NODE_ENV === "production" ? "/KangaFlow" : ""
 const nextConfig: NextConfig = {
   assetPrefix: basePath,
   basePath,
+  // Raw string URLs into public/ (audio src, string next/image src) are NOT
+  // prefixed by Next; lib/base-path reads this to apply the same sub-path.
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
   // TypeScript 7 (Go-native) ships only the `tsc` CLI, not the JS compiler
   // API. `next build` defaults to the CLI on 16.4, but `next dev` still loads
   // the compiler API and throws "TypeScript 7.0.2 does not provide the compiler

@@ -9,6 +9,7 @@ import type { IconType } from "react-icons"
 import { FaGithub, FaLinkedin } from "react-icons/fa6"
 
 import { Button } from "@/components/ui/button"
+import { withBasePath } from "@/lib/base-path"
 import { person } from "@/lib/person"
 import { useAchievements } from "@/providers/achievements-provider"
 
@@ -95,7 +96,7 @@ export function SiteFooter() {
           alt="KangaZero"
           className="terminal:invert ml-2 h-5 w-auto opacity-80 dark:invert"
           height={20}
-          src="/trademarks/kanga-zero.svg"
+          src={withBasePath("/trademarks/kanga-zero.svg")}
           width={90}
         />
       </div>
