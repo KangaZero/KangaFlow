@@ -204,6 +204,14 @@
   --swarm-shade: #8fd0f0;
   --swarm-shine: #ffffff;
   --swarm-sheet: #b3e3fb;
+  /* Light-theme sky birds (components/sky-birds canvas, drawn above Clouds). */
+  --sky-starling: #2a3446;
+  --sky-starling-far: #6d7f93;
+  --sky-gull-wing: #c4ced8;
+  --sky-gull-tip: #1e2228;
+  --sky-gull-body: #fafbfc;
+  --sky-gull-edge: #5a6876;
+  --sky-hawk: #28282f;
   --primary: oklch(0.508 0.118 165.612);
   --primary-foreground: oklch(0.979 0.021 166.113);
   --secondary: oklch(0.967 0.001 286.375);

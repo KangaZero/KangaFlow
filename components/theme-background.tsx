@@ -6,6 +6,7 @@ import { Activity, useEffect, useState } from "react"
 import { BlueSky } from "@/components/blue-sky"
 import { Clouds } from "@/components/canvasui/Clouds"
 import { DeepSea } from "@/components/deep-sea"
+import { SkyBirds } from "@/components/sky-birds"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import { DEFAULT_THEME } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -44,15 +45,22 @@ function activeBackground(theme: string | undefined, isReducedMotion: boolean) {
       )
     default:
       return (
-        <Clouds
-          className={FILL}
-          cover={0.1}
-          refraction={0.1}
-          speed={isReducedMotion ? 0 : 0.6}
-          wind={0.2}
-        >
-          <BlueSky className={FILL} isReducedMotion={isReducedMotion} />
-        </Clouds>
+        <>
+          <Clouds
+            className={FILL}
+            cover={0.1}
+            refraction={0.1}
+            speed={isReducedMotion ? 0 : 0.6}
+            wind={0.2}
+          >
+            <BlueSky className={FILL} />
+          </Clouds>
+          {/* Birds sit ABOVE the cloud layer (crisp, and the HTML-in-Canvas
+              content never repaints per frame). */}
+          <Activity mode={isReducedMotion ? "hidden" : "visible"}>
+            <SkyBirds />
+          </Activity>
+        </>
       )
   }
 }
