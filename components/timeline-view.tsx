@@ -1,144 +1,91 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import Image, { type StaticImageData } from "next/image"
-import { FaGithub } from "react-icons/fa6"
-import personalPortfolioImg from "@/assets/timeline/01-personal-portfolio.png"
-import myPageImg from "@/assets/timeline/02-my-page.png"
-import kangaWorksImg from "@/assets/timeline/03-kanga-works-2023.png"
-import portfolioImg from "@/assets/timeline/04-must-finish-2025.png"
-import kangaFlowImg from "@/assets/timeline/05-kangaflow.png"
+import "@/components/timeline.css"
+
+import {
+  motion,
+  useInView,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+} from "motion/react"
+import Image from "next/image"
+import { useEffect, useRef, useState } from "react"
+
 import {
   ScrollProgress,
   ScrollProgressProvider,
 } from "@/components/animate-ui/primitives/animate/scroll-progress"
 import { LocaleTransition } from "@/components/locale-transition"
-import { CardBody, CardContainer, CardItem } from "@/components/ui/3d-card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Timeline, type TimelineEntry } from "@/components/ui/timeline"
+import { TimelineLinks } from "@/components/timeline-links"
+import {
+  PORTFOLIOS,
+  type Portfolio,
+  pad2,
+  shotLayoutId,
+} from "@/components/timeline-portfolios"
+import { TimelineViewer } from "@/components/timeline-viewer"
+import { isReducedMotion } from "@/lib/isReducedMotion"
+import { passedCount } from "@/lib/timeline"
+import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
-// One entry per portfolio. `slug` keys the i18n description; the name/year/urls
-// are brand facts, so they live here rather than in the dictionaries.
-type Portfolio = {
-  slug:
-    | "personalPortfolio"
-    | "myPage"
-    | "kangaWorks"
-    | "portfolio"
-    | "kangaFlow"
-  name: string
-  year: string
-  image: StaticImageData
-  liveUrl: string
-  repoUrl: string
-  current?: boolean
+const REVEAL = {
+  initial: { opacity: 0, y: 24 },
+  transition: { duration: 0.5, ease: [0.2, 0.8, 0.2, 1] as const },
+  viewport: { amount: 0.3, once: true },
+  whileInView: { opacity: 1, y: 0 },
 }
 
-// Oldest → newest; the current site is flagged for the badge.
-const PORTFOLIOS: readonly Portfolio[] = [
-  {
-    image: personalPortfolioImg,
-    liveUrl: "https://kangazero.github.io/kangazero.Personal_Portfolio.io/",
-    name: "Personal Portfolio",
-    repoUrl: "https://github.com/KangaZero/kangazero.Personal_Portfolio.io",
-    slug: "personalPortfolio",
-    year: "2022",
-  },
-  {
-    image: myPageImg,
-    liveUrl: "https://kangazero.github.io/my-page/",
-    name: "my-page",
-    repoUrl: "https://github.com/KangaZero/my-page",
-    slug: "myPage",
-    year: "2023",
-  },
-  {
-    image: kangaWorksImg,
-    liveUrl: "https://kanga-works2023.vercel.app/",
-    name: "Kanga Works",
-    repoUrl: "https://github.com/KangaZero/KangaWorks2023",
-    slug: "kangaWorks",
-    year: "2023",
-  },
-  {
-    image: portfolioImg,
-    liveUrl: "https://must-finish-2025.vercel.app/en",
-    name: "must-finish",
-    repoUrl: "https://github.com/KangaZero/portfolio",
-    slug: "portfolio",
-    year: "2025",
-  },
-  {
-    current: true,
-    image: kangaFlowImg,
-    liveUrl: "https://kangazero.github.io/KangaFlow/en",
-    name: "KangaFlow",
-    repoUrl: "https://github.com/KangaZero/KangaFlow",
-    slug: "kangaFlow",
-    year: "2026",
-  },
-]
-
-function PortfolioCard({ portfolio }: { portfolio: Portfolio }) {
-  const { translate } = useLocale()
-
-  return (
-    <div className="flex flex-col gap-4 pb-4">
-      <div className="flex items-center gap-3">
-        <h3 className="font-heading text-lg font-semibold">{portfolio.name}</h3>
-        {portfolio.current ? (
-          <Badge variant="secondary">{translate("timeline.current")}</Badge>
-        ) : null}
-        <Button
-          aria-label={translate("timeline.viewSource")}
-          asChild
-          className="ml-auto"
-          size="icon"
-          variant="ghost"
-        >
-          <a href={portfolio.repoUrl} rel="noreferrer" target="_blank">
-            <FaGithub />
-          </a>
-        </Button>
-      </div>
-
-      <LocaleTransition className="max-w-xl">
-        <p className="text-muted-foreground text-sm">
-          {translate(`timeline.entries.${portfolio.slug}`)}
-        </p>
-      </LocaleTransition>
-
-      <CardContainer className="w-full" containerClassName="justify-start py-4">
-        <CardBody className="h-auto w-full max-w-xl">
-          <CardItem className="w-full" translateZ={40}>
-            <a
-              aria-label={translate("timeline.visitSite")}
-              href={portfolio.liveUrl}
-              rel="noreferrer"
-              target="_blank"
-            >
-              <Image
-                alt={portfolio.name}
-                className="border-border h-auto w-full rounded-xl border object-cover shadow-md"
-                src={portfolio.image}
-              />
-            </a>
-          </CardItem>
-        </CardBody>
-      </CardContainer>
-    </div>
-  )
-}
-
+/*
+ * Timeline = editorial calm at rest (huge outlined years, heavy headlines,
+ * greyscale screenshots, sticky year rail) + the rebel plate as the moment:
+ * a scroll-drawn spine with diamond markers, and the plate + accent shard +
+ * bolt tip wiping in behind an entry on hover / keyboard focus (always on for
+ * the current site). Screenshots open a fullscreen viewer via a shared-layout
+ * morph (components/timeline-viewer).
+ */
 export function TimelineView() {
   const { translate } = useLocale()
+  const { animationPref } = useGlobalStates()
+  const reducedMotion = isReducedMotion(animationPref, useReducedMotion())
+  const listRef = useRef<HTMLOListElement>(null)
+  const startsRef = useRef<number[]>([])
+  const [passed, setPassed] = useState(0)
+  const [active, setActive] = useState(0)
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null)
+  const thumbnailsRef = useRef<(HTMLButtonElement | null)[]>([])
 
-  const data: TimelineEntry[] = PORTFOLIOS.map((portfolio) => ({
-    content: <PortfolioCard portfolio={portfolio} />,
-    title: portfolio.year,
-  }))
+  // Spine fill: list scroll progress, measured against a line 60% down the
+  // viewport so an entry "arrives" a little before it reaches the middle.
+  const { scrollYProgress } = useScroll({
+    offset: ["start 60%", "end 60%"],
+    target: listRef,
+  })
+
+  // Each entry's top as a fraction of the list height → markers light up when
+  // the drawn spine reaches them.
+  useEffect(() => {
+    const list = listRef.current
+    if (!list) return
+    const measure = () => {
+      const height = list.offsetHeight || 1
+      startsRef.current = Array.from(list.children, (child) =>
+        child instanceof HTMLElement ? child.offsetTop / height : 1
+      )
+      setPassed(passedCount(startsRef.current, scrollYProgress.get()))
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(list)
+    return () => observer.disconnect()
+  }, [scrollYProgress])
+
+  useMotionValueEvent(scrollYProgress, "change", (progress) => {
+    const next = passedCount(startsRef.current, progress)
+    setPassed((current) => (current === next ? current : next))
+  })
 
   return (
     <main className="min-h-svh w-full pb-28 sm:pb-0">
@@ -149,17 +96,210 @@ export function TimelineView() {
           mode="scaleX"
         />
       </ScrollProgressProvider>
-      <header className="mx-auto max-w-7xl px-6 pt-16 pb-2 md:px-10">
-        <LocaleTransition>
-          <h1 className="font-heading text-3xl font-semibold sm:text-4xl">
-            {translate("timeline.heading")}
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm">
-            {translate("timeline.subtitle")}
-          </p>
-        </LocaleTransition>
-      </header>
-      <Timeline data={data} />
+
+      <div className="mx-auto max-w-6xl px-6 pt-16 pb-20 md:px-10">
+        <header className="mb-12">
+          <LocaleTransition>
+            <h1 className="font-heading text-5xl leading-[0.9] font-extrabold tracking-tight sm:text-7xl">
+              {translate("timeline.heading")}
+            </h1>
+            <p className="text-muted-foreground mt-3 max-w-[52ch] text-sm">
+              {translate("timeline.subtitle")}
+            </p>
+          </LocaleTransition>
+        </header>
+
+        <div className="grid gap-9 md:grid-cols-[70px_minmax(0,1fr)]">
+          <nav
+            aria-label={translate("timeline.heading")}
+            className="sticky top-24 hidden self-start md:grid md:gap-1"
+          >
+            {PORTFOLIOS.map((portfolio, index) => (
+              <a
+                aria-current={index === active ? "true" : undefined}
+                className="text-muted-foreground aria-[current=true]:text-foreground grid grid-cols-[14px_1fr] items-center gap-2 py-1.5 font-mono text-[11px] font-bold transition-colors"
+                href={`#timeline-${portfolio.slug}`}
+                key={portfolio.slug}
+              >
+                <i
+                  aria-hidden
+                  className={
+                    index === active
+                      ? "bg-tooltip-shadow h-0.5 w-3.5 transition-all"
+                      : "bg-border h-0.5 w-2 transition-all"
+                  }
+                />
+                {portfolio.year}
+              </a>
+            ))}
+          </nav>
+
+          <ol className="relative pl-[30px] md:pl-10" ref={listRef}>
+            <span
+              aria-hidden
+              className="bg-border absolute top-0 bottom-0 left-[9px] w-0.5"
+            >
+              <motion.span
+                className="bg-tooltip-shadow absolute inset-0 origin-top"
+                style={{ scaleY: reducedMotion ? 1 : scrollYProgress }}
+              />
+            </span>
+            {PORTFOLIOS.map((portfolio, index) => (
+              <TimelineEntry
+                active={index === active}
+                index={index}
+                isOpen={viewerIndex === index}
+                key={portfolio.slug}
+                onActive={setActive}
+                onOpen={setViewerIndex}
+                passed={reducedMotion || index < passed}
+                portfolio={portfolio}
+                reducedMotion={reducedMotion}
+                thumbnailRef={(button) => {
+                  thumbnailsRef.current[index] = button
+                }}
+              />
+            ))}
+          </ol>
+        </div>
+      </div>
+
+      <TimelineViewer
+        onClose={() => setViewerIndex(null)}
+        onReturnFocus={(index) => thumbnailsRef.current[index]?.focus()}
+        originIndex={viewerIndex}
+        reducedMotion={reducedMotion}
+      />
     </main>
+  )
+}
+
+function TimelineEntry({
+  portfolio,
+  index,
+  active,
+  passed,
+  isOpen,
+  reducedMotion,
+  onActive,
+  onOpen,
+  thumbnailRef,
+}: {
+  portfolio: Portfolio
+  index: number
+  active: boolean
+  passed: boolean
+  /** This entry's screenshot is currently shown in the viewer. */
+  isOpen: boolean
+  reducedMotion: boolean
+  onActive: (index: number) => void
+  onOpen: (index: number) => void
+  thumbnailRef: (button: HTMLButtonElement | null) => void
+}) {
+  const { translate } = useLocale()
+  const ref = useRef<HTMLLIElement>(null)
+  // "Active" = the entry crossing the middle band of the viewport.
+  const inView = useInView(ref, { margin: "-45% 0px -45% 0px" })
+  useEffect(() => {
+    if (inView) onActive(index)
+  }, [inView, index, onActive])
+
+  const reveal = reducedMotion ? {} : REVEAL
+
+  return (
+    <li
+      className="timeline-entry border-border relative grid scroll-mt-20 items-end gap-9 border-t py-16 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
+      data-active={active}
+      data-current={portfolio.current === true}
+      id={`timeline-${portfolio.slug}`}
+      ref={ref}
+    >
+      <span
+        aria-hidden
+        className="timeline-marker absolute top-[72px] -left-[27px] size-[11px] md:-left-[37px]"
+        data-passed={passed}
+      />
+      <span
+        aria-hidden
+        className="timeline-numeral font-heading absolute top-1.5 -left-1.5 text-[clamp(110px,17vw,210px)] leading-[0.8] font-black"
+      >
+        {portfolio.year.slice(2)}
+      </span>
+
+      <motion.div className="relative pt-[clamp(96px,14vw,170px)]" {...reveal}>
+        <div className="relative -ml-[34px] py-4 pr-6 pl-[34px]">
+          <span
+            aria-hidden
+            className="timeline-plate absolute -top-1 -right-3.5 -bottom-2.5 left-0"
+          >
+            <span className="timeline-plate__shard" />
+            <span className="timeline-plate__body" />
+          </span>
+          <div className="timeline-copy relative">
+            <div
+              className="text-tooltip-shadow font-mono text-[11px] font-bold tracking-[0.2em]"
+              data-slot="timeline-index"
+            >
+              {`${pad2(index + 1)} / ${pad2(PORTFOLIOS.length)} · `}
+              <time dateTime={portfolio.year}>{portfolio.year}</time>
+            </div>
+            <h2 className="font-heading mt-2 mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[clamp(30px,4vw,46px)] leading-[0.95] font-extrabold tracking-tight">
+              {portfolio.name}
+              {portfolio.current ? (
+                <span className="timeline-now rounded-full px-2 py-1 text-[11px] leading-none font-bold tracking-[0.14em] uppercase">
+                  {translate("timeline.current")}
+                </span>
+              ) : null}
+            </h2>
+            <LocaleTransition className="mb-4 max-w-[42ch]">
+              <p className="text-muted-foreground text-[15px] leading-relaxed">
+                {translate(`timeline.entries.${portfolio.slug}`)}
+              </p>
+            </LocaleTransition>
+            <TimelineLinks portfolio={portfolio} />
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.figure className="relative m-0" {...reveal}>
+        <button
+          aria-haspopup="dialog"
+          aria-label={`${translate("timeline.viewer.expand")}: ${portfolio.name}`}
+          className="group focus-visible:outline-tooltip-shadow relative block w-full cursor-zoom-in rounded-[4px] focus-visible:outline-3 focus-visible:outline-offset-4"
+          onClick={() => onOpen(index)}
+          ref={thumbnailRef}
+          type="button"
+        >
+          {isOpen ? (
+            // Keep the space (and the focusable button) while the image is
+            // "away" in the viewer, so Radix can return focus here on close.
+            <div className="aspect-[16/10] w-full" />
+          ) : (
+            <motion.div
+              className="border-border relative aspect-[16/10] overflow-hidden border"
+              {...(reducedMotion
+                ? {}
+                : { layoutId: shotLayoutId(portfolio.slug) })}
+              style={{ borderRadius: 4 }}
+              transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
+            >
+              <Image
+                alt={portfolio.name}
+                className="timeline-shot object-cover object-top"
+                fill
+                sizes="(min-width: 768px) 55vw, 92vw"
+                src={portfolio.image}
+              />
+            </motion.div>
+          )}
+          <span
+            aria-hidden
+            className="bg-background/70 text-foreground absolute right-2.5 bottom-2.5 grid size-8 place-items-center rounded-lg opacity-0 backdrop-blur transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+          >
+            ⤢
+          </span>
+        </button>
+      </motion.figure>
+    </li>
   )
 }

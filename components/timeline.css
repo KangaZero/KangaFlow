@@ -1,0 +1,167 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* Timeline page: editorial calm at rest, the "rebel" plate as the moment.
+   Colours come from the tooltip tokens (plate / plate foreground / accent), so
+   every theme gets its own look with no new tokens. Motion (spine, reveals,
+   viewer morph) lives in the components; this file owns shapes + hover states. */
+
+/* Plate outline with a bolt tip on the left edge, pointing back at the spine. */
+.timeline-entry,
+.timeline-viewer {
+  --timeline-shape: polygon(
+    18px 0,
+    100% 3%,
+    98% 100%,
+    16px 97%,
+    16px 36px,
+    8px 28px,
+    9px 23px,
+    0 26px,
+    9px 16px,
+    8px 21px,
+    17px 13px
+  );
+}
+
+/* Huge outlined year numeral behind each entry. */
+.timeline-numeral {
+  color: transparent;
+  -webkit-text-stroke: 1.5px
+    color-mix(in oklch, var(--foreground) 14%, transparent);
+  pointer-events: none;
+}
+
+/* Spine marker (diamond). */
+.timeline-marker {
+  rotate: 45deg;
+  background: var(--background);
+  border: 2px solid var(--border);
+  transition:
+    background 0.3s,
+    border-color 0.3s;
+}
+.timeline-marker[data-passed="true"] {
+  background: var(--tooltip-shadow);
+  border-color: var(--tooltip-shadow);
+}
+.timeline-entry[data-current="true"] .timeline-marker::after {
+  position: absolute;
+  inset: -8px;
+  border: 2px solid var(--tooltip-shadow);
+  animation: timeline-ping 1.6s ease-out infinite;
+  content: "";
+}
+@keyframes timeline-ping {
+  from {
+    opacity: 0.9;
+    scale: 0.6;
+  }
+  to {
+    opacity: 0;
+    scale: 1.5;
+  }
+}
+
+/* The plate behind the copy: invisible at rest; a diagonal wipe + small slam
+   brings plate + accent shard in on hover / keyboard focus, and it stays on for
+   the current site. It sits in padding that always exists → no layout shift. */
+.timeline-plate {
+  clip-path: polygon(-10% -40%, -10% -40%, -30% 140%, -30% 140%);
+  opacity: 0;
+  transform: rotate(-1.2deg) scale(1.02);
+  transition:
+    clip-path 0.3s cubic-bezier(0.6, 0, 0.2, 1),
+    transform 0.34s cubic-bezier(0.2, 1.25, 0.4, 1),
+    opacity 0.15s;
+}
+/* Plate pieces: shape only, so the viewer can reuse them without the
+   hidden-until-hover state of .timeline-plate. */
+.timeline-plate__shard,
+.timeline-plate__body {
+  position: absolute;
+  clip-path: var(--timeline-shape);
+}
+.timeline-plate__shard {
+  inset: 4px 0 0 4px;
+  background: var(--tooltip-shadow);
+  transform: rotate(-1deg) translate(6px, 5px);
+}
+.timeline-plate__body {
+  inset: 4px 14px 10px 0;
+  background: var(--tooltip);
+}
+.timeline-entry:is(:hover, :focus-within, [data-current="true"])
+  .timeline-plate {
+  clip-path: polygon(-10% -40%, 130% -40%, 110% 140%, -30% 140%);
+  opacity: 1;
+  transform: none;
+}
+
+/* Copy flips to plate colours while the plate is showing. */
+.timeline-copy {
+  transition: color 0.25s;
+}
+.timeline-copy :is(p, [data-slot="timeline-index"], a) {
+  transition:
+    color 0.25s,
+    border-color 0.25s;
+}
+.timeline-entry:is(:hover, :focus-within, [data-current="true"])
+  .timeline-copy {
+  color: var(--tooltip-foreground);
+}
+.timeline-entry:is(:hover, :focus-within, [data-current="true"])
+  .timeline-copy
+  p {
+  color: color-mix(in oklch, var(--tooltip-foreground) 80%, transparent);
+}
+.timeline-entry:is(:hover, :focus-within, [data-current="true"])
+  .timeline-copy
+  [data-slot="timeline-index"] {
+  color: color-mix(
+    in oklch,
+    var(--tooltip-shadow) 55%,
+    var(--tooltip-foreground)
+  );
+}
+.timeline-entry:is(:hover, :focus-within, [data-current="true"])
+  .timeline-copy
+  a {
+  border-color: color-mix(in oklch, var(--tooltip-foreground) 28%, transparent);
+}
+
+/* Clean "Current" pill (normal type, accent). On the plate it lifts to the
+   plate foreground so it stays readable in the light theme. */
+.timeline-now {
+  border: 1.5px solid var(--tooltip-shadow);
+  color: var(--tooltip-shadow);
+}
+.timeline-viewer .timeline-now {
+  background: color-mix(in oklch, var(--tooltip-shadow) 30%, transparent);
+  color: var(--tooltip-foreground);
+}
+.timeline-entry[data-current="true"] .timeline-now {
+  background: color-mix(in oklch, var(--tooltip-shadow) 30%, transparent);
+  color: var(--tooltip-foreground);
+}
+
+/* Screenshot thumbnail: greyscale until the entry is active / hovered / focused. */
+.timeline-shot {
+  filter: grayscale(0.6) contrast(1.05);
+  transition:
+    filter 0.5s,
+    transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.timeline-entry:is(:hover, :focus-within, [data-active="true"]) .timeline-shot {
+  filter: none;
+  transform: scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeline-plate,
+  .timeline-shot {
+    transition: none;
+  }
+  .timeline-entry[data-current="true"] .timeline-marker::after {
+    animation: none;
+  }
+}
