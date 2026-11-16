@@ -430,6 +430,9 @@ const en = {
       toggleSettings: "Toggle settings",
       toggleTerminal: "Toggle terminal",
     },
+    ambience: "Ambience",
+    ambienceHint:
+      "Play a quiet deep-sea soundscape while the dark theme is on.",
     animation: "Animations",
     animationSystem: "System",
     currentLabel: "Current",
@@ -447,7 +450,7 @@ const en = {
     showChromeInEnvironment: "Show header on the environment page",
     soundEffects: "Sound effects",
     soundEffectsHint:
-      "Play a short synthesised sound when you unlock an achievement.",
+      "Play short synthesised sounds for toggles, windows, notifications and achievements.",
     storageUnavailable:
       "Changes apply right away but will be lost on reload. Private browsing or a blocked-storage setting usually causes this.",
     storageUnavailableTitle: "This browser is blocking storage",

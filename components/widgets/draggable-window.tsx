@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import { SPRING_ACCORDION, SPRING_CONTENT } from "@/lib/motion"
 import { safeLocalStorage } from "@/lib/safe-storage"
+import { playSfx } from "@/lib/sfx/play"
 import { cn } from "@/lib/utils"
 import { RESIZE_STEP, snapDelta, vimWindowAction } from "@/lib/vim-window"
 import { Z_LAYERS } from "@/lib/z-order"
@@ -175,6 +176,13 @@ export function DraggableWindow({
     : /\btop-/.test(anchorClass)
       ? "top"
       : "center"
+  // Open/close sound on a real transition only (not the initial mount value).
+  const wasOpenRef = useRef(isOpen)
+  useEffect(() => {
+    if (wasOpenRef.current === isOpen) return
+    wasOpenRef.current = isOpen
+    playSfx(isOpen ? "win-open" : "win-close")
+  }, [isOpen])
   const [growShift, setGrowShift] = useState(0)
   useLayoutEffect(() => {
     if (!isOpen || anchorEdge === "center" || heightOffset === 0) {

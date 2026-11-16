@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { GLASS_SURFACE } from "@/components/niri/glass"
 import type { ToastPosition } from "@/components/niri/settings"
 import type { NotificationType } from "@/lib/notifications"
+import { playSfx } from "@/lib/sfx/play"
 import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -156,6 +157,7 @@ export function NotificationToast(): React.JSX.Element {
       }
     }
     if (toShow.length === 0) return
+    playSfx("toast-in")
     // Newest toast on top; reverse so array[0] is the most-recent arrival.
     setActive((prev) =>
       [...toShow.reverse(), ...prev].slice(0, maxStackRef.current)

@@ -34,7 +34,8 @@ import {
   rarityStars,
 } from "@/lib/achievements"
 import { isReducedMotion } from "@/lib/isReducedMotion"
-import { getSharedAudio, playUnlockSound } from "@/lib/unlock-sound"
+import { gatedSharedAudio } from "@/lib/sfx/play"
+import { playUnlockSound } from "@/lib/unlock-sound"
 import { Z_LAYERS } from "@/lib/z-order"
 import { useAchievements } from "@/providers/achievements-provider"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -234,7 +235,7 @@ function UnlockToast({
   useEffect(() => {
     playUnlockSound({
       enabled: sound,
-      getAudio: getSharedAudio,
+      getAudio: gatedSharedAudio,
       rarity,
       reduced,
     })

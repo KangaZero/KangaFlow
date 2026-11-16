@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import { AchievementToast } from "@/components/achievement-toast"
 import { HintOverlay } from "@/components/hint-overlay"
 import { SettingsDialog } from "@/components/settings-dialog"
+import { SfxSync } from "@/components/sfx-sync"
 import { ShortcutDispatcher } from "@/components/shortcut-dispatcher"
 import { SiteHeader } from "@/components/site-header"
 import { TerminalDialog } from "@/components/terminal-dialog"
@@ -58,6 +59,7 @@ export default async function LangLayout({
                 <HintOverlay />
                 <WidgetManagement />
                 <AchievementToast />
+                <SfxSync />
               </div>
             </AchievementsProvider>
           </NotificationsProvider>

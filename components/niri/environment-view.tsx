@@ -61,6 +61,7 @@ import {
   type Viewport,
 } from "@/lib/niri-overview"
 import { loadNiriState, saveNiriState } from "@/lib/niri-persistence"
+import { playSfx } from "@/lib/sfx/play"
 import { matrixToGlyphRain } from "@/lib/terminal/cmatrix"
 import { readSourceFiles } from "@/lib/terminal/source"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
@@ -401,6 +402,25 @@ export function EnvironmentView() {
       hydratedRef.current = true
     }
   }, [])
+
+  // Workspace / overview sounds. Declared BEFORE the persist effect so the
+  // restore commit still sees hydratedRef === false and stays silent (a
+  // restored layout is not a user action).
+  const soundPrevRef = useRef({
+    active: state.active,
+    overview: state.overview,
+  })
+  useEffect(() => {
+    const prev = soundPrevRef.current
+    soundPrevRef.current = { active: state.active, overview: state.overview }
+    if (!hydratedRef.current) return
+    if (prev.overview !== state.overview) {
+      playSfx(state.overview ? "overview-in" : "overview-out")
+    } else if (prev.active !== state.active) {
+      const index = state.workspaces.findIndex((w) => w.id === state.active)
+      playSfx("ws-switch", { step: index + 1 })
+    }
+  }, [state.active, state.overview, state.workspaces])
 
   // Persist layout + each window's cached content on every reducer change. The
   // first change after mount IS the restore itself, so that run just marks

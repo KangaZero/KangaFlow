@@ -85,6 +85,7 @@ import {
   TWEEN_QUICK,
 } from "@/lib/motion"
 import { safeLocalStorage } from "@/lib/safe-storage"
+import { playSfx } from "@/lib/sfx/play"
 import { THEMES, type Theme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
@@ -456,6 +457,7 @@ function SecuritySection(): React.JSX.Element {
   async function handleSet(): Promise<void> {
     if (pwdInput !== confirmInput) {
       setFeedback("mismatch")
+      playSfx("error-soft")
       return
     }
     await setStoredPassword(pwdInput)

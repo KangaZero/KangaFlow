@@ -13,7 +13,7 @@ import {
 } from "lucide-react"
 import { AnimatePresence, LayoutGroup, motion } from "motion/react"
 import type * as React from "react"
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import {
   Popover,
@@ -26,6 +26,7 @@ import type { WidgetId } from "@/components/niri/settings"
 import { SPRING_CARD, SPRING_CONTENT } from "@/lib/motion"
 import type { NotificationType } from "@/lib/notifications"
 import { formatRelativeTime } from "@/lib/notifications"
+import { playSfx } from "@/lib/sfx/play"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -58,6 +59,13 @@ export function NotificationCenter({
   const { translate } = useLocale()
   const { notifications, unreadCount, dismiss, markRead, remind } =
     useNotifications()
+  // Chime when the unread count grows (shares the "arrival" rate group with
+  // the toast sound, so one notification never double-plays).
+  const prevUnreadRef = useRef(unreadCount)
+  useEffect(() => {
+    if (unreadCount > prevUnreadRef.current) playSfx("notify")
+    prevUnreadRef.current = unreadCount
+  }, [unreadCount])
   const {
     setIsAlarmOpen,
     setIsCalendarOpen,

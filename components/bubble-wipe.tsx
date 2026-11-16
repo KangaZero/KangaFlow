@@ -12,6 +12,7 @@ import {
   type SwarmBubble,
   transitionTarget,
 } from "@/lib/page-transition"
+import { playSfx } from "@/lib/sfx/play"
 import { Z_LAYERS } from "@/lib/z-order"
 
 // Cartoon "bubble swarm" route transition: cover → navigate → reveal.
@@ -98,6 +99,7 @@ function settle(promises: Promise<unknown>[], budget: number): Promise<void> {
 }
 
 async function cover() {
+  playSfx("bubble-cover")
   const { riseMs, riseStaggerMs } = SWARM_TIMING
   const rises = state.bubbles.map(
     ({ el, spec }) =>
@@ -174,6 +176,7 @@ async function reveal() {
     state.phase = "idle"
     return
   }
+  playSfx("bubble-pop")
   const { popMs, popStaggerMs, burstMs } = SWARM_TIMING
   const pops: Promise<unknown>[] = []
   if (state.sheet) {

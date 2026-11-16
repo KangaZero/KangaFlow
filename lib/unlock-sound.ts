@@ -4,9 +4,14 @@
 // Web Audio nodes. Gentle levels; layers grow with rarity:
 //   riser during the capsule rattle → crack + pop at the open → chime
 //   arpeggio at the impact, + low boom from rare, + high shimmer from legendary.
+// playUnlockSound keeps only the capsule layers (riser/crack/pop) and voices
+// the reward with the Magic-menu `unlock-<rarity>` recipe from lib/sfx.
 
 import { rarityLevel, unlockTimeline } from "@/lib/achievement-unlock"
 import type { Rarity } from "@/lib/achievements"
+import { SFX_RECIPES } from "@/lib/sfx/catalog"
+import { sfxMaster } from "@/lib/sfx/play"
+import { renderPlan } from "@/lib/sfx/synth"
 
 export type SoundEvent =
   | {
@@ -216,8 +221,25 @@ export function scheduleUnlockSound(
 }
 
 /**
+ * The capsule part of an unlock (riser during the rattle, crack + pop at the
+ * open), synced to the capsule visuals. The reward itself is the Magic-menu
+ * unlock recipe from lib/sfx (played at the impact beat by playUnlockSound).
+ */
+export function unlockCapsulePlan(
+  rarity: Rarity,
+  reduced: boolean
+): SoundEvent[] {
+  return unlockSoundPlan(rarity, reduced).filter(
+    (event) =>
+      event.kind === "riser" || event.kind === "crack" || event.kind === "pop"
+  )
+}
+
+/**
  * Play only when the user opted in. The context comes from `getAudio`, which is
  * NOT called at all when sound is off, so nothing is created in that case.
+ * Capsule events stay timed to the animation; the Magic-menu reward recipe
+ * plays at the impact beat (at once under reduced motion: no capsule).
  * Returns whether anything was scheduled.
  */
 export function playUnlockSound({
@@ -229,33 +251,18 @@ export function playUnlockSound({
   enabled: boolean
   rarity: Rarity
   reduced: boolean
-  getAudio: () => AudioLike | null
+  getAudio: () => AudioContext | null
 }): boolean {
   if (!enabled) return false
   const audio = getAudio()
   if (!audio) return false
-  scheduleUnlockSound(audio, unlockSoundPlan(rarity, reduced))
-  return true
-}
-
-let shared: AudioContext | null = null
-
-/**
- * One lazily-created AudioContext. Browsers start it suspended until a user
- * gesture (autoplay policy); `resume()` is attempted and a refusal is ignored,
- * so the worst case is silence. `null` where Web Audio is unavailable.
- */
-export function getSharedAudio(): AudioContext | null {
-  if (
-    typeof window === "undefined" ||
-    typeof window.AudioContext !== "function"
+  scheduleUnlockSound(audio, unlockCapsulePlan(rarity, reduced))
+  const impact = reduced ? 0 : unlockTimeline(rarity).impactAt / 1000
+  renderPlan(
+    audio,
+    sfxMaster(audio),
+    SFX_RECIPES[`unlock-${rarity}`]({}),
+    audio.currentTime + 0.02 + impact
   )
-    return null
-  try {
-    shared ??= new window.AudioContext()
-  } catch {
-    return null
-  }
-  if (shared.state === "suspended") shared.resume().catch(() => undefined)
-  return shared
+  return true
 }

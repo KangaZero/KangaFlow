@@ -75,6 +75,12 @@ function loadSoundEffects(): boolean {
   return safeLocalStorage.getItem(SOUND_EFFECTS_STORAGE_KEY) === "true"
 }
 
+const AMBIENCE_STORAGE_KEY = "kangaflow:ambience"
+
+function loadAmbience(): boolean {
+  return safeLocalStorage.getItem(AMBIENCE_STORAGE_KEY) === "true"
+}
+
 // Booleans whose default is not `false` need a tri-state read: only an explicit
 // "true"/"false" overrides the fallback (missing/garbage → fallback).
 function loadBoolean(key: string, fallback: boolean): boolean {
@@ -279,6 +285,7 @@ function loadEnvSettings(): EnvSettings {
 }
 
 const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
+  ambience: false,
   animationPref: "system",
   columnCount: DEFAULT_COLUMN_COUNT,
   envSettings: DEFAULT_ENV_SETTINGS,
@@ -300,6 +307,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   noteLineNumbers: "off",
   onekoEnabled: DEFAULT_ONEKO_ENABLED,
   onekoFollowCursor: DEFAULT_ONEKO_FOLLOW_CURSOR,
+  setAmbience: () => {},
   setAnimationPref: () => {},
   setColumnCount: () => {},
   setEnvSettings: () => {},
@@ -393,6 +401,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [animationPref, setAnimationPref] = useState<AnimationPref>("system")
   const [vimMode, setVimMode] = useState(false)
   const [soundEffects, setSoundEffects] = useState(false)
+  const [ambience, setAmbience] = useState(false)
   const [onekoEnabled, setOnekoEnabled] = useState(DEFAULT_ONEKO_ENABLED)
   const [onekoFollowCursor, setOnekoFollowCursor] = useState(
     DEFAULT_ONEKO_FOLLOW_CURSOR
@@ -409,6 +418,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     setAnimationPref(loadAnimationPref())
     setVimMode(loadVimMode())
     setSoundEffects(loadSoundEffects())
+    setAmbience(loadAmbience())
     setOnekoEnabled(
       loadBoolean(ONEKO_ENABLED_STORAGE_KEY, DEFAULT_ONEKO_ENABLED)
     )
@@ -474,6 +484,12 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (hydrated.current) {
+      safeLocalStorage.setItem(AMBIENCE_STORAGE_KEY, String(ambience))
+    }
+  }, [ambience])
+
+  useEffect(() => {
+    if (hydrated.current) {
       safeLocalStorage.setItem(ONEKO_ENABLED_STORAGE_KEY, String(onekoEnabled))
     }
   }, [onekoEnabled])
@@ -517,6 +533,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<GlobalStatesContextValue>(
     () => ({
+      ambience,
       animationPref,
       columnCount,
       envSettings,
@@ -538,6 +555,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       noteLineNumbers,
       onekoEnabled,
       onekoFollowCursor,
+      setAmbience,
       setAnimationPref,
       setColumnCount,
       setEnvSettings,
@@ -580,6 +598,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       onekoFollowCursor,
       showChromeInEnvironment,
       soundEffects,
+      ambience,
       vimMode,
       isAlarmOpen,
       isCalendarOpen,

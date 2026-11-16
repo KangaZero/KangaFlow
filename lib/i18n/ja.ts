@@ -437,6 +437,8 @@ const ja = {
       toggleSettings: "設定の切り替え",
       toggleTerminal: "ターミナルの切り替え",
     },
+    ambience: "環境音",
+    ambienceHint: "ダークテーマのあいだ、深海の環境音を静かに流します。",
     animation: "アニメーション",
     animationSystem: "システム",
     currentLabel: "現在",
@@ -453,7 +455,8 @@ const ja = {
     resetToDefaults: "デフォルトに戻す",
     showChromeInEnvironment: "環境ページでヘッダーを表示",
     soundEffects: "効果音",
-    soundEffectsHint: "実績を解除したときに短い効果音を鳴らします。",
+    soundEffectsHint:
+      "トグルやウィンドウ、通知、実績の解除時に短い効果音を鳴らします。",
     storageUnavailable:
       "変更はすぐに反映されますが、再読み込みすると失われます。プライベートブラウジングやストレージのブロック設定が原因の場合がほとんどです。",
     storageUnavailableTitle: "このブラウザではストレージがブロックされています",

@@ -75,6 +75,9 @@ export type GlobalStatesContextValue = {
   // Synthesised sound effects (achievement unlocks). Persisted; default off.
   soundEffects: boolean
   setSoundEffects: (on: boolean) => void
+  /** Opt-in background ambience (dark theme: deep sea). Off by default. */
+  ambience: boolean
+  setAmbience: (on: boolean) => void
   // Note-editor line-number gutter (persisted): off, absolute, or vim-style
   // relative (distance from the caret line).
   noteLineNumbers: NoteLineNumbers

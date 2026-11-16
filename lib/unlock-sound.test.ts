@@ -113,7 +113,7 @@ describe("scheduleUnlockSound / playUnlockSound", () => {
   })
 
   it("creates nothing (not even a context) when sound is off", () => {
-    const getAudio = vi.fn(() => fakeAudio().audio)
+    const getAudio = vi.fn((): AudioContext | null => null)
     expect(
       playUnlockSound({
         enabled: false,

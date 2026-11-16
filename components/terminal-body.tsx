@@ -44,6 +44,7 @@ import { GlyphRain } from "@/components/canvasui/GlyphRain"
 import { CodeEditor } from "@/components/code-editor"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import { getWindowContent, setWindowContent } from "@/lib/niri-window-cache"
+import { playSfx } from "@/lib/sfx/play"
 import {
   isMatrixTheme,
   type MatrixOptions,
@@ -758,6 +759,8 @@ export function TerminalBody({
           const atHome =
             pageForRoute(routePathRef.current)?.name === ONEKO_HOME_PAGE
           term.write(renderOnekoOutput(result.output, atHome))
+          if (result.output.kind === "summoned") playSfx("oneko-summon")
+          if (result.output.kind === "dismissed") playSfx("oneko-dismiss")
           return true
         }
         case "cd": {
@@ -1019,6 +1022,7 @@ export function TerminalBody({
         }
         const started = performance.now()
         const reprompt = runCommand(line)
+        if (s.exitCode !== 0) playSfx("term-error")
         execMsRef.current = performance.now() - started
         persistRef.current()
         if (reprompt && !s.editorOpen) prompt()
@@ -1078,6 +1082,7 @@ export function TerminalBody({
 
     fit.fit()
     fastfetch()
+    playSfx("term-boot")
     // Open straight into the editor if a file was requested (page code button),
     // else drop to the shell prompt.
     // PageCodeButton passes a real deep source path; map it to the flat

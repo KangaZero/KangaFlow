@@ -16,6 +16,7 @@ import {
 } from "@/lib/hero-interaction"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import { person } from "@/lib/person"
+import { playSfx } from "@/lib/sfx/play"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -68,6 +69,7 @@ export function HeroAvatar() {
 
   function boop(event: React.MouseEvent<HTMLButtonElement>) {
     setBoops((count) => count + 1)
+    playSfx("boop", { step: boops + 1 })
     setShowCounter(true)
     window.clearTimeout(counterTimer.current)
     counterTimer.current = window.setTimeout(

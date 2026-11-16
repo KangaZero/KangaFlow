@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import Image from "next/image"
 import { Dialog as DialogPrimitive } from "radix-ui"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { TimelineLinks } from "@/components/timeline-links"
 import {
@@ -13,6 +13,7 @@ import {
   pad2,
   shotLayoutId,
 } from "@/components/timeline-portfolios"
+import { playSfx } from "@/lib/sfx/play"
 import { stepIndex } from "@/lib/timeline"
 import { Z_LAYERS } from "@/lib/z-order"
 import { useLocale } from "@/providers/locale-provider"
@@ -42,6 +43,9 @@ export function TimelineViewer({
   reducedMotion: boolean
 }) {
   const open = originIndex !== null
+  useEffect(() => {
+    if (open) playSfx("viewer-open")
+  }, [open])
   return (
     <DialogPrimitive.Root
       onOpenChange={(next) => {

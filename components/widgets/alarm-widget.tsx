@@ -26,10 +26,14 @@ import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { SPRING_LIST, SPRING_PILL, SPRING_TAP } from "@/lib/motion"
 import { safeLocalStorage } from "@/lib/safe-storage"
+import { playSfx } from "@/lib/sfx/play"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 import { useNotifications } from "@/providers/notifications-provider"
+
+/** Gap between alarm chimes while the ringing overlay is up. */
+const ALARM_SFX_INTERVAL_MS = 2200
 
 const STORAGE_KEY = "kangaflow:alarms"
 
@@ -506,12 +510,23 @@ export function AlarmWidget(): React.JSX.Element {
     if (ringing != null) stopRef.current?.focus({ preventScroll: true })
   }, [ringing])
 
+  // Chime once now and every ALARM_SFX_INTERVAL_MS while the overlay rings.
+  const isRinging = ringing != null
+  useEffect(() => {
+    if (!isRinging) return
+    playSfx("alarm")
+    const id = window.setInterval(() => playSfx("alarm"), ALARM_SFX_INTERVAL_MS)
+    return () => window.clearInterval(id)
+  }, [isRinging])
+
   const silence = (): void => {
+    playSfx("alarm-dismiss")
     if (firing != null) dismissedRef.current = `${firing}@${currentHHMM}`
     setRinging(null)
     bellRef.current?.stopAnimation()
   }
   const snooze = (): void => {
+    playSfx("alarm-dismiss")
     if (ringing != null) remind(5, ringing.label, "alarm", "alarm")
     silence()
   }

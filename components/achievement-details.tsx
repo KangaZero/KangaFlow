@@ -12,9 +12,15 @@ import {
   rarityStars,
   setNumber,
 } from "@/lib/achievements"
+import { playSfx } from "@/lib/sfx/play"
 import { type SharePlatform, shareIntentUrl } from "@/lib/share"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
+
+/** Confirmation sound once the clipboard write actually resolved. */
+function playCopySound(): void {
+  playSfx("copy")
+}
 
 /**
  * Text side of an achievement: title, description, metadata and (once unlocked)
@@ -57,7 +63,7 @@ export function AchievementDetails({
       }
       return
     }
-    await navigator.clipboard?.writeText(url)
+    await navigator.clipboard?.writeText(url).then(playCopySound)
   }
 
   // GitHub has no share endpoint (shareIntentUrl returns null): copy the link.
@@ -68,7 +74,7 @@ export function AchievementDetails({
       window.open(intent, "_blank", "noopener,noreferrer")
       return
     }
-    void navigator.clipboard?.writeText(url)
+    void navigator.clipboard?.writeText(url).then(playCopySound)
   }
 
   return (
