@@ -46,7 +46,7 @@ const ja = {
         title: "エオス",
       },
       "go-touch-grass": {
-        description: "達成可能な実績をすべて解除した。",
+        description: "全部見つけたね。…そろそろ外に出よう？",
         title: "外の空気を吸え",
       },
       "new-beginnings": {
@@ -62,7 +62,7 @@ const ja = {
         title: "サイコパス",
       },
       "puzzle-master": {
-        description: "史上最難関のパズルを解いた。",
+        description: "解けたの！？作った本人でも無理なのに。",
         title: "パズルマスター",
       },
       "sand-mandala": {
@@ -70,11 +70,11 @@ const ja = {
         title: "砂曼荼羅",
       },
       "snoopy-detective": {
-        description: "日付と天気のボックスにカーソルを合わせた。",
+        description: "待って、なんで職場知ってるの！？",
         title: "スヌーピー探偵",
       },
       "social-stalker": {
-        description: "制作者のSNSリンクをすべて開いた。",
+        description: "SNS全部開いたの？…ちょっと怖いんだけど。",
         title: "ソーシャルストーカー",
       },
       speedophile: {

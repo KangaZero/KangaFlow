@@ -47,7 +47,7 @@ const en = {
         title: "Eos",
       },
       "go-touch-grass": {
-        description: "Unlocked every achievable achievement.",
+        description: "You found everything. Please, go outside.",
         title: "Go Touch Grass",
       },
       "new-beginnings": {
@@ -63,7 +63,7 @@ const en = {
         title: "Psychopath",
       },
       "puzzle-master": {
-        description: "Solved the most difficult puzzle ever devised.",
+        description: "You solved it?! Even I can't.",
         title: "Puzzle Master",
       },
       "sand-mandala": {
@@ -71,11 +71,11 @@ const en = {
         title: "Sand Mandala",
       },
       "snoopy-detective": {
-        description: "Hovered the date & weather box.",
+        description: "Wait, why do you know where I work?!",
         title: "Snoopy Detective",
       },
       "social-stalker": {
-        description: "Opened every one of the creator's socials.",
+        description: "You've opened all my socials. Should I be worried?",
         title: "Social Stalker",
       },
       speedophile: {
