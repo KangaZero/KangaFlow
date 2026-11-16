@@ -5,7 +5,7 @@ import { useTheme } from "next-themes"
 import { Activity, useEffect, useState } from "react"
 import { BlueSky } from "@/components/blue-sky"
 import { Clouds } from "@/components/canvasui/Clouds"
-import { SwimmingSchool } from "@/components/sea-creatures"
+import { DeepSea } from "@/components/deep-sea"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import { DEFAULT_THEME } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -32,7 +32,7 @@ function activeBackground(theme: string | undefined, isReducedMotion: boolean) {
         <>
           <LightRays className={FILL} />
           <Activity mode={isReducedMotion ? "hidden" : "visible"}>
-            <SwimmingSchool />
+            <DeepSea />
           </Activity>
         </>
       )

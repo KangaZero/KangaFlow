@@ -1,0 +1,119 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* Depth gradient: teal near the surface fading to the page's black. Kept
+   translucent so the WebGL LightRays behind it still show through. */
+.deep-sea {
+  background:
+    radial-gradient(
+      ellipse 80% 55% at 50% -15%,
+      rgb(29 107 115 / 0.35),
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      rgb(6 34 42 / 0.55) 0%,
+      rgb(4 20 26 / 0.35) 40%,
+      rgb(2 10 13 / 0.15) 75%,
+      transparent 100%
+    );
+}
+
+/* Deep-sea CSS bubbles: three nested elements, all compositor-only
+   (transform/translate/scale/opacity) → zero JS per frame.
+   rise (Y + grow while rising) → sway (X) → wobble (squash & stretch).
+   `cqh` = container height, so the rise distance needs no JS measuring; the
+   host sets `container-type: size`. */
+
+.sea-bubble {
+  position: absolute;
+  bottom: -60px;
+  left: var(--x);
+  width: var(--size);
+  height: var(--size);
+  animation: sea-bubble-rise var(--duration) cubic-bezier(0.32, 0, 0.7, 0.75)
+    var(--delay) infinite;
+  will-change: transform;
+}
+.sea-bubble__sway {
+  position: absolute;
+  inset: 0;
+  animation: sea-bubble-sway var(--sway) ease-in-out var(--delay) infinite
+    alternate;
+}
+.sea-bubble__body {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* key specular (light from above-left), bright rim, faint inner sheen */
+  background:
+    radial-gradient(ellipse 22% 14% at 32% 26%, #fffe 0 60%, transparent 100%),
+    radial-gradient(
+      circle at 50% 50%,
+      transparent 0 63%,
+      #a6fff2aa 72%,
+      #39e6cf66 76%,
+      transparent 80%
+    ),
+    radial-gradient(circle at 50% 70%, #39e6cf14 0, transparent 70%);
+  animation: sea-bubble-wobble var(--wobble) ease-in-out infinite alternate;
+}
+/* Large bubbles are spherical caps: flattened, rocking, flat-ish bottom. */
+.sea-bubble[data-big="true"] .sea-bubble__body {
+  border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
+  animation-name: sea-bubble-cap;
+}
+.sea-bubble[data-depth="far"] {
+  filter: blur(1.6px);
+  opacity: 0.45;
+}
+.sea-bubble[data-depth="mid"] {
+  filter: blur(0.6px);
+  opacity: 0.75;
+}
+
+@keyframes sea-bubble-rise {
+  0% {
+    transform: translateY(0) scale(0.85);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  100% {
+    /* bubbles expand as pressure drops; they leave via the top, never pop */
+    transform: translateY(calc(-100cqh - 120px)) scale(1.25);
+    opacity: 1;
+  }
+}
+@keyframes sea-bubble-sway {
+  from {
+    translate: calc(var(--amplitude) * -1) 0;
+  }
+  to {
+    translate: var(--amplitude) 0;
+  }
+}
+@keyframes sea-bubble-wobble {
+  from {
+    scale: 1.06 0.94;
+  }
+  to {
+    scale: 0.95 1.05;
+  }
+}
+@keyframes sea-bubble-cap {
+  from {
+    scale: 1.22 0.8;
+    rotate: -8deg;
+  }
+  to {
+    scale: 1.12 0.88;
+    rotate: 8deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sea-bubble,
+  .sea-bubble * {
+    animation-play-state: paused;
+  }
+}
