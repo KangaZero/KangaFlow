@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  FULLSCREEN_WIDTH,
   getActiveWorkspace,
   getFocusedColumn,
   getFocusedWindow,
@@ -181,7 +182,7 @@ describe("fullscreen", () => {
     state = niriReducer(state, { app: "terminal", type: "spawn" })
     expect(getFocusedColumn(state)?.width).toBe(1 / 2)
     state = niriReducer(state, { type: "fullscreen" })
-    expect(getFocusedColumn(state)?.width).toBe(1)
+    expect(getFocusedColumn(state)?.width).toBe(FULLSCREEN_WIDTH)
     state = niriReducer(state, { type: "fullscreen" })
     expect(getFocusedColumn(state)?.width).toBe(1 / 2)
   })

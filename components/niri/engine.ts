@@ -34,6 +34,9 @@ const DEFAULT_TITLES: Record<AppId, string> = {
 export const WORKSPACE_MIN = 1
 export const WORKSPACE_MAX = 3
 const SPAWN_WIDTH = 1 / 2
+// Fullscreen column width as a fraction of the strip. Intentionally 0.99, not
+// 1: a full 1 may overflow the x-axis for the window.
+export const FULLSCREEN_WIDTH = 0.99
 // Hard cap on total open windows across all workspaces.
 const WINDOW_MAX = 20
 
@@ -355,7 +358,7 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
           mapColumn(ws, ws.focused, (col) => ({
             ...col,
             // Enter → full strip width; exit → back to the spawn half-width.
-            width: isFullscreen ? SPAWN_WIDTH : 1,
+            width: isFullscreen ? SPAWN_WIDTH : FULLSCREEN_WIDTH,
           }))
       )
     }
