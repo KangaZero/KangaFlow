@@ -1,0 +1,49 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* Environment window chrome extras ("frosted glass"). Colours come from the
+   theme tokens (--primary, --card), so every theme gets its own accent. */
+
+/* Attention state (e.g. a ringing alarm): the frame breathes a soft accent
+   glow every 2s (0.5 Hz, far below any flashing threshold). Layered on top of
+   the elevation shadow so the depth stays. */
+.window-attention {
+  animation: window-breathe 2s ease-in-out infinite;
+}
+@keyframes window-breathe {
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--primary) 55%, transparent),
+      0 0 32px 4px color-mix(in oklch, var(--primary) 28%, transparent),
+      0 24px 60px -24px rgb(0 0 0 / 0.6);
+  }
+}
+
+/* Ringing alarm: two halo rings expand out of the bell, offset by 1s. */
+.alarm-halo {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--primary);
+  border-radius: 9999px;
+  opacity: 0;
+  pointer-events: none;
+  animation: alarm-halo 2s ease-out infinite;
+}
+.alarm-halo + .alarm-halo {
+  animation-delay: 1s;
+}
+@keyframes alarm-halo {
+  0% {
+    opacity: 0.5;
+    scale: 1;
+  }
+  100% {
+    opacity: 0;
+    scale: 1.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .window-attention,
+  .alarm-halo {
+    animation: none;
+  }
+}

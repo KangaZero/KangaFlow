@@ -1,23 +1,27 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { GripHorizontal, X } from "lucide-react"
+import "@/components/widgets/widgets.css"
+
+import { X } from "lucide-react"
 import {
   AnimatePresence,
   motion,
   useDragControls,
   useMotionValue,
+  useReducedMotion,
 } from "motion/react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { GLASS_SURFACE } from "@/components/niri/glass"
+import { GLASS_SURFACE, WINDOW_ELEVATION } from "@/components/niri/glass"
 import {
   WIDGET_STATE_STORAGE_PREFIX as STORAGE_PREFIX,
   WIDGET_ANCHOR_CLASS,
   type WidgetAnchor,
 } from "@/components/niri/settings"
 import { Button } from "@/components/ui/button"
-import { SPRING_CONTENT } from "@/lib/motion"
+import { isReducedMotion } from "@/lib/isReducedMotion"
+import { SPRING_ACCORDION, SPRING_CONTENT } from "@/lib/motion"
 import { safeLocalStorage } from "@/lib/safe-storage"
 import { cn } from "@/lib/utils"
 import { RESIZE_STEP, snapDelta, vimWindowAction } from "@/lib/vim-window"
@@ -69,7 +73,32 @@ export type DraggableWindowProps = {
   // Fired when the window gains focus (open / pointer-down). Lets a caller sync
   // external focus state — e.g. a floated niri column marking itself focused.
   onFocus?: () => void
+  // Draws attention to the window (e.g. a ringing alarm): a soft breathing
+  // accent glow around the frame. Purely visual.
+  attention?: boolean
+  // Extra px added below the user's (persisted, resizable) height — e.g. an
+  // inline accordion growing out of the bottom edge. Animated with
+  // SPRING_ACCORDION; never persisted, so collapsing restores the user's size.
+  heightOffset?: number
   children: React.ReactNode
+}
+
+// Where a closing window "minimises" to: bottom-centre of the viewport (the
+// dock area). Expressed as a transform-origin relative to the window, so a
+// scale-down visibly flies toward that point without touching the drag x/y
+// motion values (those persist across open/close and must keep the position).
+function minimiseOrigin(el: HTMLElement | null): {
+  originX: number
+  originY: number
+} {
+  if (el == null) return { originX: 0.5, originY: 1 }
+  const rect = el.getBoundingClientRect()
+  const dockX = window.innerWidth / 2
+  const dockY = window.innerHeight - 24
+  return {
+    originX: rect.width > 0 ? (dockX - rect.left) / rect.width : 0.5,
+    originY: rect.height > 0 ? (dockY - rect.top) / rect.height : 1,
+  }
 }
 
 export function DraggableWindow({
@@ -88,9 +117,12 @@ export function DraggableWindow({
   anchor,
   defaultOffset = null,
   onFocus,
+  attention = false,
+  heightOffset = 0,
   children,
 }: DraggableWindowProps): React.JSX.Element | null {
-  const { envSettings } = useGlobalStates()
+  const { envSettings, animationPref } = useGlobalStates()
+  const reduceMotion = isReducedMotion(animationPref, useReducedMotion())
   const { bringToFront, activeId } = useZOrder()
   // Latest handlers read through refs so the focus effect can stay off them
   // (their identity changes each render; depending on them would re-raise every
@@ -112,6 +144,11 @@ export function DraggableWindow({
   // above its peers.
   const [z, setZ] = useState<number>(Z_LAYERS.window)
   const constraintsRef = useRef<HTMLDivElement>(null)
+  // Drag bounds as a plain box in x/y-offset space, refreshed from the
+  // viewport right before each drag starts. A ref-element constraint would
+  // make Motion re-scale the position whenever the window's layout changes
+  // (resize, the accordion's heightOffset), nudging the window on its own.
+  const dragBounds = useRef({ bottom: 0, left: 0, right: 0, top: 0 })
   const dragControls = useDragControls()
 
   const anchorClass = anchor ? WIDGET_ANCHOR_CLASS[anchor] : positionClassName
@@ -127,6 +164,45 @@ export function DraggableWindow({
   // Refs used by the resize pointer-capture handler (avoids stale closure issues).
   const startSizeRef = useRef({ height: 0, width: 0 })
   const startPosRef = useRef({ x: 0, y: 0 })
+  // While the corner is being dragged, height follows the pointer instantly
+  // (a spring there would lag behind the cursor).
+  const [isResizing, setIsResizing] = useState(false)
+  const totalHeight = size.height + heightOffset
+
+  // Growth direction for heightOffset: content should extend DOWNWARD from the
+  // current top edge. A bottom-anchored window would naturally grow upward, so
+  // it slides down by as much free space as there is below it (negative
+  // margin-bottom); a top-anchored one grows down and only slides up if it
+  // would overflow the viewport (negative margin-top). Centred windows
+  // (`m-auto`) grow evenly and are left alone.
+  const anchorEdge: "top" | "bottom" | "center" = /\bbottom-/.test(anchorClass)
+    ? "bottom"
+    : /\btop-/.test(anchorClass)
+      ? "top"
+      : "center"
+  const [growShift, setGrowShift] = useState(0)
+  useLayoutEffect(() => {
+    if (!isOpen || anchorEdge === "center" || heightOffset === 0) {
+      setGrowShift(0)
+      return
+    }
+    const el = windowRef.current
+    if (el == null) return
+    // Measured before the height animation starts: the collapsed frame.
+    const rect = el.getBoundingClientRect()
+    const spaceBelow = Math.max(0, window.innerHeight - rect.bottom - 12)
+    setGrowShift(
+      anchorEdge === "bottom"
+        ? Math.min(heightOffset, spaceBelow) // slide down this much
+        : Math.max(0, heightOffset - spaceBelow) // slide up only on overflow
+    )
+  }, [heightOffset, isOpen, anchorEdge])
+  const growMargins =
+    anchorEdge === "bottom"
+      ? { marginBottom: -growShift }
+      : anchorEdge === "top"
+        ? { marginTop: -growShift }
+        : {}
 
   useEffect(() => setMounted(true), [])
   // Opening (or re-opening) a widget brings it to the front and registers it as
@@ -237,20 +313,42 @@ export function DraggableWindow({
       <AnimatePresence>
         {isOpen ? (
           <motion.div
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            animate={
+              reduceMotion
+                ? { ...growMargins, height: totalHeight, opacity: 1 }
+                : {
+                    ...growMargins,
+                    filter: "blur(0px)",
+                    height: totalHeight,
+                    opacity: 1,
+                    scale: 1,
+                  }
+            }
             className={cn(
-              "text-card-foreground pointer-events-auto fixed flex scrollbar-none flex-col overflow-hidden",
+              "text-card-foreground pointer-events-auto fixed flex scrollbar-none flex-col overflow-hidden transition-shadow duration-300",
               GLASS_SURFACE[envSettings.glass],
+              isActive ? WINDOW_ELEVATION.focused : WINDOW_ELEVATION.rest,
+              attention && !reduceMotion && "window-attention",
               anchorClass
             )}
+            data-focused={isActive}
             drag
-            dragConstraints={constraintsRef}
+            dragConstraints={dragBounds.current}
             dragControls={dragControls}
             dragElastic={0.06}
             dragListener={false}
             dragMomentum={false}
-            exit={{ opacity: 0, scale: 0.95, y: 16 }}
-            initial={{ opacity: 0, scale: 0.95, y: 16 }}
+            exit="minimise"
+            initial={
+              reduceMotion
+                ? { height: totalHeight, opacity: 0 }
+                : {
+                    filter: "blur(8px)",
+                    height: totalHeight,
+                    opacity: 0,
+                    scale: 0.94,
+                  }
+            }
             onDragEnd={() =>
               saveState(storageKey, { position: { x: x.get(), y: y.get() } })
             }
@@ -260,31 +358,67 @@ export function DraggableWindow({
             ref={windowRef}
             style={{
               borderRadius: envSettings.windowRadius,
-              height: size.height,
               width: size.width,
               x,
               y,
             }}
-            transition={SPRING_CONTENT}
+            transition={{
+              ...SPRING_CONTENT,
+              filter: { duration: 0.26, ease: "easeOut" },
+              height:
+                isResizing || reduceMotion ? { duration: 0 } : SPRING_ACCORDION,
+              marginBottom: reduceMotion ? { duration: 0 } : SPRING_ACCORDION,
+              marginTop: reduceMotion ? { duration: 0 } : SPRING_ACCORDION,
+            }}
+            // Exit: squeeze, then shrink toward the dock (bottom-centre).
+            variants={{
+              minimise: () =>
+                reduceMotion
+                  ? { opacity: 0, transition: { duration: 0.12 } }
+                  : {
+                      ...minimiseOrigin(windowRef.current),
+                      opacity: [1, 0.9, 0],
+                      scaleX: [1, 0.7, 0.06],
+                      scaleY: [1, 0.55, 0.06],
+                      transition: {
+                        duration: 0.38,
+                        ease: [0.5, 0, 0.75, 0],
+                        times: [0, 0.45, 1],
+                      },
+                    },
+            }}
           >
-            {/* Title bar — drag handle */}
+            {/* Title bar — drag handle. Native-style: icon, centred title,
+                close; the title brightens when the window is active. */}
             <div
-              className="border-border bg-muted/40 flex cursor-grab items-center gap-2 border-b px-3 py-2 active:cursor-grabbing"
-              onPointerDown={(e) => dragControls.start(e)}
+              className="grid cursor-grab grid-cols-[1.5rem_1fr_1.5rem] items-center gap-2 px-3 py-2 select-none active:cursor-grabbing"
+              onPointerDown={(e) => {
+                const el = windowRef.current
+                if (el != null) {
+                  const rect = el.getBoundingClientRect()
+                  const bounds = dragBounds.current
+                  bounds.left = x.get() - rect.left
+                  bounds.right = x.get() + (window.innerWidth - rect.right)
+                  bounds.top = y.get() - rect.top
+                  bounds.bottom = y.get() + (window.innerHeight - rect.bottom)
+                }
+                dragControls.start(e)
+              }}
             >
-              <GripHorizontal
-                aria-hidden
-                className="text-muted-foreground size-4 shrink-0"
-              />
-              {icon != null ? (
-                <span className="text-muted-foreground shrink-0">{icon}</span>
-              ) : null}
-              <span className="text-muted-foreground flex-1 truncate text-xs font-medium">
+              <span aria-hidden className="text-muted-foreground flex">
+                {icon}
+              </span>
+              <span
+                className={cn(
+                  "truncate text-center text-xs font-semibold tracking-tight transition-colors duration-300",
+                  isActive ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
                 {title}
               </span>
               <Button
                 aria-label={`Close ${title}`}
-                className="size-6 shrink-0"
+                className="size-6 justify-self-end transition-transform active:scale-90"
                 onClick={onClose}
                 size="icon"
                 variant="ghost"
@@ -302,6 +436,7 @@ export function DraggableWindow({
               onPointerDown={(e) => {
                 e.stopPropagation()
                 e.currentTarget.setPointerCapture(e.pointerId)
+                setIsResizing(true)
                 startSizeRef.current = { ...size }
                 startPosRef.current = { x: e.clientX, y: e.clientY }
               }}
@@ -330,6 +465,7 @@ export function DraggableWindow({
               }}
               onPointerUp={(e) => {
                 e.currentTarget.releasePointerCapture(e.pointerId)
+                setIsResizing(false)
                 const finalSize = {
                   height: Math.max(
                     minHeight,

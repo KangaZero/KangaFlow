@@ -58,8 +58,8 @@ vi.mock("@/components/widgets/draggable-window", () => ({
   }) => (isOpen ? React.createElement(React.Fragment, null, children) : null),
 }))
 
-vi.mock("@/components/ui/animated-tooltip", () => ({
-  AnimatedTooltip: ({ children }: { children: React.ReactNode }) =>
+vi.mock("@/components/widgets/widget-tooltip", () => ({
+  WidgetTooltip: ({ children }: { children: React.ReactNode }) =>
     React.createElement(React.Fragment, null, children),
 }))
 
@@ -317,6 +317,28 @@ describe("MediaPlayer", () => {
         btn("mediaPlayer.play").click()
       })
       expect(audio().volume).toBe(0)
+    })
+  })
+
+  describe("track list accordion", () => {
+    it("is collapsed by default and expands inline below the player", async () => {
+      await renderPlayer()
+      const toggle = container.querySelector(
+        'button[aria-controls="media-player-track-list"]'
+      ) as HTMLButtonElement
+      expect(toggle.getAttribute("aria-expanded")).toBe("false")
+      expect(container.querySelector("#media-player-track-list")).toBeNull()
+
+      await act(async () => {
+        toggle.click()
+      })
+      expect(toggle.getAttribute("aria-expanded")).toBe("true")
+      expect(container.querySelector("#media-player-track-list")).toBeTruthy()
+
+      await act(async () => {
+        toggle.click()
+      })
+      expect(toggle.getAttribute("aria-expanded")).toBe("false")
     })
   })
 })

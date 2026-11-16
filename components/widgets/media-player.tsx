@@ -24,13 +24,19 @@ import { Volume1Icon } from "@/components/animate-ui/icons/volume-1"
 import { Volume2Icon } from "@/components/animate-ui/icons/volume-2"
 import { VolumeOffIcon } from "@/components/animate-ui/icons/volume-off"
 import { ElasticSlider } from "@/components/ElasticSlider"
-import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { TrackList } from "@/components/widgets/track-list"
 import { formatSecondsToMMSS, PLAYLIST } from "@/components/widgets/tracks"
-import { SPRING_TAP, TWEEN_FAST, TWEEN_TRACK } from "@/lib/motion"
+import { WidgetTooltip } from "@/components/widgets/widget-tooltip"
+import { isReducedMotion } from "@/lib/isReducedMotion"
+import {
+  SPRING_ACCORDION,
+  SPRING_TAP,
+  TWEEN_FAST,
+  TWEEN_TRACK,
+} from "@/lib/motion"
 import { asArrayOf, isNumber, safeLocalStorage } from "@/lib/safe-storage"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -42,6 +48,11 @@ function loadFavorites(): ReadonlySet<number> {
     safeLocalStorage.getJson(TRACK_FAVORITES_KEY, [], asArrayOf(isNumber))
   )
 }
+
+// Accordion size: tall enough for the 4-track playlist; longer lists scroll
+// inside it, so the window never grows beyond player + this height.
+const TRACK_LIST_HEIGHT = 248
+const TRACK_LIST_ID = "media-player-track-list"
 
 export function MediaPlayer() {
   const { translate } = useLocale()
@@ -56,6 +67,7 @@ export function MediaPlayer() {
     setMediaCurrentIndex: setCurrentIndex,
     isTrackListOpen: showList,
     setIsTrackListOpen: setShowList,
+    animationPref,
   } = useGlobalStates()
   const wd = envSettings.widgetDefaults.media
 
@@ -69,6 +81,8 @@ export function MediaPlayer() {
   const currentTimeSecRef = useRef(0)
   const track = PLAYLIST[currentIndex] ?? PLAYLIST[0]
   const shouldReduceMotion = useReducedMotion()
+  // App animation preference + OS setting: reduced → the accordion snaps.
+  const reduceListMotion = isReducedMotion(animationPref, shouldReduceMotion)
 
   // Keep refs in sync so effects with [] deps can read current values.
   useEffect(() => {
@@ -249,7 +263,11 @@ export function MediaPlayer() {
     [setCurrentIndex, setIsPlaying]
   )
 
-  const closeList = useCallback(() => setShowList(false), [setShowList])
+  // The list lives inside the player: opening it from elsewhere (the bar's
+  // mini pill toggles the same state) also opens the player so it is visible.
+  useEffect(() => {
+    if (showList && !isMediaPlayerOpen) setIsMediaPlayerOpen(true)
+  }, [showList, isMediaPlayerOpen, setIsMediaPlayerOpen])
 
   const goToPrevious = (): void => {
     if (currentTimeSec > 3) {
@@ -277,6 +295,8 @@ export function MediaPlayer() {
         defaultHeight={224}
         defaultOffset={wd.offset}
         defaultWidth={320}
+        // The accordion grows the window downward; the player keeps its spot.
+        heightOffset={showList ? TRACK_LIST_HEIGHT : 0}
         icon={<GripVertical aria-hidden className="size-3.5" />}
         isOpen={isMediaPlayerOpen}
         minHeight={180}
@@ -330,11 +350,10 @@ export function MediaPlayer() {
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.85 }}
             >
-              <AnimatedTooltip
-                label={translate("mediaPlayer.list")}
-                side="left"
-              >
+              <WidgetTooltip label={translate("mediaPlayer.list")} side="left">
                 <Button
+                  aria-controls={TRACK_LIST_ID}
+                  aria-expanded={showList}
                   aria-label={translate("mediaPlayer.list")}
                   onClick={() => setShowList((v) => !v)}
                   size="icon"
@@ -342,7 +361,7 @@ export function MediaPlayer() {
                 >
                   <ListIcon animateOnTap className="size-4" />
                 </Button>
-              </AnimatedTooltip>
+              </WidgetTooltip>
             </motion.div>
           </div>
 
@@ -372,7 +391,7 @@ export function MediaPlayer() {
               whileHover={{ scale: 1.15, x: -2 }}
               whileTap={{ scale: 0.85 }}
             >
-              <AnimatedTooltip label={translate("mediaPlayer.loop")} side="top">
+              <WidgetTooltip label={translate("mediaPlayer.loop")} side="top">
                 <Button
                   aria-label={translate("mediaPlayer.loop")}
                   onClick={() => {
@@ -399,7 +418,7 @@ export function MediaPlayer() {
                     className="size-4"
                   />
                 </Button>
-              </AnimatedTooltip>
+              </WidgetTooltip>
             </motion.div>
 
             <motion.div
@@ -407,7 +426,7 @@ export function MediaPlayer() {
               whileHover={{ scale: 1.15, x: -2 }}
               whileTap={{ scale: 0.85 }}
             >
-              <AnimatedTooltip
+              <WidgetTooltip
                 label={
                   (
                     PLAYLIST[
@@ -428,7 +447,7 @@ export function MediaPlayer() {
                 >
                   <SkipBack className="size-5" />
                 </Button>
-              </AnimatedTooltip>
+              </WidgetTooltip>
             </motion.div>
 
             <motion.div
@@ -484,7 +503,7 @@ export function MediaPlayer() {
               whileHover={{ scale: 1.15, x: 2 }}
               whileTap={{ scale: 0.85 }}
             >
-              <AnimatedTooltip
+              <WidgetTooltip
                 label={
                   PLAYLIST[(currentIndex + 1) % PLAYLIST.length]?.title ??
                   PLAYLIST[0].title
@@ -502,7 +521,7 @@ export function MediaPlayer() {
                 >
                   <SkipForward className="size-5" />
                 </Button>
-              </AnimatedTooltip>
+              </WidgetTooltip>
             </motion.div>
             <Popover>
               <PopoverTrigger>
@@ -511,7 +530,7 @@ export function MediaPlayer() {
                   whileHover={{ scale: 1.15, x: -2 }}
                   whileTap={{ scale: 0.85 }}
                 >
-                  <AnimatedTooltip
+                  <WidgetTooltip
                     label={translate("mediaPlayer.volume")}
                     side="top"
                   >
@@ -558,7 +577,7 @@ export function MediaPlayer() {
                         )}
                       </AnimatePresence>
                     </Button>
-                  </AnimatedTooltip>
+                  </WidgetTooltip>
                 </motion.div>
               </PopoverTrigger>
               <PopoverContent>
@@ -589,18 +608,40 @@ export function MediaPlayer() {
               </PopoverContent>
             </Popover>
           </div>
+
+          {/* Track list accordion: folds out of the player's bottom edge. Its
+              height animates with the same spring as the window's heightOffset,
+              so the player stays put and the list grows out underneath. */}
+          <AnimatePresence initial={false}>
+            {showList ? (
+              <motion.section
+                animate={{ height: TRACK_LIST_HEIGHT, opacity: 1 }}
+                aria-label={translate("mediaPlayer.list")}
+                className="border-border/50 bg-card/50 -mx-4 -mb-4 overflow-hidden border-t"
+                exit={{ height: 0, opacity: 0 }}
+                id={TRACK_LIST_ID}
+                initial={{ height: 0, opacity: 0 }}
+                key="track-list"
+                transition={
+                  reduceListMotion
+                    ? { duration: 0 }
+                    : { ...SPRING_ACCORDION, opacity: { duration: 0.18 } }
+                }
+              >
+                <div className="h-full overflow-y-auto overscroll-contain">
+                  <TrackList
+                    currentIndex={currentIndex}
+                    favoritedIndices={favoritedIndices}
+                    onSelect={handleSelectTrack}
+                    onToggleFavorite={toggleFavorite}
+                    restIndices={restIndices}
+                  />
+                </div>
+              </motion.section>
+            ) : null}
+          </AnimatePresence>
         </div>
       </DraggableWindow>
-
-      <TrackList
-        currentIndex={currentIndex}
-        favoritedIndices={favoritedIndices}
-        isOpen={showList}
-        onClose={closeList}
-        onSelect={handleSelectTrack}
-        onToggleFavorite={toggleFavorite}
-        restIndices={restIndices}
-      />
     </>
   )
 }

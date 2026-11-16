@@ -98,7 +98,7 @@ export function NotesWidget(): React.JSX.Element {
       <motion.div
         animate={{ opacity: 1, scale: 1 }}
         className={cn(
-          "group border-border/60 mb-2 cursor-pointer rounded-xl border p-3 text-sm",
+          "group border-border/60 mb-2 cursor-pointer rounded-xl border p-3 text-sm transition-shadow hover:shadow-[0_8px_18px_-10px_rgba(0,0,0,0.45)]",
           colors.bg,
           openIds.includes(note.id) && "ring-ring ring-1"
         )}
@@ -109,7 +109,7 @@ export function NotesWidget(): React.JSX.Element {
         layoutId={note.id}
         onClick={() => openNote(note.id)}
         transition={SPRING_REORDER}
-        whileHover={{ scale: 1.01 }}
+        whileHover={{ y: -2 }}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-1.5">

@@ -48,6 +48,15 @@ export const SPRING_CONTENT = {
   type: "spring",
 } as const
 
+// Accordion expand/collapse (e.g. the media player's inline track list). The
+// window height and the section height both use THIS preset so they move in
+// lockstep — the panel grows out of the bottom edge with no overshoot gap.
+export const SPRING_ACCORDION = {
+  damping: 34,
+  stiffness: 320,
+  type: "spring",
+} as const
+
 // Segmented-control pill (tighter, more authoritative).
 export const SPRING_SEGMENTED = {
   damping: 32,

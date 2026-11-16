@@ -3,6 +3,7 @@
 
 import {
   AlarmClock,
+  Bell,
   Check,
   Flag,
   Hourglass,
@@ -40,6 +41,85 @@ const MODES = [
 ] as const
 
 type Mode = (typeof MODES)[number]["key"]
+
+// Ringing state: noticeable but calm — a gently wobbling bell with two halo
+// rings, large light numerals, and prominent Snooze / Stop (Stop focused).
+function AlarmRinging({
+  ringing,
+  onSnooze,
+  onStop,
+  snoozeLabel,
+  stopLabel,
+  stopRef,
+  title,
+}: {
+  ringing: { label: string; time: string } | null
+  onSnooze: () => void
+  onStop: () => void
+  snoozeLabel: string
+  stopLabel: string
+  stopRef: React.RefObject<HTMLButtonElement | null>
+  title: string
+}): React.JSX.Element {
+  return (
+    <AnimatePresence>
+      {ringing != null ? (
+        <motion.div
+          animate={{ opacity: 1, scale: 1 }}
+          aria-label={`${title}: ${ringing.label}, ${ringing.time}`}
+          className="bg-card/95 absolute inset-0 z-10 grid place-content-center justify-items-center gap-3 p-4 text-center backdrop-blur-md"
+          exit={{ opacity: 0, scale: 0.97 }}
+          initial={{ opacity: 0, scale: 0.96 }}
+          role="alertdialog"
+          transition={SPRING_TAP}
+        >
+          <div className="bg-primary/15 text-primary relative grid size-13 place-items-center rounded-full">
+            <span aria-hidden className="alarm-halo" />
+            <span aria-hidden className="alarm-halo" />
+            <motion.span
+              animate={{ rotate: [0, 14, -12, 8, -4, 0, 0] }}
+              aria-hidden
+              className="flex origin-[50%_15%]"
+              transition={{
+                duration: 1.6,
+                ease: "easeInOut",
+                repeat: Number.POSITIVE_INFINITY,
+                times: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 1],
+              }}
+            >
+              <Bell className="size-6" />
+            </motion.span>
+          </div>
+          <div className="text-5xl leading-none font-light tracking-tight tabular-nums">
+            {ringing.time}
+          </div>
+          <div className="text-muted-foreground text-sm">{ringing.label}</div>
+          <div className="mt-1 grid w-full max-w-60 grid-cols-2 gap-2">
+            <motion.button
+              className="bg-muted hover:bg-muted/80 rounded-xl py-2.5 text-sm font-semibold transition-colors"
+              onClick={onSnooze}
+              transition={SPRING_TAP}
+              type="button"
+              whileTap={{ scale: 0.96 }}
+            >
+              {snoozeLabel}
+            </motion.button>
+            <motion.button
+              className="bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-semibold"
+              onClick={onStop}
+              ref={stopRef}
+              transition={SPRING_TAP}
+              type="button"
+              whileTap={{ scale: 0.96 }}
+            >
+              {stopLabel}
+            </motion.button>
+          </div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  )
+}
 
 function ModeTabs({
   mode,
@@ -313,6 +393,15 @@ export function AlarmWidget(): React.JSX.Element {
   const [newLabel, setNewLabel] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [firing, setFiring] = useState<string | null>(null)
+  // What the elegant ringing overlay shows; null = not ringing.
+  const [ringing, setRinging] = useState<{
+    label: string
+    time: string
+  } | null>(null)
+  // "alarmId@HH:MM" the user stopped/snoozed: the 5s auto-clear of `firing`
+  // would otherwise re-fire the same alarm again within the same minute.
+  const dismissedRef = useRef<string | null>(null)
+  const stopRef = useRef<HTMLButtonElement>(null)
   const bellRef = useRef<BellIconHandle>(null)
   const labelRef = useRef<HTMLInputElement>(null)
   useVimInput(labelRef, { enabled: vimMode })
@@ -322,7 +411,11 @@ export function AlarmWidget(): React.JSX.Element {
 
   const ringBell = (): void => {
     bellRef.current?.startAnimation()
-    window.setTimeout(() => bellRef.current?.stopAnimation(), 5000)
+    setRinging({ label: translate("notifications.timerDone"), time: "00:00" })
+    window.setTimeout(() => {
+      bellRef.current?.stopAnimation()
+      setRinging(null)
+    }, 5000)
     notify(translate("notifications.timerDone"), "alarm", "timer")
   }
   const timer = useTimer(ringBell)
@@ -395,15 +488,33 @@ export function AlarmWidget(): React.JSX.Element {
   useEffect(() => {
     const active = alarms.find((a) => a.enabled && a.time === currentHHMM)
     if (!active || firing === active.id) return
+    if (dismissedRef.current === `${active.id}@${currentHHMM}`) return
     setFiring(active.id)
+    setRinging({ label: active.label, time: active.time })
     bellRef.current?.startAnimation()
     notify(active.label, "alarm", "alarm")
     const id = window.setTimeout(() => {
       setFiring(null)
+      setRinging(null)
       bellRef.current?.stopAnimation()
     }, 5000)
     return () => window.clearTimeout(id)
   }, [currentHHMM, alarms, firing, notify])
+
+  // Keyboard users land on Stop as soon as it rings.
+  useEffect(() => {
+    if (ringing != null) stopRef.current?.focus({ preventScroll: true })
+  }, [ringing])
+
+  const silence = (): void => {
+    if (firing != null) dismissedRef.current = `${firing}@${currentHHMM}`
+    setRinging(null)
+    bellRef.current?.stopAnimation()
+  }
+  const snooze = (): void => {
+    if (ringing != null) remind(5, ringing.label, "alarm", "alarm")
+    silence()
+  }
 
   // Derived display values for stopwatch / timer.
   const swTotal = Math.floor(stopwatch.elapsed / 1000)
@@ -413,6 +524,7 @@ export function AlarmWidget(): React.JSX.Element {
   return (
     <DraggableWindow
       anchor={wd.anchor}
+      attention={ringing != null}
       defaultHeight={380}
       defaultOffset={wd.offset}
       defaultWidth={300}
@@ -424,7 +536,16 @@ export function AlarmWidget(): React.JSX.Element {
       storageKey="alarm-widget"
       title="Clock"
     >
-      <div className="flex flex-col gap-3 p-3">
+      <div className="relative flex min-h-full flex-col gap-3 p-3">
+        <AlarmRinging
+          onSnooze={snooze}
+          onStop={silence}
+          ringing={ringing}
+          snoozeLabel={translate("widgets.alarm.snooze")}
+          stopLabel={translate("widgets.alarm.stop")}
+          stopRef={stopRef}
+          title={translate("widgets.alarm.ringing")}
+        />
         <LayoutGroup>
           <ModeTabs mode={mode} onChange={setMode} />
         </LayoutGroup>
