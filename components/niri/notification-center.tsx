@@ -20,9 +20,9 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/animate-ui/components/radix/popover"
+import { BAR_ICON_BUTTON } from "@/components/niri/bar-styles"
+import { BarTooltip, barTooltipSide } from "@/components/niri/bar-tooltip"
 import type { WidgetId } from "@/components/niri/settings"
-import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
-import { Button } from "@/components/ui/button"
 import { SPRING_CARD, SPRING_CONTENT } from "@/lib/motion"
 import type { NotificationType } from "@/lib/notifications"
 import { formatRelativeTime } from "@/lib/notifications"
@@ -94,26 +94,30 @@ export function NotificationCenter({
 
   return (
     <Popover onOpenChange={setOpen} open={open}>
-      <AnimatedTooltip
+      {/* Calm bar tooltip (no AnimatedTooltip on the environment bar). */}
+      <BarTooltip
         label={translate("environment.bar.notifications")}
-        side={barPosition === "left" ? "right" : "left"}
+        side={barTooltipSide(barPosition)}
       >
         <PopoverTrigger asChild>
-          <Button
-            aria-label={translate("environment.bar.notifications")}
-            className="relative rounded-full"
-            size="icon-sm"
-            variant="ghost"
+          <button
+            aria-label={
+              unreadCount > 0
+                ? `${translate("environment.bar.notifications")} (${unreadCount})`
+                : translate("environment.bar.notifications")
+            }
+            className={cn(BAR_ICON_BUTTON, "aria-expanded:bg-foreground/10")}
+            type="button"
           >
             <Bell />
             {unreadCount > 0 ? (
-              <span className="bg-primary text-primary-foreground ring-card absolute -top-0.5 -right-0.5 flex min-w-4 items-center justify-center rounded-full px-1 text-[0.5625rem] leading-none font-medium tabular-nums ring-2">
+              <span className="bg-primary text-primary-foreground absolute top-px right-0 flex h-3.75 min-w-3.75 items-center justify-center rounded-full px-1 text-[0.5625rem] leading-none font-semibold tabular-nums shadow-[0_0_0_2px_color-mix(in_oklch,var(--card)_92%,transparent)]">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             ) : null}
-          </Button>
+          </button>
         </PopoverTrigger>
-      </AnimatedTooltip>
+      </BarTooltip>
 
       <PopoverContent
         align="end"

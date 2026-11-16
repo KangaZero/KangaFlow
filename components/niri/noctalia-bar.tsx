@@ -1,17 +1,20 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+import "@/components/niri/noctalia-bar.css"
 
 import { Image as ImageIcon, Settings } from "lucide-react"
+import { LayoutGroup, motion } from "motion/react"
 import type * as React from "react"
 import { SiNixos } from "react-icons/si"
 import { Counter } from "@/components/Counter"
+import { BAR_ICON_BUTTON } from "@/components/niri/bar-styles"
+import { BarTooltip, barTooltipSide } from "@/components/niri/bar-tooltip"
 import { MediaMiniPill } from "@/components/niri/media-mini-pill"
 import { NotificationCenter } from "@/components/niri/notification-center"
 import { type BorderRadius, DAIJI } from "@/components/niri/settings"
 import { SystemStatus } from "@/components/niri/system-status"
-import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
-import { Button } from "@/components/ui/button"
 import type { Locale } from "@/lib/i18n"
+import { SPRING_PILL } from "@/lib/motion"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
 import { useNotifications } from "@/providers/notifications-provider"
@@ -29,6 +32,9 @@ type WorkspacePip = {
 const CIRCLE_REVEAL =
   "origin-bottom scale-0 transition-transform duration-300 ease-out group-hover:scale-100"
 
+// Titles longer than this fade out at the end instead of being cut hard.
+const TITLE_FADE_FROM = 28
+
 // Clock built on the react-bits Counter — "HH:MM" split into two fixed-2-digit
 // rolling counters. Falls back to plain text if the format is unexpected.
 function BarClock({
@@ -42,14 +48,18 @@ function BarClock({
   const hours = Number(h)
   const minutes = Number(m)
   if (Number.isNaN(hours) || Number.isNaN(minutes)) {
-    return <span className="text-muted-foreground tabular-nums">{time}</span>
+    return (
+      <span className="text-foreground font-medium tabular-nums">{time}</span>
+    )
   }
   return (
     <span
+      aria-label={time}
       className={cn(
-        "text-muted-foreground flex items-center tabular-nums",
+        "text-foreground flex items-center font-medium tabular-nums",
         vertical && "flex-col"
       )}
+      role="img"
     >
       <Counter
         fontSize={13}
@@ -60,7 +70,11 @@ function BarClock({
         value={hours}
         vertical={vertical}
       />
-      <span>:</span>
+      {vertical ? null : (
+        <span aria-hidden className="mx-px opacity-55">
+          :
+        </span>
+      )}
       <Counter
         fontSize={13}
         gap={0}
@@ -71,6 +85,19 @@ function BarClock({
         vertical={vertical}
       />
     </span>
+  )
+}
+
+// Hairline divider between bar groups (rotates for vertical bars).
+function BarSeparator({ vertical }: { vertical: boolean }): React.JSX.Element {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "bg-foreground/10 shrink-0",
+        vertical ? "h-px w-4" : "h-4 w-px"
+      )}
+    />
   )
 }
 
@@ -111,6 +138,9 @@ export function NoctaliaBar(props: {
   const { notify } = useNotifications()
   const isV = orientation === "vertical"
   const otherLayout = keyboardLayout === "en" ? "ja" : "en"
+  // Every bar tooltip opens toward the desktop (one helper, no per-call ternaries).
+  const tipSide = barTooltipSide(barPosition)
+  const title = activeWindowTitle === "" ? "—" : activeWindowTitle
 
   function switchLocale(): void {
     setLocale(otherLayout)
@@ -126,8 +156,13 @@ export function NoctaliaBar(props: {
   return (
     <header
       className={cn(
-        "border-border text-foreground flex justify-between gap-3 border px-2 py-1.5 text-xs shadow-lg backdrop-blur",
-        isV ? "h-full flex-col items-center" : "items-center"
+        "noctalia-bar text-foreground text-xs backdrop-blur-md backdrop-saturate-150",
+        isV
+          ? "flex h-full w-11 flex-col items-center justify-between gap-3 py-2"
+          : // 1fr · auto · 1fr keeps the workspace cluster centred whatever the
+            // side groups' widths; the right column never shrinks below its
+            // content, so the title side absorbs any squeeze.
+            "grid h-10 grid-cols-[minmax(0,1fr)_auto_minmax(max-content,1fr)] items-center gap-4 px-2"
       )}
       style={{
         backgroundColor: `color-mix(in oklch, var(--card) ${Math.round(opacity * 100)}%, transparent)`,
@@ -135,166 +170,179 @@ export function NoctaliaBar(props: {
       }}
     >
       {/* LEFT: launcher logo + active window title */}
-      {/* TODO(human): derive every bar tooltip's side from barPosition
-          (left→right, right→left, top→bottom, bottom→top) via one helper,
-          instead of the per-tooltip left/right ternaries below. */}
       <div className={cn("flex min-w-0 items-center gap-2", isV && "flex-col")}>
-        <AnimatedTooltip
+        <BarTooltip
           label={translate("environment.bar.launcher")}
           shortcut={["Alt", "D"]}
-          side={barPosition !== "right" ? "right" : "left"}
+          side={tipSide}
         >
-          <Button
+          <button
             aria-label={translate("environment.bar.launcher")}
-            className="rounded-full"
+            className={cn(BAR_ICON_BUTTON, "text-primary hover:text-primary")}
             onClick={onLauncher}
-            size="icon-sm"
-            variant="ghost"
+            type="button"
           >
             <SiNixos />
-          </Button>
-        </AnimatedTooltip>
+          </button>
+        </BarTooltip>
         <span
           className={cn(
             "text-muted-foreground truncate",
-            isV ? "max-h-36.25 [writing-mode:vertical-rl]" : "max-w-36.25"
+            isV ? "max-h-30 [writing-mode:vertical-rl]" : "max-w-55",
+            activeWindowTitle === "" && "opacity-50",
+            title.length > TITLE_FADE_FROM && "bar-title-fade text-clip"
           )}
+          data-vertical={isV}
+          title={activeWindowTitle === "" ? undefined : activeWindowTitle}
         >
-          {activeWindowTitle === "" ? "—" : activeWindowTitle}
+          {title}
         </span>
       </div>
 
-      {/* CENTER: workspace pills, clock, settings, keyboard-layout badge */}
-      <div className={cn("flex items-center gap-2", isV && "flex-col")}>
-        <ul className={cn("flex items-center gap-1", isV && "flex-col")}>
-          {workspaces.map((ws) => (
-            <li key={ws.id}>
-              <button
-                aria-label={`${translate("environment.bar.workspace")} ${ws.id}`}
-                className={cn(
-                  "group relative flex size-5 items-center justify-center overflow-hidden rounded-full text-[0.625rem] leading-none tabular-nums transition-colors",
-                  ws.active
-                    ? "bg-primary text-primary-foreground"
-                    : ws.occupied
-                      ? "bg-muted text-foreground"
-                      : "border-border/50 text-muted-foreground border bg-transparent"
-                )}
-                onClick={() => onWorkspace(ws.id)}
-                type="button"
-              >
-                <span
-                  aria-hidden
+      {/* CENTER: workspace pills, clock, keyboard-layout badge */}
+      <div className={cn("flex items-center gap-3", isV && "flex-col")}>
+        <LayoutGroup id={`bar-workspaces-${barPosition}`}>
+          <ul className={cn("flex items-center gap-1", isV && "flex-col")}>
+            {workspaces.map((ws) => (
+              // `layout="position"`: when the active pip widens, its
+              // neighbours slide over (transform) instead of jumping.
+              <motion.li key={ws.id} layout="position" transition={SPRING_PILL}>
+                <button
+                  aria-current={ws.active ? "true" : undefined}
+                  aria-label={`${translate("environment.bar.workspace")} ${ws.id}`}
                   className={cn(
-                    "bg-primary pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 rounded-full",
-                    CIRCLE_REVEAL
+                    "group focus-visible:ring-primary focus-visible:ring-offset-card relative flex items-center justify-center overflow-hidden rounded-full text-[0.625rem] leading-none tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+                    // The active pip is wider, so it reads without relying on colour.
+                    ws.active ? (isV ? "h-7.5 w-5" : "h-5 w-7.5") : "size-5",
+                    ws.active
+                      ? "text-primary-foreground"
+                      : ws.occupied
+                        ? "bg-foreground/10 text-foreground"
+                        : "text-muted-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--foreground)_16%,transparent)]"
                   )}
-                />
-                <span className="relative z-10 grid place-items-center">
-                  <span className="col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-y-[-150%]">
-                    {ws.id}
-                  </span>
+                  onClick={() => onWorkspace(ws.id)}
+                  type="button"
+                >
+                  {ws.active ? (
+                    // One highlight shared via layoutId: it glides to the
+                    // newly focused workspace instead of blinking.
+                    <motion.span
+                      aria-hidden
+                      className="bg-primary pointer-events-none absolute inset-0 shadow-[0_2px_8px_-3px_var(--primary)]"
+                      layoutId="bar-active-workspace"
+                      style={{ borderRadius: 999 }}
+                      transition={SPRING_PILL}
+                    />
+                  ) : null}
                   <span
                     aria-hidden
-                    className="text-primary-foreground col-start-1 row-start-1 translate-y-[150%] transition-transform duration-300 ease-out group-hover:translate-y-0"
-                  >
-                    {DAIJI[ws.id] ?? String(ws.id)}
+                    className={cn(
+                      "bg-primary pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2 rounded-full",
+                      CIRCLE_REVEAL
+                    )}
+                  />
+                  <span className="relative z-10 grid place-items-center">
+                    <span className="col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-y-[-150%]">
+                      {ws.id}
+                    </span>
+                    <span
+                      aria-hidden
+                      // Transparent until hover too: in a vertical bar the active pip is
+                      // taller, so a translate alone would let the 大字 peek out.
+                      className="text-primary-foreground col-start-1 row-start-1 translate-y-[150%] opacity-0 transition-[transform,opacity] duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100"
+                    >
+                      {DAIJI[ws.id] ?? String(ws.id)}
+                    </span>
                   </span>
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+                </button>
+              </motion.li>
+            ))}
+          </ul>
+        </LayoutGroup>
         <BarClock time={clock} vertical={isV} />
-        {/* Keyboard badge — pill floats outside it via absolute, no layout shift */}
-        <div className={cn("relative", isV ? "self-center" : "")}>
-          <button
-            aria-label={`${translate("nav.language")} → ${otherLayout.toUpperCase()}`}
+        <button
+          aria-label={`${translate("nav.language")} → ${otherLayout.toUpperCase()}`}
+          className={cn(
+            "group text-muted-foreground focus-visible:ring-primary focus-visible:ring-offset-card relative grid place-items-center overflow-hidden rounded-[5px] font-mono text-[0.625rem] leading-none font-semibold uppercase shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--foreground)_14%,transparent)] transition-shadow outline-none hover:shadow-[inset_0_0_0_1px_var(--primary)] focus-visible:ring-2 focus-visible:ring-offset-2",
+            isV
+              ? "min-h-5.5 w-5 py-1.25 [writing-mode:vertical-rl]"
+              : "h-5 min-w-5.5 px-1.25"
+          )}
+          onClick={switchLocale}
+          type="button"
+        >
+          <span
+            aria-hidden
             className={cn(
-              "group border-border/50 text-muted-foreground hover:border-primary relative overflow-hidden rounded-sm border p-1 font-mono text-[0.625rem] leading-none uppercase transition-colors",
-              isV && "[writing-mode:vertical-rl]"
+              "bg-primary pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2",
+              CIRCLE_REVEAL
             )}
-            onClick={switchLocale}
-            type="button"
-          >
+          />
+          <span className="relative z-10 grid place-items-center">
+            <span
+              className={cn(
+                "col-start-1 row-start-1 transition-transform duration-300 ease-out",
+                isV
+                  ? "group-hover:translate-x-[-150%]"
+                  : "group-hover:translate-y-[-150%]"
+              )}
+            >
+              {keyboardLayout}
+            </span>
             <span
               aria-hidden
               className={cn(
-                "bg-primary pointer-events-none absolute bottom-0 left-1/2 aspect-square w-[140%] -translate-x-1/2",
-                CIRCLE_REVEAL
+                "text-primary-foreground col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-x-0 group-hover:translate-y-0",
+                isV ? "translate-x-[150%]" : "translate-y-[150%]"
               )}
-            />
-            <span className="relative z-10 grid place-items-center">
-              <span
-                className={cn(
-                  "col-start-1 row-start-1 transition-transform duration-300 ease-out",
-                  isV
-                    ? "group-hover:translate-x-[-150%]"
-                    : "group-hover:translate-y-[-150%]"
-                )}
-              >
-                {keyboardLayout}
-              </span>
-              <span
-                aria-hidden
-                className={cn(
-                  "text-primary-foreground col-start-1 row-start-1 transition-transform duration-300 ease-out group-hover:translate-x-0 group-hover:translate-y-0",
-                  isV ? "translate-x-[150%]" : "translate-y-[150%]"
-                )}
-              >
-                {otherLayout}
-              </span>
+            >
+              {otherLayout}
             </span>
-          </button>
-          {/* Floats to the right of the badge (or below for vertical bars) */}
-          <div
-            className={cn(
-              "absolute z-10",
-              isV
-                ? "top-full left-1/2 mt-1 -translate-x-1/2"
-                : "top-1/2 left-full ml-1 -translate-y-1/2"
-            )}
-          >
-            <MediaMiniPill
-              barPosition={barPosition}
-              barRadius={barRadius}
-              vertical={isV}
-            />
-          </div>
-        </div>
+          </span>
+        </button>
       </div>
 
-      {/* RIGHT: faux system monitor + notification bell */}
-      <div className={cn("flex items-center gap-2", isV && "flex-col")}>
+      {/* RIGHT: media control (in flow), system status, wallpaper, settings, bell */}
+      <div
+        className={cn(
+          "flex items-center gap-2",
+          isV ? "flex-col" : "justify-self-end"
+        )}
+      >
+        <MediaMiniPill
+          barPosition={barPosition}
+          barRadius={barRadius}
+          vertical={isV}
+        />
+        <BarSeparator vertical={isV} />
         <SystemStatus vertical={isV} />
-        <AnimatedTooltip
+        <BarTooltip
           label={translate("environment.settings.wallpaper")}
-          side={barPosition === "left" ? "right" : "left"}
+          side={tipSide}
         >
-          <Button
+          <button
             aria-label={translate("environment.settings.wallpaper")}
-            className="rounded-full"
+            className={BAR_ICON_BUTTON}
             onClick={onWallpaper}
-            size="icon-sm"
-            variant="ghost"
+            type="button"
           >
             <ImageIcon />
-          </Button>
-        </AnimatedTooltip>
-        <AnimatedTooltip
+          </button>
+        </BarTooltip>
+        <BarTooltip
           label={translate("environment.settings.title")}
           shortcut={["Alt", "Shift", ","]}
-          side={barPosition === "left" ? "right" : "left"}
+          side={tipSide}
         >
-          <Button
+          <button
             aria-label={translate("environment.settings.title")}
-            className="rounded-full"
+            className={BAR_ICON_BUTTON}
             onClick={onSettings}
-            size="icon-sm"
-            variant="ghost"
+            type="button"
           >
             <Settings />
-          </Button>
-        </AnimatedTooltip>
+          </button>
+        </BarTooltip>
         <NotificationCenter
           barPosition={barPosition}
           orientation={orientation}

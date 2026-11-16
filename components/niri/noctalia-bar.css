@@ -1,0 +1,26 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* Environment top bar surface: a hairline edge, an inner top highlight and a
+   soft layered shadow. The glass fill itself stays an inline style because it
+   follows settings.barOpacity. Theme classes (.dark/.terminal) live on <html>. */
+
+.noctalia-bar {
+  border: 1px solid color-mix(in oklch, var(--foreground) 10%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 8px 24px -12px rgb(0 0 0 / 0.18);
+}
+:is(.dark, .terminal) .noctalia-bar {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 1px 2px rgb(0 0 0 / 0.25),
+    0 8px 24px -10px rgb(0 0 0 / 0.5);
+}
+
+/* Long window titles fade out instead of a hard ellipsis. */
+.bar-title-fade {
+  mask-image: linear-gradient(90deg, black 85%, transparent);
+}
+.bar-title-fade[data-vertical="true"] {
+  mask-image: linear-gradient(180deg, black 85%, transparent);
+}

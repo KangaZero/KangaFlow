@@ -26,6 +26,7 @@ import {
 import { useBluetoothAvailable } from "@/lib/bluetooth"
 import { type NetworkLevel, networkLevel, useNetwork } from "@/lib/network"
 import { cn } from "@/lib/utils"
+import { useLocale } from "@/providers/locale-provider"
 
 const BATTERY_ICON: Record<BatteryLevel, LucideIcon> = {
   charging: BatteryCharging,
@@ -53,6 +54,7 @@ export function SystemStatus({
   const bluetoothAvailable = useBluetoothAvailable()
   const network = useNetwork()
   const shouldReduceMotion = useReducedMotion()
+  const { translate } = useLocale()
 
   const level = batteryLevel(battery.level, battery.charging)
   const BatteryIcon = BATTERY_ICON[level]
@@ -62,12 +64,29 @@ export function SystemStatus({
   const wifi = networkLevel(network)
   const WifiIcon = WIFI_ICON[wifi]
 
+  // One spoken summary for the whole cluster (the icons themselves are
+  // decorative), e.g. "Network: online · Bluetooth: on · Battery: 82%, charging".
+  const summary = [
+    `${translate("environment.bar.status.network")}: ${translate(`environment.bar.status.network_${wifi}`)}`,
+    `${translate("environment.bar.status.bluetooth")}: ${translate(
+      bluetoothAvailable
+        ? "environment.bar.status.bluetoothOn"
+        : "environment.bar.status.bluetoothOff"
+    )}`,
+    `${translate("environment.bar.status.battery")}: ${
+      known ? `${percent}%` : translate("environment.bar.status.unknown")
+    }${battery.charging ? `, ${translate("environment.bar.status.charging")}` : ""}`,
+  ].join(" · ")
+
   return (
     <span
+      aria-label={summary}
       className={cn(
-        "text-muted-foreground flex items-center gap-2",
-        vertical && "flex-col"
+        // One shared hover surface for the cluster instead of three targets.
+        "text-foreground/72 hover:bg-foreground/8 flex items-center gap-2.5 rounded-lg transition-colors",
+        vertical ? "flex-col px-0 py-2" : "h-7 px-2"
       )}
+      role="img"
     >
       <WifiIcon
         aria-hidden
@@ -77,7 +96,13 @@ export function SystemStatus({
         aria-hidden
         className={cn("size-3.5", !bluetoothAvailable && "opacity-40")}
       />
-      <span className={cn("flex items-center gap-1", vertical && "flex-col")}>
+      {/* Vertical bars: the percentage sits on its own line under the icon. */}
+      <span
+        className={cn(
+          "flex items-center",
+          vertical ? "flex-col gap-0.5" : "gap-1"
+        )}
+      >
         <motion.span
           // Charging pulses (opacity — a motion value MotionConfig's
           // reducedMotion doesn't cover, so guard it explicitly).
@@ -100,14 +125,21 @@ export function SystemStatus({
           <BatteryIcon
             aria-hidden
             className={cn(
-              "size-4",
+              "size-4.25",
               !known && "opacity-40",
               level === "low" && "text-destructive"
             )}
           />
         </motion.span>
         {percent !== null ? (
-          <span className="tabular-nums">{percent}%</span>
+          <span
+            className={cn(
+              "tabular-nums",
+              vertical ? "text-[0.625rem] leading-none" : "text-[0.71875rem]"
+            )}
+          >
+            {percent}%
+          </span>
         ) : null}
       </span>
     </span>
