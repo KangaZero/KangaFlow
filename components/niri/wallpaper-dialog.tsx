@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/animate-ui/components/radix/dialog"
-import { GLASS_SURFACE } from "@/components/niri/glass"
+import { GLASS_SURFACE, WINDOW_ELEVATION } from "@/components/niri/glass"
 import type {
   BorderRadius,
   GlassLevel,
@@ -39,14 +39,18 @@ export function WallpaperDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent
-        className={cn("sm:max-w-lg", GLASS_SURFACE[glass])}
+        className={cn(
+          "gap-5 sm:max-w-xl",
+          GLASS_SURFACE[glass],
+          WINDOW_ELEVATION.rest
+        )}
         style={{ borderRadius: `${windowRadius}px` }}
       >
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-[17px] tracking-[-0.01em]">
             {translate("environment.settings.wallpaper")}
           </DialogTitle>
-          <DialogDescription className="text-color-accent-foreground">
+          <DialogDescription className="text-muted-foreground">
             {translate("environment.settings.wallpaperHint")}
           </DialogDescription>
         </DialogHeader>

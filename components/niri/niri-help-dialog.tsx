@@ -8,9 +8,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/animate-ui/components/radix/dialog"
+import { GLASS_SURFACE, WINDOW_ELEVATION } from "@/components/niri/glass"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import type { TranslationKey } from "@/lib/i18n"
 import { IS_MAC } from "@/lib/shortcuts"
+import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
 
 // The niri environment's tiling binds (Alt is the compositor modifier). Keys are
@@ -62,23 +64,38 @@ export function NiriHelpDialog({
   const { translate } = useLocale()
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-h-[90vh] overflow-auto sm:max-w-lg md:max-w-4xl">
+      {/* Frosted-shell sheet: the "soft" glass level (the dialog isn't wired to
+          the user's transparency setting) + the shared resting elevation. */}
+      <DialogContent
+        className={cn(
+          "max-h-[90vh] gap-5 overflow-auto rounded-2xl sm:max-w-lg md:max-w-3xl",
+          GLASS_SURFACE.soft,
+          WINDOW_ELEVATION.rest
+        )}
+      >
         <DialogHeader>
-          <DialogTitle>{translate("environment.help.title")}</DialogTitle>
+          <DialogTitle className="text-[17px] tracking-[-0.01em]">
+            {translate("environment.help.title")}
+          </DialogTitle>
           <DialogDescription>
             {translate("environment.help.description")}
           </DialogDescription>
         </DialogHeader>
-        <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
           {SHORTCUTS.map((s) => (
             <li
-              className="border-border flex flex-col items-center justify-between gap-3 rounded-md border p-3 sm:flex-row"
+              className="hover:bg-foreground/[0.06] border-foreground/[0.07] -mx-2 flex items-center justify-between gap-3 rounded-lg border-b px-2 py-2 transition-colors"
               key={s.label}
             >
-              <span className="text-sm">{translate(s.label)}</span>
+              <span className="text-[13px]">{translate(s.label)}</span>
               <KbdGroup>
                 {s.keys.map((k) => (
-                  <Kbd key={k}>{k}</Kbd>
+                  <Kbd
+                    className="bg-foreground/10 text-foreground h-[22px] min-w-[22px] rounded-md px-1.5 font-mono text-[11px] shadow-[inset_0_-1px_0_var(--border)]"
+                    key={k}
+                  >
+                    {k}
+                  </Kbd>
                 ))}
               </KbdGroup>
             </li>
