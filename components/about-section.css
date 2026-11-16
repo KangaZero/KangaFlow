@@ -80,51 +80,6 @@
   border-top: none;
 }
 
-/* ---- Avatar (polygon frame) ---- */
-.avatar-wrapper {
-  position: relative;
-  width: 180px;
-  height: 220px;
-}
-
-.avatar-polygon-container {
-  width: 180px;
-  height: 220px;
-  position: relative;
-  /* https://bennettfeely.com/clippy/ */
-  clip-path: polygon(
-    16% 37%,
-    15% 88%,
-    25% 100%,
-    25% 53%,
-    74% 34%,
-    75% 75%,
-    25% 75%,
-    24% 100%,
-    86% 78%,
-    100% 1%
-  );
-  background: var(--foreground);
-  overflow: visible;
-  z-index: 1;
-}
-
-.avatar-img {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  object-fit: cover;
-  z-index: 2;
-  bottom: -5px;
-  transition: filter 0.3s;
-}
-
-/* The source art is dark line-art; invert it on dark + terminal themes. */
-.dark .avatar-img,
-.terminal .avatar-img {
-  filter: invert(1) brightness(2);
-}
-
 /* ---- Ruby name furigana fade ---- */
 .ruby-furigana {
   transition:
@@ -140,4 +95,51 @@
 .ruby-furigana.fade-out {
   opacity: 0;
   transform: translateY(30px);
+}
+
+/* ---- Name hover/focus: furigana label-maker strip ----
+   While the name morphs (.morph-on, see MorphText), each reading slides up
+   onto a plate-coloured strip from under its name part, staggered by the
+   part's first glyph (--ps). The reading itself stays the real <rt> text; the
+   strip is a pseudo-element. EN keeps its hidden-at-rest reading and reveals
+   it on the strip; JA readings (visible at rest) move onto the strip. */
+.hero-name .ruby-furigana {
+  position: relative;
+  isolation: isolate;
+  padding: 0 0.3em;
+}
+.hero-name .ruby-furigana::before {
+  position: absolute;
+  inset: -0.05em 0 -0.15em;
+  z-index: -1;
+  background: var(--tooltip);
+  box-shadow: inset 0 -2px 0 color-mix(in oklch, var(--tooltip) 60%, black);
+  clip-path: inset(100% 0 0 0);
+  content: "";
+  opacity: 0;
+  translate: 0 0.4em;
+  transition:
+    clip-path 0.28s cubic-bezier(0.6, 0, 0.2, 1),
+    translate 0.28s,
+    opacity 0.1s;
+  transition-delay: calc((var(--total) - var(--ps)) * 14ms);
+}
+.hero-name.morph-on .ruby-furigana::before {
+  clip-path: inset(0 0 0 0);
+  opacity: 1;
+  translate: 0 0;
+  transition-delay: calc(var(--morph-lead, 0ms) + var(--ps) * 25ms + 40ms);
+}
+.hero-name.morph-on .ruby-furigana {
+  color: var(--tooltip-foreground);
+  letter-spacing: 0.06em;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: calc(var(--morph-lead, 0ms) + var(--ps) * 25ms + 120ms);
+}
+.hero-name--reduced .ruby-furigana,
+.hero-name--reduced .ruby-furigana::before,
+.hero-name--reduced .morph-letter__glyph,
+.hero-name--reduced .morph-letter__tag {
+  transition: none !important;
 }

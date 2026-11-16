@@ -1,0 +1,249 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* Start-page avatar ("ink & shard"). The silhouette PNG is used as a CSS mask
+   (--avatar-mask, set from the static import so it carries the basePath), so
+   the same outline can be filled with solid ink, a halftone or accent copies.
+   Pointer parallax writes --px/--py (−1..1) straight onto the element.
+   Everything animates transform / translate / scale / opacity / clip-path. */
+
+.hero-avatar {
+  --px: 0;
+  --py: 0;
+  position: relative;
+  display: block;
+  width: 180px;
+  height: 220px;
+  cursor: pointer;
+  border-radius: 12px;
+  outline: none;
+}
+.hero-avatar:focus-visible {
+  box-shadow: 0 0 0 3px
+    color-mix(in oklch, var(--tooltip-shadow) 70%, transparent);
+}
+
+/* today's polygon frame */
+.hero-avatar__frame {
+  position: absolute;
+  inset: 0;
+  background: var(--foreground);
+  /* https://bennettfeely.com/clippy/ */
+  clip-path: polygon(
+    16% 37%,
+    15% 88%,
+    25% 100%,
+    25% 53%,
+    74% 34%,
+    75% 75%,
+    25% 75%,
+    24% 100%,
+    86% 78%,
+    100% 1%
+  );
+  translate: calc(var(--px) * 4px) calc(var(--py) * 3px);
+  transition: translate 0.2s;
+}
+
+/* accent shard: slams in behind the frame on hover */
+.hero-avatar__shard {
+  position: absolute;
+  inset: 6px -22px 8px -14px;
+  background: var(--tooltip-shadow);
+  clip-path: polygon(8% 18%, 100% 0, 92% 100%, 0 86%);
+  opacity: 0;
+  transform: rotate(14deg) scale(0.5) translate(-20px, -10px);
+  translate: calc(var(--px) * -12px) calc(var(--py) * -10px);
+  transition:
+    opacity 0.2s,
+    transform 0.38s cubic-bezier(0.2, 1.5, 0.4, 1),
+    translate 0.2s;
+}
+.hero-avatar[data-on="true"] .hero-avatar__shard {
+  opacity: 1;
+  transform: rotate(-5deg) scale(1) translate(8px, 6px);
+}
+
+/* silhouette layers move furthest (depth) and squash from the feet on boop */
+.hero-avatar__layer {
+  position: absolute;
+  inset: 0;
+  translate: calc(var(--px) * 9px) calc(var(--py) * 6px);
+  transform-origin: 50% 100%;
+  transition: translate 0.2s;
+}
+
+/* the real image: base silhouette + alt text + error fallback */
+.hero-avatar__img {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  object-fit: cover;
+}
+:is(.dark, .terminal) .hero-avatar__img {
+  filter: invert(1) brightness(2);
+}
+
+/* masked copies of the silhouette, same box as the image */
+.hero-avatar__sil {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  /* Same box the <Image> actually renders: preflight's `img { height: auto }`
+     makes the square PNG 150×150 despite its height={300} attribute. */
+  width: 150px;
+  height: 150px;
+  translate: -50% 0;
+  mask: var(--avatar-mask) center / 100% 100% no-repeat;
+  pointer-events: none;
+}
+
+/* halftone ink wipes up from the shoulders */
+.hero-avatar__ink {
+  background:
+    radial-gradient(circle, var(--tooltip-shadow) 1.3px, transparent 1.8px) 0 0
+    / 6px 6px,
+    var(--foreground);
+  clip-path: inset(100% 0 0 0);
+  transition: clip-path 0.45s cubic-bezier(0.6, 0, 0.2, 1) 0.05s;
+}
+.hero-avatar[data-on="true"] .hero-avatar__ink {
+  clip-path: inset(0 0 0 0);
+}
+
+/* colour-split copies snap from offset to aligned (stepped = glitchy) */
+.hero-avatar__split {
+  opacity: 0;
+}
+.hero-avatar__split[data-tone="accent"] {
+  background: var(--tooltip-shadow);
+}
+.hero-avatar__split[data-tone="light"] {
+  background: var(--tooltip-foreground);
+  mix-blend-mode: difference;
+}
+.hero-avatar[data-on="true"] .hero-avatar__split[data-tone="accent"] {
+  animation: hero-avatar-split-a 0.36s steps(3) both;
+}
+.hero-avatar[data-on="true"] .hero-avatar__split[data-tone="light"] {
+  animation: hero-avatar-split-b 0.36s steps(3) both;
+}
+@keyframes hero-avatar-split-a {
+  0% {
+    opacity: 0.9;
+    translate: calc(-50% - 7px) 0;
+  }
+  66% {
+    opacity: 0.7;
+    translate: calc(-50% + 3px) 0;
+  }
+  100% {
+    opacity: 0;
+    translate: -50% 0;
+  }
+}
+@keyframes hero-avatar-split-b {
+  0% {
+    opacity: 0.6;
+    translate: calc(-50% + 7px) 2px;
+  }
+  66% {
+    opacity: 0.5;
+    translate: calc(-50% - 3px) 0;
+  }
+  100% {
+    opacity: 0;
+    translate: -50% 0;
+  }
+}
+
+/* "HELLO!" sticker peels on from its corner */
+.hero-avatar__sticker {
+  position: absolute;
+  top: 70px;
+  right: -28px;
+  z-index: 3;
+  padding: 6px 9px;
+  background: var(--tooltip-foreground);
+  box-shadow: 3px 3px 0 var(--tooltip-shadow);
+  color: var(--tooltip);
+  font:
+    900 13px / 1 Impact,
+    "Arial Black",
+    sans-serif;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  clip-path: polygon(0 0, 100% 0, 100% 72%, 84% 100%, 0 100%);
+  opacity: 0;
+  transform: rotate(-60deg) scale(0.4);
+  transform-origin: 0% 0%;
+  transition:
+    opacity 0.15s 0.2s,
+    transform 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) 0.2s;
+}
+.hero-avatar__sticker::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16%;
+  height: 28%;
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--tooltip) 30%, transparent),
+    var(--tooltip-shadow)
+  );
+  content: "";
+}
+.hero-avatar[data-on="true"] .hero-avatar__sticker {
+  opacity: 1;
+  transform: rotate(8deg) scale(1);
+}
+
+/* boop: burst lines + counter */
+.hero-avatar__burst {
+  position: absolute;
+  z-index: 4;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.hero-avatar__burst i {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 4px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--tooltip-shadow);
+  transform-origin: 50% 0;
+  animation: hero-avatar-line 0.4s ease-out forwards;
+}
+@keyframes hero-avatar-line {
+  from {
+    opacity: 1;
+    transform: rotate(var(--a)) translateY(10px) scaleY(1);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(var(--a)) translateY(34px) scaleY(0.2);
+  }
+}
+.hero-avatar__counter {
+  position: absolute;
+  bottom: 30px;
+  left: -40px;
+  z-index: 4;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* reduced motion (app setting or OS): states still apply, but instantly, and
+   parallax / boop / split / burst are skipped */
+.hero-avatar[data-reduced="true"] *,
+.hero-avatar[data-reduced="true"] *::before,
+.hero-avatar[data-reduced="true"] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+.hero-avatar[data-reduced="true"] .hero-avatar__split {
+  display: none;
+}

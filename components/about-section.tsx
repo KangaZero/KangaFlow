@@ -34,14 +34,17 @@ import {
   SiVuedotjs,
 } from "react-icons/si"
 import accentureMark from "@/assets/accenture-mark.svg"
-import avatarSrc from "@/assets/avatar.png"
 import usydCrest from "@/assets/usyd-crest.svg"
+import { HeroAvatar } from "@/components/hero-avatar"
 import { LocaleTransition } from "@/components/locale-transition"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import { Carousel, type CarouselItem } from "@/components/ui/carousel"
 import { GradientText } from "@/components/ui/gradient-text"
+import { MorphText, morphGlyphCount } from "@/components/ui/morph-text"
+import { avatarEnteredAtTime, leadDelayMs } from "@/lib/hero-interaction"
 import type { TranslationKey } from "@/lib/i18n"
+import { isReducedMotion } from "@/lib/isReducedMotion"
 import { person } from "@/lib/person"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
@@ -171,31 +174,6 @@ const BrandMark = ({
         </span>
       )}
     </span>
-  )
-}
-
-function Avatar() {
-  const [failed, setFailed] = useState(false)
-
-  return (
-    <div className="avatar-wrapper">
-      <div className="avatar-polygon-container" />
-      {failed ? (
-        <span className="font-heading text-muted-foreground absolute inset-0 flex items-center justify-center text-xl font-medium">
-          {`${person.firstName.at(0) ?? ""}${person.lastName.at(0) ?? ""}`}
-        </span>
-      ) : (
-        <Image
-          alt={person.firstName}
-          className="avatar-img"
-          height={300}
-          onError={() => setFailed(true)}
-          priority
-          src={avatarSrc}
-          width={150}
-        />
-      )}
-    </div>
   )
 }
 
@@ -410,30 +388,73 @@ function RubyName({ isJapanese }: { isJapanese: boolean }) {
         typeof person.rubyName
       >)
     : person.rubyName
+  const { animationPref } = useGlobalStates()
+  const reduced = isReducedMotion(animationPref, useReducedMotion())
+  const [morphing, setMorphing] = useState(false)
+  const [lead, setLead] = useState(0)
+
+  // One running glyph index across all parts (stagger order); each part's
+  // offset also drives when its furigana strip slides out.
+  const lengths = rubyNameOrdered.map((part) => morphGlyphCount(part.romaji))
+  const total = lengths.reduce((sum, n) => sum + n, 0)
+  const offsets = lengths.map((_, i) =>
+    lengths.slice(0, i).reduce((sum, n) => sum + n, 0)
+  )
+
+  // Hover AND keyboard focus run the same morph. If the avatar's slam is still
+  // peaking, the name's entrance waits it out (exits are never delayed).
+  function start() {
+    setLead(reduced ? 0 : leadDelayMs(avatarEnteredAtTime(), performance.now()))
+    setMorphing(true)
+  }
+  const stop = () => setMorphing(false)
+
   return (
-    <h1 className="font-heading text-center text-3xl leading-relaxed font-semibold sm:text-4xl">
-      {rubyNameOrdered.map((part) => (
-        <motion.span
-          className="inline-block"
-          key={part.romaji}
-          layout
-          transition={{ damping: 50, stiffness: 200, type: "spring" }}
-        >
-          <ruby className="mx-1">
-            {part.romaji}
-            <rt
-              className={cn(
-                "text-muted-foreground text-[0.4em]",
-                "ruby-furigana",
-                isJapanese ? "fade-in" : "fade-out"
-              )}
-            >
-              {part.furigana}
-            </rt>
-          </ruby>
-        </motion.span>
-      ))}
-    </h1>
+    // biome-ignore lint/a11y/noStaticElementInteractions: presentational wrapper driving the decorative name morph; the h1 inside carries the text.
+    <div
+      className={cn(
+        "hero-name ransom-on-page rounded-lg px-2 outline-none",
+        "focus-visible:ring-tooltip-shadow focus-visible:ring-offset-background focus-visible:ring-2 focus-visible:ring-offset-4",
+        morphing && "morph-on",
+        reduced && "hero-name--reduced"
+      )}
+      onBlur={stop}
+      onFocus={start}
+      onPointerEnter={start}
+      onPointerLeave={stop}
+      style={{ "--morph-lead": `${lead}ms` }}
+      // biome-ignore lint/a11y/noNoninteractiveTabindex: keyboard parity, so the hover-only morph also plays on focus.
+      tabIndex={0}
+    >
+      <h1 className="font-heading text-center text-3xl leading-relaxed font-semibold sm:text-4xl">
+        {rubyNameOrdered.map((part, index) => (
+          <motion.span
+            className="inline-block"
+            key={part.romaji}
+            layout
+            transition={{ damping: 50, stiffness: 200, type: "spring" }}
+          >
+            <ruby className="mx-1">
+              <MorphText
+                offset={offsets[index] ?? 0}
+                text={part.romaji}
+                total={total}
+              />
+              <rt
+                className={cn(
+                  "text-muted-foreground text-[0.4em]",
+                  "ruby-furigana",
+                  isJapanese ? "fade-in" : "fade-out"
+                )}
+                style={{ "--ps": offsets[index] ?? 0, "--total": total }}
+              >
+                {part.furigana}
+              </rt>
+            </ruby>
+          </motion.span>
+        ))}
+      </h1>
+    </div>
   )
 }
 
@@ -583,8 +604,8 @@ export function AboutSection() {
               id={overviewSection.id}
             >
               <div className="relative">
-                <Avatar />
-                <ScrollShrinkLogo className="absolute top-20 left-2" />
+                <HeroAvatar />
+                <ScrollShrinkLogo className="pointer-events-none absolute top-20 left-2" />
               </div>
               <RubyName isJapanese={locale === "ja"} />
               <LocaleTransition className="flex w-full flex-col items-center gap-6">
