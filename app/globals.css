@@ -16,76 +16,79 @@
   }
 }
 
-/* Tooltip tails. Defined as real utilities (not inline `[clip-path:…]` classes)
-   so Tailwind variants compose: `tail-top sm:tail-bottom` flips the tail at a
-   breakpoint, which a template-concatenated `sm:${…}` class can never do —
-   Tailwind scans source text at build time and never sees a runtime string.
-   `tail-top` / `tail-bottom` are exact vertical mirrors: every y is `100% - y`. */
-@utility tail-bottom {
-  /* tail on top edge → tooltip sits below trigger */
+/* Tooltip silhouettes: the plate's outline AND its zig-zag bolt tip in ONE
+   polygon, so the tip reads as part of the tooltip (not a second shape glued
+   on). The accent shard behind reuses the same utility, so its offset wraps the
+   tip too. Real utilities (not inline `[clip-path:…]`) so variants compose:
+   `tooltip-shape-top sm:tooltip-shape-bottom` flips at a breakpoint, which a
+   runtime-concatenated class never could (Tailwind scans source text).
+   The tip lives in a 15px zone on the trigger-facing side (the component pads
+   that side by 25px); top/bottom and left/right are exact mirrors. */
+@utility tooltip-shape-bottom {
+  /* tip on top edge → tooltip sits below the trigger */
   clip-path: polygon(
-    0 80%,
-    0 15px,
-    37% 9px,
-    30% 6px,
-    46% 4px,
-    50% 0,
-    39% 3px,
-    54% 6px,
-    47% 10px,
-    100% 10px,
-    100% calc(100% - 0px)
+    0 18px,
+    calc(50% - 10px) 16px,
+    calc(50% - 3px) 7px,
+    calc(50% - 8px) 8px,
+    calc(50% + 3px) 0,
+    calc(50% + 1px) 8px,
+    calc(50% + 6px) 7px,
+    calc(50% + 10px) 15px,
+    97% 15px,
+    100% 94%,
+    4% 100%
   );
 }
 
-@utility tail-top {
-  /* tail on bottom edge → tooltip sits above trigger */
+@utility tooltip-shape-top {
+  /* tip on bottom edge → tooltip sits above the trigger */
   clip-path: polygon(
-    0 10,
-    0 calc(100% - 12px),
-    37% calc(100% - 15px),
-    30% calc(100% - 6px),
-    46% calc(100% - 4px),
-    50% 100%,
-    39% calc(100% - 3px),
-    54% calc(100% - 6px),
-    47% calc(100% - 10px),
-    100% calc(100% - 14px),
-    100% 8px
+    0 4px,
+    97% 0,
+    100% calc(100% - 18px),
+    calc(50% + 10px) calc(100% - 16px),
+    calc(50% + 3px) calc(100% - 7px),
+    calc(50% + 8px) calc(100% - 8px),
+    calc(50% - 3px) 100%,
+    calc(50% - 1px) calc(100% - 8px),
+    calc(50% - 6px) calc(100% - 7px),
+    calc(50% - 10px) calc(100% - 15px),
+    4% calc(100% - 15px)
   );
 }
 
-@utility tail-left {
-  /* tail on right edge → tooltip sits left of trigger */
+@utility tooltip-shape-left {
+  /* tip on right edge → tooltip sits left of the trigger */
   clip-path: polygon(
-    0 0,
-    calc(100% - 22px) 0,
-    calc(100% - 16px) 44%,
-    calc(100% - 10px) 30%,
-    calc(100% - 6px) 62%,
-    100% 70%,
-    calc(100% - 5px) 48%,
-    calc(100% - 11px) 78%,
-    calc(100% - 18px) 64%,
-    calc(100% - 26px) 100%,
-    8px 100%
+    0 4px,
+    calc(100% - 18px) 0,
+    calc(100% - 16px) calc(50% - 10px),
+    calc(100% - 7px) calc(50% - 3px),
+    calc(100% - 8px) calc(50% - 8px),
+    100% calc(50% + 3px),
+    calc(100% - 8px) calc(50% + 1px),
+    calc(100% - 7px) calc(50% + 6px),
+    calc(100% - 15px) calc(50% + 10px),
+    calc(100% - 17px) 100%,
+    4% 100%
   );
 }
 
-@utility tail-right {
-  /* tail on left edge → tooltip sits right of trigger */
+@utility tooltip-shape-right {
+  /* tip on left edge → tooltip sits right of the trigger */
   clip-path: polygon(
-    22px 0,
-    100% 0,
-    calc(100% - 8px) 100%,
-    26px 100%,
-    18px 64%,
-    11px 78%,
-    5px 48%,
-    0 70%,
-    6px 62%,
-    10px 30%,
-    16px 44%
+    17px 0,
+    100% 6%,
+    97% 100%,
+    15px 100%,
+    15px calc(50% + 10px),
+    7px calc(50% + 6px),
+    8px calc(50% + 1px),
+    0 calc(50% + 3px),
+    8px calc(50% - 8px),
+    7px calc(50% - 3px),
+    16px calc(50% - 10px)
   );
 }
 

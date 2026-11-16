@@ -1,15 +1,20 @@
 "use client"
+// [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+
+import "@/components/ui/animated-tooltip.css"
 
 import {
   AnimatePresence,
   motion,
+  type Transition,
   useMotionValue,
   useSpring,
   useTransform,
 } from "motion/react"
-import { useState } from "react"
+import { useMemo, useState } from "react"
 
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
+import { ransomLetters } from "@/lib/ransom-letters"
 import { cn } from "@/lib/utils"
 
 export interface AnimatedTooltipProps {
@@ -31,55 +36,67 @@ export interface AnimatedTooltipProps {
   side?: "top" | "bottom" | "right" | "left" | "responsive"
   className?: string
 }
-// `tail-*` are project utilities declared in globals.css. They are real
-// utilities (`@utility`), not inline `[clip-path:…]` classes, so Tailwind
-// variants compose — see `responsive`, which flips the tail at `sm`.
+
+// `tooltip-shape-*` (globals.css) are real utilities, so the `responsive` side
+// can flip shape + tip padding at `sm` with plain Tailwind variants. `pad` puts
+// 25px on the trigger-facing side: that is where the bolt tip lives.
 const SIDE_STYLES = {
   bottom: {
-    className: "top-full mt-2",
+    className: "top-full mt-0.5",
     origin: "origin-top",
-    pad: "px-4 pt-5 pb-1.5",
-    shadow: "4px_4px",
-    tail: "tail-bottom",
-    y: -8,
+    pad: "px-4 pt-[25px] pb-2.5",
+    shape: "tooltip-shape-bottom",
   },
   left: {
-    className: "top-0 right-full mr-2",
+    className: "top-0 right-full mr-0.5",
     origin: "origin-right",
-    pad: "py-1.5 pl-4 pr-8",
-    shadow: "-4px_4px",
-    tail: "tail-left",
-    y: 0,
+    pad: "py-2.5 pr-[28px] pl-4",
+    shape: "tooltip-shape-left",
   },
   responsive: {
-    className: "bottom-full mb-2 sm:top-full sm:bottom-auto sm:mt-2 sm:mb-0",
+    className:
+      "bottom-full mb-0.5 sm:top-full sm:bottom-auto sm:mt-0.5 sm:mb-0",
     origin: "origin-bottom sm:origin-top",
-    pad: "px-4 py-5",
-    shadow: "4px_4px",
-    tail: "tail-top sm:tail-bottom",
-    y: 8,
+    pad: "px-4 pt-2.5 pb-[25px] sm:pt-[25px] sm:pb-2.5",
+    shape: "tooltip-shape-top sm:tooltip-shape-bottom",
   },
   right: {
-    className: "top-0 left-full ml-2",
+    className: "top-0 left-full ml-0.5",
     origin: "origin-left",
-    pad: "py-1.5 pr-4 pl-8",
-    shadow: "4px_4px",
-    tail: "tail-right",
-    y: 0,
+    pad: "py-2.5 pr-4 pl-[28px]",
+    shape: "tooltip-shape-right",
   },
   top: {
-    className: "bottom-full mb-2",
+    className: "bottom-full mb-0.5",
     origin: "origin-bottom",
-    pad: "px-4 pt-1.5 pb-5",
-    shadow: "4px_-4px",
-    tail: "tail-top",
-    y: 8,
+    pad: "px-4 pt-2.5 pb-[25px]",
+    shape: "tooltip-shape-top",
   },
 } as const
 
+/*
+ * Entrance = diagonal wipe + slam, run together:
+ * - a diagonal clip-path wipe reveals shard + plate;
+ * - the plate slams in (mild scale/rotate overshoot) and the accent shard
+ *   springs in 50ms later from the opposite corner;
+ * - letters pop in after the plate lands, with a stepped colour-split glitch.
+ * Exit slices the tooltip out to the right.
+ * The wipe polygons reach far past the box (−60%/160%) so the shard overflow
+ * is never clipped, and keep the same point count so Motion can interpolate.
+ */
+const WIPE_HIDDEN = "polygon(-20% -60%, -20% -60%, -40% 160%, -40% 160%)"
+const WIPE_SHOWN = "polygon(-20% -60%, 140% -60%, 120% 160%, -40% 160%)"
+const WIPE_GONE = "polygon(140% -60%, 140% -60%, 120% 160%, 120% 160%)"
+// A literal tuple matches Motion's cubic-bezier type (readonly [n, n, n, n]).
+const WIPE_EASE = [0.6, 0, 0.2, 1] as const
+const SLAM: Transition = { damping: 15, stiffness: 420, type: "spring" }
+const SHARD: Transition = { damping: 14, stiffness: 380, type: "spring" }
+const GLYPH_DELAY = 0.12
+const GLYPH_STAGGER = 0.022
+
 // Generalised from the Aceternity "animated tooltip": the mouse-follow spring
-// (rotate + translateX) is preserved, but it now wraps an arbitrary trigger and
-// shows a text label on a configurable side.
+// (rotate + translateX) is preserved on the outer layer; the entrance runs on
+// inner layers so the two never fight over the same transform.
 export function AnimatedTooltip({
   label,
   shortcut,
@@ -97,6 +114,7 @@ export function AnimatedTooltip({
   )
   const placement = SIDE_STYLES[side]
   const isHorizontal = side === "left" || side === "right"
+  const letters = useMemo(() => ransomLetters(label), [label])
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: presentational wrapper; the real control is the interactive child, this only drives the decorative tooltip.
@@ -114,56 +132,109 @@ export function AnimatedTooltip({
       <AnimatePresence>
         {open && (
           <div className="relative">
-            {/* wrapper carries the shadow; child carries the shape */}
+            {/* Layer 1: position + mouse-follow tilt. */}
             <motion.div
-              animate={{
-                opacity: 1,
-                scale: 1,
-                transition: { damping: 10, stiffness: 260, type: "spring" },
-                y: 0,
-              }}
               className={cn(
                 "pointer-events-none absolute z-50 w-max",
-                // `drop-shadow-*`, not `filter-[drop-shadow(…)]`: the latter
-                // sets the whole `filter` property, so any other filter
-                // utility added here later would silently clobber it.
-                "drop-shadow-[4px_4px_0_var(--tooltip-shadow)]",
-                // "translate-y-[-15]",
-                // side !== "left"
-                //   ? "left-1/2 -translate-x-1/2"
-                //   : "right-full mr-2",
                 placement.origin,
                 isHorizontal ? "" : "left-1/2",
                 placement.className
               )}
               data-slot="tooltip-content"
-              exit={{ opacity: 0, scale: 0.6, y: placement.y }}
-              initial={{ opacity: 0, scale: 0.6, y: placement.y }}
-              // style={{ rotate, translateX }}
               style={{ rotate, translateX, x: isHorizontal ? 0 : "-50%" }}
             >
-              <div
-                className={cn(
-                  "bg-tooltip flex -skew-x-6 items-center gap-1.5 whitespace-nowrap",
-                  placement.pad,
-                  "text-tooltip-foreground text-[11px] font-black tracking-wide uppercase",
-                  placement.tail
-                )}
+              {/* Layer 2: slam in, slice out. */}
+              <motion.div
+                animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                className={placement.origin}
+                exit={{ opacity: 0, transition: { duration: 0.16 }, x: 14 }}
+                initial={{ opacity: 0, rotate: -9, scale: 1.3 }}
+                transition={{ ...SLAM, opacity: { duration: 0.12 } }}
               >
-                <span className="skew-x-6">{label}</span>
-                {shortcut?.length ? (
-                  <KbdGroup className="skew-x-6">
-                    {shortcut.map((token) => (
-                      <Kbd
-                        className="in-data-[slot=tooltip-content]:bg-sidebar-accent"
-                        key={token}
-                      >
-                        {token}
-                      </Kbd>
-                    ))}
-                  </KbdGroup>
-                ) : null}
-              </div>
+                {/* Layer 3: diagonal wipe (clip-path) around shard + plate. */}
+                <motion.div
+                  animate={{ clipPath: WIPE_SHOWN }}
+                  className="relative"
+                  exit={{
+                    clipPath: WIPE_GONE,
+                    transition: { duration: 0.16, ease: "easeIn" },
+                  }}
+                  initial={{ clipPath: WIPE_HIDDEN }}
+                  transition={{ duration: 0.3, ease: WIPE_EASE }}
+                >
+                  {/* Accent shard: same silhouette, offset like a hard shadow. */}
+                  <motion.div
+                    animate={{ opacity: 1, rotate: -3, scale: 1, x: 6, y: 5 }}
+                    aria-hidden
+                    className={cn(
+                      "bg-tooltip-shadow absolute -inset-x-2.5 -top-1.5 -bottom-2",
+                      placement.shape
+                    )}
+                    initial={{
+                      opacity: 0,
+                      rotate: 10,
+                      scale: 0.6,
+                      x: -26,
+                      y: -14,
+                    }}
+                    transition={{ ...SHARD, delay: 0.05 }}
+                  />
+                  {/* Plate: skewed, text counter-skewed back to upright. */}
+                  <div
+                    className={cn(
+                      "bg-tooltip relative flex -skew-x-[9deg] items-center gap-2 whitespace-nowrap",
+                      placement.pad,
+                      placement.shape
+                    )}
+                  >
+                    <span className="sr-only">{label}</span>
+                    <span
+                      aria-hidden
+                      className="tooltip-glitch inline-flex skew-x-[9deg] items-end"
+                    >
+                      {letters.map((token) =>
+                        token.type === "space" ? (
+                          <span className="w-1.5" key={token.key} />
+                        ) : (
+                          <motion.span
+                            animate={{
+                              opacity: 1,
+                              rotate: token.rotate,
+                              scale: 1,
+                              y: token.dy,
+                            }}
+                            className="ransom-glyph"
+                            data-kind={token.kind}
+                            initial={{ opacity: 0, rotate: 40, scale: 0, y: 0 }}
+                            key={token.key}
+                            style={{ "--glyph-size": `${token.size}px` }}
+                            transition={{
+                              damping: 14,
+                              delay: GLYPH_DELAY + token.index * GLYPH_STAGGER,
+                              stiffness: 520,
+                              type: "spring",
+                            }}
+                          >
+                            {token.char}
+                          </motion.span>
+                        )
+                      )}
+                    </span>
+                    {shortcut?.length ? (
+                      <KbdGroup className="skew-x-[9deg]">
+                        {shortcut.map((token) => (
+                          <Kbd
+                            className="in-data-[slot=tooltip-content]:bg-sidebar-accent"
+                            key={token}
+                          >
+                            {token}
+                          </Kbd>
+                        ))}
+                      </KbdGroup>
+                    ) : null}
+                  </div>
+                </motion.div>
+              </motion.div>
             </motion.div>
           </div>
         )}
