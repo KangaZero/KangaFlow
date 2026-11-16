@@ -469,9 +469,12 @@ export function EnvironmentView() {
   // Overview layer still mounted (true from opening until its exit zoom has
   // finished), so the live strip stays hidden underneath until then.
   const [overviewLayer, setOverviewLayer] = useState(false)
-  const [wallpaperStyleProp, setWallpaperStylePro] = useState<CSSProperties>(
-    wallpaperStyle(settings.wallpaper, theme)
-  )
+  // Starts EMPTY, filled by the effect below after mount. Computing it during
+  // render baked the server's default-theme wallpaper (the terminal cat) into
+  // the prerendered HTML; React doesn't patch a mismatched `style` attribute on
+  // hydration, and the client state already matched, so the effect's identical
+  // update never re-rendered — the desktop kept the wrong wallpaper.
+  const [wallpaperStyleProp, setWallpaperStylePro] = useState<CSSProperties>({})
 
   // Shared click-to-front counter (same one the floating widgets use). Focusing
   // a tiled window bumps the whole tiled layer above the floats; clicking a
@@ -519,7 +522,12 @@ export function EnvironmentView() {
   }, [])
 
   // Measure the strip so column widths + centring are in real pixels.
+  // Re-runs when the desktop mounts: the login screen renders first, so on the
+  // initial mount the strip isn't in the DOM yet (stripRef is null). With an
+  // empty dep list the observer never attached, stripWidth stayed 0 and every
+  // column clamped to MIN_COLUMN_WIDTH — resize/fullscreen looked broken.
   useEffect(() => {
+    if (isLoggedIn !== "visible") return
     const el = stripRef.current
     if (!el) return
     const measure = () =>
@@ -528,7 +536,7 @@ export function EnvironmentView() {
     ro.observe(el)
     measure()
     return () => ro.disconnect()
-  }, [])
+  }, [isLoggedIn])
 
   useEffect(() => {
     if (state.overview) setOverviewLayer(true)
