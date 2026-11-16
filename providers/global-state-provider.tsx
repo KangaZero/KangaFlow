@@ -69,6 +69,12 @@ function loadVimMode(): boolean {
   return safeLocalStorage.getItem(VIM_MODE_STORAGE_KEY) === "true"
 }
 
+const SOUND_EFFECTS_STORAGE_KEY = "kangaflow:soundEffects"
+
+function loadSoundEffects(): boolean {
+  return safeLocalStorage.getItem(SOUND_EFFECTS_STORAGE_KEY) === "true"
+}
+
 const NOTE_LINE_NUMBERS_STORAGE_KEY = "kangaflow:noteLineNumbers"
 
 function loadNoteLineNumbers(): NoteLineNumbers {
@@ -299,10 +305,12 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   setNoteLineNumbers: () => {},
   setShortcuts: () => {},
   setShowChromeInEnvironment: () => {},
+  setSoundEffects: () => {},
   setTerminalFile: () => {},
   setVimMode: () => {},
   shortcuts: [...DEFAULT_SHORTCUTS],
   showChromeInEnvironment: false,
+  soundEffects: false,
   terminalFile: null,
   theme: DEFAULT_THEME,
   toggleTheme: async () => {},
@@ -367,6 +375,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [showChromeInEnvironment, setShowChromeInEnvironment] = useState(false)
   const [animationPref, setAnimationPref] = useState<AnimationPref>("system")
   const [vimMode, setVimMode] = useState(false)
+  const [soundEffects, setSoundEffects] = useState(false)
   const [noteLineNumbers, setNoteLineNumbers] = useState<NoteLineNumbers>("off")
   const [isLoggedIn, setIsLoggedIn] = useState<"hidden" | "visible">("hidden")
   const [envSettings, setEnvSettings] =
@@ -378,6 +387,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     setShowChromeInEnvironment(loadEnvChrome())
     setAnimationPref(loadAnimationPref())
     setVimMode(loadVimMode())
+    setSoundEffects(loadSoundEffects())
     setNoteLineNumbers(loadNoteLineNumbers())
     const loaded = loadEnvSettings()
     setEnvSettings(loaded)
@@ -428,6 +438,12 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       safeLocalStorage.setItem(VIM_MODE_STORAGE_KEY, String(vimMode))
     }
   }, [vimMode])
+
+  useEffect(() => {
+    if (hydrated.current) {
+      safeLocalStorage.setItem(SOUND_EFFECTS_STORAGE_KEY, String(soundEffects))
+    }
+  }, [soundEffects])
 
   useEffect(() => {
     if (hydrated.current) {
@@ -499,10 +515,12 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       setNoteLineNumbers,
       setShortcuts,
       setShowChromeInEnvironment,
+      setSoundEffects,
       setTerminalFile,
       setVimMode,
       shortcuts,
       showChromeInEnvironment,
+      soundEffects,
       terminalFile,
       theme,
       toggleTheme,
@@ -514,6 +532,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       envSettings,
       noteLineNumbers,
       showChromeInEnvironment,
+      soundEffects,
       vimMode,
       isAlarmOpen,
       isCalendarOpen,

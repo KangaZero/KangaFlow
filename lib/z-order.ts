@@ -9,6 +9,8 @@
 //   dialog            radix dialogs (wallpaper, help, settings, terminal, command)
 //   popover           bar dropdowns (notifications) — always on top
 //   hint              link-hint ("f") overlay — above everything hintable
+//   unlockDim         achievement-unlock screen dim, just below the toast
+//   unlockFx          achievement-unlock particles + flash, just above the toast
 //   transition        route-transition bubble swarm — covers the whole app
 //
 // The bands are spaced (not adjacent) so the click-to-front counter, clamped at
@@ -21,6 +23,8 @@ export const Z_LAYERS = {
   popover: 1100,
   toast: 1150,
   transition: 1300,
+  unlockDim: 1140,
+  unlockFx: 1160,
   window: 100,
   windowMax: 800,
 } as const

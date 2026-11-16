@@ -74,6 +74,8 @@ export function SettingsDialog() {
     setAnimationPref,
     vimMode,
     setVimMode,
+    soundEffects,
+    setSoundEffects,
     theme,
     toggleTheme,
   } = useGlobalStates()
@@ -228,6 +230,23 @@ export function SettingsDialog() {
             aria-pressed={vimMode}
             checked={vimMode}
             onClick={() => setVimMode(!vimMode)}
+          />
+        </div>
+
+        <div className="border-border flex items-center justify-between gap-3 border-t py-3">
+          <div className="flex flex-col gap-0.5">
+            <p className="text-sm font-medium">
+              {translate("settings.soundEffects")}
+            </p>
+            <p className="text-muted-foreground text-xs">
+              {translate("settings.soundEffectsHint")}
+            </p>
+          </div>
+          <Switch
+            aria-label={translate("settings.soundEffects")}
+            aria-pressed={soundEffects}
+            checked={soundEffects}
+            onClick={() => setSoundEffects(!soundEffects)}
           />
         </div>
 

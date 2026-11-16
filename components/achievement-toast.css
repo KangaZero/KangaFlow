@@ -1,0 +1,389 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* "Gacha slam" achievement-unlock toast: a capsule rattles and cracks open in
+   the slab slot, the graded slab pops out, and a rebel plate slams in beside
+   it. Colours come from the rarity tokens (--rarity-*, via --rc) and the
+   tooltip plate tokens; no literals. Motion owns every transform. */
+
+/* All toasts share one grid cell, so an exiting toast and the next one
+   (chained unlocks) overlap instead of sitting side by side. */
+.unlock-toast {
+  grid-area: 1 / 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: min(480px, calc(100vw - 2rem));
+  pointer-events: auto;
+}
+
+/* ---------- slab slot (capsule opens here, slab lands here) ---------- */
+.unlock-toast__slot {
+  position: relative;
+  z-index: 3;
+  flex: none;
+  width: 70px;
+  margin-right: -18px;
+}
+.unlock-toast__slab {
+  filter: drop-shadow(0 8px 14px oklch(0 0 0 / 0.45));
+}
+/* The real AchievementSlab rendered small. `zoom` (not transform) so the
+   layout box shrinks too and the toast lays out around a 69px card. */
+.unlock-toast__slab-zoom {
+  width: 230px;
+  zoom: 0.3;
+  animation: unlock-idle-tilt 4.5s ease-in-out infinite;
+}
+/* Foil visible at rest; pointer tilt (useCardTilt) still overrides inline. */
+.unlock-toast__slab .ach-slab {
+  --hyp: 0.55;
+}
+@keyframes unlock-idle-tilt {
+  0%,
+  100% {
+    transform: perspective(500px) rotateY(-12deg) rotateX(5deg);
+  }
+  50% {
+    transform: perspective(500px) rotateY(12deg) rotateX(-5deg);
+  }
+}
+
+/* ---------- capsule: font-size sets its size (8em square) ---------- */
+.unlock-capsule {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8em;
+  height: 8em;
+  font-size: 9px;
+  pointer-events: none;
+  translate: -50% -50%;
+}
+.unlock-capsule__shadow {
+  position: absolute;
+  right: 15%;
+  bottom: -0.9em;
+  left: 15%;
+  height: 1em;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, oklch(0 0 0 / 0.45), transparent);
+}
+.unlock-capsule__glow {
+  position: absolute;
+  inset: -1.8em;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in oklch, var(--rc) 65%, transparent),
+    transparent
+  );
+}
+.unlock-capsule__body {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 100%;
+}
+.unlock-capsule__half {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 50%;
+}
+.unlock-capsule__top {
+  top: 0;
+  border: 0.14em solid color-mix(in oklch, var(--rc) 55%, black);
+  border-bottom: 0;
+  border-radius: 4em 4em 0 0;
+  background:
+    radial-gradient(
+      ellipse 26% 20% at 30% 34%,
+      oklch(1 0 0 / 0.9) 0 40%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 50% 100%,
+      oklch(0 0 0 / 0.18),
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--rc) 75%, white),
+      var(--rc) 55%,
+      color-mix(in oklch, var(--rc) 70%, black)
+    );
+}
+@property --unlock-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+/* Mythic: rainbow sheen sweeping around the capsule top. */
+.unlock-capsule[data-rarity="mythic"] .unlock-capsule__top {
+  background:
+    radial-gradient(
+      ellipse 26% 20% at 30% 34%,
+      oklch(1 0 0 / 0.9) 0 40%,
+      transparent 100%
+    ),
+    conic-gradient(
+      from var(--unlock-angle) at 50% 100%,
+      var(--rarity-mythic),
+      var(--rarity-legendary),
+      var(--rarity-uncommon),
+      var(--rarity-rare),
+      var(--rarity-mythic)
+    );
+  animation: unlock-spin 1.6s linear infinite;
+}
+@keyframes unlock-spin {
+  to {
+    --unlock-angle: 360deg;
+  }
+}
+.unlock-capsule__bottom {
+  bottom: 0;
+  border: 0.14em solid oklch(0.55 0.01 260);
+  border-top: 0;
+  border-radius: 0 0 4em 4em;
+  background:
+    radial-gradient(
+      ellipse 30% 22% at 38% 26%,
+      oklch(1 0 0 / 0.65) 0 40%,
+      transparent 100%
+    ),
+    linear-gradient(180deg, oklch(0.98 0 0 / 0.95), oklch(0.8 0.01 260 / 0.95));
+}
+.unlock-capsule__band {
+  position: absolute;
+  top: -0.4em;
+  right: -0.2em;
+  left: -0.2em;
+  height: 0.8em;
+  border: 0.1em solid oklch(0.5 0.01 260);
+  border-radius: 0.35em;
+  background: linear-gradient(180deg, oklch(0.97 0 0), oklch(0.72 0.01 260));
+}
+.unlock-capsule__leak {
+  position: absolute;
+  top: calc(50% - 0.12em);
+  right: 8%;
+  left: 8%;
+  height: 0.24em;
+  border-radius: 1em;
+  background: oklch(1 0 0);
+  box-shadow:
+    0 0 0.8em 0.3em var(--rc),
+    0 0 2.4em 0.6em color-mix(in oklch, var(--rc) 60%, transparent);
+}
+
+/* ---------- rebel plate on stacked rarity shards ---------- */
+.unlock-toast__plate-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.unlock-shard {
+  position: absolute;
+  inset: -6px -14px -8px -10px;
+  clip-path: polygon(3% 8%, 100% 0, 96% 100%, 0 90%);
+}
+.unlock-shard[data-index="0"] {
+  background: var(--rc);
+}
+.unlock-shard[data-index="1"] {
+  background: var(--tooltip-shadow);
+}
+.unlock-shard[data-index="2"] {
+  background: var(--foreground);
+}
+.unlock-shard[data-index="3"] {
+  background: color-mix(in oklch, var(--rc) 60%, white);
+}
+.unlock-plate {
+  position: relative;
+  padding: 14px 40px 16px 34px;
+  background: var(--tooltip);
+  clip-path: polygon(0 5%, 98% 0, 100% 93%, 3% 100%);
+  color: var(--tooltip-foreground);
+}
+.unlock-plate__in {
+  transform: skewX(8deg);
+}
+.unlock-plate__title {
+  margin-top: 2px;
+  font-family: Impact, "Haettenschweiler", "Arial Black", sans-serif;
+  font-size: 19px;
+  letter-spacing: 0.03em;
+  line-height: 1.15;
+  text-shadow: 2px 2px 0 var(--rc);
+  text-transform: uppercase;
+}
+.terminal .unlock-plate__title {
+  font-family: var(--font-mono);
+  font-weight: 900;
+}
+.unlock-plate__desc {
+  margin-top: 2px;
+  color: color-mix(in oklch, var(--tooltip-foreground) 70%, transparent);
+  font-size: 12px;
+}
+.unlock-plate__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+}
+.unlock-chip {
+  padding: 2px 7px;
+  border: 1px solid color-mix(in oklch, var(--rc) 60%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--rc) 14%, transparent);
+  color: var(--rc);
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.unlock-stars {
+  color: var(--rc);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.unlock-new {
+  padding: 3px 6px;
+  background: var(--rc);
+  box-shadow: 2px 2px 0 var(--tooltip-foreground);
+  color: var(--tooltip);
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  transform: rotate(-6deg) skewX(-10deg);
+}
+.unlock-progress {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: color-mix(in oklch, var(--tooltip-foreground) 70%, transparent);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.unlock-roll {
+  display: inline-block;
+  height: 1.2em;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+.unlock-roll > span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2em;
+}
+.unlock-roll b {
+  color: var(--rc);
+  font-weight: 800;
+}
+.unlock-bar {
+  position: relative;
+  height: 7px;
+  margin-top: 4px;
+  overflow: hidden;
+  background: color-mix(in oklch, var(--tooltip-foreground) 18%, transparent);
+  transform: skewX(-20deg);
+}
+.unlock-bar__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--rc);
+  transform-origin: left;
+}
+.unlock-bar__glow {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    oklch(1 0 0 / 0.85),
+    transparent
+  );
+}
+.unlock-timer {
+  position: absolute;
+  right: 14px;
+  bottom: 3px;
+  left: 14px;
+  height: 2px;
+  overflow: hidden;
+  background: color-mix(in oklch, var(--rc) 25%, transparent);
+}
+.unlock-timer > span {
+  display: block;
+  height: 100%;
+  background: var(--rc);
+  transform-origin: left;
+}
+.unlock-sticker {
+  position: absolute;
+  z-index: 2;
+  top: -18px;
+  right: -10px;
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+}
+.unlock-sticker::before,
+.unlock-sticker::after {
+  position: absolute;
+  inset: 0;
+  clip-path: var(--star);
+  content: "";
+}
+.unlock-sticker::before {
+  background: var(--rc);
+}
+.unlock-sticker::after {
+  z-index: -1;
+  background: var(--foreground);
+  transform: translate(3px, 3px);
+}
+.unlock-sticker > span {
+  position: relative;
+  color: var(--tooltip);
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 15px;
+  line-height: 1;
+  text-align: center;
+  transform: rotate(-10deg);
+}
+.unlock-sticker small {
+  display: block;
+  font-family: var(--font-sans, system-ui);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+.unlock-dismiss {
+  position: absolute;
+  z-index: 3;
+  top: 8px;
+  right: 66px;
+  display: grid;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  color: var(--tooltip-foreground);
+  place-items: center;
+}
+.unlock-dismiss:hover,
+.unlock-dismiss:focus-visible {
+  background: oklch(1 0 0 / 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unlock-toast__slab-zoom,
+  .unlock-capsule[data-rarity="mythic"] .unlock-capsule__top {
+    animation: none;
+  }
+}

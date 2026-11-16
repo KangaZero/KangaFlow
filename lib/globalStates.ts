@@ -73,6 +73,9 @@ export type GlobalStatesContextValue = {
   // Read by <VimInput>/useVimInput to arm modal editing on text fields.
   vimMode: boolean
   setVimMode: (on: boolean) => void
+  // Synthesised sound effects (achievement unlocks). Persisted; default off.
+  soundEffects: boolean
+  setSoundEffects: (on: boolean) => void
   // Note-editor line-number gutter (persisted): off, absolute, or vim-style
   // relative (distance from the caret line).
   noteLineNumbers: NoteLineNumbers
