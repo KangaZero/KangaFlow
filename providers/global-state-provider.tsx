@@ -75,6 +75,20 @@ function loadSoundEffects(): boolean {
   return safeLocalStorage.getItem(SOUND_EFFECTS_STORAGE_KEY) === "true"
 }
 
+// Booleans whose default is not `false` need a tri-state read: only an explicit
+// "true"/"false" overrides the fallback (missing/garbage → fallback).
+function loadBoolean(key: string, fallback: boolean): boolean {
+  const raw = safeLocalStorage.getItem(key)
+  if (raw === "true") return true
+  if (raw === "false") return false
+  return fallback
+}
+
+const ONEKO_ENABLED_STORAGE_KEY = "kangaflow:onekoEnabled"
+const ONEKO_FOLLOW_CURSOR_STORAGE_KEY = "kangaflow:onekoFollowCursor"
+const DEFAULT_ONEKO_ENABLED = DEFAULT_ONEKO_OPTIONS.isToggledOn
+const DEFAULT_ONEKO_FOLLOW_CURSOR = DEFAULT_ONEKO_OPTIONS.followMouse
+
 const NOTE_LINE_NUMBERS_STORAGE_KEY = "kangaflow:noteLineNumbers"
 
 function loadNoteLineNumbers(): NoteLineNumbers {
@@ -284,7 +298,8 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isTrackListOpen: false,
   mediaCurrentIndex: 0,
   noteLineNumbers: "off",
-  onekoSettings: DEFAULT_ONEKO_OPTIONS,
+  onekoEnabled: DEFAULT_ONEKO_ENABLED,
+  onekoFollowCursor: DEFAULT_ONEKO_FOLLOW_CURSOR,
   setAnimationPref: () => {},
   setColumnCount: () => {},
   setEnvSettings: () => {},
@@ -303,6 +318,8 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   setIsTrackListOpen: () => {},
   setMediaCurrentIndex: () => {},
   setNoteLineNumbers: () => {},
+  setOnekoEnabled: () => {},
+  setOnekoFollowCursor: () => {},
   setShortcuts: () => {},
   setShowChromeInEnvironment: () => {},
   setSoundEffects: () => {},
@@ -376,6 +393,10 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [animationPref, setAnimationPref] = useState<AnimationPref>("system")
   const [vimMode, setVimMode] = useState(false)
   const [soundEffects, setSoundEffects] = useState(false)
+  const [onekoEnabled, setOnekoEnabled] = useState(DEFAULT_ONEKO_ENABLED)
+  const [onekoFollowCursor, setOnekoFollowCursor] = useState(
+    DEFAULT_ONEKO_FOLLOW_CURSOR
+  )
   const [noteLineNumbers, setNoteLineNumbers] = useState<NoteLineNumbers>("off")
   const [isLoggedIn, setIsLoggedIn] = useState<"hidden" | "visible">("hidden")
   const [envSettings, setEnvSettings] =
@@ -388,6 +409,12 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     setAnimationPref(loadAnimationPref())
     setVimMode(loadVimMode())
     setSoundEffects(loadSoundEffects())
+    setOnekoEnabled(
+      loadBoolean(ONEKO_ENABLED_STORAGE_KEY, DEFAULT_ONEKO_ENABLED)
+    )
+    setOnekoFollowCursor(
+      loadBoolean(ONEKO_FOLLOW_CURSOR_STORAGE_KEY, DEFAULT_ONEKO_FOLLOW_CURSOR)
+    )
     setNoteLineNumbers(loadNoteLineNumbers())
     const loaded = loadEnvSettings()
     setEnvSettings(loaded)
@@ -447,6 +474,21 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (hydrated.current) {
+      safeLocalStorage.setItem(ONEKO_ENABLED_STORAGE_KEY, String(onekoEnabled))
+    }
+  }, [onekoEnabled])
+
+  useEffect(() => {
+    if (hydrated.current) {
+      safeLocalStorage.setItem(
+        ONEKO_FOLLOW_CURSOR_STORAGE_KEY,
+        String(onekoFollowCursor)
+      )
+    }
+  }, [onekoFollowCursor])
+
+  useEffect(() => {
+    if (hydrated.current) {
       safeLocalStorage.setItem(NOTE_LINE_NUMBERS_STORAGE_KEY, noteLineNumbers)
     }
   }, [noteLineNumbers])
@@ -494,7 +536,8 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isTrackListOpen,
       mediaCurrentIndex,
       noteLineNumbers,
-      onekoSettings: DEFAULT_ONEKO_OPTIONS,
+      onekoEnabled,
+      onekoFollowCursor,
       setAnimationPref,
       setColumnCount,
       setEnvSettings,
@@ -513,6 +556,8 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       setIsTrackListOpen,
       setMediaCurrentIndex,
       setNoteLineNumbers,
+      setOnekoEnabled,
+      setOnekoFollowCursor,
       setShortcuts,
       setShowChromeInEnvironment,
       setSoundEffects,
@@ -531,6 +576,8 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       columnCount,
       envSettings,
       noteLineNumbers,
+      onekoEnabled,
+      onekoFollowCursor,
       showChromeInEnvironment,
       soundEffects,
       vimMode,

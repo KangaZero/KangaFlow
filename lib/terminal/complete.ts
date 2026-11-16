@@ -3,9 +3,10 @@
 // line and the known file list, work out which token is being completed, the
 // matching candidates, and their longest common prefix. Free of xterm/React so
 // the terminal only owns menu state + drawing.
+
+import { ONEKO_COMMANDS } from "@/lib/terminal/oneko"
 import { TERMINAL_PAGE_NAMES } from "@/lib/terminal/pages"
 import { THEMES } from "@/lib/themes"
-import { ONEKO_COMMANDS } from "./oneko"
 
 // Single source of truth for the shell's command names (also drives completion
 // of the first word).

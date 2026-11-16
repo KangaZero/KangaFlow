@@ -63,6 +63,16 @@ describe("achievements reducer", () => {
     expect(COMPLETION_IDS).not.toContain("go-touch-grass")
   })
 
+  it("keeps the oneko easter egg out of completion", () => {
+    expect(getAchievementDef("psychopath")).toEqual({
+      id: "psychopath",
+      rarity: "uncommon",
+      secret: true,
+      trigger: "oneko",
+    })
+    expect(COMPLETION_IDS).not.toContain("psychopath")
+  })
+
   it("throws on an unknown definition id", () => {
     // @ts-expect-error runtime guard test
     expect(() => getAchievementDef("nope")).toThrow()
@@ -131,7 +141,7 @@ describe("achievement collection helpers", () => {
       legendary: 2,
       mythic: 1,
       rare: 3,
-      uncommon: 2,
+      uncommon: 3,
     })
   })
 })

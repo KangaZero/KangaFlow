@@ -57,6 +57,10 @@ const ja = {
         description: "行ってはいけない場所へ迷い込んだ。",
         title: "立入禁止",
       },
+      psychopath: {
+        description: "ねこ様を追い払った。なんてことを…",
+        title: "サイコパス",
+      },
       "puzzle-master": {
         description: "史上最難関のパズルを解いた。",
         title: "パズルマスター",

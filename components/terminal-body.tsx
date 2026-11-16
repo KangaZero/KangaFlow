@@ -58,9 +58,10 @@ import {
 import { type FastfetchInfo, renderFastfetch } from "@/lib/terminal/fastfetch"
 import { MENU_MAX_ROWS, renderMenu } from "@/lib/terminal/menu"
 import {
-  type ONEKO_COMMANDS,
-  onekoHelp,
+  applyOnekoCommand,
+  ONEKO_HOME_PAGE,
   onekoReduceMotionWarning,
+  renderOnekoOutput,
 } from "@/lib/terminal/oneko"
 import {
   buildPageFiles,
@@ -90,6 +91,7 @@ import {
   resolvePath,
 } from "@/lib/terminal/vfs"
 import { isTheme, THEMES } from "@/lib/themes"
+import { useAchievements } from "@/providers/achievements-provider"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -315,7 +317,7 @@ const HELP: readonly (readonly [
   ["cat <file>", "print a file"],
   ["nvim <file>", "edit a file in vim"],
   ["theme <name>", "switch theme (light | dark | terminal)"],
-  ["oneko", "your sticky pet"],
+  ["oneko <subcmd>", "your sticky pet (oneko help)"],
   ["crt [on|off]", "toggle the CRT scanline effect"],
   ["clear", "clear the screen"],
   ["whoami", "print the current user"],
@@ -365,7 +367,12 @@ export function TerminalBody({
     setGlobalMatrixOptions,
     envSettings,
     animationPref,
+    onekoEnabled,
+    setOnekoEnabled,
+    onekoFollowCursor,
+    setOnekoFollowCursor,
   } = useGlobalStates()
+  const { unlockAchievement } = useAchievements()
   // paletteForTheme returns a shared constant → stable identity for deps.
   const palette = paletteForTheme(resolvedTheme)
   // Flat page filesystem: each routable page is a dir holding `index.tsx`
@@ -452,6 +459,19 @@ export function TerminalBody({
   // defers to OS prefers-reduced-motion which we re-query at call time.
   const animationPrefRef = useRef(animationPref)
   animationPrefRef.current = animationPref
+  // Live oneko settings + route + unlock for the once-bound `oneko` handler.
+  const onekoStateRef = useRef({
+    enabled: onekoEnabled,
+    followCursor: onekoFollowCursor,
+  })
+  onekoStateRef.current = {
+    enabled: onekoEnabled,
+    followCursor: onekoFollowCursor,
+  }
+  const routePathRef = useRef(routePath)
+  routePathRef.current = routePath
+  const unlockRef = useRef(unlockAchievement)
+  unlockRef.current = unlockAchievement
 
   const startedAt = useRef(saved?.startedAt ?? Date.now())
   const session = useRef<Session>({
@@ -714,19 +734,30 @@ export function TerminalBody({
           return true
 
         case "oneko": {
-          const pref = animationPrefRef.current
-          const motionReduced =
-            pref === "off" ||
-            (pref === "system" &&
-              window.matchMedia("(prefers-reduced-motion: reduce)").matches)
+          // OS preference re-queried at call time (the pref may be "system").
+          const motionReduced = isReducedMotion(
+            animationPrefRef.current,
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          )
           if (motionReduced) term.write(onekoReduceMotionWarning())
-          const onekoArg = arg.trim() as (typeof ONEKO_COMMANDS)[number]
-          switch (onekoArg) {
-            case "" as typeof onekoArg:
-              term.write(onekoHelp(true))
-              return true
-            case "toggle":
+          const previous = onekoStateRef.current
+          const result = applyOnekoCommand(previous, arg)
+          // Settings persist even under reduced motion; <Neko /> just won't
+          // draw the cat until motion is allowed again.
+          if (result.next.enabled !== previous.enabled) {
+            setOnekoEnabled(result.next.enabled)
           }
+          if (result.next.followCursor !== previous.followCursor) {
+            setOnekoFollowCursor(result.next.followCursor)
+          }
+          // Mirror immediately so back-to-back commands see the new state
+          // before React re-renders and refreshes the ref.
+          onekoStateRef.current = result.next
+          if (result.unlock !== null) unlockRef.current(result.unlock)
+          s.exitCode = result.exitCode
+          const atHome =
+            pageForRoute(routePathRef.current)?.name === ONEKO_HOME_PAGE
+          term.write(renderOnekoOutput(result.output, atHome))
           return true
         }
         case "cd": {

@@ -1,6 +1,5 @@
 import type { Dispatch, SetStateAction } from "react"
 import type { EnvSettings } from "@/components/niri/settings"
-import type { OnekoOptions } from "@/lib/oneko"
 import type { PageHref } from "@/lib/pages"
 import type { Shortcut } from "@/lib/shortcuts"
 import type { MatrixOptions } from "@/lib/terminal/cmatrix"
@@ -93,8 +92,13 @@ export type GlobalStatesContextValue = {
   // useTheme + useThemeTransition pairing.
   theme: Theme
   toggleTheme: (theme: Theme, duration?: number) => Promise<void>
-  // element is excluded: it's browser-only and created by the constructor.
-  onekoSettings: Omit<Required<OnekoOptions>, "element">
+  // oneko-sama (the pixel cat on /environment). Persisted; only configurable
+  // through the terminal's `oneko` command. Defaults come from
+  // DEFAULT_ONEKO_OPTIONS (isToggledOn / followMouse) so they live in one place.
+  onekoEnabled: boolean
+  setOnekoEnabled: (on: boolean) => void
+  onekoFollowCursor: boolean
+  setOnekoFollowCursor: (on: boolean) => void
 }
 
 export const ANIMATION_PREFS = ["system", "on", "off"] as const

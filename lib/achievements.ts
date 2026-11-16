@@ -14,9 +14,11 @@ export const RARITIES = [
 ] as const
 export type Rarity = (typeof RARITIES)[number]
 
-// How an achievement unlocks. `mount|theme|reveal` are the direct user triggers
-// that count toward completion; `completion`/`speedrun` are derived; `locked`
-// achievements have no in-app trigger yet (reachable only via unlock()).
+// How an achievement unlocks. `mount|theme|reveal|webmcp` are the direct user
+// triggers that count toward completion; `completion`/`speedrun` are derived;
+// `oneko` is a terminal easter egg (`oneko toggle` off) kept OUT of completion so
+// nobody has to be cruel to reach 100%; `locked` achievements have no in-app
+// trigger yet (reachable only via unlock()).
 export type AchievementTrigger =
   | "mount"
   | "theme"
@@ -24,6 +26,7 @@ export type AchievementTrigger =
   | "reveal"
   | "completion"
   | "speedrun"
+  | "oneko"
   | "locked"
 
 export type AchievementDef = {
@@ -59,6 +62,7 @@ export const ACHIEVEMENTS = [
     secret: false,
     trigger: "completion",
   },
+  { id: "psychopath", rarity: "uncommon", secret: true, trigger: "oneko" },
   { id: "speedophile", rarity: "mythic", secret: true, trigger: "speedrun" },
 ] as const satisfies readonly AchievementDef[]
 

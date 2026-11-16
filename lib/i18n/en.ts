@@ -58,6 +58,10 @@ const en = {
         description: "Wandered somewhere you were not meant to go.",
         title: "Out of Bounds",
       },
+      psychopath: {
+        description: "Dismissed oneko-sama. How could you?",
+        title: "Psychopath",
+      },
       "puzzle-master": {
         description: "Solved the most difficult puzzle ever devised.",
         title: "Puzzle Master",

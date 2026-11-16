@@ -11,6 +11,9 @@
 // Multi-frame animations cycle through their cell array.
 import onekoSrc from "@/assets/oneko/default.png"
 
+// Single source for `oneko version` (lib/terminal/oneko reads it from here).
+export const ONEKO_VERSION = "1.0.0"
+
 export type Direction = "N" | "NE" | "E" | "SE" | "S" | "SW" | "W" | "NW"
 
 export type IdleAnimation =
@@ -157,11 +160,15 @@ export interface OnekoOptions {
   speechClassName?: string
   /** anchor-name set on the cat element for CSS anchor positioning. Default "--oneko". */
   anchorName?: string
-  /** Auto-wire a document mousemove listener to chase the cursor (default true). */
+  /** Auto-wire a document mousemove listener to chase the cursor; when false the cat roams randomly (default false). */
   followMouse?: boolean
   /** Override the DOM element. Defaults to a new <div> appended to <body>. */
   element?: HTMLElement
-  /** the oneko toggle cmd */
+  /**
+   * When false the instance is inert: no element is styled or appended and no
+   * listeners/loops start (default true). Callers that can simply skip
+   * construction (components/neko.tsx) should do that instead.
+   */
   isToggledOn?: boolean
 }
 
@@ -218,7 +225,6 @@ export class Oneko extends EventTarget {
   // position-area. A no-op on browsers that support it (the vast majority now).
   private readonly anchorFallback: boolean
   private readonly ownsElement: boolean
-  private readonly isToggledOn: boolean
 
   private x: number
   private y: number
@@ -235,6 +241,9 @@ export class Oneko extends EventTarget {
   private running = false
   private dragging = false
   private stopRandomMoving = false
+  // Set by destroy(); ends the random-roam loop so a rebuilt cat never leaves a
+  // zombie loop behind (stopRandomMoving only pauses it during a drag).
+  private destroyed = false
 
   constructor(rawOptions: Partial<OnekoOptions> = {}) {
     super()
@@ -275,17 +284,15 @@ export class Oneko extends EventTarget {
     this.targetX = this.x
     this.targetY = this.y
 
-    this.isToggledOn = options.isToggledOn
-
     const anchorName = options.anchorName
     const speechClassName = options.speechClassName
 
     this.ownsElement = ownsElement
     this.element = options.element
 
-    //TODO: Add "Psychopath" achievement as well but at oneko cmd (terminal body switch case)
-    if (!this.isToggledOn) {
-      console.warn("How could you!")
+    // Inert instance (see OnekoOptions.isToggledOn). The "How could you!" line
+    // and the Psychopath achievement live in the `oneko toggle` command.
+    if (!options.isToggledOn) {
       return
     }
 
@@ -366,6 +373,7 @@ export class Oneko extends EventTarget {
   /** Stop the loop, drop listeners, and remove the element if we created it. */
   destroy(): void {
     this.running = false
+    this.destroyed = true
     document.removeEventListener("mousemove", this.onMouseMove)
     this.element.removeEventListener("click", this.onClick)
     this.element.removeEventListener("pointerdown", this.onPointerDown)
@@ -395,7 +403,9 @@ export class Oneko extends EventTarget {
     const intervals = Array.from({ length: 100 }, () => randInt(1, 20))
     let current = 0
 
-    while (!this.stopRandomMoving) {
+    // A drag (stopRandomMoving) only cuts the current leg short; the loop keeps
+    // going until destroy(), so roaming resumes after the cat is dropped.
+    while (!this.destroyed) {
       const maxX = document.documentElement.clientWidth
       const maxY = document.documentElement.clientHeight
       const xs = randInt(1, maxX)
@@ -423,6 +433,7 @@ export class Oneko extends EventTarget {
         if (
           done ||
           this.stopRandomMoving ||
+          this.destroyed ||
           performance.now() - start > timeout
         ) {
           resolve()
