@@ -208,7 +208,7 @@ function TimelineEntry({
 
   return (
     <li
-      className="timeline-entry border-border relative grid scroll-mt-20 items-end gap-9 border-t py-16 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
+      className="timeline-entry border-sidebar-border relative grid scroll-mt-20 items-end gap-9 border-t py-16 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]"
       data-active={active}
       data-current={portfolio.current === true}
       id={`timeline-${portfolio.slug}`}

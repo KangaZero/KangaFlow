@@ -25,8 +25,8 @@
 /* Huge outlined year numeral behind each entry. */
 .timeline-numeral {
   color: transparent;
-  -webkit-text-stroke: 1.5px
-    color-mix(in oklch, var(--foreground) 14%, transparent);
+  -webkit-text-stroke: 3px
+    color-mix(in oklch, var(--foreground) 14%, var(--sidebar-foreground));
   pointer-events: none;
 }
 
@@ -46,7 +46,7 @@
 .timeline-entry[data-current="true"] .timeline-marker::after {
   position: absolute;
   inset: -8px;
-  border: 2px solid var(--tooltip-shadow);
+  border: 2px solid var(--sidebar-foreground);
   animation: timeline-ping 1.6s ease-out infinite;
   content: "";
 }
