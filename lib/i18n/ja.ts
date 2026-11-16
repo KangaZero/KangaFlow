@@ -239,6 +239,25 @@ const ja = {
       title: "アプリケーションランチャー",
       unpin: "ピン解除",
     },
+    login: {
+      capsLock: "Caps Lock がオンです",
+      denied: "アクセス拒否",
+      forceEntry: "Ctrl + Alt + Q · 強制ログイン",
+      greeting: {
+        afternoon: "こんにちは、{name}さん",
+        evening: "こんばんは、{name}さん",
+        morning: "おはようございます、{name}さん",
+      },
+      hidePassword: "パスワードを隠す",
+      locked: "ロック中",
+      password: "パスワード",
+      pressAnyKey: "いずれかのキーを押してロック解除",
+      secondsShort: "秒",
+      showPassword: "パスワードを表示",
+      tooManyAttempts:
+        "試行回数が上限に達しました。しばらくしてから再試行してください。",
+      unlock: "ロック解除",
+    },
     overview: {
       region: "ワークスペース一覧",
       selected: "選択中",

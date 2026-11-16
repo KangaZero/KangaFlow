@@ -1,0 +1,48 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* Environment lock screen: the slow wallpaper pan, the breathing wake hint and
+   the denied ripple. Everything else is Tailwind + Motion in login-screen.tsx. */
+
+.login-kenburns {
+  animation: login-kenburns 38s ease-in-out infinite alternate;
+}
+@keyframes login-kenburns {
+  from {
+    transform: scale(1.02) translate(0, 0);
+  }
+  to {
+    transform: scale(1.1) translate(-1.5%, -1%);
+  }
+}
+
+.login-hint {
+  animation: login-breathe 2.8s ease-in-out infinite;
+}
+@keyframes login-breathe {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* One expanding ring off the password field per denied attempt (keyed, so a
+   new element replays it). */
+.login-ripple {
+  animation: login-ripple 0.7s ease-out both;
+}
+@keyframes login-ripple {
+  from {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.08, 1.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-kenburns,
+  .login-hint,
+  .login-ripple {
+    animation: none;
+  }
+}
