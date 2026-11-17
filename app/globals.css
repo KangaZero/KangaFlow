@@ -434,6 +434,12 @@
 :root:is(.dark, .terminal) {
   --xterm-viewport-tint: rgb(0 0 0 / 0.2);
 }
+/* The terminal theme's window glass is only 25% opaque, so Mocha's dimmest
+   ink (Overlay2) measured 3.6:1 at 0.2; 0.45 puts it at ~4.9:1 (AA). Dark
+   sits on 55% glass and already clears AA at 0.2. */
+:root.terminal {
+  --xterm-viewport-tint: rgb(0 0 0 / 0.45);
+}
 
 @layer base {
   * {
