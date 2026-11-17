@@ -34,11 +34,11 @@ terminal. Shipped fully static to GitHub Pages.
 ![React](https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-7-3178c6?style=flat-square&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-v4-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)
-![Biome](https://img.shields.io/badge/Biome-2.4-60a5fb?style=flat-square&logo=biome&logoColor=white)
+![Biome](https://img.shields.io/badge/Biome-2.6.5-60a5fb?style=flat-square&logo=biome&logoColor=white)
 
 <br/>
 
-[![KangaFlow — portfolio](./assets/screenshot.png)](https://kangazero.github.io/KangaFlow/)
+[![KangaFlow — portfolio home page](./assets/screenshot.webp)](https://kangazero.github.io/KangaFlow/)
 
 <!-- TODO(human): drop in the real screenshot of the niri/Noctalia desktop at assets/screenshot-environment.png -->
 [![KangaFlow — niri desktop environment](./assets/screenshot-environment.png)](https://kangazero.github.io/KangaFlow/en/environment)
@@ -79,8 +79,12 @@ terminal. Shipped fully static to GitHub Pages.
 | ⌨️ **Vim command palette**     | Press <kbd>:</kbd> to open, type `:q` (or <kbd>Esc</kbd> / click-away / ✕) to close. Jump to any theme, page, or language.                                                                 |
 | 🎨 **Three themes**            | Light · Dark · Terminal, with a View-Transition **circular reveal** on switch. Cycle with <kbd>d</kbd> or the toggle.                                                                      |
 | 🌏 **Bilingual (EN / 日本語)** | End-to-end **type-safe** i18n — invalid keys don't compile. Locale lives in the URL (`/en`, `/ja`).                                                                                        |
-| 🏆 **Achievements**            | Unlockable with rarities, secrets, a localStorage save, and an animated toast.                                                                                                             |
+| 🏆 **Achievements**            | 12 unlockables with rarities, secrets, a localStorage save, and an animated toast.                                                                                                         |
+| 🗓️ **Timeline**                | Every past portfolio from 2022 on, with screenshots in a fullscreen viewer.                                                                                                                |
+| 🔗 **Link hints**              | Press <kbd>f</kbd> for Vimium-style hints that label everything clickable.                                                                                                                 |
+| 🔊 **Sound**                   | A synthesised "magic menu" effects palette, plus an opt-in, low-volume deep-sea ambience on the dark theme.                                                                                |
 | 🌤️ **Live weather + date**     | Client-side [Open-Meteo](https://open-meteo.com/) fetch with a skeleton while loading.                                                                                                     |
+| 🔐 **Lock screen**             | The desktop opens behind a lock screen with a greeting and a password field (wrong attempts are denied, then locked out).                                                                  |
 | 🖥️ **niri desktop (NNN)**      | A scrollable-tiling window manager with a Noctalia-style bar, workspaces, overview, and Alt-based keybinds (`Alt+H/J/K/L` focus, `Alt+T` float, `Alt+Z` align, `Alt+Shift+Q` close).       |
 | 🪟 **Floating widgets**        | Draggable, resizable Notes (rich text), Clock (alarm / timer / stopwatch + laps), Calendar, and Media player — with click-to-front and a unified z-order.                                  |
 | 🔔 **Notifications**           | Bell popover with a dismissible, data-driven list; fires on alarm / timer / stopwatch and supports "remind me in N min" reminders that persist across reloads.                             |
@@ -92,7 +96,7 @@ terminal. Shipped fully static to GitHub Pages.
 - **Next.js 16.4** (App Router, `output: "export"`) · **React 19** · **Tailwind CSS v4**
 - **TypeScript 7** (the Go-native `tsc`), strict — `noUncheckedIndexedAccess`,
   `exactOptionalPropertyTypes`, and friends
-- **[Biome](https://biomejs.dev/) 2.4** — one binary for the git hook, CI, and `just` (no ESLint/Prettier)
+- **[Biome](https://biomejs.dev/) 2.6.5** — one binary for the git hook, CI, and `just` (no ESLint/Prettier)
 - **shadcn/ui** ("radix-mira") + **[animate-ui](https://animate-ui.com/)** + **Motion**
 - **[xterm.js](https://xtermjs.org/)** (terminal) + **CodeMirror** (editor) for the desktop apps
 - **Vitest** for unit tests · **Nix flake** + **just** for a reproducible toolchain
@@ -104,7 +108,7 @@ terminal. Shipped fully static to GitHub Pages.
 > **TypeScript 7** (Go-native `tsc`). Next.js 16.2 crashes on TS 7; from 16.3
 > on, `next build` type-checks with the project-local `tsc` CLI by default.
 
-- **Node.js 26** and **pnpm 11** — or simply run `nix develop`, which pins both
+- **Node.js 26** and **pnpm 12** — or simply run `nix develop`, which pins both
   (plus `just` and the git hooks) for a reproducible environment.
 - A **modern browser**. The theme switch uses the
   [View Transitions API](https://developer.mozilla.org/docs/Web/API/View_Transitions_API);
@@ -132,7 +136,7 @@ pnpm install
 just dev         # http://localhost:3000
 ```
 
-Without Nix, you'll need Node 26 + pnpm 11 yourself, then `pnpm install && just dev`.
+Without Nix, you'll need Node 26 + pnpm 12 yourself, then `pnpm install && just dev`.
 
 ## Tasks
 
