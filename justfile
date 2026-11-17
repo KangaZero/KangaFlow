@@ -33,6 +33,11 @@ test:
 map-data:
     node scripts/build-tokyo-map.mjs
 
+# Regenerate the blur-up image placeholders (lib/image-placeholders.ts).
+# Needs ffmpeg from the flake's dev shell; commit the generated file.
+placeholders:
+    node scripts/build-image-placeholders.mjs
+
 # Full gate: everything CI runs, in the same order.
 verify: lint typecheck test build
 

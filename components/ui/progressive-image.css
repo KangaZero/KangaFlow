@@ -1,0 +1,42 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* Blur-up reveal shared by <ProgressiveImage> and <WallpaperBackground>.
+   Cost budget: the placeholder's blur + scale are STATIC (painted once, never
+   animated) and the layer is unmounted once the reveal ends; the only thing
+   that animates is the real image's opacity. Phases come from
+   lib/progressive-load.ts via data-state; under reduced motion the
+   components skip "revealing" (instant swap), so no fade runs at all.
+   Positioning is left to the caller's classes, so this file only clips the
+   scaled blur and drives opacity. */
+
+.progressive {
+  overflow: hidden;
+}
+
+/* tiny upscaled image: blurred and scaled up a touch so the soft edge the
+   blur leaves sits outside the clipped box */
+.progressive__placeholder {
+  filter: blur(12px);
+  transform: scale(1.08);
+  pointer-events: none;
+}
+.progressive[data-state="error"] .progressive__placeholder {
+  filter: blur(12px) grayscale(0.7);
+  opacity: 0.6;
+}
+
+.progressive[data-state="loading"] .progressive__img,
+.progressive[data-state="error"] .progressive__img {
+  opacity: 0;
+}
+.progressive[data-state="revealing"] .progressive__img {
+  animation: progressive-fade-in 600ms ease-out both;
+}
+
+@keyframes progressive-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

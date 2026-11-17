@@ -71,11 +71,14 @@
   transition: translate 0.2s;
 }
 
-/* the real image: base silhouette + alt text + error fallback */
+/* the real image: base silhouette + alt text + error fallback. This class sits
+   on <ProgressiveImage>'s wrapper, which has no width attribute of its own:
+   without one, `left: 50%` would shrink it to half the button. */
 .hero-avatar__img {
   position: absolute;
   bottom: -5px;
   left: 50%;
+  width: 150px;
   transform: translateX(-50%);
   object-fit: cover;
 }

@@ -138,6 +138,8 @@
               pkgs.nodejs_26
               pkgs.pnpm
               pkgs.just
+              # `just placeholders` encodes the blur-up WebP data URIs.
+              pkgs.ffmpeg-headless
             ]
             ++ self.checks.${system}.pre-commit-check.enabledPackages;
           };

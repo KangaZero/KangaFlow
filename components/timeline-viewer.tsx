@@ -3,7 +3,6 @@
 
 import { ArrowLeft, ArrowRight, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import Image from "next/image"
 import { Dialog as DialogPrimitive } from "radix-ui"
 import { useEffect, useState } from "react"
 
@@ -13,6 +12,7 @@ import {
   pad2,
   shotLayoutId,
 } from "@/components/timeline-portfolios"
+import { ProgressiveImage } from "@/components/ui/progressive-image"
 import { playSfx } from "@/lib/sfx/play"
 import { stepIndex } from "@/lib/timeline"
 import { Z_LAYERS } from "@/lib/z-order"
@@ -193,10 +193,11 @@ function ViewerBody({
                   key={portfolio.slug}
                   transition={{ duration: 0.24 }}
                 >
-                  <Image
+                  <ProgressiveImage
                     alt={portfolio.name}
                     className="object-cover object-top"
                     fill
+                    placeholder={portfolio.placeholder}
                     sizes="(min-width: 768px) 70vw, 92vw"
                     src={portfolio.image}
                   />

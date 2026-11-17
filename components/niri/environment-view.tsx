@@ -40,7 +40,7 @@ import {
   DAIJI,
 } from "@/components/niri/settings"
 import type { AppId, NiriWindow } from "@/components/niri/types"
-import { wallpaperStyle } from "@/components/niri/wallpaper"
+import { WallpaperBackground } from "@/components/niri/wallpaper-background"
 import { WallpaperDialog } from "@/components/niri/wallpaper-dialog"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useStoredString } from "@/lib/hooks/use-safe-storage"
@@ -469,12 +469,6 @@ export function EnvironmentView() {
   // Overview layer still mounted (true from opening until its exit zoom has
   // finished), so the live strip stays hidden underneath until then.
   const [overviewLayer, setOverviewLayer] = useState(false)
-  // Starts EMPTY, filled by the effect below after mount. Computing it during
-  // render baked the server's default-theme wallpaper (the terminal cat) into
-  // the prerendered HTML; React doesn't patch a mismatched `style` attribute on
-  // hydration, and the client state already matched, so the effect's identical
-  // update never re-rendered — the desktop kept the wrong wallpaper.
-  const [wallpaperStyleProp, setWallpaperStylePro] = useState<CSSProperties>({})
 
   // Shared click-to-front counter (same one the floating widgets use). Focusing
   // a tiled window bumps the whole tiled layer above the floats; clicking a
@@ -510,10 +504,6 @@ export function EnvironmentView() {
     }),
     [translate]
   )
-
-  useEffect(() => {
-    setWallpaperStylePro(wallpaperStyle(settings.wallpaper, theme))
-  }, [theme, settings.wallpaper])
 
   // Ticking clock for the bar.
   useEffect(() => {
@@ -747,8 +737,6 @@ export function EnvironmentView() {
       )}
       style={
         {
-          ...wallpaperStyleProp,
-          backgroundAttachment: "fixed",
           // Omit `zoom` entirely at 1× so `main` never becomes a stacking
           // context at the default scale — that would trap the tiled strip and
           // panels below the body-level floats (defeating the z-order system).
@@ -760,6 +748,16 @@ export function EnvironmentView() {
         } as CSSProperties
       }
     >
+      {/* The wallpaper as main's bottom layer (-z-1 paints it under every
+      in-flow child without making main a stacking context). It renders
+      nothing until after hydration: computing it during render baked the
+      server's default-theme wallpaper into the prerendered HTML, and React
+      doesn't patch a mismatched `style` attribute on hydration. */}
+      <WallpaperBackground
+        className="absolute inset-0 -z-1"
+        id={settings.wallpaper}
+        theme={theme}
+      />
       {isLoggedIn === "visible" ? (
         <>
           {/* Global cmatrix rain (`cmatrix -g`): covers the desktop above the

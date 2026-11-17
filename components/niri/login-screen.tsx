@@ -8,7 +8,6 @@ import { animate, motion, useReducedMotion } from "motion/react"
 import { useTheme } from "next-themes"
 import {
   type ChangeEvent,
-  type CSSProperties,
   useCallback,
   useEffect,
   useId,
@@ -31,12 +30,12 @@ import {
   SiTypescript,
   SiZig,
 } from "react-icons/si"
-import avatarSrc from "@/assets/avatar.png"
+import avatarSrc from "@/assets/avatar.webp"
 import {
   FlameWrap,
   type FlameWrapInstance,
 } from "@/components/canvasui/FlameWrap"
-import { wallpaperStyle } from "@/components/niri/wallpaper"
+import { WallpaperBackground } from "@/components/niri/wallpaper-background"
 import { verifyPassword } from "@/lib/auth"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import {
@@ -135,9 +134,6 @@ export function LoginScreen({
   // null until mounted: the page is prerendered, so any time-derived text
   // (clock, date, greeting) must only appear client-side or it won't hydrate.
   const [now, setNow] = useState<number | null>(null)
-  // Wallpaper from the desktop's own setting (resolved after mount so the
-  // theme is known — matches EnvironmentView's hydration).
-  const [wallStyle, setWallStyle] = useState<CSSProperties>({})
 
   const passwordId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -157,10 +153,6 @@ export function LoginScreen({
       : translate(
           `environment.login.greeting.${dayPart(new Date(now).getHours())}`
         ).replace("{name}", firstName)
-
-  useEffect(() => {
-    setWallStyle(wallpaperStyle(envSettings.wallpaper, theme))
-  }, [envSettings.wallpaper, theme])
 
   // Clock: tick often enough for the minute, and every 250ms while locked
   // out so the countdown ring drains smoothly.
@@ -466,8 +458,15 @@ export function LoginScreen({
               "absolute -inset-[4%] bg-cover bg-center",
               !reduced && "login-kenburns"
             )}
-            style={wallStyle}
-          />
+          >
+            {/* The desktop's own wallpaper setting. Client-only (resolved after
+                hydration, once the theme is known), like EnvironmentView. */}
+            <WallpaperBackground
+              className="absolute inset-0"
+              id={envSettings.wallpaper}
+              theme={theme}
+            />
+          </div>
           <div
             aria-hidden
             className={cn(

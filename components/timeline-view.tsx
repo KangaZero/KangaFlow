@@ -10,7 +10,6 @@ import {
   useReducedMotion,
   useScroll,
 } from "motion/react"
-import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 
 import {
@@ -26,6 +25,7 @@ import {
   shotLayoutId,
 } from "@/components/timeline-portfolios"
 import { TimelineViewer } from "@/components/timeline-viewer"
+import { ProgressiveImage } from "@/components/ui/progressive-image"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import { passedCount } from "@/lib/timeline"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -283,12 +283,16 @@ function TimelineEntry({
               style={{ borderRadius: 4 }}
               transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
             >
-              <Image
+              <ProgressiveImage
                 alt={portfolio.name}
-                className="timeline-shot object-cover object-top"
+                className="object-cover object-top"
                 fill
+                placeholder={portfolio.placeholder}
                 sizes="(min-width: 768px) 55vw, 92vw"
                 src={portfolio.image}
+                // The hover filter/scale lives on the wrapper so it never
+                // shares a `transition` with the reveal's opacity.
+                wrapperClassName="timeline-shot"
               />
             </motion.div>
           )}

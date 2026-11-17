@@ -4,10 +4,10 @@
 import "@/components/hero-avatar.css"
 
 import { animate, useReducedMotion } from "motion/react"
-import Image from "next/image"
 import { useRef, useState } from "react"
 
-import avatarSrc from "@/assets/avatar.png"
+import avatarSrc from "@/assets/avatar.webp"
+import { ProgressiveImage } from "@/components/ui/progressive-image"
 import { RansomWord } from "@/components/ui/ransom-word"
 import {
   boopLabel,
@@ -124,14 +124,17 @@ export function HeroAvatar() {
           </span>
         ) : (
           <>
-            <Image
+            {/* The wrapper takes the old img box (hero-avatar__img); the
+                masked silhouettes below position themselves, untouched. */}
+            <ProgressiveImage
               alt={person.firstName}
-              className="hero-avatar__img"
               height={300}
               onError={() => setFailed(true)}
-              priority
+              placeholder="avatar"
+              preload
               src={avatarSrc}
               width={150}
+              wrapperClassName="hero-avatar__img"
             />
             <span aria-hidden className="hero-avatar__sil hero-avatar__ink" />
             <span

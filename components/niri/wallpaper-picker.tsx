@@ -5,7 +5,7 @@ import { Check } from "lucide-react"
 import { motion } from "motion/react"
 import { useTheme } from "next-themes"
 import { WALLPAPERS, type WallpaperId } from "@/components/niri/settings"
-import { wallpaperStyle } from "@/components/niri/wallpaper"
+import { WallpaperBackground } from "@/components/niri/wallpaper-background"
 import { SPRING_TAP } from "@/lib/motion"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
@@ -67,9 +67,11 @@ export function WallpaperPicker({
                   : "ring-foreground/10 ring-1"
               )}
             >
-              <span
+              <WallpaperBackground
                 className="absolute inset-0"
-                style={wallpaperStyle(w, theme)}
+                id={w}
+                size="thumb"
+                theme={theme}
               />
               {selected ? (
                 <motion.span
