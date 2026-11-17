@@ -409,6 +409,7 @@ const en = {
   nav: {
     achievements: "Achievements",
     environment: "Environment",
+    footer: "Site pages",
     home: "Home",
     language: "Language",
     settings: "Settings",

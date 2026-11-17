@@ -410,6 +410,7 @@ const ja = {
   nav: {
     achievements: "実績",
     environment: "環境",
+    footer: "サイトのページ",
     home: "ホーム",
     language: "言語",
     settings: "設定",
