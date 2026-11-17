@@ -4,6 +4,10 @@
 // finite set applies. Pure data (no React/DOM).
 
 import type { Minutes, TrackSrc } from "@/components/widgets/tracks"
+import {
+  DEFAULT_KEYBOARD_OPTIONS,
+  type KeyboardOptions,
+} from "@/lib/keyboard-prefs"
 
 export const DAIJI: Record<number, string> = {
   1: "壱",
@@ -145,7 +149,9 @@ type WidgetStartupBase = {
 
 export type WidgetStartup<T extends WidgetId> = T extends "media"
   ? WidgetStartupBase & { options: MediaPlayerOptions }
-  : WidgetStartupBase
+  : T extends "keyboard"
+    ? WidgetStartupBase & { options: KeyboardOptions }
+    : WidgetStartupBase
 
 type MediaPlayerOptions = {
   currentVolume: number
@@ -210,7 +216,12 @@ export const DEFAULT_ENV_SETTINGS: EnvSettings = {
     calendar: { anchor: "top-right", offset: null, show: false },
     // The keyboard starts docked to the bottom edge; the anchor applies once
     // it is undocked (floated).
-    keyboard: { anchor: "center", offset: null, show: false },
+    keyboard: {
+      anchor: "center",
+      offset: null,
+      options: DEFAULT_KEYBOARD_OPTIONS,
+      show: false,
+    },
     media: {
       anchor: "bottom-right",
       offset: null,

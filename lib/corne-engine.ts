@@ -1,29 +1,37 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 // The on-screen Corne keyboard's behaviour as a pure state machine: layer
-// resolution (momentary hold / tap-to-lock / both = Adjust), the one-shot Shift
-// (double-tap = caps) and one-shot Ctrl, chord detection, and token → edit
-// action. `step` takes the current state plus one event and returns the next
-// state and the edit actions to perform; the widget applies those to the text
-// target. No React, no DOM, no clock: time arrives on the event.
+// resolution (Vial tri-layer: Lower + Raise = Adjust, MO(3) = Adjust directly;
+// held = momentary, tapped = lock), hold-tap keys (the keymap's tap dances),
+// the one-shot Shift (double-tap = caps) and one-shot Ctrl, chord detection,
+// and token → edit action. `step` takes the current state plus one event and
+// returns the next state and the edit actions to perform; the widget applies
+// those to the text target. No React, no DOM, no clock: time arrives on the
+// event.
 
 import {
+  actionOf,
+  type Binding,
+  bindingAt,
   CORNE_KEYS,
+  type CorneKey,
   capsOf,
-  isCharToken,
-  isFnToken,
+  holdOf,
+  isInertBinding,
+  type KeyAction,
   type KeyId,
   type KeyToken,
   keyById,
   type LayerId,
   type LayerKey,
+  type NamedKey,
   type PrintableChar,
   shiftOf,
-  tokenAt,
+  TAPPING_TERM_MS,
+  tapOf,
 } from "@/lib/corne-layout"
 
-// Timing (ms). A press shorter than TAP_MS with nothing else pressed meanwhile
-// is a tap; two Shift taps within DOUBLE_TAP_MS engage caps.
-export const TAP_MS = 230
+// Timing (ms). Two Shift taps within DOUBLE_TAP_MS engage caps. Tap vs hold
+// uses the keymap's TAPPING_TERM_MS.
 export const DOUBLE_TAP_MS = 380
 export const REPEAT_DELAY_MS = 420
 export const REPEAT_RATE_MS = 55
@@ -32,10 +40,13 @@ export const SHIFT_MODES = ["off", "oneshot", "caps"] as const
 export type ShiftMode = (typeof SHIFT_MODES)[number]
 
 type DownKey = {
-  token: KeyToken
+  binding: Binding
   at: number
   // Another key went down while this one was held — so it is a hold, not a tap.
   chorded: boolean
+  // The token acting while the key is down; null while a hold-tap has not yet
+  // decided between its tap and its hold.
+  active: KeyToken | null
 }
 
 export type EngineState = {
@@ -92,6 +103,9 @@ export type EditAction =
 export type EngineEvent =
   | { type: "press"; key: KeyId; at: number }
   | { type: "release"; key: KeyId; at: number }
+  // A hold-tap pressed at `pressedAt` is still down after the tapping term —
+  // driven by a timer. Stale timers (the key was released) are ignored.
+  | { type: "holdTimeout"; key: KeyId; pressedAt: number }
   // Re-fire a held repeatable key (Backspace, arrows) — driven by a timer.
   | { type: "repeat"; key: KeyId }
   // Header tab fallback: lock a layer (base unlocks).
@@ -107,20 +121,16 @@ export type StepResult = {
   repeat: boolean
 }
 
-const REPEATABLE: ReadonlySet<KeyToken> = new Set([
+const REPEATABLE: ReadonlySet<NamedKey> = new Set([
   "Bksp",
-  "WBksp",
-  "Del",
   "Left",
   "Right",
   "Up",
   "Down",
 ])
 
-const MOVE_FOR: Partial<Record<KeyToken, CaretMove>> = {
+const MOVE_FOR: Partial<Record<NamedKey, CaretMove>> = {
   Down: "down",
-  End: "lineEnd",
-  Home: "lineStart",
   Left: "left",
   PgDn: "docEnd",
   PgUp: "docStart",
@@ -128,22 +138,17 @@ const MOVE_FOR: Partial<Record<KeyToken, CaretMove>> = {
   Up: "up",
 }
 
-const LAYER_KEY_FOR: Partial<Record<KeyToken, LayerKey>> = {
-  Lower: "lower",
-  Raise: "raise",
-}
-
 // ── Derived state ───────────────────────────────────────────────────────────
 
 /**
- * The layer the keys currently show. A held or locked Lower/Raise picks its
- * layer; both at once (held or locked, in any mix) is Adjust.
+ * The layer the keys currently show. Adjust wins when its own key is held or
+ * locked, or when Lower and Raise are both on (held or locked, in any mix).
  */
 export function resolveLayer(
   held: readonly LayerKey[],
   locked: LayerId | null
 ): LayerId {
-  if (locked === "adjust") return "adjust"
+  if (held.includes("adjust") || locked === "adjust") return "adjust"
   const lower = held.includes("lower") || locked === "lower"
   const raise = held.includes("raise") || locked === "raise"
   if (lower && raise) return "adjust"
@@ -167,13 +172,10 @@ export function isCtrlActive(state: EngineState): boolean {
   return state.ctrlHeld > 0 || state.ctrlOneShot
 }
 
-/** Whether a layer key reads as engaged (held, locked, or under Adjust). */
+/** Whether a layer key reads as engaged (held, locked, or Adjust is showing). */
 export function isLayerKeyEngaged(state: EngineState, key: LayerKey): boolean {
-  return (
-    state.held.includes(key) ||
-    state.locked === key ||
-    state.locked === "adjust"
-  )
+  if (state.held.includes(key) || state.locked === key) return true
+  return key === "adjust" && activeLayer(state) === "adjust"
 }
 
 /** The face a character key shows / types under the current modifiers. */
@@ -186,6 +188,11 @@ export function applyShift(
   return char
 }
 
+/** A hold-tap on `key` is down and has not decided yet (the hook times it). */
+export function isHoldPending(state: EngineState, key: KeyId): boolean {
+  return state.down.get(key)?.active === null
+}
+
 // ── Pure transitions ────────────────────────────────────────────────────────
 
 /** A release counts as a tap when it was quick and nothing chorded with it. */
@@ -193,7 +200,7 @@ export function isTap(
   down: { at: number; chorded: boolean },
   at: number
 ): boolean {
-  return !down.chorded && at - down.at < TAP_MS
+  return !down.chorded && at - down.at < TAPPING_TERM_MS
 }
 
 /** Tapping a layer key toggles its lock (tapping the locked one unlocks). */
@@ -230,45 +237,97 @@ export function shiftAfterUse(mode: ShiftMode): ShiftMode {
   return mode === "oneshot" ? "off" : mode
 }
 
-/** The edit a non-modifier token performs under the current modifiers. */
-export function actionFor(
-  state: EngineState,
-  token: KeyToken
-): EditAction | null {
-  if (isCharToken(token)) {
-    if (isCtrlActive(state)) return { char: token, type: "ctrl" }
-    return { text: applyShift(state, token), type: "insert" }
+type EditKeyAction = Extract<KeyAction, { kind: "char" | "named" }>
+
+/** The edit a character or named key performs under the current modifiers. */
+export function editFor(state: EngineState, action: EditKeyAction): EditAction {
+  if (action.kind === "char") {
+    if (isCtrlActive(state)) return { char: action.char, type: "ctrl" }
+    return { text: applyShift(state, action.char), type: "insert" }
   }
-  const move = MOVE_FOR[token]
+  const move = MOVE_FOR[action.key]
   if (move !== undefined) return { move, type: "move" }
-  switch (token) {
+  switch (action.key) {
     case "Bksp":
       return isCtrlActive(state)
         ? { type: "deleteWordBackward" }
         : { type: "deleteBackward" }
-    case "WBksp":
-      return { type: "deleteWordBackward" }
-    case "Del":
-      return { type: "deleteForward" }
     case "Space":
       return { text: " ", type: "insert" }
     case "Enter":
       return { type: "enter" }
     case "Tab":
       return { type: "tab" }
-    case "Esc":
-      return { type: "escape" }
     default:
-      // Gui / Alt / F-keys / NOOP have nothing to do inside a text field.
-      return null
+      return { type: "escape" }
   }
 }
 
-/** Inert tokens light up when pressed but never edit (Gui, Alt, F-keys, NOOP). */
-export function isInertToken(token: KeyToken): boolean {
-  return (
-    token === "Gui" || token === "Alt" || token === "NOOP" || isFnToken(token)
-  )
+const result = (
+  state: EngineState,
+  actions: readonly EditAction[] = [],
+  repeat = false
+): StepResult => ({ actions, repeat, state })
+
+/** A token starts acting: a layer / modifier engages, an edit key fires. */
+function engage(state: EngineState, token: KeyToken): StepResult {
+  const action = actionOf(token)
+  switch (action.kind) {
+    case "layer":
+      return result({ ...state, held: [...state.held, action.layer] })
+    case "mod":
+      return action.mod === "Shift"
+        ? result({ ...state, shiftHeld: state.shiftHeld + 1 })
+        : result({ ...state, ctrlHeld: state.ctrlHeld + 1 })
+    case "inert":
+    case "none":
+      return result(state)
+    case "char":
+    case "named":
+      return result(
+        // Any real keystroke spends the pending one-shots.
+        {
+          ...state,
+          ctrlOneShot: false,
+          shiftMode: shiftAfterUse(state.shiftMode),
+        },
+        [editFor(state, action)],
+        action.kind === "named" && REPEATABLE.has(action.key)
+      )
+  }
+}
+
+/** A token stops acting; a quick tap of a layer / modifier latches it. */
+function disengage(
+  state: EngineState,
+  token: KeyToken,
+  tap: boolean,
+  at: number
+): EngineState {
+  const action = actionOf(token)
+  if (action.kind === "layer") {
+    return {
+      ...state,
+      held: state.held.filter((held) => held !== action.layer),
+      locked: tap ? lockAfterTap(state.locked, action.layer) : state.locked,
+    }
+  }
+  if (action.kind !== "mod") return state
+  if (action.mod === "Shift") {
+    return {
+      ...state,
+      lastShiftTapAt: tap ? at : state.lastShiftTapAt,
+      shiftHeld: Math.max(0, state.shiftHeld - 1),
+      shiftMode: tap
+        ? shiftAfterTap(state.shiftMode, state.lastShiftTapAt, at)
+        : state.shiftMode,
+    }
+  }
+  return {
+    ...state,
+    ctrlHeld: Math.max(0, state.ctrlHeld - 1),
+    ctrlOneShot: tap ? !state.ctrlOneShot : state.ctrlOneShot,
+  }
 }
 
 function withDown(
@@ -286,104 +345,111 @@ function withDown(
   return next
 }
 
-const NO_CHANGE = (state: EngineState): StepResult => ({
-  actions: [],
-  repeat: false,
-  state,
-})
+function withActive(
+  down: ReadonlyMap<KeyId, DownKey>,
+  key: KeyId,
+  active: KeyToken
+): ReadonlyMap<KeyId, DownKey> {
+  const entry = down.get(key)
+  if (entry === undefined) return down
+  return new Map(down).set(key, { ...entry, active })
+}
+
+/**
+ * Another key landing decides every undecided hold-tap: a modifier hold
+ * (space → Ctrl) becomes the hold, so "hold space + c" is Ctrl+C; any other
+ * hold-tap fires its tap at once, so fast rolls ("q" then "u") keep order.
+ */
+function settlePending(state: EngineState): StepResult {
+  let next = state
+  const actions: EditAction[] = []
+  for (const [id, entry] of state.down) {
+    const hold = holdOf(entry.binding)
+    if (entry.active !== null || hold === null) continue
+    const token = actionOf(hold).kind === "mod" ? hold : tapOf(entry.binding)
+    const engaged = engage(next, token)
+    actions.push(...engaged.actions)
+    next = { ...engaged.state, down: withActive(next.down, id, token) }
+  }
+  return result(next, actions)
+}
 
 function press(state: EngineState, key: KeyId, at: number): StepResult {
   const corneKey = keyById(key)
-  if (
-    corneKey === undefined ||
-    corneKey.kind === "ext" ||
-    state.down.has(key)
-  ) {
-    return NO_CHANGE(state)
+  if (corneKey === undefined || state.down.has(key)) return result(state)
+  if (isInertBinding(bindingAt(activeLayer(state), corneKey))) {
+    return result(state)
   }
-  const token = tokenAt(activeLayer(state), corneKey)
-  const down = withDown(state.down, key, { at, chorded: false, token })
-  const layerKey = LAYER_KEY_FOR[token]
-  if (layerKey !== undefined) {
-    return {
-      actions: [],
-      repeat: false,
-      state: { ...state, down, held: [...state.held, layerKey] },
-    }
+  const settled = settlePending(state)
+  const binding = bindingAt(activeLayer(settled.state), corneKey)
+  if (holdOf(binding) !== null) {
+    // Undecided until release, the tapping term, or another key press.
+    const down = withDown(settled.state.down, key, {
+      active: null,
+      at,
+      binding,
+      chorded: false,
+    })
+    return result({ ...settled.state, down }, settled.actions)
   }
-  if (token === "Shift") {
-    return {
-      actions: [],
-      repeat: false,
-      state: { ...state, down, shiftHeld: state.shiftHeld + 1 },
-    }
-  }
-  if (token === "Ctrl") {
-    return {
-      actions: [],
-      repeat: false,
-      state: { ...state, ctrlHeld: state.ctrlHeld + 1, down },
-    }
-  }
-  const action = actionFor(state, token)
-  if (action === null) {
-    return { actions: [], repeat: false, state: { ...state, down } }
-  }
-  return {
-    actions: [action],
-    repeat: REPEATABLE.has(token),
-    // Any real keystroke spends the pending one-shots.
-    state: {
-      ...state,
-      ctrlOneShot: false,
-      down,
-      shiftMode: shiftAfterUse(state.shiftMode),
-    },
-  }
+  const token = tapOf(binding)
+  const engaged = engage(settled.state, token)
+  const down = withDown(engaged.state.down, key, {
+    active: token,
+    at,
+    binding,
+    chorded: false,
+  })
+  return result(
+    { ...engaged.state, down },
+    [...settled.actions, ...engaged.actions],
+    engaged.repeat
+  )
 }
 
 function release(state: EngineState, key: KeyId, at: number): StepResult {
   const entry = state.down.get(key)
-  if (entry === undefined) return NO_CHANGE(state)
+  if (entry === undefined) return result(state)
   const down = withDown(state.down, key, null)
-  const tap = isTap(entry, at)
-  const layerKey = LAYER_KEY_FOR[entry.token]
-  if (layerKey !== undefined) {
-    return NO_CHANGE({
-      ...state,
-      down,
-      held: state.held.filter((held) => held !== layerKey),
-      locked: tap ? lockAfterTap(state.locked, layerKey) : state.locked,
-    })
+  if (entry.active !== null) {
+    return result(
+      disengage({ ...state, down }, entry.active, isTap(entry, at), at)
+    )
   }
-  if (entry.token === "Shift") {
-    return NO_CHANGE({
-      ...state,
-      down,
-      lastShiftTapAt: tap ? at : state.lastShiftTapAt,
-      shiftHeld: Math.max(0, state.shiftHeld - 1),
-      shiftMode: tap
-        ? shiftAfterTap(state.shiftMode, state.lastShiftTapAt, at)
-        : state.shiftMode,
-    })
+  // A hold-tap decided by its own release: quick = tap, past the term = hold.
+  const tap = tapOf(entry.binding)
+  const quick = at - entry.at < TAPPING_TERM_MS
+  const token = quick ? tap : (holdOf(entry.binding) ?? tap)
+  const engaged = engage({ ...state, down }, token)
+  return result(disengage(engaged.state, token, quick, at), engaged.actions)
+}
+
+function holdTimeout(
+  state: EngineState,
+  key: KeyId,
+  pressedAt: number
+): StepResult {
+  const entry = state.down.get(key)
+  const hold = entry === undefined ? null : holdOf(entry.binding)
+  if (entry?.active !== null || entry.at !== pressedAt || hold === null) {
+    return result(state)
   }
-  if (entry.token === "Ctrl") {
-    return NO_CHANGE({
-      ...state,
-      ctrlHeld: Math.max(0, state.ctrlHeld - 1),
-      ctrlOneShot: tap ? !state.ctrlOneShot : state.ctrlOneShot,
-      down,
-    })
-  }
-  return NO_CHANGE({ ...state, down })
+  const engaged = engage(state, hold)
+  return result(
+    { ...engaged.state, down: withActive(engaged.state.down, key, hold) },
+    engaged.actions,
+    engaged.repeat
+  )
 }
 
 function repeat(state: EngineState, key: KeyId): StepResult {
-  const entry = state.down.get(key)
-  if (entry === undefined || !REPEATABLE.has(entry.token))
-    return NO_CHANGE(state)
-  const action = actionFor(state, entry.token)
-  return { actions: action ? [action] : [], repeat: true, state }
+  const active = state.down.get(key)?.active
+  if (active === undefined || active === null) return result(state)
+  const action = actionOf(active)
+  if (action.kind !== "named" || !REPEATABLE.has(action.key)) {
+    return result(state)
+  }
+  return result(state, [editFor(state, action)], true)
 }
 
 /** Advance the keyboard by one event. */
@@ -393,17 +459,19 @@ export function step(state: EngineState, event: EngineEvent): StepResult {
       return press(state, event.key, event.at)
     case "release":
       return release(state, event.key, event.at)
+    case "holdTimeout":
+      return holdTimeout(state, event.key, event.pressedAt)
     case "repeat":
       return repeat(state, event.key)
     case "selectLayer":
-      return NO_CHANGE({
+      return result({
         ...state,
         locked: event.layer === "base" ? null : event.layer,
       })
     case "physicalShift":
-      return NO_CHANGE({ ...state, physicalShift: event.down })
+      return result({ ...state, physicalShift: event.down })
     case "reset":
-      return NO_CHANGE({
+      return result({
         ...INITIAL_ENGINE_STATE,
         locked: state.locked,
         shiftMode: state.shiftMode === "caps" ? "caps" : "off",
@@ -436,13 +504,14 @@ function centreOf(id: KeyId): readonly [number, number] | null {
 
 /**
  * The nearest key from `from` in `direction`: it must lie ahead along the axis,
- * and sideways drift costs 2.5× forward distance. Extension keys join only when
- * they are shown. Returns null at the edge of the board.
+ * and sideways drift costs 2.5× forward distance. Only keys `canFocus` accepts
+ * are candidates (the widget skips hidden extension keys and inert keys).
+ * Returns null at the edge of the board.
  */
 export function nearestKey(
   from: KeyId,
   direction: NavDirection,
-  includeExt: boolean
+  canFocus: (key: CorneKey) => boolean
 ): KeyId | null {
   const origin = centreOf(from)
   if (origin === null) return null
@@ -450,7 +519,7 @@ export function nearestKey(
   let best: KeyId | null = null
   let bestScore = Number.POSITIVE_INFINITY
   for (const key of CORNE_KEYS) {
-    if (key.id === from || (key.kind === "ext" && !includeExt)) continue
+    if (key.id === from || !canFocus(key)) continue
     const centre = centreOf(key.id)
     if (centre === null) continue
     const dx = centre[0] - origin[0]

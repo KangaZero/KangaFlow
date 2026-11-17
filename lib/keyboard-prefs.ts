@@ -68,3 +68,30 @@ export function parseKeyboardPrefs(raw: unknown): KeyboardPrefs {
         : DEFAULT_KEYBOARD_PREFS.showExt,
   }
 }
+
+// ── Options shown in the environment settings ──
+// These live in EnvSettings (widgetDefaults.keyboard.options, beside the media
+// player's options) rather than in the widget's own prefs above: the settings
+// panel and the widget both read that one React state, so a toggle in either
+// place shows up in the other at once, and it persists with the rest of the
+// env settings. The guard sits here with the other keyboard storage guards.
+
+export type KeyboardOptions = {
+  // Light keys by QWERTY position (true) or by matching legend (false).
+  qwertyMapping: boolean
+}
+
+export const DEFAULT_KEYBOARD_OPTIONS: KeyboardOptions = {
+  qwertyMapping: true,
+}
+
+/** Validate stored keyboard options field by field. */
+export function parseKeyboardOptions(raw: unknown): KeyboardOptions {
+  if (!isRecord(raw)) return DEFAULT_KEYBOARD_OPTIONS
+  return {
+    qwertyMapping:
+      typeof raw.qwertyMapping === "boolean"
+        ? raw.qwertyMapping
+        : DEFAULT_KEYBOARD_OPTIONS.qwertyMapping,
+  }
+}

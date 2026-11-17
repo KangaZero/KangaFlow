@@ -2,29 +2,44 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  actionOf,
+  type Binding,
+  bindingAt,
   CORNE_KEYS,
   capsOf,
   charNameOf,
+  holdOf,
   isCharToken,
+  isInertBinding,
+  type KeyId,
   keyById,
   keyForCode,
   LAYER_IDS,
-  LAYERS,
-  PHYSICAL_KEY_MAP,
+  type LayerId,
   shiftOf,
-  statusAt,
-  THUMBS,
-  tokenAt,
+  tapOf,
 } from "@/lib/corne-layout"
 
-const mustKey = (id: Parameters<typeof keyById>[0]) => {
+const mustKey = (id: KeyId) => {
   const key = keyById(id)
   if (key === undefined) throw new Error(`missing key ${id}`)
   return key
 }
 
+const at = (layer: LayerId, id: KeyId): Binding => bindingAt(layer, mustKey(id))
+
+// A row in screen order, hold-taps written "tap/hold".
+const row = (layer: LayerId, half: "L" | "R", r: 0 | 1 | 2): string =>
+  ([0, 1, 2, 3, 4, 5] as const)
+    .map((c) => {
+      const binding = at(layer, `${half}-${r}-${c}`)
+      const hold = holdOf(binding)
+      return hold === null ? tapOf(binding) : `${tapOf(binding)}/${hold}`
+    })
+    .join(" ")
+
 describe("geometry", () => {
-  it("has 42 real keys (3x6 + 3 thumbs per half) plus 4 ghost extension keys", () => {
+  it("has 42 matrix + thumb keys plus 4 v4 extension keys", () => {
     expect(CORNE_KEYS.filter((k) => k.kind !== "ext")).toHaveLength(42)
     expect(CORNE_KEYS.filter((k) => k.kind === "ext")).toHaveLength(4)
     expect(new Set(CORNE_KEYS.map((k) => k.id)).size).toBe(CORNE_KEYS.length)
@@ -39,44 +54,60 @@ describe("geometry", () => {
   })
 })
 
-describe("layers", () => {
-  it("encodes the Colemak-DH base alphas", () => {
-    const row = (half: "L" | "R", r: 0 | 1 | 2) =>
-      LAYERS.base[half][r].join(" ")
-    expect(row("L", 0)).toBe("Tab q w f p b")
-    expect(row("L", 1)).toBe("Ctrl a r s t g")
-    expect(row("L", 2)).toBe("Shift z x c d v")
-    expect(row("R", 0)).toBe("j l u y ; Bksp")
-    expect(row("R", 1)).toBe("m n e i o '")
-    expect(row("R", 2)).toBe("k h , . / Shift")
+describe("keymap (owner's Vial export)", () => {
+  it("encodes the Colemak-DH base with its tap dances", () => {
+    expect(row("base", "L", 0)).toBe("Esc q/Esc w f p b")
+    expect(row("base", "L", 1)).toBe("Gui a r s t g")
+    expect(row("base", "L", 2)).toBe("Ctrl z x c d v")
+    expect(row("base", "R", 0)).toBe("j l u y ;/Bksp None")
+    expect(row("base", "R", 1)).toBe("m n e i o None")
+    expect(row("base", "R", 2)).toBe("k h , . //Enter None")
   })
 
-  it("marks thumbs and the lower/raise/adjust layers as placeholders", () => {
-    expect(THUMBS.placeholder).toBe(true)
-    expect(LAYERS.base.placeholder).toBe(false)
-    for (const layer of ["lower", "raise", "adjust"] as const) {
-      expect(LAYERS[layer].placeholder).toBe(true)
-    }
+  it("puts the layer keys and the space/ctrl hold-tap on the thumbs", () => {
+    expect(at("base", "LT-0")).toBe("Alt")
+    expect(at("base", "LT-1")).toBe("Lower")
+    expect(at("base", "LT-2")).toEqual({ hold: "Ctrl", tap: "Space" })
+    expect(at("base", "RT-0")).toBe("Adjust")
+    expect(at("base", "RT-1")).toBe("Raise")
+    expect(at("base", "RT-2")).toBe("Shift")
   })
 
-  it("reports honesty status per key", () => {
-    expect(statusAt("base", mustKey("L-1-1"))).toBe("verified")
-    expect(statusAt("base", mustKey("L-1-0"))).toBe("conventional")
-    expect(statusAt("base", mustKey("R-0-5"))).toBe("conventional")
-    expect(statusAt("base", mustKey("LT-1"))).toBe("placeholder")
-    expect(statusAt("lower", mustKey("L-1-1"))).toBe("placeholder")
-    expect(statusAt("base", mustKey("LX-0"))).toBe("unverified")
+  it("encodes Lower (numbers, F-keys), Raise (symbols) and Adjust (nav)", () => {
+    expect(row("lower", "L", 0)).toBe("Esc 1 2 3 4 5")
+    expect(row("lower", "R", 1)).toBe("F11 F12 None PgUp PgDn None")
+    expect(row("raise", "L", 0)).toBe("Esc ! @ # $ %")
+    expect(row("raise", "R", 2)).toBe("_ + { } | None")
+    expect(row("adjust", "R", 0)).toBe("Enter Btn1 Up Btn2 Bksp None")
+    expect(row("adjust", "R", 1)).toBe("Btn3 Left Down Right Gui None")
   })
 
-  it("resolves tokens per layer; extension keys never act", () => {
-    expect(tokenAt("base", mustKey("R-1-2"))).toBe("e")
-    expect(tokenAt("lower", mustKey("R-0-0"))).toBe("^")
-    expect(tokenAt("raise", mustKey("R-1-1"))).toBe("Left")
-    expect(tokenAt("adjust", mustKey("R-0-1"))).toBe("7")
-    expect(tokenAt("base", mustKey("LT-1"))).toBe("Lower")
+  it("leaves the extension keys unbound on every shown layer", () => {
     for (const layer of LAYER_IDS) {
-      expect(tokenAt(layer, mustKey("RX-1"))).toBe("NOOP")
+      for (const id of ["LX-0", "LX-1", "RX-0", "RX-1"] as const) {
+        expect(at(layer, id)).toBe("None")
+      }
     }
+  })
+})
+
+describe("key actions", () => {
+  it("types each token as a discriminated action", () => {
+    expect(actionOf("q")).toEqual({ char: "q", kind: "char" })
+    expect(actionOf("Bksp")).toEqual({ key: "Bksp", kind: "named" })
+    expect(actionOf("Ctrl")).toEqual({ kind: "mod", mod: "Ctrl" })
+    expect(actionOf("Adjust")).toEqual({ kind: "layer", layer: "adjust" })
+    expect(actionOf("MsUp")).toEqual({ kind: "inert", token: "MsUp" })
+    expect(actionOf("F5")).toEqual({ kind: "inert", token: "F5" })
+    expect(actionOf("None")).toEqual({ kind: "none" })
+  })
+
+  it("flags inert bindings (no tap or hold can act)", () => {
+    expect(isInertBinding("RgbTog")).toBe(true)
+    expect(isInertBinding("None")).toBe(true)
+    expect(isInertBinding("Gui")).toBe(true)
+    expect(isInertBinding({ hold: "Esc", tap: "q" })).toBe(false)
+    expect(isInertBinding("Shift")).toBe(false)
   })
 })
 
@@ -95,29 +126,56 @@ describe("characters", () => {
     expect(charNameOf("q")).toBeNull()
   })
 
-  it("tells characters from functions", () => {
+  it("tells characters from everything else", () => {
     expect(isCharToken("q")).toBe(true)
     expect(isCharToken("Bksp")).toBe(false)
     expect(isCharToken("F5")).toBe(false)
+    expect(isCharToken("None")).toBe(false)
+    expect(isCharToken("MsUp")).toBe(false)
   })
 })
 
 describe("keyForCode (physical mirroring)", () => {
-  it("maps QWERTY positions to the Corne key in the same spot", () => {
-    expect(keyForCode("KeyQ")).toBe("L-0-1")
-    expect(keyForCode("KeyJ")).toBe("R-1-1")
-    expect(keyForCode("Space")).toBe("LT-2")
-    expect(keyForCode("ShiftRight")).toBe("R-2-5")
+  it("QWERTY mapping ON: lights the Corne key at the same QWERTY position", () => {
+    expect(keyForCode("KeyE", true)).toBe("L-0-3") // Colemak-DH "f"
+    expect(keyForCode("KeyQ", true)).toBe("L-0-1")
+    expect(keyForCode("KeyJ", true)).toBe("R-1-1") // "n"
+    expect(keyForCode("Space", true)).toBe("LT-2")
+    expect(keyForCode("ShiftRight", true)).toBe("R-2-5")
   })
 
-  it("returns null for codes with no spot (and for prototype keys)", () => {
-    expect(keyForCode("F5")).toBeNull()
-    expect(keyForCode("toString")).toBeNull()
+  it("QWERTY mapping OFF: lights the base key with the same legend", () => {
+    expect(keyForCode("KeyF", false)).toBe("L-0-3")
+    expect(keyForCode("KeyE", false)).toBe("R-1-2")
+    expect(keyForCode("KeyQ", false)).toBe("L-0-1")
+    expect(keyForCode("Semicolon", false)).toBe("R-0-4")
+    expect(keyForCode("Slash", false)).toBe("R-2-4")
+  })
+
+  it("OFF: named keys light their key; taps win over holds", () => {
+    expect(keyForCode("Escape", false)).toBe("L-0-0") // not q's hold
+    expect(keyForCode("Backspace", false)).toBe("R-0-4") // ; / hold Bksp
+    expect(keyForCode("Enter", false)).toBe("R-2-4") // / / hold Enter
+    expect(keyForCode("Space", false)).toBe("LT-2")
+    expect(keyForCode("ShiftLeft", false)).toBe("RT-2")
+    expect(keyForCode("ControlLeft", false)).toBe("L-2-0")
+    expect(keyForCode("MetaLeft", false)).toBe("L-1-0")
+  })
+
+  it("returns null for codes with no key (and prototype names)", () => {
+    expect(keyForCode("F5", true)).toBeNull()
+    expect(keyForCode("toString", true)).toBeNull()
+    expect(keyForCode("Digit1", false)).toBeNull() // only on Lower
+    expect(keyForCode("Tab", false)).toBeNull() // only on Raise
+    expect(keyForCode("toString", false)).toBeNull()
   })
 
   it("only points at keys that exist", () => {
-    for (const id of Object.values(PHYSICAL_KEY_MAP)) {
-      expect(keyById(id)).toBeDefined()
+    for (const mode of [true, false]) {
+      for (const code of ["KeyA", "KeyZ", "Comma", "Period", "AltLeft"]) {
+        const id = keyForCode(code, mode)
+        if (id !== null) expect(keyById(id)).toBeDefined()
+      }
     }
   })
 })

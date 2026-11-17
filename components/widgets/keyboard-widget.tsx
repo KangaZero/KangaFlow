@@ -1,11 +1,11 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
-// On-screen keyboard widget: the owner's Corne v4 split board in Colemak-DH
-// (mockup Variant B). Two glass slabs — one per half, each draggable on its own
+// On-screen keyboard widget: the owner's Corne v4 split board with their real
+// Vial keymap (Colemak-DH base, Lower / Raise / Adjust; mockup Variant B). Two glass slabs — one per half, each draggable on its own
 // — and a floating capsule with the layer tabs, the ext-key toggle, "Hide
 // keyboard frame", dock/float and close. Taps type at the caret of the last
-// focused field without stealing focus; the physical keyboard lights the
-// matching Corne key. Behaviour lives in lib/corne-engine, data in
+// focused field without stealing focus; hold-tap keys act on hold; the
+// physical keyboard lights the key with the matching legend. Behaviour lives in lib/corne-engine, data in
 // lib/corne-layout, caret edits in lib/text-target.
 
 import "@/components/widgets/keyboard-widget.css"
@@ -13,6 +13,7 @@ import "@/components/widgets/keyboard-widget.css"
 import {
   EyeOff,
   GripVertical,
+  Keyboard,
   Lock,
   PanelBottom,
   PictureInPicture2,
@@ -49,21 +50,23 @@ import {
   type ShiftMode,
 } from "@/lib/corne-engine"
 import {
+  type Binding,
+  bindingAt,
   CORNE_KEYS,
   type CorneKey,
   charNameOf,
   HALVES,
   type Half,
+  holdOf,
   isCharToken,
   isFnToken,
+  isInertBinding,
   type KeyId,
-  type KeyStatus,
   type KeyToken,
-  keyById,
   LAYER_IDS,
   type LayerId,
-  statusAt,
-  tokenAt,
+  NONE,
+  tapOf,
 } from "@/lib/corne-layout"
 import { useCorneKeyboard } from "@/lib/hooks/use-corne-keyboard"
 import { isReducedMotion } from "@/lib/isReducedMotion"
@@ -136,19 +139,27 @@ const readOffset = (
   y: y.get(),
 })
 
-function keycapKind(key: CorneKey, token: KeyToken): KeycapKind {
-  if (key.kind === "ext") return "ghost"
-  if (token === "NOOP") return "noop"
-  return isCharToken(token) ? "char" : "mod"
+function keycapKind(binding: Binding): KeycapKind {
+  const tap = tapOf(binding)
+  if (tap === NONE) return "none"
+  if (isInertBinding(binding)) return "inert"
+  return isCharToken(tap) ? "char" : "mod"
 }
 
 export function KeyboardWidget(): React.JSX.Element | null {
-  const { isKeyboardOpen, setIsKeyboardOpen, envSettings, animationPref } =
-    useGlobalStates()
+  const {
+    isKeyboardOpen,
+    setIsKeyboardOpen,
+    envSettings,
+    setEnvSettings,
+    animationPref,
+  } = useGlobalStates()
   const { translate } = useLocale()
   const reduce = isReducedMotion(animationPref, useReducedMotion())
   const anchor = envSettings.widgetDefaults.keyboard.anchor
   const defaultOffset = envSettings.widgetDefaults.keyboard.offset
+  // Shared with the settings panel (EnvSettings is the one source of truth).
+  const { qwertyMapping } = envSettings.widgetDefaults.keyboard.options
 
   const [mounted, setMounted] = useState(false)
   const [prefs] = useState<KeyboardPrefs>(loadPrefs)
@@ -197,6 +208,7 @@ export function KeyboardWidget(): React.JSX.Element | null {
     useCorneKeyboard({
       isOpen: isKeyboardOpen,
       onInert: flashKey,
+      qwertyMapping,
       rootRef,
     })
   const layer = activeLayer(engine)
@@ -308,6 +320,22 @@ export function KeyboardWidget(): React.JSX.Element | null {
     } else {
       changeDock("bottom")
     }
+  }
+
+  const toggleQwertyMapping = (): void => {
+    setEnvSettings((prev) => ({
+      ...prev,
+      widgetDefaults: {
+        ...prev.widgetDefaults,
+        keyboard: {
+          ...prev.widgetDefaults.keyboard,
+          options: {
+            ...prev.widgetDefaults.keyboard.options,
+            qwertyMapping: !prev.widgetDefaults.keyboard.options.qwertyMapping,
+          },
+        },
+      },
+    }))
   }
 
   const toggleExt = (): void => {
@@ -430,7 +458,6 @@ export function KeyboardWidget(): React.JSX.Element | null {
     (id: KeyId, event: PointerEvent<HTMLButtonElement>): void => {
       // Keeps focus — and the caret — in the text field.
       event.preventDefault()
-      if (keyById(id)?.kind === "ext") return
       event.currentTarget.setPointerCapture(event.pointerId)
       pointers.current.set(event.pointerId, id)
       press(id, "pointer", event.timeStamp)
@@ -453,19 +480,25 @@ export function KeyboardWidget(): React.JSX.Element | null {
       if (event.key === "Enter" || event.key === " ") {
         // preventDefault also stops the button's synthetic click.
         event.preventDefault()
-        if (!event.repeat && keyById(id)?.kind !== "ext")
-          press(id, "keyboard", event.timeStamp)
+        if (!event.repeat) press(id, "keyboard", event.timeStamp)
         return
       }
       const direction = NAV_KEYS[event.key]
       if (direction === undefined) return
       event.preventDefault()
-      const next = nearestKey(id, direction, showExt)
+      // Arrow keys skip hidden extension keys and keys that cannot act.
+      const next = nearestKey(
+        id,
+        direction,
+        (key) =>
+          (showExt || key.kind !== "ext") &&
+          !isInertBinding(bindingAt(layer, key))
+      )
       if (next === null) return
       setFocusKey(next)
       keyRefs.current.get(next)?.focus()
     },
-    [press, showExt]
+    [press, showExt, layer]
   )
 
   const onKeyKeyUp = useCallback(
@@ -488,45 +521,55 @@ export function KeyboardWidget(): React.JSX.Element | null {
 
   const onKeyFocus = useCallback((id: KeyId): void => setFocusKey(id), [])
 
-  // Legend + accessible name for a key on the current layer.
-  const describe = (
-    key: CorneKey,
-    token: KeyToken,
-    status: KeyStatus
-  ): { legend: string; aria: string } => {
-    if (key.kind === "ext") {
-      return {
-        aria: translate("widgets.keyboard.extKeyAria"),
-        legend: translate("widgets.keyboard.extKey"),
-      }
-    }
-    let legend: string
-    let name: string
+  // Legend + accessible name for one token on the current layer.
+  const describeToken = (token: KeyToken): { legend: string; name: string } => {
     if (isCharToken(token)) {
       const face = applyShift(engine, token)
       const charName = charNameOf(face)
-      legend = face
-      name =
-        charName === null
-          ? face
-          : translate(`widgets.keyboard.chars.${charName}`)
-    } else if (isFnToken(token)) {
-      legend = token
-      name = translate("widgets.keyboard.fnKeyAria").replace(
-        "{n}",
-        token.slice(1)
-      )
-    } else {
-      legend = translate(`widgets.keyboard.keys.${token}.legend`)
-      name = translate(`widgets.keyboard.keys.${token}.aria`)
+      return {
+        legend: face,
+        name:
+          charName === null
+            ? face
+            : translate(`widgets.keyboard.chars.${charName}`),
+      }
     }
-    const aria =
-      status === "placeholder" || status === "conventional"
-        ? translate("widgets.keyboard.ariaWithStatus")
-            .replace("{label}", name)
-            .replace("{status}", translate(`widgets.keyboard.status.${status}`))
-        : name
-    return { aria, legend }
+    if (isFnToken(token)) {
+      return {
+        legend: token,
+        name: translate("widgets.keyboard.fnKeyAria").replace(
+          "{n}",
+          token.slice(1)
+        ),
+      }
+    }
+    return {
+      legend: translate(`widgets.keyboard.keys.${token}.legend`),
+      name: translate(`widgets.keyboard.keys.${token}.aria`),
+    }
+  }
+
+  // A hold-tap reads "q, hold for Escape"; inert keys say they do nothing here.
+  const describe = (
+    binding: Binding
+  ): { legend: string; holdLegend: string | null; aria: string } => {
+    const tap = describeToken(tapOf(binding))
+    const holdToken = holdOf(binding)
+    const hold = holdToken === null ? null : describeToken(holdToken)
+    const name =
+      hold === null
+        ? tap.name
+        : translate("widgets.keyboard.holdAria")
+            .replace("{tap}", tap.name)
+            .replace("{hold}", hold.name)
+    const inert = isInertBinding(binding) && tapOf(binding) !== NONE
+    return {
+      aria: inert
+        ? translate("widgets.keyboard.inertAria").replace("{label}", name)
+        : name,
+      holdLegend: hold?.legend ?? null,
+      legend: tap.legend,
+    }
   }
 
   const pressedState = (token: KeyToken): boolean | null => {
@@ -539,23 +582,26 @@ export function KeyboardWidget(): React.JSX.Element | null {
         return isLayerKeyEngaged(engine, "lower")
       case "Raise":
         return isLayerKeyEngaged(engine, "raise")
+      case "Adjust":
+        return isLayerKeyEngaged(engine, "adjust")
       default:
         return null
     }
   }
 
   const renderKey = (key: CorneKey): React.JSX.Element => {
-    const token = tokenAt(layer, key)
-    const status = statusAt(layer, key)
-    const { legend, aria } = describe(key, token, status)
+    const binding = bindingAt(layer, key)
+    const token = tapOf(binding)
+    const { legend, holdLegend, aria } = describe(binding)
     return (
       <CorneKeycap
         ariaLabel={aria}
         caps={token === "Shift" && engine.shiftMode === "caps"}
         corneKey={key}
         down={engine.down.has(key.id)}
+        holdLegend={holdLegend}
         key={key.id}
-        kind={keycapKind(key, token)}
+        kind={keycapKind(binding)}
         legend={legend}
         lit={lit.has(key.id)}
         onAssistiveClick={onAssistiveClick}
@@ -567,13 +613,7 @@ export function KeyboardWidget(): React.JSX.Element | null {
         pressed={pressedState(token)}
         reduceMotion={reduce}
         registerRef={registerRef}
-        status={status}
         tabbable={key.id === focusKey}
-        title={
-          key.kind === "ext"
-            ? translate("widgets.keyboard.extUnverified")
-            : undefined
-        }
       />
     )
   }
@@ -673,8 +713,17 @@ export function KeyboardWidget(): React.JSX.Element | null {
                   title={translate("widgets.keyboard.extTitle")}
                   type="button"
                 >
-                  {translate("widgets.keyboard.extToggle")}{" "}
-                  <small>{translate("widgets.keyboard.extUnverified")}</small>
+                  {translate("widgets.keyboard.extToggle")}
+                </button>
+                <button
+                  aria-label={translate("widgets.keyboard.qwertyMapping")}
+                  aria-pressed={qwertyMapping}
+                  className="osk-icon-btn"
+                  onClick={toggleQwertyMapping}
+                  title={translate("widgets.keyboard.qwertyMappingHint")}
+                  type="button"
+                >
+                  <Keyboard aria-hidden className="size-3.5" />
                 </button>
                 <button
                   aria-label={translate("widgets.keyboard.hideFrame")}
@@ -778,16 +827,6 @@ export function KeyboardWidget(): React.JSX.Element | null {
               </div>
 
               <p className="osk-foot">
-                <span>
-                  <b className="osk-foot-placeholder">?</b>{" "}
-                  {translate("widgets.keyboard.legendPlaceholder")}
-                </span>
-                <span>
-                  <b>≈</b> {translate("widgets.keyboard.legendConventional")}
-                </span>
-                <span className="osk-foot-pending">
-                  {translate("widgets.keyboard.pending")}
-                </span>
                 <span aria-hidden className="osk-flags">
                   <span
                     className="osk-flag"

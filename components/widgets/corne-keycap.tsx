@@ -2,27 +2,31 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 // One Corne keycap: placed absolutely in its half from the layout geometry
 // (CSS custom properties, so the key unit `--u` scales the whole board), with
-// its legend sliding out/in when the layer or Shift changes. A real <button>
-// with an aria-label; pointer and keyboard wiring come from the widget.
+// its legend sliding out/in when the layer or Shift changes. Hold-tap keys
+// show the tap legend large and the hold legend small underneath. A real
+// <button> with an aria-label; inert and unbound keys are aria-disabled.
+// Pointer and keyboard wiring come from the widget.
 
 import { AnimatePresence, motion } from "motion/react"
 import type { CSSProperties, KeyboardEvent, PointerEvent } from "react"
 import { memo } from "react"
 
-import type { CorneKey, KeyId, KeyStatus } from "@/lib/corne-layout"
+import type { CorneKey, KeyId } from "@/lib/corne-layout"
 
 // Inline custom properties (`--x`, …) alongside the regular style keys.
 type KeyStyle = CSSProperties & Record<`--${string}`, number | string>
 
-export type KeycapKind = "char" | "mod" | "noop" | "ghost"
+// char = typed character, mod = function / modifier / layer key, inert =
+// display-only (mouse, media, GUI, …), none = unbound (blank).
+export type KeycapKind = "char" | "mod" | "inert" | "none"
 
 export type CorneKeycapProps = {
   corneKey: CorneKey
   legend: string
+  // Small secondary legend for a hold-tap's hold action.
+  holdLegend: string | null
   ariaLabel: string
-  title?: string | undefined
   kind: KeycapKind
-  status: KeyStatus
   // Toggle-style keys (Shift/Ctrl/layer keys) report their engaged state.
   pressed: boolean | null
   caps: boolean
@@ -46,10 +50,9 @@ const LEGEND_SPRING = { damping: 26, stiffness: 520, type: "spring" } as const
 function CorneKeycapImpl({
   corneKey,
   legend,
+  holdLegend,
   ariaLabel,
-  title,
   kind,
-  status,
   pressed,
   caps,
   down,
@@ -70,24 +73,32 @@ function CorneKeycapImpl({
     "--x": corneKey.x,
     "--y": corneKey.y,
   }
-  const isGhost = kind === "ghost"
+  const disabled = kind === "inert" || kind === "none"
   const id = corneKey.id
+  const legends = (
+    <>
+      <span className="osk-tap">{legend}</span>
+      {holdLegend === null ? null : (
+        <span className="osk-hold">{holdLegend}</span>
+      )}
+    </>
+  )
   return (
     <button
-      aria-disabled={isGhost || undefined}
+      aria-disabled={disabled || undefined}
       aria-label={ariaLabel}
       aria-pressed={pressed ?? undefined}
       className="osk-key"
       data-caps={caps || undefined}
       data-down={down || undefined}
+      data-ext={corneKey.kind === "ext" || undefined}
       data-key={id}
       data-kind={kind}
       data-lit={lit || undefined}
-      data-status={status}
       onClick={(event) => {
         // A virtual click from assistive tech (no pointer, no key events):
         // pointer and Enter/Space presses are handled on their own events.
-        if (event.detail === 0 && !isGhost) onAssistiveClick(id)
+        if (event.detail === 0 && !disabled) onAssistiveClick(id)
       }}
       onContextMenu={(event) => event.preventDefault()}
       onFocus={() => onFocus(id)}
@@ -100,11 +111,10 @@ function CorneKeycapImpl({
       ref={(el) => registerRef(id, el)}
       style={style}
       tabIndex={tabbable ? 0 : -1}
-      title={title}
       type="button"
     >
       {reduceMotion ? (
-        <span className="osk-legend">{legend}</span>
+        <span className="osk-legend">{legends}</span>
       ) : (
         <AnimatePresence initial={false}>
           <motion.span
@@ -112,22 +122,13 @@ function CorneKeycapImpl({
             className="osk-legend"
             exit={{ opacity: 0, scale: 0.85, y: "-45%" }}
             initial={{ opacity: 0, scale: 0.85, y: "45%" }}
-            key={legend}
+            key={JSON.stringify([legend, holdLegend])}
             transition={LEGEND_SPRING}
           >
-            {legend}
+            {legends}
           </motion.span>
         </AnimatePresence>
       )}
-      {status === "placeholder" ? (
-        <span aria-hidden className="osk-badge">
-          ?
-        </span>
-      ) : status === "conventional" ? (
-        <span aria-hidden className="osk-badge">
-          ≈
-        </span>
-      ) : null}
     </button>
   )
 }

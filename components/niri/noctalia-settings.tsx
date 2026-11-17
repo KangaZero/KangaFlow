@@ -12,6 +12,7 @@ import {
   EyeOff,
   HelpCircle,
   Image as ImageIcon,
+  Keyboard,
   LayoutGrid,
   ListOrdered,
   type LucideIcon,
@@ -1214,6 +1215,43 @@ export function NoctaliaSettings(props: {
                               )}
                             </p>
                           )}
+
+                          {/* Keyboard: physical-key mirroring mode */}
+                          {id === "keyboard" ? (
+                            <div className="flex items-center gap-2">
+                              <Keyboard
+                                aria-hidden
+                                className="text-muted-foreground size-3.5"
+                              />
+                              <span
+                                className="flex-1 text-[13px]"
+                                title={translate(
+                                  "widgets.keyboard.qwertyMappingHint"
+                                )}
+                              >
+                                {translate("widgets.keyboard.qwertyMapping")}
+                              </span>
+                              <ToggleSwitch
+                                checked={
+                                  settings.widgetDefaults.keyboard.options
+                                    .qwertyMapping
+                                }
+                                label={translate(
+                                  "widgets.keyboard.qwertyMappingHint"
+                                )}
+                                onToggle={() =>
+                                  setWidget("keyboard", {
+                                    options: {
+                                      qwertyMapping:
+                                        !settings.widgetDefaults.keyboard
+                                          .options.qwertyMapping,
+                                    },
+                                  })
+                                }
+                                reduce={reduce}
+                              />
+                            </div>
+                          ) : null}
 
                           {/* Notes: vim-style line-number gutter */}
                           {id === "notes" ? (

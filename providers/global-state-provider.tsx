@@ -43,6 +43,7 @@ import {
   NOTE_LINE_NUMBER_MODES,
   type NoteLineNumbers,
 } from "@/lib/globalStates"
+import { parseKeyboardOptions } from "@/lib/keyboard-prefs"
 import { DEFAULT_ONEKO_OPTIONS } from "@/lib/oneko"
 import { safeLocalStorage } from "@/lib/safe-storage"
 import {
@@ -185,7 +186,14 @@ function pickWidgetDefaults(value: unknown): EnvSettings["widgetDefaults"] {
   return {
     alarm: pickBase("alarm"),
     calendar: pickBase("calendar"),
-    keyboard: pickBase("keyboard"),
+    keyboard: {
+      ...pickBase("keyboard"),
+      options: parseKeyboardOptions(
+        src.keyboard && typeof src.keyboard === "object"
+          ? (src.keyboard as Record<string, unknown>).options
+          : undefined
+      ),
+    },
     media: {
       ...pickBase("media"),
       options: {

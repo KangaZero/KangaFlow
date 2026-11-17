@@ -9,13 +9,6 @@
 .osk-root {
   /* Every surface here is glass: use the glass muted ink (globals.css). */
   --muted-foreground: var(--glass-muted-foreground);
-  /* Placeholder markers: the destructive hue pulled toward the foreground, so
-     the tiny "?" clears 4.5:1 on a keycap in every theme. */
-  --osk-marker-ink: color-mix(
-    in oklch,
-    var(--destructive) 70%,
-    var(--foreground)
-  );
   --u: min(46px, calc((100vw - 160px) / 14));
   --g: calc(var(--u) * 0.1);
   --split: calc(var(--u) * 1.4);
@@ -125,14 +118,13 @@
 .osk-toggle {
   padding: 3px 9px;
   border-radius: 999px;
-  border: 1px dashed color-mix(in oklch, var(--foreground) 22%, transparent);
+  border: 1px solid color-mix(in oklch, var(--foreground) 22%, transparent);
   font-size: 10.5px;
   white-space: nowrap;
   color: var(--muted-foreground);
   cursor: pointer;
 }
 .osk-toggle[aria-pressed="true"] {
-  border-style: solid;
   border-color: var(--primary);
   color: var(--foreground);
 }
@@ -237,9 +229,29 @@
   font-size: calc(var(--u) * 0.24);
   color: var(--muted-foreground);
 }
-.osk-key[data-kind="noop"] {
-  color: transparent;
+/* Display-only keys (mouse, media, GUI, F-keys): legend shown, no action. */
+.osk-key[data-kind="inert"] {
+  font-size: calc(var(--u) * 0.22);
+  color: var(--muted-foreground);
+  background: color-mix(in oklch, var(--card) 55%, transparent);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+/* Unbound (KC_NO): a blank cap. */
+.osk-key[data-kind="none"] {
   background: color-mix(in oklch, var(--card) 40%, transparent);
+  box-shadow: none;
+  cursor: default;
+}
+.osk-key:is([data-kind="inert"], [data-kind="none"]):hover {
+  background: color-mix(in oklch, var(--card) 55%, transparent);
+}
+/* The v4 extension keys only render behind the "+4 ext" toggle. */
+.osk-key[data-ext] {
+  display: none;
+}
+.osk-root[data-show-ext] .osk-key[data-ext] {
+  display: grid;
 }
 .osk-key:is([data-down], [data-lit]) {
   translate: 0 calc(var(--u) * 0.04);
@@ -260,39 +272,19 @@
 }
 .osk-legend {
   grid-area: 1 / 1;
+  display: grid;
+  justify-items: center;
+  gap: calc(var(--u) * 0.04);
   white-space: nowrap;
 }
-
-/* honesty markers: dashed "?" = placeholder, dotted "≈" = conventional */
-.osk-key[data-status="placeholder"] {
-  border: 1px dashed color-mix(in oklch, var(--destructive) 55%, transparent);
-}
-.osk-key[data-status="conventional"] {
-  border: 1px dotted color-mix(in oklch, var(--foreground) 40%, transparent);
-}
-.osk-badge {
-  position: absolute;
-  top: calc(var(--u) * 0.05);
-  right: calc(var(--u) * 0.08);
-  font: 700 calc(var(--u) * 0.17) / 1 var(--font-mono);
+/* Hold-tap: tap legend large (inherits the key size), hold legend small. */
+.osk-hold {
+  font-size: calc(var(--u) * 0.17);
+  font-weight: 400;
   color: var(--muted-foreground);
 }
-.osk-key[data-status="placeholder"] .osk-badge {
-  color: var(--osk-marker-ink);
-}
-.osk-key[data-kind="ghost"] {
-  display: none;
-  cursor: help;
-  font-size: calc(var(--u) * 0.18);
-  color: var(--muted-foreground);
-  background: transparent;
-  border: 1.5px dashed
-    color-mix(in oklch, var(--muted-foreground) 70%, transparent);
-  box-shadow: none;
-  opacity: 0.75;
-}
-.osk-root[data-show-ext] .osk-key[data-kind="ghost"] {
-  display: grid;
+.osk-key[aria-pressed="true"] .osk-hold {
+  color: inherit;
 }
 
 /* ── footer ── */
@@ -309,10 +301,6 @@
   background: var(--glass-fill);
   backdrop-filter: blur(16px);
   pointer-events: auto;
-}
-.osk-foot-placeholder,
-.osk-foot-pending {
-  color: var(--osk-marker-ink);
 }
 .osk-flags {
   display: flex;
