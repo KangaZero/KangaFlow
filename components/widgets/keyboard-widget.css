@@ -1,0 +1,414 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+/* On-screen Corne v4 keyboard (mockup Variant B: floating glass, split halves).
+   Geometry comes from lib/corne-layout via per-key custom properties (--x, --y,
+   --h, --r in key units); the unit --u scales the whole board. Every colour is
+   a mix of the theme tokens from app/globals.css, so all three themes and the
+   desktop accent apply. The slabs/capsule get GLASS_SURFACE classes; the
+   frameless overrides below are unlayered so they beat those utilities. */
+
+.osk-root {
+  --u: min(46px, calc((100vw - 160px) / 14));
+  --g: calc(var(--u) * 0.1);
+  --split: calc(var(--u) * 1.4);
+  font-family: var(--font-mono);
+  color: var(--card-foreground);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.osk-root[data-dock="bottom"] {
+  padding-bottom: 10px;
+}
+
+.osk-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── capsule: grip, title, layer tabs, ext toggle, frame/dock/close ── */
+.osk-capsule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  pointer-events: auto;
+}
+.osk-title {
+  color: var(--foreground);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.osk-title small {
+  color: var(--muted-foreground);
+  font-weight: 400;
+}
+.osk-icon-btn,
+.osk-grip {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+.osk-grip {
+  cursor: grab;
+}
+.osk-grip:active {
+  cursor: grabbing;
+}
+.osk-icon-btn:hover,
+.osk-grip:hover {
+  background: color-mix(in oklch, var(--foreground) 8%, transparent);
+  color: var(--foreground);
+}
+.osk-icon-btn[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.osk-icon-btn[data-variant="close"]:hover {
+  background: color-mix(in oklch, var(--destructive) 22%, transparent);
+}
+.osk-root
+  :is(
+    .osk-icon-btn,
+    .osk-grip,
+    .osk-tab,
+    .osk-toggle,
+    .osk-half-grip,
+    .osk-restore-dot
+  ):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.osk-tabs {
+  display: flex;
+  gap: 2px;
+  margin: 0;
+  padding: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--foreground) 6%, transparent);
+}
+.osk-tab {
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+.osk-tab small {
+  opacity: 0.7;
+}
+.osk-tab[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.osk-toggle {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px dashed color-mix(in oklch, var(--foreground) 22%, transparent);
+  font-size: 10.5px;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+.osk-toggle[aria-pressed="true"] {
+  border-style: solid;
+  border-color: var(--primary);
+  color: var(--foreground);
+}
+.osk-toggle small {
+  opacity: 0.75;
+}
+
+/* ── halves: one glass slab each, independently draggable ── */
+.osk-halves {
+  display: flex;
+  justify-content: center;
+  gap: var(--split);
+}
+.osk-root[data-show-ext] .osk-halves {
+  gap: calc(var(--split) + 2.3 * var(--u));
+}
+.osk-slab {
+  position: relative;
+  padding: 26px 12px 10px;
+  border-radius: 18px;
+  pointer-events: auto;
+  transition:
+    background-color 0.25s,
+    border-color 0.25s,
+    box-shadow 0.25s,
+    backdrop-filter 0.25s;
+}
+.osk-slab[data-dragging] {
+  z-index: 2;
+}
+.osk-half {
+  position: relative;
+  width: calc(6 * var(--u));
+  height: calc(5.25 * var(--u));
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+  /* Own compositing layer: a key press repaints only the keys, not the
+     backdrop-filtered slab underneath. Measured in headless Chromium (software
+     raster): median press cost ~220ms without this, ~75ms with it. */
+  will-change: transform;
+}
+.osk-half-grip {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  translate: -50% 0;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 14px;
+  border-radius: 99px;
+  cursor: grab;
+}
+.osk-half-grip::before {
+  content: "";
+  width: 36px;
+  height: 4px;
+  border-radius: 4px;
+  background: color-mix(in oklch, var(--foreground) 25%, transparent);
+}
+.osk-half-grip:hover::before {
+  background: var(--primary);
+}
+
+/* ── keys ── */
+.osk-key {
+  position: absolute;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  left: calc(var(--x) * var(--u));
+  top: calc(var(--y) * var(--u));
+  width: calc(var(--u) - var(--g));
+  height: calc(var(--h, 1) * var(--u) - var(--g));
+  rotate: var(--r, 0deg);
+  border-radius: calc(var(--u) * 0.2);
+  border: 1px solid color-mix(in oklch, var(--foreground) 13%, transparent);
+  background: color-mix(in oklch, var(--card) 88%, var(--foreground));
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklch, white 14%, transparent),
+    0 calc(var(--u) * 0.05) 0
+    color-mix(in oklch, var(--foreground) 16%, transparent);
+  font: 500 calc(var(--u) * 0.32) / 1 var(--font-mono);
+  color: var(--foreground);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    translate 0.07s,
+    background-color 0.12s,
+    box-shadow 0.07s,
+    color 0.12s;
+}
+.osk-key:hover {
+  background: color-mix(in oklch, var(--card) 78%, var(--foreground));
+}
+.osk-key:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+.osk-key[data-kind="mod"] {
+  font-size: calc(var(--u) * 0.24);
+  color: var(--muted-foreground);
+}
+.osk-key[data-kind="noop"] {
+  color: transparent;
+  background: color-mix(in oklch, var(--card) 40%, transparent);
+}
+.osk-key:is([data-down], [data-lit]) {
+  translate: 0 calc(var(--u) * 0.04);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, white 8%, transparent);
+  background: color-mix(in oklch, var(--primary) 34%, var(--card));
+  color: var(--foreground);
+}
+.osk-key[data-lit] {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+.osk-key[aria-pressed="true"] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.osk-key[aria-pressed="true"][data-caps] {
+  box-shadow: inset 0 -3px 0 var(--primary-foreground);
+}
+.osk-legend {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+/* honesty markers: dashed "?" = placeholder, dotted "≈" = conventional */
+.osk-key[data-status="placeholder"] {
+  border: 1px dashed color-mix(in oklch, var(--destructive) 55%, transparent);
+}
+.osk-key[data-status="conventional"] {
+  border: 1px dotted color-mix(in oklch, var(--foreground) 40%, transparent);
+}
+.osk-badge {
+  position: absolute;
+  top: calc(var(--u) * 0.05);
+  right: calc(var(--u) * 0.08);
+  font: 700 calc(var(--u) * 0.17) / 1 var(--font-mono);
+  color: var(--muted-foreground);
+}
+.osk-key[data-status="placeholder"] .osk-badge {
+  color: var(--destructive);
+}
+.osk-key[data-kind="ghost"] {
+  display: none;
+  cursor: help;
+  font-size: calc(var(--u) * 0.18);
+  color: var(--muted-foreground);
+  background: transparent;
+  border: 1.5px dashed
+    color-mix(in oklch, var(--muted-foreground) 70%, transparent);
+  box-shadow: none;
+  opacity: 0.75;
+}
+.osk-root[data-show-ext] .osk-key[data-kind="ghost"] {
+  display: grid;
+}
+
+/* ── footer ── */
+.osk-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  background: color-mix(in oklch, var(--card) 70%, transparent);
+  backdrop-filter: blur(16px);
+  pointer-events: auto;
+}
+.osk-foot-placeholder {
+  color: var(--destructive);
+}
+.osk-foot-pending {
+  color: var(--destructive);
+}
+.osk-flags {
+  display: flex;
+  gap: 6px;
+}
+.osk-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--foreground) 12%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+.osk-flag[data-on] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: transparent;
+}
+
+/* ── dock target while dragging the capsule ── */
+.osk-dock-hint {
+  position: fixed;
+  inset: auto 12px 8px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 2px dashed color-mix(in oklch, var(--primary) 70%, transparent);
+  border-radius: 12px;
+  font: 11px var(--font-mono);
+  color: var(--foreground);
+  background: color-mix(in oklch, var(--primary) 14%, transparent);
+  pointer-events: none;
+}
+
+/* ── "Hide keyboard frame" (data-frameless on the root) ──
+   Only the keyboard's own frame goes: slab border/background/shadow/blur, the
+   capsule, grab bars and footer. Keycaps stay put and keep working. Only the
+   hiding direction delays `visibility` (so the fade plays); revealing flips it
+   at once, so focus can return to the toggle in the same frame. */
+.osk-capsule,
+.osk-foot,
+.osk-half-grip {
+  transition: opacity 0.22s ease;
+}
+.osk-root[data-frameless] .osk-slab {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.osk-root[data-frameless] :is(.osk-capsule, .osk-foot, .osk-half-grip) {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.22s ease,
+    visibility 0.22s allow-discrete;
+}
+.osk-restore-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  display: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 99px;
+  cursor: pointer;
+  opacity: 0.25;
+  transition: opacity 0.15s;
+}
+.osk-restore-dot::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: inherit;
+  background: var(--primary);
+}
+.osk-root[data-frameless] .osk-restore-dot {
+  display: block;
+}
+.osk-restore-dot:is(:hover, :focus-visible) {
+  opacity: 1;
+}
+
+/* Reduced motion (the site's animation preference, resolved in JS so "off"
+   applies even when the OS allows motion): no transitions anywhere. Same
+   specificity as the frameless rule above and later in the file, so it wins. */
+.osk-root[data-reduced-motion]
+  :is(
+    .osk-key,
+    .osk-slab,
+    .osk-capsule,
+    .osk-foot,
+    .osk-half-grip,
+    .osk-restore-dot
+  ) {
+  transition: none;
+}

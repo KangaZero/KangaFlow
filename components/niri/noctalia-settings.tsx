@@ -109,6 +109,7 @@ const WIDGET_ANCHOR_LABEL = {
 const WIDGET_NAME_KEY = {
   alarm: "widgets.alarm.title",
   calendar: "widgets.calendar.title",
+  keyboard: "widgets.keyboard.title",
   media: "mediaPlayer.title",
   notes: "widgets.notes.title",
 } as const satisfies Record<WidgetId, TranslationKey>
@@ -558,6 +559,7 @@ export function NoctaliaSettings(props: {
     isNotesOpen,
     isAlarmOpen,
     isCalendarOpen,
+    isKeyboardOpen,
     isMediaPlayerOpen,
     noteLineNumbers,
     setNoteLineNumbers,
@@ -566,6 +568,7 @@ export function NoctaliaSettings(props: {
   const widgetOpen: Record<WidgetId, boolean> = {
     alarm: isAlarmOpen,
     calendar: isCalendarOpen,
+    keyboard: isKeyboardOpen,
     media: isMediaPlayerOpen,
     notes: isNotesOpen,
   }

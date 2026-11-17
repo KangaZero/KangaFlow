@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import type { JSX } from "react"
 import { AlarmWidget } from "@/components/widgets/alarm-widget"
 import { CalendarWidget } from "@/components/widgets/calendar-widget"
+import { KeyboardWidget } from "@/components/widgets/keyboard-widget"
 import { MediaPlayer } from "@/components/widgets/media-player"
 import { NotesWidget } from "@/components/widgets/notes-widget"
 import type { AppPath } from "@/lib/globalStates"
@@ -13,8 +14,9 @@ export const AVAILABLE_WIDGETS = [
   { element: NotesWidget, global: false, name: "notes" },
   { element: AlarmWidget, global: false, name: "alarm" },
   { element: CalendarWidget, global: false, name: "calendar" },
+  { element: KeyboardWidget, global: false, name: "keyboard" },
 ] as const satisfies readonly {
-  element: () => JSX.Element
+  element: () => JSX.Element | null
   global: boolean
   name: string
 }[]

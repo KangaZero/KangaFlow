@@ -69,6 +69,7 @@ export function NotificationCenter({
   const {
     setIsAlarmOpen,
     setIsCalendarOpen,
+    setIsKeyboardOpen,
     setIsMediaPlayerOpen,
     setIsNotesOpen,
   } = useGlobalStates()
@@ -93,6 +94,7 @@ export function NotificationCenter({
   const openWidget: Record<WidgetId, (isOpen: boolean) => void> = {
     alarm: setIsAlarmOpen,
     calendar: setIsCalendarOpen,
+    keyboard: setIsKeyboardOpen,
     media: setIsMediaPlayerOpen,
     notes: setIsNotesOpen,
   }

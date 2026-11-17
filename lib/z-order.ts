@@ -5,6 +5,7 @@
 // Bands, low → high:
 //   bar               desktop chrome; content and windows sit above it
 //   window..windowMax  floating widgets — click-to-front counts up in this band
+//   keyboard          the on-screen keyboard: above every window it types into
 //   panel             full-screen modal panels (launcher, desktop settings)
 //   dialog            radix dialogs (wallpaper, help, settings, terminal, command)
 //   popover           bar dropdowns (notifications) — always on top
@@ -19,6 +20,7 @@ export const Z_LAYERS = {
   bar: 30,
   dialog: 1000,
   hint: 1200,
+  keyboard: 850,
   panel: 900,
   popover: 1100,
   toast: 1150,

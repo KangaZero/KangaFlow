@@ -31,10 +31,12 @@ export function WebMcp() {
   const {
     isAlarmOpen,
     isCalendarOpen,
+    isKeyboardOpen,
     isMediaPlayerOpen,
     isNotesOpen,
     setIsAlarmOpen,
     setIsCalendarOpen,
+    setIsKeyboardOpen,
     setIsMediaPlayerOpen,
     setIsNotesOpen,
   } = useGlobalStates()
@@ -42,10 +44,12 @@ export function WebMcp() {
   const widgetStates = {
     isAlarmOpen,
     isCalendarOpen,
+    isKeyboardOpen,
     isMediaPlayerOpen,
     isNotesOpen,
     setIsAlarmOpen,
     setIsCalendarOpen,
+    setIsKeyboardOpen,
     setIsMediaPlayerOpen,
     setIsNotesOpen,
   } as const
@@ -129,6 +133,9 @@ export function WebMcp() {
               case "notes":
                 result[widget] = widgetsRef.current.isNotesOpen
                 break
+              case "keyboard":
+                result[widget] = widgetsRef.current.isKeyboardOpen
+                break
               default:
                 break
             }
@@ -192,6 +199,17 @@ export function WebMcp() {
               break
             case false:
               widgetsRef.current.setIsNotesOpen(false)
+              break
+            default:
+              break // is not in args
+          }
+
+          switch (args.keyboard) {
+            case true:
+              widgetsRef.current.setIsKeyboardOpen(true)
+              break
+            case false:
+              widgetsRef.current.setIsKeyboardOpen(false)
               break
             default:
               break // is not in args

@@ -185,6 +185,7 @@ function pickWidgetDefaults(value: unknown): EnvSettings["widgetDefaults"] {
   return {
     alarm: pickBase("alarm"),
     calendar: pickBase("calendar"),
+    keyboard: pickBase("keyboard"),
     media: {
       ...pickBase("media"),
       options: {
@@ -296,6 +297,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   isCommandPaletteOpen: false,
   isHelloEffectAnimationComplete: false,
   isJavascriptFlipTechIconFlipped: false,
+  isKeyboardOpen: false,
   isLoggedIn: "hidden",
   isMediaPlayerOpen: false,
   isMediaPlayerPlaying: false,
@@ -317,6 +319,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   setIsCommandPaletteOpen: () => {},
   setIsHelloEffectAnimationComplete: () => {},
   setIsJavascriptFlipTechIconFlipped: () => {},
+  setIsKeyboardOpen: () => {},
   setIsLoggedIn: () => {},
   setIsMediaPlayerOpen: () => {},
   setIsMediaPlayerPlaying: () => {},
@@ -374,6 +377,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [isNotesOpen, setIsNotesOpen] = useState(false)
   const [isAlarmOpen, setIsAlarmOpen] = useState(false)
   const [isCalendarOpen, setIsCalendarOpen] = useState(false)
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const [isTerminalOpen, setIsTerminalOpen] = useState(false)
   const [terminalFile, setTerminalFile] = useState<string | null>(null)
   const [globalMatrixOptions, setGlobalMatrixOptions] =
@@ -436,6 +440,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     const openers: Record<WidgetId, (open: boolean) => void> = {
       alarm: setIsAlarmOpen,
       calendar: setIsCalendarOpen,
+      keyboard: setIsKeyboardOpen,
       media: setIsMediaPlayerOpen,
       notes: setIsNotesOpen,
     }
@@ -544,6 +549,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isCommandPaletteOpen,
       isHelloEffectAnimationComplete,
       isJavascriptFlipTechIconFlipped,
+      isKeyboardOpen,
       isLoggedIn,
       isMediaPlayerOpen,
       isMediaPlayerPlaying,
@@ -565,6 +571,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       setIsCommandPaletteOpen,
       setIsHelloEffectAnimationComplete,
       setIsJavascriptFlipTechIconFlipped,
+      setIsKeyboardOpen,
       setIsLoggedIn,
       setIsMediaPlayerOpen,
       setIsMediaPlayerPlaying,
@@ -605,6 +612,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       isCommandPaletteOpen,
       isHelloEffectAnimationComplete,
       isJavascriptFlipTechIconFlipped,
+      isKeyboardOpen,
       isLoggedIn,
       isMediaPlayerOpen,
       isMediaPlayerPlaying,

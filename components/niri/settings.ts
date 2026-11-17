@@ -97,12 +97,19 @@ export type ToastMaxStack = (typeof TOAST_MAX_STACKS)[number]
 
 // Floating widgets that can be opened on the desktop. Each id maps to a
 // DraggableWindow `storageKey` (`kangaflow:widget-state:<storageKey>`).
-export const WIDGET_IDS = ["notes", "alarm", "calendar", "media"] as const
+export const WIDGET_IDS = [
+  "notes",
+  "alarm",
+  "calendar",
+  "media",
+  "keyboard",
+] as const
 export type WidgetId = (typeof WIDGET_IDS)[number]
 
 export const WIDGET_STORAGE_KEYS: Record<WidgetId, string> = {
   alarm: "alarm-widget",
   calendar: "calendar-widget",
+  keyboard: "keyboard-widget",
   media: "media-player",
   notes: "notes-widget",
 }
@@ -201,6 +208,9 @@ export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   widgetDefaults: {
     alarm: { anchor: "bottom-left", offset: null, show: false },
     calendar: { anchor: "top-right", offset: null, show: false },
+    // The keyboard starts docked to the bottom edge; the anchor applies once
+    // it is undocked (floated).
+    keyboard: { anchor: "center", offset: null, show: false },
     media: {
       anchor: "bottom-right",
       offset: null,

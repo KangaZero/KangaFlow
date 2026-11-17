@@ -7,6 +7,7 @@ import {
   FileCode2,
   Globe,
   Image as ImageIcon,
+  Keyboard,
   Languages,
   type LucideIcon,
   Music,
@@ -101,6 +102,8 @@ export function NoctaliaLauncher(props: {
     setIsAlarmOpen,
     isCalendarOpen,
     setIsCalendarOpen,
+    isKeyboardOpen,
+    setIsKeyboardOpen,
     vimMode,
   } = useGlobalStates()
 
@@ -232,6 +235,17 @@ export function NoctaliaLauncher(props: {
         },
         sublabel: translate("widgets.calendar.sublabel"),
       },
+      {
+        active: isKeyboardOpen,
+        icon: Keyboard,
+        id: "keyboard-widget",
+        label: translate("widgets.keyboard.title"),
+        onSelect: () => {
+          setIsKeyboardOpen(!isKeyboardOpen)
+          onClose()
+        },
+        sublabel: translate("widgets.keyboard.sublabel"),
+      },
     ],
     [
       theme,
@@ -240,12 +254,14 @@ export function NoctaliaLauncher(props: {
       isNotesOpen,
       isAlarmOpen,
       isCalendarOpen,
+      isKeyboardOpen,
       toggleTheme,
       setLocale,
       setIsMediaPlayerOpen,
       setIsNotesOpen,
       setIsAlarmOpen,
       setIsCalendarOpen,
+      setIsKeyboardOpen,
       onClose,
       onOpenSettings,
       onOpenWallpaper,

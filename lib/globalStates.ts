@@ -43,6 +43,9 @@ export type GlobalStatesContextValue = {
   setIsAlarmOpen: (state: boolean) => void
   isCalendarOpen: boolean
   setIsCalendarOpen: (state: boolean) => void
+  // On-screen Corne keyboard widget (ephemeral).
+  isKeyboardOpen: boolean
+  setIsKeyboardOpen: (state: boolean) => void
   // Terminal dialog open state + the file to open in `nvim` (null = plain shell).
   // Ephemeral; only reachable under the terminal theme.
   isTerminalOpen: boolean
