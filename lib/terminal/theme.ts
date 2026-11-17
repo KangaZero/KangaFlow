@@ -11,7 +11,7 @@ export type TerminalPalette = {
   // DOM backing painted *behind* the transparent xterm canvas (a CSS colour on
   // the mount element). Under allowTransparency the canvas clearRects and never
   // fills the theme background, so contrast has to come from here: dark → none
-  // (light text reads over the dark wallpaper); light → a low-alpha scrim so
+  // (light text reads over the dark wallpaper); light → a near-solid scrim so
   // dark text + the fastfetch accents stay legible over the busy photo.
   scrim: string
   text: string
@@ -44,7 +44,7 @@ export const MOCHA: TerminalPalette = {
   green: "#a6e3a1",
   lavender: "#b4befe",
   mauve: "#cba6f7",
-  overlay: "#6c7086",
+  overlay: "#9399b2",
   pink: "#f5c2e7",
   red: "#f38ba8",
   sapphire: "#74c7ec",
@@ -56,26 +56,32 @@ export const MOCHA: TerminalPalette = {
   yellow: "#f9e2af",
 }
 
+// Latte accents darkened (same hue, lower lightness) so each clears WCAG AA
+// 4.5:1 on the Latte base under the 92% scrim; stock Latte accents measured
+// 1.9–4.3:1 there. Mocha keeps its stock values except Overlay2 for overlay.
 export const LATTE: TerminalPalette = {
   base: "#eff1f5",
   black: "#5c5f77",
-  blue: "#1e66f5",
+  blue: "#0b55e3",
   brightBlack: "#6c6f85",
   brightWhite: "#bcc0cc",
   cursor: "#dc8a78",
-  green: "#40a02b",
-  lavender: "#7287fd",
-  mauve: "#8839ef",
-  overlay: "#9ca0b0",
-  pink: "#ea76cb",
-  red: "#d20f39",
-  sapphire: "#209fb5",
-  scrim: "rgba(239,241,245,0.7)", // base #eff1f5 @ 70% — dark text + fastfetch accents stay legible over the photo
+  green: "#007200",
+  lavender: "#4755c6",
+  mauve: "#802ce4",
+  overlay: "#5d606f",
+  pink: "#a33389",
+  red: "#c5002f",
+  sapphire: "#006b80",
+  // base #eff1f5 @ 92%: the Latte ink (#4c4f69) needs a near-solid light
+  // backing to clear WCAG AA over the darkest wallpaper pixels; 8% still lets
+  // the photo show through.
+  scrim: "rgba(239,241,245,0.92)",
   surface: "#ccd0da",
-  teal: "#179299",
+  teal: "#006c74",
   text: "#4c4f69",
   white: "#acb0be",
-  yellow: "#df8e1d",
+  yellow: "#984c00",
 }
 
 // Light theme → Latte; dark AND the terminal theme → Mocha. Returns the shared

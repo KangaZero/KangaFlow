@@ -5,6 +5,9 @@
 // No network, no IP lookup, no Node APIs — the output is a pure function of the
 // input so it stays trivially testable and safe in the static export.
 
+import { hexToRgb } from "@/lib/terminal/prompt"
+import { LATTE, MOCHA, type TerminalPalette } from "@/lib/terminal/theme"
+
 export type FastfetchInfo = {
   themeLabel: string // e.g. "terminal (Catppuccin)"
   resolution: string // e.g. "1920x1080"
@@ -82,27 +85,21 @@ type Accents = {
   overlay: Rgb
 }
 
-const MOCHA: Accents = {
-  blue: [137, 180, 250], // #89b4fa
-  lavender: [180, 190, 254], // #b4befe
-  mauve: [203, 166, 247], // #cba6f7
-  overlay: [108, 112, 134], // #6c7086
-  pink: [245, 194, 231], // #f5c2e7
-  sapphire: [116, 199, 236], // #74c7ec
-  teal: [148, 226, 213], // #94e2d5
-  text: [205, 214, 244], // #cdd6f4
-}
+// Derived from the terminal palettes (lib/terminal/theme), the single source
+// of truth, so the banner can never drift from the prompt and menu colours.
+const accentsFrom = (palette: TerminalPalette): Accents => ({
+  blue: hexToRgb(palette.blue),
+  lavender: hexToRgb(palette.lavender),
+  mauve: hexToRgb(palette.mauve),
+  overlay: hexToRgb(palette.overlay),
+  pink: hexToRgb(palette.pink),
+  sapphire: hexToRgb(palette.sapphire),
+  teal: hexToRgb(palette.teal),
+  text: hexToRgb(palette.text),
+})
 
-const LATTE: Accents = {
-  blue: [30, 102, 245], // #1e66f5
-  lavender: [114, 135, 253], // #7287fd
-  mauve: [136, 57, 239], // #8839ef
-  overlay: [156, 160, 176], // #9ca0b0
-  pink: [234, 118, 203], // #ea76cb
-  sapphire: [32, 159, 181], // #209fb5
-  teal: [23, 146, 153], // #179299
-  text: [76, 79, 105], // #4c4f69
-}
+const MOCHA_ACCENTS = accentsFrom(MOCHA)
+const LATTE_ACCENTS = accentsFrom(LATTE)
 
 // Linearly interpolate between two colours; `t` runs 0 → 1.
 const lerp = (from: Rgb, to: Rgb, t: number): Rgb => [
@@ -260,7 +257,7 @@ const paletteRows = (): string[] => {
 // Logo column on the left, info column (title, rule, rows, swatches) on the
 // right, vertically centred against the logo. Returns lines xterm writes as-is.
 export function renderFastfetch(info: FastfetchInfo): string[] {
-  const accents = info.dark ? MOCHA : LATTE
+  const accents = info.dark ? MOCHA_ACCENTS : LATTE_ACCENTS
   const user = "kangazero"
   const host = "kangaflow"
   const title = `${BOLD}${fg(accents.teal)}${user}${RESET}${fg(accents.overlay)}@${RESET}${BOLD}${fg(accents.blue)}${host}${RESET}`
