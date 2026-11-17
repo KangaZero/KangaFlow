@@ -94,7 +94,10 @@ export function SystemStatus({
       />
       <BluetoothIcon
         aria-hidden
-        className={cn("size-3.5", !bluetoothAvailable && "opacity-40")}
+        className={cn(
+          "size-3.5",
+          !bluetoothAvailable && "text-muted-foreground"
+        )}
       />
       {/* Vertical bars: the percentage sits on its own line under the icon. */}
       <span
@@ -126,7 +129,7 @@ export function SystemStatus({
             aria-hidden
             className={cn(
               "size-4.25",
-              !known && "opacity-40",
+              !known && "text-muted-foreground",
               level === "low" && "text-destructive"
             )}
           />

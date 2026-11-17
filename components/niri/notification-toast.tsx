@@ -33,7 +33,7 @@ const TYPE_ICON: Record<
 
 const TYPE_COLOR: Record<NotificationType, string> = {
   alarm: "text-rose-500",
-  info: "text-primary",
+  info: "text-primary-ink",
   stopwatch: "text-amber-500",
   success: "text-emerald-500",
   timer: "text-sky-500",

@@ -311,7 +311,7 @@ export function MediaPlayer() {
         <div className="flex flex-col gap-3 p-4">
           {/* Track meta */}
           <div className="flex items-center gap-3">
-            <div className="bg-primary/10 text-primary relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md">
+            <div className="bg-primary/10 text-primary-ink relative flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md">
               {track.coverSrc ? (
                 // biome-ignore lint/performance/noImgElement: static export — next/image optimization unavailable
                 <img

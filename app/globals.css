@@ -24,6 +24,13 @@
    runtime-concatenated class never could (Tailwind scans source text).
    The tip lives in a 15px zone on the trigger-facing side (the component pads
    that side by 25px); top/bottom and left/right are exact mirrors. */
+/* Text on environment glass: swap the page's muted ink for the glass one (see
+   --glass-muted-foreground). Everything inside inherits it, including shadcn
+   primitives that read --muted-foreground. */
+@utility glass-ink {
+  --muted-foreground: var(--glass-muted-foreground);
+}
+
 @utility tooltip-shape-bottom {
   /* tip on top edge → tooltip sits below the trigger */
   clip-path: polygon(
@@ -138,6 +145,13 @@
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: var(--primary);
+  /* The accent as text/icon colour. Resolved per element (inline theme), so it
+     follows the env accent override on <main> as well as the theme. */
+  --color-primary-ink: color-mix(
+    in oklch,
+    var(--primary),
+    var(--foreground) var(--primary-ink-shift)
+  );
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-tooltip-shadow: var(--tooltip-shadow);
@@ -249,6 +263,24 @@
      drive every button/border). Cascades to .dark/.terminal below. */
   --line-accent: oklch(0.5 0.15 163);
   --line-marker: oklch(0.62 0.008 60);
+  /* Environment glass (components/niri/glass.ts + the bar, launcher and bar
+     popovers). Glass sits over arbitrary photo wallpapers, so its text has to
+     clear WCAG AA against the darkest photo pixel the blur lets through, not
+     against the page. Light: dark ink on white glass, so the fill must stay
+     dense (80% white over pure black is ~#ccc) and the muted ink must be
+     deeper than the page's (which only clears 4.5:1 on solid white).
+     --glass-muted-foreground is swapped in for --muted-foreground by the
+     `glass-ink` utility. --primary-ink-shift pulls the accent toward the
+     foreground when the accent is used as text/icon colour (text-primary-ink):
+     enough to clear AA on glass, still reading as the accent. */
+  --glass-fill: color-mix(in oklch, var(--card) 80%, transparent);
+  --glass-fill-soft: color-mix(in oklch, var(--card) 88%, transparent);
+  --glass-muted-foreground: oklch(0.4 0.013 58);
+  --primary-ink-shift: 30%;
+  /* Tint over the xterm viewport. Light: none — the Latte scrim behind the
+     canvas is the backing, and a black tint greyed it down under the dark
+     ink. Dark/terminal: a 20% shade under the light ink. */
+  --xterm-viewport-tint: transparent;
 }
 
 .dark {
@@ -301,6 +333,15 @@
      the marker proximity highlight (color-mix in LineSidebar.css). */
   --line-accent: oklch(0.76 0.15 163);
   --line-marker: oklch(0.55 0.01 60);
+  /* Dark glass: light ink over a photo that can be bright (beach leaves), so
+     the fill thickens from 25% to 55% and the muted ink lifts to L=0.87 —
+     together they clear 4.5:1 over the brightest blurred wallpaper areas. The
+     deep accent (L=0.43, a button fill) is pulled halfway to the foreground
+     when used as ink. */
+  --glass-fill: color-mix(in oklch, var(--card) 55%, transparent);
+  --glass-fill-soft: color-mix(in oklch, var(--card) 70%, transparent);
+  --glass-muted-foreground: oklch(0.87 0.01 56.259);
+  --primary-ink-shift: 50%;
 }
 
 /*
@@ -378,6 +419,20 @@
   /* Green #a6e3a1 */
   --line-marker: var(--border);
   /* Surface1 #45475a */
+  --glass-fill: color-mix(in oklch, var(--card) 25%, transparent);
+  --glass-fill-soft: color-mix(in oklch, var(--card) 60%, transparent);
+  /* Subtext1 — one Mocha step brighter than --muted-foreground (Subtext0), so
+     muted text on glass clears AA over the bright parts of the photo. */
+  --glass-muted-foreground: #bac2de;
+  /* Mocha Green is already a light ink: no shift. */
+  --primary-ink-shift: 0%;
+}
+
+/* Dark ink themes shade the xterm viewport (see --xterm-viewport-tint).
+   Pinned to <html>: xterm's own root element also carries a `terminal` class,
+   so a bare `.terminal` rule would match inside the terminal too. */
+:root:is(.dark, .terminal) {
+  --xterm-viewport-tint: rgb(0 0 0 / 0.2);
 }
 
 @layer base {
@@ -478,7 +533,7 @@
 /* xterm */
 /* This is enable a semi-transparent bg (Wow very informative m8) */
 .xterm-viewport {
-  background-color: rgba(0, 0, 0, 0.2) !important;
+  background-color: var(--xterm-viewport-tint) !important;
 }
 
 /* To not show the scrollbars rendered by xterm */

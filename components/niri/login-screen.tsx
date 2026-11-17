@@ -401,7 +401,7 @@ export function LoginScreen({
       : ""
 
   const inputClass =
-    "flex-1 bg-transparent font-mono text-sm text-foreground outline-none placeholder:text-muted-foreground/60 caret-primary"
+    "flex-1 bg-transparent font-mono text-sm text-foreground outline-none placeholder:text-muted-foreground caret-primary"
   const atLock = phase === "lock"
   const timeLabel =
     now === null
@@ -472,7 +472,9 @@ export function LoginScreen({
             className={cn(
               "absolute inset-0 transition-[backdrop-filter,background-color] duration-700",
               atLock
-                ? "bg-gradient-to-b from-black/40 via-black/0 to-black/60"
+                ? // Dense enough that the white clock/date/hint clear WCAG AA
+                  // over the brightest wallpaper (the light-theme cat photo).
+                  "bg-gradient-to-b from-black/60 via-black/45 to-black/70"
                 : "bg-black/45 backdrop-blur-2xl backdrop-saturate-110"
             )}
           />
@@ -487,13 +489,11 @@ export function LoginScreen({
             <div className="text-[clamp(64px,11vw,132px)] leading-none font-extralight tracking-tight tabular-nums">
               {timeLabel}
             </div>
-            <div className="mt-2.5 text-[15px] font-medium opacity-85">
-              {dateLabel}
-            </div>
+            <div className="mt-2.5 text-[15px] font-medium">{dateLabel}</div>
           </div>
           <p
             className={cn(
-              "absolute bottom-[9%] left-1/2 -translate-x-1/2 text-[13px] tracking-[0.08em] text-white/75 transition-opacity [text-shadow:0_1px_12px_rgb(0_0_0/0.6)]",
+              "absolute bottom-[9%] left-1/2 -translate-x-1/2 text-[13px] tracking-[0.08em] text-white transition-opacity [text-shadow:0_1px_12px_rgb(0_0_0/0.6)]",
               atLock ? !reduced && "login-hint" : "opacity-0"
             )}
           >
@@ -544,7 +544,7 @@ export function LoginScreen({
               <motion.div
                 animate={{ opacity: 1, scale: phase === "success" ? 0 : 1 }}
                 className={cn(
-                  "bg-card/60 text-foreground flex h-full w-full flex-col justify-center rounded-[18px] border px-7 py-6 backdrop-blur-xl",
+                  "glass-ink text-foreground flex h-full w-full flex-col justify-center rounded-[18px] border bg-(--glass-fill) px-7 py-6 backdrop-blur-xl",
                   "shadow-[inset_0_1px_0_rgb(255_255_255/0.2),0_2px_6px_rgb(0_0_0/0.2),0_40px_80px_-30px_rgb(0_0_0/0.8)]",
                   deniedActive
                     ? "border-destructive/60"
@@ -654,7 +654,7 @@ export function LoginScreen({
                           <BlinkingCaret />
                         ) : null}
                         {password.length === 0 ? (
-                          <span className="text-muted-foreground/60 font-mono text-sm">
+                          <span className="text-muted-foreground font-mono text-sm">
                             {translate("environment.login.password")}
                           </span>
                         ) : (
@@ -756,7 +756,7 @@ export function LoginScreen({
                     {translate("environment.login.capsLock")}
                   </span>
                 </div>
-                <p className="text-muted-foreground/50 mt-3 text-center font-mono text-[0.6rem] tracking-[0.2em] uppercase">
+                <p className="text-muted-foreground mt-3 text-center font-mono text-[0.6rem] tracking-[0.2em] uppercase">
                   {translate("environment.login.forceEntry")}
                 </p>
               </motion.div>

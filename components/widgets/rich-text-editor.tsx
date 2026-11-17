@@ -348,7 +348,7 @@ export function RichTextEditor({
           aria-label="Note content"
           aria-multiline="true"
           className={cn(
-            "[&_a]:text-primary min-h-0 flex-1 overflow-auto p-3 text-sm leading-relaxed outline-none [&_a]:underline",
+            "[&_a]:text-primary-ink min-h-0 flex-1 overflow-auto p-3 text-sm leading-relaxed outline-none [&_a]:underline",
             noteLineNumbers !== "off" && "pl-11"
           )}
           contentEditable

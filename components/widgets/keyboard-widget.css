@@ -7,6 +7,15 @@
    frameless overrides below are unlayered so they beat those utilities. */
 
 .osk-root {
+  /* Every surface here is glass: use the glass muted ink (globals.css). */
+  --muted-foreground: var(--glass-muted-foreground);
+  /* Placeholder markers: the destructive hue pulled toward the foreground, so
+     the tiny "?" clears 4.5:1 on a keycap in every theme. */
+  --osk-marker-ink: color-mix(
+    in oklch,
+    var(--destructive) 70%,
+    var(--foreground)
+  );
   --u: min(46px, calc((100vw - 160px) / 14));
   --g: calc(var(--u) * 0.1);
   --split: calc(var(--u) * 1.4);
@@ -109,9 +118,6 @@
   color: var(--muted-foreground);
   cursor: pointer;
 }
-.osk-tab small {
-  opacity: 0.7;
-}
 .osk-tab[aria-pressed="true"] {
   background: var(--primary);
   color: var(--primary-foreground);
@@ -129,9 +135,6 @@
   border-style: solid;
   border-color: var(--primary);
   color: var(--foreground);
-}
-.osk-toggle small {
-  opacity: 0.75;
 }
 
 /* ── halves: one glass slab each, independently draggable ── */
@@ -275,7 +278,7 @@
   color: var(--muted-foreground);
 }
 .osk-key[data-status="placeholder"] .osk-badge {
-  color: var(--destructive);
+  color: var(--osk-marker-ink);
 }
 .osk-key[data-kind="ghost"] {
   display: none;
@@ -303,15 +306,13 @@
   border-radius: 999px;
   font-size: 10px;
   color: var(--muted-foreground);
-  background: color-mix(in oklch, var(--card) 70%, transparent);
+  background: var(--glass-fill);
   backdrop-filter: blur(16px);
   pointer-events: auto;
 }
-.osk-foot-placeholder {
-  color: var(--destructive);
-}
+.osk-foot-placeholder,
 .osk-foot-pending {
-  color: var(--destructive);
+  color: var(--osk-marker-ink);
 }
 .osk-flags {
   display: flex;

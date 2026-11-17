@@ -77,7 +77,7 @@ function AlarmRinging({
           role="alertdialog"
           transition={SPRING_TAP}
         >
-          <div className="bg-primary/15 text-primary relative grid size-13 place-items-center rounded-full">
+          <div className="bg-primary/15 text-primary-ink relative grid size-13 place-items-center rounded-full">
             <span aria-hidden className="alarm-halo" />
             <span aria-hidden className="alarm-halo" />
             <motion.span
@@ -580,7 +580,7 @@ export function AlarmWidget(): React.JSX.Element {
               <BellIcon
                 className={cn(
                   "text-muted-foreground shrink-0 transition-colors",
-                  firing != null && "text-primary"
+                  firing != null && "text-primary-ink"
                 )}
                 ref={bellRef}
                 size={20}

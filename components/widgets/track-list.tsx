@@ -84,7 +84,9 @@ export const TrackList = memo(function TrackList({
                         <span
                           className={cn(
                             "ml-auto shrink-0 font-mono text-[10px] tabular-nums",
-                            isActive ? "text-primary" : "text-muted-foreground"
+                            isActive
+                              ? "text-primary-ink"
+                              : "text-muted-foreground"
                           )}
                         >
                           {formatSecondsToMMSS(t.duration)}
@@ -117,7 +119,7 @@ export const TrackList = memo(function TrackList({
                     className={cn(
                       "relative mr-1 flex size-7 shrink-0 items-center justify-center rounded-lg opacity-100 transition-opacity",
                       isActive
-                        ? "text-primary hover:text-foreground"
+                        ? "text-primary-ink hover:text-foreground"
                         : "text-muted-foreground hover:text-foreground"
                     )}
                     onClick={(e) => {
@@ -191,7 +193,9 @@ export const TrackList = memo(function TrackList({
                         <span
                           className={cn(
                             "ml-auto shrink-0 font-mono text-[10px] tabular-nums",
-                            isActive ? "text-primary" : "text-muted-foreground"
+                            isActive
+                              ? "text-primary-ink"
+                              : "text-muted-foreground"
                           )}
                         >
                           {formatSecondsToMMSS(t.duration)}
@@ -224,7 +228,7 @@ export const TrackList = memo(function TrackList({
                     className={cn(
                       "relative mr-1 flex size-7 shrink-0 items-center justify-center rounded-lg transition-opacity",
                       isActive
-                        ? "text-primary hover:text-foreground"
+                        ? "text-primary-ink hover:text-foreground"
                         : "text-muted-foreground hover:text-foreground",
                       "opacity-0 group-hover:opacity-100"
                     )}

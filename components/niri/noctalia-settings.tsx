@@ -477,7 +477,7 @@ function SecuritySection(): React.JSX.Element {
   }
 
   const inputClass =
-    "w-full rounded-[10px] border border-foreground/10 bg-foreground/[0.04] px-3 py-2 text-sm outline-none transition-[border-color,box-shadow] focus:border-primary focus:ring-3 focus:ring-primary/25"
+    "w-full rounded-[10px] border border-foreground/10 bg-foreground/[0.04] px-3 py-2 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-muted-foreground focus:border-primary focus:ring-3 focus:ring-primary/25"
 
   return (
     <SettingCard
@@ -486,7 +486,7 @@ function SecuritySection(): React.JSX.Element {
     >
       <p className="text-muted-foreground text-xs">
         {translate("environment.settings.security.status")}{" "}
-        <span className={isSet ? "text-primary" : "text-muted-foreground"}>
+        <span className={isSet ? "text-primary-ink" : "text-muted-foreground"}>
           {isSet
             ? translate("environment.settings.security.statusSet")
             : translate("environment.settings.security.statusOpen")}
@@ -532,7 +532,7 @@ function SecuritySection(): React.JSX.Element {
         {feedback ? (
           <motion.p
             animate={{ opacity: 1, y: 0 }}
-            className={`text-xs ${SECURITY_FEEDBACK[feedback].ok ? "text-primary" : "text-destructive"}`}
+            className={`text-xs ${SECURITY_FEEDBACK[feedback].ok ? "text-primary-ink" : "text-destructive"}`}
             exit={{ opacity: 0 }}
             initial={{ opacity: 0, y: 4 }}
             transition={{ duration: 0.2 }}

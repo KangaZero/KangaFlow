@@ -271,8 +271,11 @@ function OverviewTile({
         type="button"
       />
       {empty ? (
-        <span className="text-muted-foreground/50 pointer-events-none absolute inset-0 flex items-center justify-center text-4xl tracking-[0.3em]">
-          —
+        <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          {/* Glass chip so the empty-workspace mark reads over any wallpaper. */}
+          <span className="glass-ink text-muted-foreground rounded-lg bg-(--glass-fill) px-3 text-4xl tracking-[0.3em] backdrop-blur-md">
+            —
+          </span>
         </span>
       ) : (
         <div
@@ -810,11 +813,15 @@ export function EnvironmentView() {
                 settings.showStartingHint ? (
                 <h1
                   className={cn(
-                    "flex h-full items-center justify-center text-center text-2xl [text-shadow:2px_1px_0_var(--color-sidebar-accent)]",
+                    "flex h-full items-center justify-center text-center text-2xl",
                     overviewLayer && "invisible"
                   )}
                 >
-                  {translate("environment.hint")}
+                  {/* On a glass chip: bare text over a photo wallpaper cannot
+                      hold 3:1 against every pixel in every theme. */}
+                  <span className="glass-ink rounded-xl bg-(--glass-fill) px-4 py-2 backdrop-blur-md [text-shadow:2px_1px_0_var(--color-sidebar-accent)]">
+                    {translate("environment.hint")}
+                  </span>
                 </h1>
               ) : (
                 <motion.div
@@ -833,7 +840,9 @@ export function EnvironmentView() {
                   <AnimatePresence initial={false} mode="popLayout">
                     {tiled.map(({ col, index: ci }, ti) => (
                       <motion.div
-                        animate={{ opacity: ci === focusedCol ? 1 : 0.6, x: 0 }}
+                        // No dimming of unfocused columns: their text has to
+                        // stay AA-readable; the primary border marks focus.
+                        animate={{ opacity: 1, x: 0 }}
                         className="flex flex-col"
                         exit={{ opacity: 0, x: 80 }}
                         // First window (empty workspace) fades in; later ones slide in
@@ -878,7 +887,7 @@ export function EnvironmentView() {
                                   trueGlass
                                     ? "bg-transparent shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_12px_44px_rgba(0,0,0,0.38)]"
                                     : glassy
-                                      ? "bg-card/30 backdrop-blur-md"
+                                      ? "glass-ink bg-(--glass-fill) backdrop-blur-md"
                                       : "bg-card",
                                   isFocused ? "border-primary" : "border-border"
                                 )}
@@ -1085,7 +1094,7 @@ export function EnvironmentView() {
                                       className={cn(
                                         "pointer-events-auto relative flex min-h-0 flex-col overflow-hidden rounded-lg border shadow-xl",
                                         glassy
-                                          ? "bg-card/30 backdrop-blur-md"
+                                          ? "glass-ink bg-(--glass-fill) backdrop-blur-md"
                                           : "bg-card",
                                         winFocused
                                           ? "border-primary"

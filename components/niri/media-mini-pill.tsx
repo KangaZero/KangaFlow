@@ -130,7 +130,7 @@ export function MediaMiniPill({
     return (
       <div
         className={cn(
-          "bg-foreground/6 text-muted-foreground flex items-center gap-1.5 opacity-60",
+          "bg-foreground/6 text-muted-foreground flex items-center gap-1.5",
           vertical ? "flex-col px-0.5 py-1" : "h-7.5 pr-2.5 pl-1"
         )}
         style={{ borderRadius: `${Math.max(barRadius - 3, 6)}px` }}
@@ -198,7 +198,7 @@ export function MediaMiniPill({
             strokeWidth="2"
           />
           <circle
-            className="stroke-primary transition-[stroke-dashoffset] duration-500"
+            className="stroke-primary-ink transition-[stroke-dashoffset] duration-500"
             cx="12"
             cy="12"
             fill="none"
@@ -402,7 +402,7 @@ export function MediaMiniPill({
                   <button
                     aria-label={translate("mediaPlayer.loop")}
                     aria-pressed={isLooping}
-                    className={cn(TRANSPORT, isLooping && "text-primary")}
+                    className={cn(TRANSPORT, isLooping && "text-primary-ink")}
                     onClick={toggleLoop}
                     type="button"
                   >
@@ -420,7 +420,10 @@ export function MediaMiniPill({
                   <button
                     aria-label={translate("mediaPlayer.list")}
                     aria-pressed={isTrackListOpen}
-                    className={cn(TRANSPORT, isTrackListOpen && "text-primary")}
+                    className={cn(
+                      TRANSPORT,
+                      isTrackListOpen && "text-primary-ink"
+                    )}
                     onClick={() => setIsTrackListOpen((v) => !v)}
                     type="button"
                   >

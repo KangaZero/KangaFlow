@@ -428,7 +428,7 @@ export function NoctaliaLauncher(props: {
           <div
             className={cn(
               "flex size-5 shrink-0 items-center justify-center",
-              isActive && "text-primary"
+              isActive && !selected && "text-primary-ink"
             )}
           >
             <Icon
@@ -441,9 +441,7 @@ export function NoctaliaLauncher(props: {
             <span
               className={cn(
                 "truncate text-xs",
-                selected
-                  ? "text-primary-foreground/80"
-                  : "text-muted-foreground"
+                selected ? "text-primary-foreground" : "text-muted-foreground"
               )}
             >
               {sublabel}
@@ -495,7 +493,7 @@ export function NoctaliaLauncher(props: {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             aria-label={translate("environment.launcher.title")}
             aria-modal="true"
-            className="border-border bg-card/90 text-foreground relative z-10 w-[min(32rem,90vw)] overflow-hidden border shadow-2xl backdrop-blur-xl"
+            className="glass-ink border-border bg-card/90 text-foreground relative z-10 w-[min(32rem,90vw)] overflow-hidden border shadow-2xl backdrop-blur-xl"
             exit={{ opacity: 0, scale: 0.96, y: -8 }}
             initial={{ opacity: 0, scale: 0.96, y: -8 }}
             role="dialog"

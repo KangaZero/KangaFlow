@@ -6,12 +6,15 @@
 
 import type { GlassLevel } from "@/components/niri/settings"
 
+// `glass-ink` swaps in the muted ink tuned for text on glass. The glass/soft
+// fills are per-theme tokens (globals.css --glass-fill*): light glass has to be
+// far denser than dark glass for its dark text to clear WCAG AA over a photo.
 const RIM =
-  "border border-white/15 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_12px_44px_rgba(0,0,0,0.38)]"
+  "glass-ink border border-white/15 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.22),0_12px_44px_rgba(0,0,0,0.38)]"
 
 export const GLASS_SURFACE: Record<GlassLevel, string> = {
-  glass: `${RIM} bg-card/25 backdrop-blur-2xl backdrop-saturate-150`,
-  soft: `${RIM} bg-card/60 backdrop-blur-xl backdrop-saturate-150`,
+  glass: `${RIM} bg-(--glass-fill) backdrop-blur-2xl backdrop-saturate-150`,
+  soft: `${RIM} bg-(--glass-fill-soft) backdrop-blur-xl backdrop-saturate-150`,
   solid: `${RIM} bg-card/95 backdrop-blur-sm`,
   // True glass is mostly a WebGL shader surface on windows; the CSS fallback
   // stays as close to fully transparent as readability allows for the panels

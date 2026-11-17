@@ -71,7 +71,7 @@ function BarClock({
         vertical={vertical}
       />
       {vertical ? null : (
-        <span aria-hidden className="mx-px opacity-55">
+        <span aria-hidden className="text-muted-foreground mx-px">
           :
         </span>
       )}
@@ -156,7 +156,7 @@ export function NoctaliaBar(props: {
   return (
     <header
       className={cn(
-        "noctalia-bar text-foreground text-xs backdrop-blur-md backdrop-saturate-150",
+        "noctalia-bar glass-ink text-foreground text-xs backdrop-blur-md backdrop-saturate-150",
         isV
           ? "flex h-full w-11 flex-col items-center justify-between gap-3 py-2"
           : // 1fr · auto · 1fr keeps the workspace cluster centred whatever the
@@ -178,7 +178,10 @@ export function NoctaliaBar(props: {
         >
           <button
             aria-label={translate("environment.bar.launcher")}
-            className={cn(BAR_ICON_BUTTON, "text-primary hover:text-primary")}
+            className={cn(
+              BAR_ICON_BUTTON,
+              "text-primary-ink hover:text-primary-ink"
+            )}
             onClick={onLauncher}
             type="button"
           >
@@ -189,7 +192,6 @@ export function NoctaliaBar(props: {
           className={cn(
             "text-muted-foreground truncate",
             isV ? "max-h-30 [writing-mode:vertical-rl]" : "max-w-55",
-            activeWindowTitle === "" && "opacity-50",
             title.length > TITLE_FADE_FROM && "bar-title-fade text-clip"
           )}
           data-vertical={isV}
