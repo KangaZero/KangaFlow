@@ -35,6 +35,7 @@ import {
 } from "react-icons/si"
 import accentureMark from "@/assets/accenture-mark.svg"
 import usydCrest from "@/assets/usyd-crest.svg"
+import { DecryptRole } from "@/components/decrypt-role"
 import { HeroAvatar } from "@/components/hero-avatar"
 import { LocaleTransition } from "@/components/locale-transition"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
@@ -610,7 +611,7 @@ export function AboutSection() {
               <RubyName isJapanese={locale === "ja"} />
               <LocaleTransition className="flex w-full flex-col items-center gap-6">
                 <p className="text-muted-foreground text-sm">
-                  {person.role} @ {person.workplace}
+                  <DecryptRole /> @ {person.workplace}
                 </p>
                 <div className="flex flex-col gap-2 text-sm/relaxed text-pretty">
                   {person.intro.map((line) => (

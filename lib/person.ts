@@ -52,6 +52,9 @@ export const person = {
   ],
 
   role: "Frontend Developer",
+  // Hero easter egg: hovering/clicking the first word of `role` decrypts it
+  // into this, upside down.
+  roleFlip: "Backend",
 
   // Romaji + furigana (+ optional kanji) per name part. The About header fades
   // the furigana in on the Japanese locale and out on English.
