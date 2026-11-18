@@ -216,7 +216,7 @@ function TimelineEntry({
     >
       <span
         aria-hidden
-        className="timeline-marker absolute top-[72px] -left-[27px] size-[11px] md:-left-[37px]"
+        className="timeline-marker absolute top-[72px] -left-[26px] size-[11px] md:-left-[36px]"
         data-passed={passed}
       />
       <span
