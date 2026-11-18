@@ -118,7 +118,11 @@
 }
 
 @theme inline {
-  --font-heading: var(--font-mono);
+  /* JetBrains Mono has no kana/kanji, so Japanese in headings fell through to
+     whatever the OS had (Yu Gothic, Hiragino, or boxes). Fallback is per
+     character: Latin stays mono, Japanese takes the dot-matrix DotGothic16
+     already loaded for the header status. */
+  --font-heading: var(--font-mono), var(--font-heading-ja);
   --font-mono: var(--font-mono);
   --font-serif: var(--font-serif-latin), var(--font-serif-ja), serif;
   --color-sidebar-ring: var(--sidebar-ring);
