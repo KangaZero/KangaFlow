@@ -53,7 +53,7 @@
     "lint": "biome ci .",
     "start": "next start",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit --incremental false"
   },
   "type": "module",
   "version": "0.0.1"

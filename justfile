@@ -21,9 +21,12 @@ fix:
 lint:
     pnpm exec biome ci .
 
-# Type-check with the native TypeScript 7 compiler.
+# Type-check with the native TypeScript 7 compiler. `--incremental false`:
+# tsconfig's `incremental: true` (for next's builds) makes a plain `--noEmit`
+# trust tsconfig.tsbuildinfo, and TS7 then missed errors in files that depend
+# on a changed type (a false green). CI starts clean, so this only bit locally.
 typecheck:
-    pnpm exec tsc --noEmit
+    pnpm exec tsc --noEmit --incremental false
 
 # Run the test suite once (non-watch).
 test:

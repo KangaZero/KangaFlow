@@ -42,7 +42,7 @@ jobs:
         run: pnpm exec biome ci .
 
       - name: Type check
-        run: pnpm exec tsc --noEmit
+        run: pnpm exec tsc --noEmit --incremental false
 
       - name: Test
         run: pnpm exec vitest run
