@@ -455,6 +455,7 @@ const en = {
       "Play a quiet deep-sea soundscape while the dark theme is on.",
     animation: "Animations",
     animationSystem: "System",
+    capturePrompt: "Press a key combo…  Esc to cancel",
     currentLabel: "Current",
     description: "Rebind keyboard shortcuts. Changes save automatically.",
     enableVim: "Enable vim keybindings in text inputs",
@@ -463,7 +464,17 @@ const en = {
       empty: "Set a key for this shortcut.",
       noModifier: "Add a modifier so this doesn't fire while typing.",
     },
+    errorTag: "ERR",
     keyLabel: "Key",
+    legend: {
+      back: "Close",
+      change: "Change",
+      move: "Move",
+      select: "Select",
+      tab: "Tab",
+    },
+    menuTitle: "Settings",
+    nekoToggle: "Toggle neko",
     off: "Off",
     on: "On",
     resetToDefaults: "Reset to defaults",
@@ -474,6 +485,12 @@ const en = {
     storageUnavailable:
       "Changes apply right away but will be lost on reload. Private browsing or a blocked-storage setting usually causes this.",
     storageUnavailableTitle: "This browser is blocking storage",
+    tabs: {
+      audio: "Audio",
+      controls: "Controls",
+      display: "Display",
+      system: "System",
+    },
     title: "Keyboard shortcuts",
   },
   terminal: {

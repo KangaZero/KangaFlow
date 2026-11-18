@@ -33,6 +33,11 @@ export const SFX_NAMES = [
   "alarm",
   "alarm-dismiss",
   "boop",
+  // Settings pause menu: cursor tick, tab page, open and close.
+  "menu-move",
+  "menu-tab",
+  "menu-open",
+  "menu-close",
   // Login (recipes ready; wired by the login overhaul port).
   "lock-wake",
   "denied",
@@ -83,6 +88,10 @@ export const SFX_META = {
   denied: { category: "login", minIntervalMs: 300, motion: false },
   "error-soft": { category: "ui", minIntervalMs: 250, motion: false },
   "lock-wake": { category: "login", minIntervalMs: 800, motion: false },
+  "menu-close": { category: "ui", minIntervalMs: 150, motion: false },
+  "menu-move": { category: "ui", minIntervalMs: 30, motion: false },
+  "menu-open": { category: "ui", minIntervalMs: 300, motion: false },
+  "menu-tab": { category: "ui", minIntervalMs: 60, motion: false },
   notify: {
     category: "environment",
     group: "arrival",
@@ -323,6 +332,36 @@ export const SFX_RECIPES: Record<SfxName, (options: SfxOptions) => SfxPlan> = {
       },
     ],
     wet: 0.5,
+  }),
+  // Resume: the same run falling, with a soft landing thud.
+  "menu-close": () => ({
+    events: [
+      { at: 0, dur: 0.14, from: 3000, gain: 0.025, kind: "swoosh", to: 600 },
+      ...run("crystal", 0, [18, 14, 11], 0.035, 0.3, 0.03),
+      { at: 0.1, f: 200, gain: 0.05, kind: "thud" },
+    ],
+    wet: 0.3,
+  }),
+  // A dry plink per cursor step: short and quiet, so holding j stays pleasant.
+  "menu-move": () => ({
+    events: [note("plink", 0, 9, 0.05, 0.035)],
+    wet: 0.08,
+  }),
+  // Pause in: a rising sweep and a four-note crystal run.
+  "menu-open": () => ({
+    events: [
+      { at: 0, dur: 0.2, from: 400, gain: 0.03, kind: "swoosh", to: 3200 },
+      ...run("crystal", 0.04, [7, 11, 14, 18], 0.04, 0.4, 0.035),
+    ],
+    wet: 0.35,
+  }),
+  // Tab page: a quick upward swish plus one bright note.
+  "menu-tab": () => ({
+    events: [
+      { at: 0, dur: 0.08, from: 1200, gain: 0.02, kind: "swoosh", to: 2800 },
+      note("celesta", 0.02, 11, 0.25, 0.06),
+    ],
+    wet: 0.2,
   }),
   notify: () => ({
     events: [

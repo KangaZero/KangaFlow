@@ -2,12 +2,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import {
+  bindingFromKeyboardEvent,
   DEFAULT_SHORTCUTS,
   formatShortcut,
   loadShortcuts,
   matchesShortcut,
   type Shortcut,
   saveShortcuts,
+  shortcutProblem,
   shortcutSignature,
 } from "@/lib/shortcuts"
 
@@ -191,5 +193,87 @@ describe("loadShortcuts / saveShortcuts", () => {
   it("falls back to defaults on corrupt storage", () => {
     window.localStorage.setItem("kangaflow:shortcuts", "{ not json")
     expect(loadShortcuts()).toEqual([...DEFAULT_SHORTCUTS])
+  })
+})
+
+describe("bindingFromKeyboardEvent", () => {
+  const key = (
+    k: string,
+    code: string,
+    mods: Partial<
+      Record<"metaKey" | "ctrlKey" | "altKey" | "shiftKey", boolean>
+    > = {}
+  ) => ({
+    altKey: false,
+    code,
+    ctrlKey: false,
+    key: k,
+    metaKey: false,
+    shiftKey: false,
+    ...mods,
+  })
+
+  it("waits while only a modifier is held", () => {
+    expect(
+      bindingFromKeyboardEvent(key("Shift", "ShiftLeft", { shiftKey: true }))
+    ).toBeNull()
+    expect(
+      bindingFromKeyboardEvent(key("Control", "ControlLeft", { ctrlKey: true }))
+    ).toBeNull()
+  })
+
+  it("reads the physical key, so an Option glyph still binds to its key", () => {
+    // macOS: Option+1 produces "¡" in event.key.
+    expect(
+      bindingFromKeyboardEvent(key("¡", "Digit1", { altKey: true }))
+    ).toEqual({
+      character: "1",
+      hasAltOrOptionKey: true,
+      hasMetaOrCtrlKey: false,
+      hasShiftKey: false,
+    })
+    expect(
+      bindingFromKeyboardEvent(key("å", "KeyA", { altKey: true }))?.character
+    ).toBe("a")
+    expect(
+      bindingFromKeyboardEvent(key(",", "Comma", { ctrlKey: true }))?.character
+    ).toBe(",")
+  })
+
+  it("maps Ctrl to the meta-or-ctrl flag off macOS", () => {
+    expect(
+      bindingFromKeyboardEvent(key("k", "KeyK", { ctrlKey: true }))
+        ?.hasMetaOrCtrlKey
+    ).toBe(true)
+  })
+})
+
+describe("shortcutProblem", () => {
+  const all = [...DEFAULT_SHORTCUTS]
+  const at = (action: Shortcut["action"]) =>
+    all.find((s) => s.action === action)
+  it("passes every default binding", () => {
+    for (const s of all) expect(shortcutProblem(s, all)).toBeNull()
+  })
+
+  it("flags empty, bare and duplicate bindings", () => {
+    const home = at("goHome")
+    if (!home) throw new Error("missing default")
+    expect(shortcutProblem({ ...home, character: "" }, all)).toBe("empty")
+    expect(
+      shortcutProblem(
+        { ...home, hasAltOrOptionKey: false, hasMetaOrCtrlKey: false },
+        all
+      )
+    ).toBe("noModifier")
+    const clash = { ...home, character: "k", hasAltOrOptionKey: false }
+    const withClash = all.map((s) => (s.action === "goHome" ? clash : s))
+    expect(shortcutProblem(clash, withClash)).toBe("duplicate")
+  })
+
+  it("allows bare keys for actions that are bare by design", () => {
+    const hints = at("toggleHints")
+    if (!hints) throw new Error("missing default")
+    expect(shortcutProblem(hints, all)).toBeNull()
   })
 })

@@ -462,6 +462,7 @@ const ja = {
     ambienceHint: "ダークテーマのあいだ、深海の環境音を静かに流します。",
     animation: "アニメーション",
     animationSystem: "システム",
+    capturePrompt: "新しいキーを押してください…　Esc で取消",
     currentLabel: "現在",
     description: "ショートカットを再設定できます。変更は自動保存されます。",
     enableVim: "テキスト入力で vim キーバインドを有効化",
@@ -470,7 +471,17 @@ const ja = {
       empty: "このショートカットにキーを設定してください。",
       noModifier: "入力中の誤爆を防ぐため修飾キーを追加してください。",
     },
+    errorTag: "エラー",
     keyLabel: "キー",
+    legend: {
+      back: "閉じる",
+      change: "変更",
+      move: "移動",
+      select: "決定",
+      tab: "タブ",
+    },
+    menuTitle: "設定",
+    nekoToggle: "ネコの表示切り替え",
     off: "オフ",
     on: "オン",
     resetToDefaults: "デフォルトに戻す",
@@ -481,6 +492,12 @@ const ja = {
     storageUnavailable:
       "変更はすぐに反映されますが、再読み込みすると失われます。プライベートブラウジングやストレージのブロック設定が原因の場合がほとんどです。",
     storageUnavailableTitle: "このブラウザではストレージがブロックされています",
+    tabs: {
+      audio: "サウンド",
+      controls: "操作",
+      display: "表示",
+      system: "システム",
+    },
     title: "キーボードショートカット",
   },
   terminal: {

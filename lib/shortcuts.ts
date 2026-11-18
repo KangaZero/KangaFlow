@@ -168,22 +168,97 @@ export function shortcutSignature(shortcut: Shortcut): string {
 // triggers the binding — the produced `event.key` there is a different glyph.
 // Letters intentionally return null: they stay character-based (vim convention),
 // so the key labelled "t" works regardless of physical position.
+const PUNCTUATION_CODE: Readonly<Record<string, string>> = {
+  "-": "Minus",
+  ",": "Comma",
+  ";": "Semicolon",
+  ".": "Period",
+  "'": "Quote",
+  "[": "BracketLeft",
+  "]": "BracketRight",
+  "/": "Slash",
+  "\\": "Backslash",
+  "`": "Backquote",
+  "=": "Equal",
+}
+
 function physicalCodeFor(char: string): string | null {
   if (/^\d$/.test(char)) return `Digit${char}`
-  const PUNCTUATION_CODE: Record<string, string> = {
-    "-": "Minus",
-    ",": "Comma",
-    ";": "Semicolon",
-    ".": "Period",
-    "'": "Quote",
-    "[": "BracketLeft",
-    "]": "BracketRight",
-    "/": "Slash",
-    "\\": "Backslash",
-    "`": "Backquote",
-    "=": "Equal",
-  }
   return PUNCTUATION_CODE[char] ?? null
+}
+
+/** The character a physical key stands for: the inverse of physicalCodeFor. */
+function characterForCode(code: string): string | null {
+  const digit = /^Digit(\d)$/.exec(code)?.[1]
+  if (digit) return digit
+  const letter = /^Key([A-Z])$/.exec(code)?.[1]
+  if (letter) return letter.toLowerCase()
+  const punctuation = Object.entries(PUNCTUATION_CODE).find(
+    ([, physical]) => physical === code
+  )
+  return punctuation?.[0] ?? null
+}
+
+const MODIFIER_KEYS: ReadonlySet<string> = new Set([
+  "Alt",
+  "AltGraph",
+  "Control",
+  "Meta",
+  "OS",
+  "Shift",
+])
+
+export type ShortcutBinding = Omit<Shortcut, "action">
+
+/**
+ * The binding a key press describes, for "press the new combination" capture.
+ * Null while only a modifier is held (the user is still building the combo).
+ *
+ * Reads the PHYSICAL key first: on macOS, ⌥ turns `event.key` into a symbol
+ * (⌥1 → "¡"), which would never match again. Falling back to `event.key` keeps
+ * keys outside the map (letters on unusual layouts) working.
+ */
+export function bindingFromKeyboardEvent(
+  event: Pick<
+    KeyboardEvent,
+    "key" | "code" | "metaKey" | "ctrlKey" | "altKey" | "shiftKey"
+  >
+): ShortcutBinding | null {
+  if (MODIFIER_KEYS.has(event.key)) return null
+  const character =
+    characterForCode(event.code) ??
+    ([...event.key].length === 1 ? event.key.toLowerCase() : null)
+  if (character === null) return null
+  return {
+    character,
+    hasAltOrOptionKey: event.altKey,
+    hasMetaOrCtrlKey: IS_MAC ? event.metaKey : event.ctrlKey,
+    hasShiftKey: event.shiftKey,
+  }
+}
+
+export type ShortcutProblem = "empty" | "noModifier" | "duplicate"
+
+/**
+ * Why a binding is unusable, or null. An empty key disables it; a bare key
+ * would fire mid-typing (except actions that are bare by design); and two
+ * identical combinations would both fire on one press.
+ */
+export function shortcutProblem(
+  shortcut: Shortcut,
+  all: readonly Shortcut[]
+): ShortcutProblem | null {
+  if (shortcut.character === "") return "empty"
+  if (
+    !(shortcut.hasMetaOrCtrlKey || shortcut.hasAltOrOptionKey) &&
+    !BARE_KEY_ACTIONS.has(shortcut.action)
+  )
+    return "noModifier"
+  const signature = shortcutSignature(shortcut)
+  const sharing = all.filter(
+    (other) => other.character !== "" && shortcutSignature(other) === signature
+  )
+  return sharing.length > 1 ? "duplicate" : null
 }
 
 export function matchesShortcut(
