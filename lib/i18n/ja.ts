@@ -114,6 +114,7 @@ const ja = {
       recent: "新着順",
       set: "番号順",
     },
+    subtitle: "サイトのあちこちに、小さな仕掛け。ごゆっくりどうぞ。",
     toast: {
       dismiss: "閉じる",
       stamp: "解除！",
@@ -506,7 +507,7 @@ const ja = {
         "多機能なNext.jsポートフォリオ。対話型ターミナル、ゲーム化した実績、WebGL背景を搭載。KangaFlowの直接の前身。",
     },
     heading: "タイムライン",
-    subtitle: "これまで公開したポートフォリオを、古い順に。",
+    subtitle: "これまで公開したポートフォリオを、古い順に。ゆっくり味わって。",
     viewer: {
       close: "閉じる",
       expand: "スクリーンショットを拡大",

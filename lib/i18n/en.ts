@@ -115,6 +115,7 @@ const en = {
       recent: "Recent",
       set: "Set #",
     },
+    subtitle: "Small things, hidden around the site. Take your time.",
     toast: {
       dismiss: "Dismiss",
       stamp: "UNLOCKED!",
@@ -500,7 +501,8 @@ const en = {
         "A feature-rich Next.js portfolio with an interactive terminal, gamified achievements, and WebGL backgrounds. KangaFlow's direct predecessor.",
     },
     heading: "Timeline",
-    subtitle: "Every portfolio I've shipped — oldest to newest.",
+    subtitle:
+      "Every portfolio I've shipped, oldest first. Best enjoyed slowly.",
     viewer: {
       close: "Close",
       expand: "Enlarge screenshot",

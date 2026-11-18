@@ -1,5 +1,5 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
-import { DotGothic16, Geist } from "next/font/google"
+import { DotGothic16, Fraunces, Geist, Shippori_Mincho } from "next/font/google"
 import localFont from "next/font/local"
 
 import "./globals.css"
@@ -29,6 +29,24 @@ const dotGothic = DotGothic16({
   weight: "400",
 })
 
+// Page-header subtitles: a light italic serif against the heavy mono title.
+// Fraunces is variable (wght + opsz), so one file covers every size/weight.
+const fraunces = Fraunces({
+  axes: ["opsz"],
+  style: "italic",
+  subsets: ["latin"],
+  variable: "--font-serif-latin",
+})
+
+// Fraunces has no kana/kanji, so the --font-serif stack falls through to this
+// mincho for Japanese. Google ships it as unicode-range slices; preload is off
+// because next/font has no "japanese" subset to preload.
+const shipporiMincho = Shippori_Mincho({
+  preload: false,
+  variable: "--font-serif-ja",
+  weight: "400",
+})
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,7 +59,9 @@ export default function RootLayout({
         fontSans.variable,
         "font-mono",
         jetbrainsMono.variable,
-        dotGothic.variable
+        dotGothic.variable,
+        fraunces.variable,
+        shipporiMincho.variable
       )}
       lang="en"
       suppressHydrationWarning

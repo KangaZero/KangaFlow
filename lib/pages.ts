@@ -77,3 +77,27 @@ export function isPageName(value: string): value is PageName {
 export function pageByName(name: string): PageLink | undefined {
   return isPageName(name) ? PAGE[name] : undefined
 }
+
+/**
+ * The order pages appear in the header dock and footer nav. Typed against
+ * PageName, so a renamed or removed page fails the build instead of linking
+ * nowhere. The page-header eyebrow ("02 / 04") is numbered from this too.
+ */
+export const NAV_ORDER = [
+  "home",
+  "achievements",
+  "timeline",
+  "environment",
+] as const satisfies readonly PageName[]
+
+/**
+ * A page's 1-based place in NAV_ORDER as a zero-padded "NN / NN" label.
+ * Every PageName is in NAV_ORDER today; one added to PAGE but not to the nav
+ * gets `undefined` rather than a fabricated "00".
+ */
+export function navPositionLabel(name: PageName): string | undefined {
+  const index = NAV_ORDER.indexOf(name)
+  if (index === -1) return undefined
+  const pad = (value: number) => String(value).padStart(2, "0")
+  return `${pad(index + 1)} / ${pad(NAV_ORDER.length)}`
+}

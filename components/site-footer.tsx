@@ -11,7 +11,7 @@ import { FaGithub, FaLinkedin } from "react-icons/fa6"
 
 import { Button } from "@/components/ui/button"
 import { withBasePath } from "@/lib/base-path"
-import { hrefForRoute, PAGE, type PageName } from "@/lib/pages"
+import { hrefForRoute, NAV_ORDER, PAGE } from "@/lib/pages"
 import { person } from "@/lib/person"
 import { useAchievements } from "@/providers/achievements-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -51,15 +51,6 @@ function useGithubFollowers(username: string) {
   return followers
 }
 
-// Same order as the header dock. Typed against PageName, so a renamed or
-// removed page fails the build here instead of linking nowhere.
-const FOOTER_PAGES = [
-  "home",
-  "achievements",
-  "timeline",
-  "environment",
-] as const satisfies readonly PageName[]
-
 export function SiteFooter() {
   const year = new Date().getFullYear()
   const followers = useGithubFollowers(person.githubUsername)
@@ -78,7 +69,7 @@ export function SiteFooter() {
 
         <nav aria-label={translate("nav.footer")}>
           <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-            {FOOTER_PAGES.map((name) => (
+            {NAV_ORDER.map((name) => (
               <li key={name}>
                 <Link
                   className="hover:text-foreground focus-visible:text-foreground transition-colors"

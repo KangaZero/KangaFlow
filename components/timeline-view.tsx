@@ -17,6 +17,7 @@ import {
   ScrollProgressProvider,
 } from "@/components/animate-ui/primitives/animate/scroll-progress"
 import { LocaleTransition } from "@/components/locale-transition"
+import { PageHeader } from "@/components/page-header"
 import { TimelineLinks } from "@/components/timeline-links"
 import {
   PORTFOLIOS,
@@ -98,16 +99,11 @@ export function TimelineView() {
       </ScrollProgressProvider>
 
       <div className="mx-auto max-w-6xl px-6 pt-16 pb-20 md:px-10">
-        <header className="mb-12">
-          <LocaleTransition>
-            <h1 className="font-heading text-5xl leading-[0.9] font-extrabold tracking-tight sm:text-7xl">
-              {translate("timeline.heading")}
-            </h1>
-            <p className="text-muted-foreground mt-3 max-w-[52ch] text-sm">
-              {translate("timeline.subtitle")}
-            </p>
-          </LocaleTransition>
-        </header>
+        <PageHeader
+          page="timeline"
+          subtitle={translate("timeline.subtitle")}
+          title={translate("timeline.heading")}
+        />
 
         <div className="grid gap-9 md:grid-cols-[70px_minmax(0,1fr)]">
           <nav

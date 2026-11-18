@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/animate-ui/components/radix/dialog"
+import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { getAchievementLabels } from "@/lib/achievement-labels"
@@ -30,15 +31,6 @@ import { COLUMN_OPTIONS } from "@/lib/globalStates"
 import { useAchievements } from "@/providers/achievements-provider"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
-
-const titleContainer = {
-  hidden: {},
-  show: { transition: { delayChildren: 0.1, staggerChildren: 0.05 } },
-}
-const titleChar = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 },
-}
 
 export function AchievementsView() {
   const { achievements } = useAchievements()
@@ -101,23 +93,13 @@ export function AchievementsView() {
     : ""
 
   return (
-    <main className="mx-auto flex min-h-svh max-w-5xl flex-col gap-6 p-6">
-      <motion.h1
-        animate="show"
-        className="flex text-2xl font-medium"
-        initial="hidden"
-        variants={titleContainer}
-      >
-        {Array.from(heading).map((char, index) => (
-          <motion.span
-            // biome-ignore lint/suspicious/noArrayIndexKey: characters are positional; index is the stable identity here.
-            key={`${char}-${index}`}
-            variants={titleChar}
-          >
-            {char === " " ? " " : char}
-          </motion.span>
-        ))}
-      </motion.h1>
+    <main className="mx-auto flex min-h-svh max-w-6xl flex-col gap-6 px-6 pt-16 pb-6 md:px-10">
+      <PageHeader
+        className="mb-6"
+        page="achievements"
+        subtitle={translate("achievements.subtitle")}
+        title={heading}
+      />
 
       <section className="flex flex-col gap-4">
         <AchievementsProgress className="max-w-sm" />
