@@ -15,7 +15,8 @@ import { useLocale } from "@/providers/locale-provider"
 // would be a fresh identity every render and rebuild the cat each time.
 export function Neko() {
   const { translate } = useLocale()
-  const { animationPref, onekoEnabled, onekoFollowCursor } = useGlobalStates()
+  const { animationPref, onekoEnabled, onekoFollowCursor, onekoInverted } =
+    useGlobalStates()
   // Same resolution the terminal's reduced-motion warning uses: the site's
   // animation preference first, then the OS setting.
   const reduceMotion = isReducedMotion(animationPref, useReducedMotion())
@@ -36,6 +37,15 @@ export function Neko() {
     })
     return () => neko.destroy()
   }, [messages, onekoEnabled, onekoFollowCursor, reduceMotion])
+
+  // The settings-title easter egg summons a "negative" neko. Flagged on <html>
+  // so a single CSS rule (globals.css) inverts the element Oneko appends to
+  // <body>; no prop needs threading into the framework-agnostic class.
+  useEffect(() => {
+    const inverted = onekoEnabled && onekoInverted
+    document.documentElement.toggleAttribute("data-oneko-inverted", inverted)
+    return () => document.documentElement.removeAttribute("data-oneko-inverted")
+  }, [onekoEnabled, onekoInverted])
 
   return null
 }

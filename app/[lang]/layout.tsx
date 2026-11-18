@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
-
 import { AchievementToast } from "@/components/achievement-toast"
 import { HintOverlay } from "@/components/hint-overlay"
+import { Neko } from "@/components/neko"
 import { SettingsDialog } from "@/components/settings-dialog"
 import { SfxSync } from "@/components/sfx-sync"
 import { ShortcutDispatcher } from "@/components/shortcut-dispatcher"
@@ -60,6 +60,9 @@ export default async function LangLayout({
                 <WidgetManagement />
                 <AchievementToast />
                 <SfxSync />
+                {/* Global: the settings-title N (and the terminal's `oneko`)
+                    summon the cat on every page, not just the environment. */}
+                <Neko />
               </div>
             </AchievementsProvider>
           </NotificationsProvider>

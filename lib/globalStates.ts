@@ -105,6 +105,9 @@ export type GlobalStatesContextValue = {
   setOnekoEnabled: (on: boolean) => void
   onekoFollowCursor: boolean
   setOnekoFollowCursor: (on: boolean) => void
+  /** The settings-title easter egg summons an inverted (white) neko. */
+  onekoInverted: boolean
+  setOnekoInverted: (on: boolean) => void
 }
 
 export const ANIMATION_PREFS = ["system", "on", "off"] as const

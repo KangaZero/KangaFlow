@@ -92,6 +92,7 @@ function loadBoolean(key: string, fallback: boolean): boolean {
 
 const ONEKO_ENABLED_STORAGE_KEY = "kangaflow:onekoEnabled"
 const ONEKO_FOLLOW_CURSOR_STORAGE_KEY = "kangaflow:onekoFollowCursor"
+const ONEKO_INVERTED_STORAGE_KEY = "kangaflow:onekoInverted"
 const DEFAULT_ONEKO_ENABLED = DEFAULT_ONEKO_OPTIONS.isToggledOn
 const DEFAULT_ONEKO_FOLLOW_CURSOR = DEFAULT_ONEKO_OPTIONS.followMouse
 
@@ -316,6 +317,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   noteLineNumbers: "off",
   onekoEnabled: DEFAULT_ONEKO_ENABLED,
   onekoFollowCursor: DEFAULT_ONEKO_FOLLOW_CURSOR,
+  onekoInverted: false,
   setAmbience: () => {},
   setAnimationPref: () => {},
   setColumnCount: () => {},
@@ -338,6 +340,7 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   setNoteLineNumbers: () => {},
   setOnekoEnabled: () => {},
   setOnekoFollowCursor: () => {},
+  setOnekoInverted: () => {},
   setShortcuts: () => {},
   setShowChromeInEnvironment: () => {},
   setSoundEffects: () => {},
@@ -422,6 +425,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [onekoFollowCursor, setOnekoFollowCursor] = useState(
     DEFAULT_ONEKO_FOLLOW_CURSOR
   )
+  const [onekoInverted, setOnekoInverted] = useState(false)
   const [noteLineNumbers, setNoteLineNumbers] = useState<NoteLineNumbers>("off")
   const [isLoggedIn, setIsLoggedIn] = useState<"hidden" | "visible">("hidden")
   const [envSettings, setEnvSettings] =
@@ -441,6 +445,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     setOnekoFollowCursor(
       loadBoolean(ONEKO_FOLLOW_CURSOR_STORAGE_KEY, DEFAULT_ONEKO_FOLLOW_CURSOR)
     )
+    setOnekoInverted(loadBoolean(ONEKO_INVERTED_STORAGE_KEY, false))
     setNoteLineNumbers(loadNoteLineNumbers())
     const loaded = loadEnvSettings()
     setEnvSettings(loaded)
@@ -522,6 +527,15 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (hydrated) {
+      safeLocalStorage.setItem(
+        ONEKO_INVERTED_STORAGE_KEY,
+        String(onekoInverted)
+      )
+    }
+  }, [hydrated, onekoInverted])
+
+  useEffect(() => {
+    if (hydrated) {
       safeLocalStorage.setItem(NOTE_LINE_NUMBERS_STORAGE_KEY, noteLineNumbers)
     }
   }, [hydrated, noteLineNumbers])
@@ -573,6 +587,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       noteLineNumbers,
       onekoEnabled,
       onekoFollowCursor,
+      onekoInverted,
       setAmbience,
       setAnimationPref,
       setColumnCount,
@@ -595,6 +610,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       setNoteLineNumbers,
       setOnekoEnabled,
       setOnekoFollowCursor,
+      setOnekoInverted,
       setShortcuts,
       setShowChromeInEnvironment,
       setSoundEffects,
@@ -615,6 +631,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       noteLineNumbers,
       onekoEnabled,
       onekoFollowCursor,
+      onekoInverted,
       showChromeInEnvironment,
       soundEffects,
       ambience,

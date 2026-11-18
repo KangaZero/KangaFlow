@@ -670,3 +670,10 @@
     opacity: 0;
   }
 }
+
+/* Settings-title easter egg: the summoned neko is a white "negative" cat. One
+   filter on the element lib/oneko appends to <body>. */
+:root[data-oneko-inverted] .oneko {
+  filter: invert(1)
+    drop-shadow(0 0 4px color-mix(in oklch, var(--primary) 70%, transparent));
+}
