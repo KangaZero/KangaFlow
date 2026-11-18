@@ -11,7 +11,7 @@ import { isReducedMotion } from "@/lib/isReducedMotion"
 import { DEFAULT_THEME } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
 
-// The WebGL backgrounds pull heavy deps (ogl / three + postprocessing), so they
+// The WebGL backgrounds pull heavy code (ogl, raw WebGL2 shaders), so they
 // load only when their theme is active — a light-theme visitor never downloads
 // them. BlueSky is pure CSS, so it ships inline.
 const LightRays = dynamic(
@@ -40,7 +40,23 @@ function activeBackground(theme: string | undefined, isReducedMotion: boolean) {
     case "terminal":
       return (
         <Activity mode={isReducedMotion ? "hidden" : "visible"}>
-          <PixelBlast className={FILL} color="#a6e3a1" transparent />
+          {/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+              "Soft glow": the dither with upstream's default bloom (glow 0.4)
+              and edge softness (0.6), picked from a live comparison. No
+              twinkle/drift/intro, and no pointer effects (this layer is
+              pointer-events-none and decorative). */}
+          <PixelBlast
+            className={FILL}
+            color="#a6e3a1"
+            drift={0}
+            enableRipples={false}
+            glow={0.4}
+            hoverEffect="none"
+            intro={false}
+            softness={0.6}
+            transparent
+            twinkle={0}
+          />
         </Activity>
       )
     default:
