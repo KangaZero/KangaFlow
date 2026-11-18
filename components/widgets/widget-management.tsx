@@ -7,42 +7,28 @@ import { CalendarWidget } from "@/components/widgets/calendar-widget"
 import { KeyboardWidget } from "@/components/widgets/keyboard-widget"
 import { MediaPlayer } from "@/components/widgets/media-player"
 import { NotesWidget } from "@/components/widgets/notes-widget"
-import type { AppPath } from "@/lib/globalStates"
+import { pageFromPathname } from "@/lib/pages"
+import { type AvailableWidgetName, widgetsOnPage } from "@/lib/widgets"
 
-export const AVAILABLE_WIDGETS = [
-  { element: MediaPlayer, global: true, name: "media-player" },
-  { element: NotesWidget, global: false, name: "notes" },
-  { element: AlarmWidget, global: false, name: "alarm" },
-  { element: CalendarWidget, global: false, name: "calendar" },
-  { element: KeyboardWidget, global: false, name: "keyboard" },
-] as const satisfies readonly {
-  element: () => JSX.Element | null
-  global: boolean
-  name: string
-}[]
-
-export type AvailableWidgetName = (typeof AVAILABLE_WIDGETS)[number]["name"]
-
-export const WIDGET_NAMES: AvailableWidgetName[] = AVAILABLE_WIDGETS.map(
-  (widget) => widget.name
-)
+// Name → element. A Record over AvailableWidgetName, so a widget added to the
+// registry in lib/widgets without an element here fails the build.
+const WIDGET_ELEMENTS = {
+  alarm: AlarmWidget,
+  calendar: CalendarWidget,
+  keyboard: KeyboardWidget,
+  "media-player": MediaPlayer,
+  notes: NotesWidget,
+} as const satisfies Record<AvailableWidgetName, () => JSX.Element | null>
 
 export function WidgetManagement(): React.JSX.Element {
-  const currentPath = usePathname() as AppPath
-
-  const rest = currentPath
-    .replace(/^\/(?:en|ja)(?=\/|$)/, "")
-    .replace(/\/$/, "")
-
-  const isEnvironment = rest.startsWith("/environment")
+  const page = pageFromPathname(usePathname())
 
   return (
     <>
-      {AVAILABLE_WIDGETS.filter(
-        (widget) => ("global" in widget && widget.global) || isEnvironment
-      ).map(({ name, element: Widget }) => (
-        <Widget key={name} />
-      ))}
+      {widgetsOnPage(page).map((name) => {
+        const Widget = WIDGET_ELEMENTS[name]
+        return <Widget key={name} />
+      })}
     </>
   )
 }

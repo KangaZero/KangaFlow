@@ -12,7 +12,7 @@
 // `AppPath` template type, which is derived from these routes rather than
 // re-listing them.
 
-import type { Locale } from "@/lib/i18n"
+import { isLocale, type Locale } from "@/lib/i18n"
 
 /**
  * The pages, keyed by name.
@@ -100,4 +100,21 @@ export function navPositionLabel(name: PageName): string | undefined {
   if (index === -1) return undefined
   const pad = (value: number) => String(value).padStart(2, "0")
   return `${pad(index + 1)} / ${pad(NAV_ORDER.length)}`
+}
+
+/**
+ * Which page a pathname is on, or undefined for one that is not a page.
+ *
+ * Anchored on the LOCALE segment rather than the start of the string, so it
+ * reads both `usePathname()` ("/en/timeline/") and `location.pathname`, which
+ * in production carries the basePath ("/KangaFlow/en/timeline/"). A regex
+ * anchored at `^/(en|ja)` silently misread every production URL as "not the
+ * environment page".
+ */
+export function pageFromPathname(pathname: string): PageName | undefined {
+  const segments = pathname.split("/").filter((segment) => segment !== "")
+  const localeIndex = segments.findIndex((segment) => isLocale(segment))
+  if (localeIndex === -1) return undefined
+  const route = segments[localeIndex + 1] ?? ""
+  return PAGE_LINKS.find((page) => page.route === route)?.name
 }

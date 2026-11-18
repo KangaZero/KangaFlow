@@ -552,6 +552,21 @@ const en = {
     loading: "Fetching weather…",
     unavailable: "Weather unavailable",
   },
+  webmcp: {
+    // Pill shown while a browser AI agent runs one of the site's tools.
+    activity: "Agent is using",
+    tools: {
+      "kangaflow-achievements": "Achievements",
+      "kangaflow-go-to-page": "Go to page",
+      "kangaflow-language": "Language",
+      "kangaflow-list-pages": "List pages",
+      "kangaflow-profile": "Profile",
+      "kangaflow-show-work-location": "Work location",
+      "kangaflow-theme": "Theme",
+      "kangaflow-timeline": "Timeline",
+      "kangaflow-toggle-widgets": "Widgets",
+    },
+  },
   widgets: {
     alarm: {
       add: "Add alarm",

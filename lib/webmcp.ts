@@ -18,29 +18,53 @@
 // and an agent's language is independent of the site locale. Kept out of i18n on
 // purpose; revisit if a tool result is ever surfaced in the UI.
 
-import {
-  AVAILABLE_WIDGETS,
-  type AvailableWidgetName,
-  WIDGET_NAMES,
-} from "@/components/widgets/widget-management"
-import { isLocale, LOCALES, type Locale } from "@/lib/i18n"
+import type { PortfolioSlug } from "@/components/timeline-portfolios"
+import { getAchievementLabels } from "@/lib/achievement-labels"
+import type { Achievement } from "@/lib/achievements"
+import { isLocale, LOCALES, type Locale, t } from "@/lib/i18n"
 import {
   PAGE_LINKS,
   PAGE_NAMES,
   type PageLink,
+  type PageName,
   type PageRoute,
 } from "@/lib/pages"
+import { person } from "@/lib/person"
 import { isTheme, THEMES, type Theme } from "@/lib/themes"
+import {
+  type AvailableWidgetName,
+  isWidgetName,
+  WIDGET_NAMES,
+  widgetsOnPage,
+} from "@/lib/widgets"
 
-// An MCP result is ALWAYS a list of content blocks discriminated by `type` —
-// never a record keyed by whatever the tool happens to be about. Parameterising
-// this by widget name produced a block shape no agent can read, so the union is
-// the block variants the spec defines and this site actually emits.
-type WebMcpContentBlock = { type: "text"; text: string }
+// What `execute` hands back. The spec takes ANY JSON-serialisable value and
+// gives it to the agent as a JSON string; there is no MCP `content`/`isError`
+// envelope in the core API (frameworks add one, browsers ignore it). So a
+// success is a sentence plus optional structured data, and a recoverable
+// failure is `{ error }`: Chrome's guidance, because a THROWN error reaches
+// the agent as a generic failure with its message dropped.
+// https://developer.chrome.com/docs/modern-web-guidance/guides/webmcp/agentic-javascript-tools
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | readonly JsonValue[]
+  | { readonly [key: string]: JsonValue }
 
-export type WebMcpToolResult<T = never> = {
-  content: T | readonly WebMcpContentBlock[]
-  isError?: boolean
+export type WebMcpToolResult =
+  | { readonly message: string; readonly data?: JsonValue }
+  | { readonly error: string }
+
+/** A successful call: what happened, plus data the agent can reason over. */
+export function toolOk(message: string, data?: JsonValue): WebMcpToolResult {
+  return data === undefined ? { message } : { data, message }
+}
+
+/** A recoverable failure, phrased so the agent can retry without guessing. */
+export function toolError(error: string): WebMcpToolResult {
+  return { error }
 }
 
 // Every tool this site publishes. A literal union, so a typo in a `name` is a
@@ -52,6 +76,9 @@ export const WEBMCP_TOOL_NAMES = [
   "kangaflow-theme",
   "kangaflow-show-work-location",
   "kangaflow-toggle-widgets",
+  "kangaflow-achievements",
+  "kangaflow-profile",
+  "kangaflow-timeline",
 ] as const
 
 // Use good ol document.querySelector !
@@ -60,6 +87,24 @@ export const WEBMCP_INTERACTIVE_ELEMENTS = {
 } as const
 
 export type WebMcpToolName = (typeof WEBMCP_TOOL_NAMES)[number]
+
+export function isWebMcpToolName(value: string): value is WebMcpToolName {
+  return WEBMCP_TOOL_NAMES.some((name) => name === value)
+}
+
+/**
+ * The tool a `toolactivated` / `toolcancel` event is about, or undefined.
+ * Those events carry `toolName`, but they arrive typed as a plain `Event`, and
+ * a name this site never registered is not ours to show; so the field is
+ * checked at runtime rather than cast.
+ */
+export function toolNameOf(event: Event): WebMcpToolName | undefined {
+  if (!("toolName" in event)) return undefined
+  const { toolName } = event
+  return typeof toolName === "string" && isWebMcpToolName(toolName)
+    ? toolName
+    : undefined
+}
 
 // The JSON-Schema subset these tools use. `unknown` here would let a malformed
 // schema reach the agent, where the failure is a tool that is advertised and
@@ -102,6 +147,23 @@ const flagProperties = <const N extends readonly string[]>(
     ])
   ) as Readonly<Record<N[number], SchemaProperty>>
 
+// Hints the browser shows or acts on (spec `ToolAnnotations`). Only the keys
+// the spec defines: MCP's destructiveHint/idempotentHint/openWorldHint are not
+// part of WebMCP. Declare them honestly; agents use them to decide whether a
+// call needs the user's confirmation.
+type WebMcpToolAnnotations = {
+  /** Reads state, changes nothing. */
+  readOnlyHint?: boolean
+  /** The result carries text a third party (or the user) wrote. */
+  untrustedContentHint?: boolean
+  /** Has effects outside the page the user should know about. */
+  consequentialHint?: boolean
+}
+
+// Second argument the browser passes to `execute`: aborted when the agent or
+// user cancels THIS call (distinct from the registration signal).
+export type WebMcpExecuteOptions = { readonly signal: AbortSignal }
+
 // Parameterised by its own argument KEYS. `K` ties together the keys declared
 // in `properties`, the keys `required` may name, and the keys `execute` may
 // destructure — misspell one and it is a type error, where `Record<string,
@@ -113,39 +175,49 @@ const flagProperties = <const N extends readonly string[]>(
 export type WebMcpToolDescriptor<K extends string | readonly string[] = never> =
   {
     name: WebMcpToolName
+    /** Human-readable label for browser UI; `name` is the machine id. */
+    title: string
     description: string
+    annotations?: WebMcpToolAnnotations
     inputSchema: {
       type: "object"
       properties: Readonly<Record<ToolArgKey<K>, SchemaProperty>>
       required?: readonly ToolArgKey<K>[]
-      example?: string
     }
     execute: (
-      args: Readonly<Partial<Record<ToolArgKey<K>, unknown>>>
+      args: Readonly<Partial<Record<ToolArgKey<K>, unknown>>>,
+      options: WebMcpExecuteOptions
     ) => Promise<WebMcpToolResult>
   }
 
-export type ModelContext = {
+// The subset of the spec's `ModelContext` this site uses (getTools/executeTool
+// are for agents, not providers). Hand-written rather than the official
+// `webmcp-types` package: the API is an origin trial that still changes
+// between Chrome releases, and this declaration is generic over each tool's
+// argument keys, which the official `ModelContextTool` (args: object) is not.
+// https://webmachinelearning.github.io/webmcp/
+//
+// An EventTarget: it fires `toolactivated` when an agent starts a call and
+// `toolcancel` when one is cancelled, each with a `toolName`.
+export type ModelContext = EventTarget & {
   registerTool: <K extends string | readonly string[]>(
     tool: WebMcpToolDescriptor<K>,
-    options?: { signal?: AbortSignal }
-  ) => Promise<void>
+    options?: {
+      /** Abort to unregister (the spec has no unregisterTool()). */
+      signal?: AbortSignal
+      /** Extra origins allowed to see the tool; same-origin only otherwise. */
+      exposedTo?: readonly string[]
+    }
+  ) => Promise<undefined>
 }
 
 declare global {
   interface Document {
-    // Present only under the WebMCP origin trial / testing flag.
+    // Present only under the WebMCP origin trial / testing flag, and only in
+    // a secure context.
     readonly modelContext?: ModelContext
   }
 }
-
-export const webMcpToolResultConstructor = (
-  value: string,
-  isError: boolean = false
-): WebMcpToolResult => ({
-  content: [{ text: value, type: "text" }],
-  isError: isError,
-})
 
 // The page a `route` belongs to, matched leniently: an agent asked for "the
 // timeline page" should not fail on the article.
@@ -160,37 +232,51 @@ export function findPage(query: string): PageLink | undefined {
 
 export type NavigateFn = (route: PageRoute) => void
 
+/** A timeline entry as the tools see it: the facts, without the image. */
+export type TimelineEntry = {
+  readonly slug: PortfolioSlug
+  readonly name: string
+  readonly year: string
+  readonly liveUrl: string
+  readonly repoUrl: string
+  readonly current?: boolean
+}
+
 /**
  * What the React layer lends the tools.
  *
- * `currentLocale` is a GETTER, not a value: `buildSiteTools` is called once
- * when the component mounts, so a plain `locale` would be frozen at whatever
- * language the page loaded in and every later answer would be wrong.
+ * Everything that changes is a GETTER, not a value: `buildSiteTools` is
+ * called once when the component mounts, so a plain `locale` or `page` would
+ * be frozen at whatever the page loaded with and every later answer would be
+ * wrong. The DOM and the URL stay on the React side; this file only decides.
  */
 export type SiteToolsBridge = {
   navigate: NavigateFn
+  currentPage: () => PageName | undefined
   currentLocale: () => Locale
   setLocale: (locale: Locale) => void
   currentTheme: () => Theme
   setCurrentTheme: (theme: Theme) => void
   showWorkLocation: () => WebMcpToolResult
-  showWidgetsState: (
-    widgetNames: AvailableWidgetName[]
-  ) => Partial<Record<AvailableWidgetName, boolean>>
-  toggleWidgets: (
-    widgets: Partial<Record<AvailableWidgetName, boolean>>
-  ) => WebMcpToolResult
+  widgetStates: () => Readonly<Record<AvailableWidgetName, boolean>>
+  setWidgetOpen: (widget: AvailableWidgetName, open: boolean) => void
+  achievements: () => readonly Achievement[]
+  /** Static, so a value rather than a getter. */
+  portfolios: readonly TimelineEntry[]
 }
 
 export function buildSiteTools({
+  achievements,
   currentLocale,
+  currentPage,
   currentTheme,
   navigate,
-  setLocale,
-  showWidgetsState,
+  portfolios,
   setCurrentTheme,
+  setLocale,
+  setWidgetOpen,
   showWorkLocation,
-  toggleWidgets,
+  widgetStates,
 }: SiteToolsBridge): readonly [
   listPages: WebMcpToolDescriptor,
   goToPage: WebMcpToolDescriptor<"page">,
@@ -200,16 +286,22 @@ export function buildSiteTools({
   // `typeof WIDGET_NAMES`, not a hand-written union: the widget registry is the
   // source of truth, so adding one there widens this tool's arguments too.
   widgets: WebMcpToolDescriptor<typeof WIDGET_NAMES>,
+  achievementsTool: WebMcpToolDescriptor,
+  profile: WebMcpToolDescriptor,
+  timeline: WebMcpToolDescriptor,
 ] {
   // Declared separately so each gets its OWN argument-key parameter. Returning
   // an array literal collapses both to the default `never`, which silently
   // un-types every `execute` argument — the failure the generic exists to stop.
   const listPages: WebMcpToolDescriptor = {
+    annotations: { readOnlyHint: true },
     description:
       "List the pages of this site that can be navigated to. Read-only.",
-    execute: async () => webMcpToolResultConstructor(PAGE_NAMES.join(", ")),
+    execute: async () =>
+      toolOk(`Pages: ${PAGE_NAMES.join(", ")}.`, [...PAGE_NAMES]),
     inputSchema: { properties: {}, type: "object" },
     name: "kangaflow-list-pages",
+    title: "List pages",
   }
 
   const goToPage: WebMcpToolDescriptor<"page"> = {
@@ -220,17 +312,16 @@ export function buildSiteTools({
       // `page` is `unknown`: it comes from a model, so the guard is the real
       // validation and the type does not pretend otherwise.
       if (typeof page !== "string")
-        return webMcpToolResultConstructor("Which page? Give me a name.", true)
+        return toolError("Which page? Give me a name.")
       const hit = findPage(page)
       // Naming the real options beats "not found" — the model can retry
       // without a second round trip through list-pages.
       if (!hit)
-        return webMcpToolResultConstructor(
-          `No page called "${page}". Available: ${PAGE_NAMES.join(", ")}.`,
-          true
+        return toolError(
+          `No page called "${page}". Available: ${PAGE_NAMES.join(", ")}.`
         )
       navigate(hit.route)
-      return webMcpToolResultConstructor(`Opened the ${hit.name} page.`)
+      return toolOk(`Opened the ${hit.name} page.`)
     },
     inputSchema: {
       properties: {
@@ -243,6 +334,7 @@ export function buildSiteTools({
       type: "object",
     },
     name: "kangaflow-go-to-page",
+    title: "Go to page",
   }
 
   const language: WebMcpToolDescriptor<"language"> = {
@@ -253,18 +345,17 @@ export function buildSiteTools({
       // Omitted means READ — the same contract as every other optional
       // argument here, so an agent does not have to learn two conventions.
       if (next === undefined)
-        return webMcpToolResultConstructor(`The site is in ${currentLocale()}.`)
+        return toolOk(`The site is in ${currentLocale()}.`)
       // `isLocale` is the project's own guard, so "fr" is refused here rather
       // than reaching setLocale and half-applying (URL swapped, no dictionary).
       if (typeof next !== "string" || !isLocale(next))
-        return webMcpToolResultConstructor(
-          `I cannot switch to "${String(next)}". Available: ${LOCALES.join(", ")}.`,
-          true
+        return toolError(
+          `I cannot switch to "${String(next)}". Available: ${LOCALES.join(", ")}.`
         )
       if (next === currentLocale())
-        return webMcpToolResultConstructor(`Already in ${next}.`, true)
+        return toolOk(`Already in ${next}; nothing changed.`)
       setLocale(next)
-      return webMcpToolResultConstructor(`Switched to ${next}.`)
+      return toolOk(`Switched to ${next}.`)
     },
     inputSchema: {
       properties: {
@@ -276,6 +367,7 @@ export function buildSiteTools({
       type: "object",
     },
     name: "kangaflow-language",
+    title: "Language",
   }
 
   const theme: WebMcpToolDescriptor<"theme"> = {
@@ -285,17 +377,15 @@ export function buildSiteTools({
     execute: async ({ theme: next }) => {
       // Omitted means READ — the same contract as every other optional
       // argument here, so an agent does not have to learn two conventions.
-      if (next === undefined)
-        return webMcpToolResultConstructor(`The site is in ${currentTheme()}.`)
+      if (next === undefined) return toolOk(`The site is in ${currentTheme()}.`)
       if (typeof next !== "string" || !isTheme(next))
-        return webMcpToolResultConstructor(
-          `I cannot switch to "${String(next)}". Available: ${THEMES.join(", ")}.`,
-          true
+        return toolError(
+          `I cannot switch to "${String(next)}". Available: ${THEMES.join(", ")}.`
         )
       if (next === currentTheme())
-        return webMcpToolResultConstructor(`Already in ${next}.`, true)
+        return toolOk(`Already in ${next}; nothing changed.`)
       setCurrentTheme(next)
-      return webMcpToolResultConstructor(`Switched to ${next}.`)
+      return toolOk(`Switched to ${next}.`)
     },
     inputSchema: {
       properties: {
@@ -307,88 +397,169 @@ export function buildSiteTools({
       type: "object",
     },
     name: "kangaflow-theme",
+    title: "Theme",
   }
 
   const workLocation: WebMcpToolDescriptor = {
     description:
-      "Show the HeaderDate popover component in its open state that shows KangaZero's work location " +
-      "If not on homepage navigate to it first, this component only exists on the homepage",
-    execute: async () => {
-      return showWorkLocation()
-    },
+      "Open the popover that shows KangaZero's work location. It only exists " +
+      "on the home page; go there with kangaflow-go-to-page first.",
+    execute: async () => showWorkLocation(),
     inputSchema: { properties: {}, type: "object" },
     name: "kangaflow-show-work-location",
+    title: "Show work location",
   }
 
   const widgets: WebMcpToolDescriptor<typeof WIDGET_NAMES> = {
     description:
-      "Toggle this site's widgets on and off. Pass a widget as true to flip it. " +
-      "Call with no arguments to read which widgets exist and their current state.",
-    // Driven off WIDGET_NAMES rather than destructuring the four keys: a
-    // destructure is a fifth spelling of the widget list, and `"media-player"`
+      "Open or close this site's widgets. Pass a widget as true to open it or " +
+      "false to close it. Call with no arguments to list the widgets on the " +
+      "current page and whether each is open. Only media-player exists " +
+      "outside the environment page.",
+    // Driven off the registry rather than destructuring the keys: a
+    // destructure is another spelling of the widget list, and `"media-player"`
     // is not even a valid binding name without renaming it.
     execute: async (args) => {
-      // Omitted means READ — same contract as the language and theme tools, so
-      // an agent does not have to learn a second convention.
-      const currentPath = window?.location.pathname
-      const rest = currentPath
-        .replace(/^\/(?:en|ja)(?=\/|$)/, "")
-        .replace(/\/$/, "")
+      const onPage = widgetsOnPage(currentPage())
+      const entries = Object.entries(args)
 
-      const isEnvironment = rest.startsWith("/environment")
-
-      const availableWidgetsOnPage = isEnvironment
-        ? AVAILABLE_WIDGETS
-        : AVAILABLE_WIDGETS.filter((widget) => widget.global !== isEnvironment)
-
-      const availableWidgetNamesOnPage = availableWidgetsOnPage.map(
-        (widget) => widget.name
-      )
-
-      const namedWidgets = availableWidgetNamesOnPage.filter(
-        (widget) => widget in args
-      )
-      if (namedWidgets.length === 0) {
-        const availableWidgetStates = showWidgetsState(
-          availableWidgetNamesOnPage
-        )
-        return webMcpToolResultConstructor(
-          `Available widgets: ${JSON.stringify(availableWidgetStates)}`
+      // Omitted means READ, the same contract as the language and theme tools.
+      if (entries.length === 0) {
+        const states = widgetStates()
+        return toolOk(
+          "Widgets on this page, and whether each is open.",
+          Object.fromEntries(onPage.map((widget) => [widget, states[widget]]))
         )
       }
-      // Values arrive from a model, so the guard is the real validation: a
-      // string "true" is refused here rather than silently counting as false.
-      const malformed = namedWidgets.filter(
-        (widget) => typeof args[widget] !== "boolean"
-      )
-      if (malformed.length > 0)
-        return webMcpToolResultConstructor(
-          `Widget arguments must be true or false. Not boolean: ${malformed.join(", ")}`,
-          true
+
+      // Every argument is checked before ANY widget changes, so a call with
+      // one bad key does not half-apply. Values arrive from a model, so a
+      // string "true" is refused rather than silently counting as false.
+      const changes: [AvailableWidgetName, boolean][] = []
+      const problems: string[] = []
+      for (const [key, value] of entries) {
+        if (!isWidgetName(key)) problems.push(`"${key}" is not a widget`)
+        else if (!onPage.includes(key))
+          problems.push(`${key} only exists on the environment page`)
+        else if (typeof value !== "boolean")
+          problems.push(`${key} must be true or false`)
+        else changes.push([key, value])
+      }
+      if (problems.length > 0)
+        return toolError(
+          `${problems.join("; ")}. Available here: ${onPage.join(", ")}.`
         )
 
-      const invalidNames = Object.keys(args).filter(
-        (widget) => !namedWidgets.includes(widget as AvailableWidgetName)
-      )
-      if (invalidNames.length > 0)
-        return webMcpToolResultConstructor(
-          `Widget arguments contains invalid keys: ${invalidNames.join(", ")}`,
-          true
-        )
-
-      return toggleWidgets(
-        args as Partial<Record<AvailableWidgetName, boolean>>
-      )
+      for (const [widget, open] of changes) setWidgetOpen(widget, open)
+      const summary = changes
+        .map(([widget, open]) => `${widget} ${open ? "opened" : "closed"}`)
+        .join(", ")
+      return toolOk(`${summary}.`)
     },
     inputSchema: {
       properties: flagProperties(
         WIDGET_NAMES,
-        (widget) => `Set true to toggle the ${widget} widget.`
+        (widget) => `true opens the ${widget} widget, false closes it.`
       ),
       type: "object",
     },
     name: "kangaflow-toggle-widgets",
+    title: "Widgets",
   }
 
-  return [listPages, goToPage, language, theme, workLocation, widgets]
+  // Results are in English whatever the site locale: an agent's language is
+  // independent of the page's (see the rule-4 note at the top), and the same
+  // masking helper as the UI decides what a secret achievement may reveal.
+  const english = <K extends Parameters<typeof t>[0]>(key: K) => t(key, "en")
+
+  const achievementsTool: WebMcpToolDescriptor = {
+    annotations: { readOnlyHint: true },
+    description:
+      "List this site's achievements: which are unlocked, their rarity and " +
+      "what each is for. Locked secret achievements stay masked.",
+    execute: async () => {
+      const list = achievements().map((achievement) => {
+        const labels = getAchievementLabels(achievement, english)
+        return {
+          description: labels.description,
+          // A secret's id would give it away, so masked rows have none.
+          id: labels.hidden ? null : achievement.id,
+          rarity: labels.rarityLabel,
+          title: labels.title,
+          unlocked: achievement.isUnlocked,
+          unlockedAt: achievement.isUnlocked ? achievement.unlockedAt : null,
+        }
+      })
+      const unlocked = list.filter((row) => row.unlocked).length
+      return toolOk(`${unlocked} of ${list.length} unlocked.`, list)
+    },
+    inputSchema: { properties: {}, type: "object" },
+    name: "kangaflow-achievements",
+    title: "Achievements",
+  }
+
+  const profile: WebMcpToolDescriptor = {
+    annotations: { readOnlyHint: true },
+    description:
+      "Who runs this site: name, role, employer, skills, work history, " +
+      "projects and contact links.",
+    execute: async () =>
+      toolOk(`${person.name}, ${person.role} at ${person.workplace}.`, {
+        contact: person.socials.map(({ href, name }) => ({ href, name })),
+        experience: person.work.experiences.map(
+          ({ company, role, timeframe }) => ({ company, role, timeframe })
+        ),
+        intro: person.intro,
+        name: person.name,
+        projects: person.projects.map(({ description, links, name }) => ({
+          description,
+          links: links.map(({ href }) => href),
+          name,
+        })),
+        role: person.role,
+        skills: person.technologies.map(({ category, name }) => ({
+          category,
+          name,
+        })),
+        studies: person.studies,
+        workplace: person.workplace,
+      }),
+    inputSchema: { properties: {}, type: "object" },
+    name: "kangaflow-profile",
+    title: "Profile",
+  }
+
+  const timeline: WebMcpToolDescriptor = {
+    annotations: { readOnlyHint: true },
+    description:
+      "Every portfolio site the owner has shipped, oldest first, with live " +
+      "and source links. Open the timeline page to see them.",
+    execute: async () =>
+      toolOk(
+        `${portfolios.length} portfolios, oldest first.`,
+        portfolios.map((entry) => ({
+          current: entry.current ?? false,
+          description: english(`timeline.entries.${entry.slug}`),
+          liveUrl: entry.liveUrl,
+          name: entry.name,
+          repoUrl: entry.repoUrl,
+          year: entry.year,
+        }))
+      ),
+    inputSchema: { properties: {}, type: "object" },
+    name: "kangaflow-timeline",
+    title: "Timeline",
+  }
+
+  return [
+    listPages,
+    goToPage,
+    language,
+    theme,
+    workLocation,
+    widgets,
+    achievementsTool,
+    profile,
+    timeline,
+  ]
 }

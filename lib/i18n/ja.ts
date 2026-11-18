@@ -551,6 +551,20 @@ const ja = {
     loading: "天気を取得中…",
     unavailable: "天気を取得できません",
   },
+  webmcp: {
+    activity: "エージェントが操作中",
+    tools: {
+      "kangaflow-achievements": "実績",
+      "kangaflow-go-to-page": "ページ移動",
+      "kangaflow-language": "言語",
+      "kangaflow-list-pages": "ページ一覧",
+      "kangaflow-profile": "プロフィール",
+      "kangaflow-show-work-location": "勤務地",
+      "kangaflow-theme": "テーマ",
+      "kangaflow-timeline": "タイムライン",
+      "kangaflow-toggle-widgets": "ウィジェット",
+    },
+  },
   widgets: {
     alarm: {
       add: "アラームを追加",
