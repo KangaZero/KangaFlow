@@ -9,7 +9,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react"
 import {
@@ -402,8 +401,13 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   // Persisted settings start at their SSR-safe defaults, then hydrate from
   // localStorage after mount (reading storage during render would mismatch the
   // server-rendered HTML). `hydrated` gates the persist effects so the initial
-  // default doesn't clobber stored values before hydration runs.
-  const hydrated = useRef(false)
+  // default doesn't clobber stored values before hydration runs. It is STATE,
+  // not a ref: a ref flipped inside the load effect is already true for the
+  // persist effects later in the same commit, which then wrote the defaults
+  // back over storage (and Strict Mode's dev re-run reloaded those defaults).
+  // As state, persist effects only see `true` on the render that also carries
+  // the loaded values.
+  const [hydrated, setHydrated] = useState(false)
   const [shortcuts, setShortcuts] = useState<Shortcut[]>(() => [
     ...DEFAULT_SHORTCUTS,
   ])
@@ -455,78 +459,78 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     for (const id of WIDGET_IDS) {
       if (loaded.widgetDefaults[id].show) openers[id](true)
     }
-    hydrated.current = true
+    setHydrated(true)
   }, [])
 
   useEffect(() => {
-    if (hydrated.current) {
+    if (hydrated) {
       safeLocalStorage.setJson(ENV_SETTINGS_STORAGE_KEY, envSettings)
     }
-  }, [envSettings])
+  }, [hydrated, envSettings])
 
   useEffect(() => {
-    if (hydrated.current) saveShortcuts(shortcuts)
-  }, [shortcuts])
+    if (hydrated) saveShortcuts(shortcuts)
+  }, [hydrated, shortcuts])
 
   useEffect(() => {
-    if (hydrated.current) {
+    if (hydrated) {
       safeLocalStorage.setItem(COLUMN_STORAGE_KEY, String(columnCount))
     }
-  }, [columnCount])
+  }, [hydrated, columnCount])
 
   useEffect(() => {
-    if (hydrated.current) {
+    if (hydrated) {
       safeLocalStorage.setItem(
         ENV_CHROME_STORAGE_KEY,
         String(showChromeInEnvironment)
       )
     }
-  }, [showChromeInEnvironment])
+  }, [hydrated, showChromeInEnvironment])
 
   useEffect(() => {
-    if (hydrated.current) {
+    if (hydrated) {
       safeLocalStorage.setItem(VIM_MODE_STORAGE_KEY, String(vimMode))
     }
-  }, [vimMode])
+  }, [hydrated, vimMode])
 
   useEffect(() => {
-    if (hydrated.current) {
+    if (hydrated) {
       safeLocalStorage.setItem(SOUND_EFFECTS_STORAGE_KEY, String(soundEffects))
     }
-  }, [soundEffects])
+  }, [hydrated, soundEffects])
 
   useEffect(() => {
-    if (hydrated.current) {
+    if (hydrated) {
       safeLocalStorage.setItem(AMBIENCE_STORAGE_KEY, String(ambience))
     }
-  }, [ambience])
+  }, [hydrated, ambience])
 
   useEffect(() => {
-    if (hydrated.current) {
+    if (hydrated) {
       safeLocalStorage.setItem(ONEKO_ENABLED_STORAGE_KEY, String(onekoEnabled))
     }
-  }, [onekoEnabled])
+  }, [hydrated, onekoEnabled])
 
   useEffect(() => {
-    if (hydrated.current) {
+    if (hydrated) {
       safeLocalStorage.setItem(
         ONEKO_FOLLOW_CURSOR_STORAGE_KEY,
         String(onekoFollowCursor)
       )
     }
-  }, [onekoFollowCursor])
+  }, [hydrated, onekoFollowCursor])
 
   useEffect(() => {
-    if (hydrated.current) {
+    if (hydrated) {
       safeLocalStorage.setItem(NOTE_LINE_NUMBERS_STORAGE_KEY, noteLineNumbers)
     }
-  }, [noteLineNumbers])
+  }, [hydrated, noteLineNumbers])
 
   // Persist the animation preference and mirror the *resolved* state onto a
   // <html data-animations> attribute so the CSS kill-switch (globals.css) can
   // neutralise CSS transitions/animations too, not just motion/react.
   useEffect(() => {
-    if (hydrated.current) {
+    if (hydrated) {
       safeLocalStorage.setItem(ANIMATION_STORAGE_KEY, animationPref)
     }
     const media = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -542,7 +546,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     apply()
     media.addEventListener("change", apply)
     return () => media.removeEventListener("change", apply)
-  }, [animationPref])
+  }, [hydrated, animationPref])
 
   const value = useMemo<GlobalStatesContextValue>(
     () => ({
