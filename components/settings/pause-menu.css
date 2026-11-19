@@ -52,6 +52,9 @@
   gap: 14px 28px;
 }
 .pm-head {
+  /* Above tabs and rows, so the neko tooltip isn't covered by them. */
+  position: relative;
+  z-index: 2;
   grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
@@ -140,6 +143,41 @@
     pm-hop 0.55s cubic-bezier(0.3, 1.8, 0.5, 1),
     pm-wiggle 0.5s 0.55s ease-in-out infinite;
 }
+/* The N stands out from the other letters: on hover/focus it wiggles, takes
+   the accent ink and glows. Declared with .pm-title so it beats the title's
+   own hover hop (same specificity, later in the file). */
+.pm-title .pm-ch-neko:hover,
+.pm-title .pm-ch-neko:focus-visible {
+  color: var(--pm-hi);
+  text-shadow:
+    0.055em 0.055em 0 var(--foreground),
+    0 0 0.3em color-mix(in oklch, var(--pm-hi) 55%, transparent);
+  animation: pm-wiggle 0.5s ease-in-out infinite;
+}
+/* AnimatedTooltip wrapper: keep the N on the title baseline, anchor the
+   tooltip under the letter, and undo the title's skew/rotation and display
+   type so the tooltip renders at its own size, upright. */
+.pm-neko-tip {
+  display: inline-flex;
+  align-items: baseline;
+}
+.pm-neko-tip > .relative {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  z-index: 3;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: normal;
+  line-height: normal;
+  text-shadow: none;
+  transform: rotate(2deg) skewX(10deg);
+}
+
 /* Cat ears peek out of the N on hover and stay while neko is out */
 .pm-ears {
   position: absolute;
@@ -153,6 +191,13 @@
   background: var(--pm-hi);
   clip-path: polygon(0 100%, 14% 0, 38% 100%, 62% 100%, 86% 0, 100% 100%);
   transition: scale 0.2s cubic-bezier(0.3, 1.8, 0.5, 1);
+  /* Idle hint: the ears flick out briefly every few seconds. */
+  animation: pm-ear-flick 5s 1.6s ease-in-out infinite;
+}
+.pm-ch-neko:hover .pm-ears,
+.pm-ch-neko:focus-visible .pm-ears,
+.pm-ch-neko[aria-pressed="true"] .pm-ears {
+  animation: none;
 }
 .pm-ch-neko:hover .pm-ears,
 .pm-ch-neko:focus-visible .pm-ears {
@@ -532,6 +577,22 @@
   }
   70% {
     translate: 0 0.03em;
+  }
+}
+@keyframes pm-ear-flick {
+  0%,
+  88%,
+  100% {
+    scale: 1 0;
+  }
+  91% {
+    scale: 1 0.75;
+  }
+  94% {
+    scale: 1 0.45;
+  }
+  97% {
+    scale: 1 0.75;
   }
 }
 @keyframes pm-wiggle {

@@ -20,6 +20,7 @@ import { GlitchError } from "@/components/settings/glitch-error"
 import { SettingsTitle } from "@/components/settings/settings-title"
 import { StorageWarning } from "@/components/storage-warning"
 import { ANIMATION_PREFS } from "@/lib/globalStates"
+import { LOCALES } from "@/lib/i18n"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import {
   type MenuIntent,
@@ -98,7 +99,7 @@ const BROKE_FLASH_MS = 600
  * full-screen menu, while Radix still gives the focus trap, aria-modal and Esc.
  */
 export function SettingsDialog() {
-  const { translate, locale } = useLocale()
+  const { translate, locale, setLocale } = useLocale()
   const {
     isSettingsOpen,
     setIsSettingsOpen,
@@ -204,6 +205,18 @@ export function SettingsDialog() {
               key: t,
               label: translate(`theme.${t}`),
               selected: theme === t,
+            })),
+          },
+          {
+            id: "language",
+            kind: "choice",
+            label: translate("nav.language"),
+            options: LOCALES.map((option) => ({
+              choose: () => setLocale(option),
+              key: option,
+              // Endonyms ("English", "日本語"), readable whichever is active.
+              label: translate(`command.locales.${option}`),
+              selected: locale === option,
             })),
           },
           {

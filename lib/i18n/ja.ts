@@ -481,6 +481,8 @@ const ja = {
       tab: "タブ",
     },
     menuTitle: "設定",
+    nekoDismiss: "ネコを帰す",
+    nekoSummon: "ネコを呼ぶ",
     nekoToggle: "ネコの表示切り替え",
     off: "オフ",
     on: "オン",

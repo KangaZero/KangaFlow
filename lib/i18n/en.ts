@@ -474,6 +474,8 @@ const en = {
       tab: "Tab",
     },
     menuTitle: "Settings",
+    nekoDismiss: "Dismiss neko",
+    nekoSummon: "Summon neko",
     nekoToggle: "Toggle neko",
     off: "Off",
     on: "On",

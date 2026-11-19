@@ -3,6 +3,7 @@
 
 import { type CSSProperties, useEffect, useRef, useState } from "react"
 
+import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { playSfx } from "@/lib/sfx/play"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -75,38 +76,44 @@ export function SettingsTitle({ reduced }: { reduced: boolean }) {
     <div className="pm-title">
       {Array.from(WORD).map((char, index) =>
         index === NEKO_INDEX ? (
-          <button
-            aria-label={translate("settings.nekoToggle")}
-            aria-pressed={onekoEnabled}
-            className="pm-ch pm-ch-neko"
+          <AnimatedTooltip
+            className="pm-neko-tip"
             key="neko-toggle"
-            onClick={toggleNeko}
-            style={{
-              "--c": index,
-              transform: `rotateY(${flips * 360}deg)`,
-              transition: reduced
-                ? "none"
-                : "transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1)",
-            }}
-            title={translate("settings.nekoToggle")}
-            type="button"
-          >
-            <span aria-hidden="true" className="pm-ears" />
-            {char}
-            {bursts.map((burst) =>
-              Array.from({ length: PAW_COUNT }, (_, paw) => (
-                <span
-                  aria-hidden="true"
-                  className="pm-paw"
-                  // biome-ignore lint/suspicious/noArrayIndexKey: paws are positional within one burst; the burst id makes the key unique.
-                  key={`${burst.id}-${paw}`}
-                  style={pawStyle(paw)}
-                >
-                  🐾
-                </span>
-              ))
+            label={translate(
+              onekoEnabled ? "settings.nekoDismiss" : "settings.nekoSummon"
             )}
-          </button>
+          >
+            <button
+              aria-label={translate("settings.nekoToggle")}
+              aria-pressed={onekoEnabled}
+              className="pm-ch pm-ch-neko"
+              onClick={toggleNeko}
+              style={{
+                "--c": index,
+                transform: `rotateY(${flips * 360}deg)`,
+                transition: reduced
+                  ? "none"
+                  : "transform 0.6s cubic-bezier(0.3, 1.5, 0.5, 1)",
+              }}
+              type="button"
+            >
+              <span aria-hidden="true" className="pm-ears" />
+              {char}
+              {bursts.map((burst) =>
+                Array.from({ length: PAW_COUNT }, (_, paw) => (
+                  <span
+                    aria-hidden="true"
+                    className="pm-paw"
+                    // biome-ignore lint/suspicious/noArrayIndexKey: paws are positional within one burst; the burst id makes the key unique.
+                    key={`${burst.id}-${paw}`}
+                    style={pawStyle(paw)}
+                  >
+                    🐾
+                  </span>
+                ))
+              )}
+            </button>
+          </AnimatedTooltip>
         ) : (
           <span
             aria-hidden="true"
