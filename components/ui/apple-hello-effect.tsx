@@ -310,8 +310,15 @@ function AppleHelloIntro({
 
   const brandBeat: BeatDef = {
     id: "brand",
+    // max-w-full: h-50 w-auto makes the mark 400px wide, wider than a
+    // phone; capped, the viewBox scales the drawing down to fit.
     render: (onDone) => (
-      <KangaFlowLogo aria-hidden onAnimationComplete={onDone} speed={speed} />
+      <KangaFlowLogo
+        aria-hidden
+        className="max-w-full"
+        onAnimationComplete={onDone}
+        speed={speed}
+      />
     ),
   }
   //

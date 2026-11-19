@@ -11,7 +11,8 @@ import {
   useScroll,
 } from "motion/react"
 import Image, { type StaticImageData } from "next/image"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import type { IconType } from "react-icons"
 import { FaGithub, FaLinkedin } from "react-icons/fa6"
 import {
@@ -169,9 +170,13 @@ function FloatingLogo({
   })
 
   const targetY = 2
-  const targetX = viewportWidth / 2 + 70
+  const targetX = viewportWidth / 2 + 80
 
-  return (
+  // Portalled to <body>: a fixed element inside a transformed ancestor (the
+  // sections reveal with a Motion `y` transform) is positioned against that
+  // ancestor instead of the viewport, so while the reveal played the 400px
+  // logo counted as page content and widened phones to ~537px.
+  return createPortal(
     <motion.div
       animate={
         shrunk
@@ -185,7 +190,8 @@ function FloatingLogo({
       transition={{ damping: 30, stiffness: 260, type: "spring" }}
     >
       <KangaFlowLogo />
-    </motion.div>
+    </motion.div>,
+    document.body
   )
 }
 
@@ -199,7 +205,11 @@ function ScrollShrinkLogo({ className }: { className?: string }) {
   // const [viewportHeight, setViewportHeight] = useState(0)
   const reduceMotion = useReducedMotion()
 
-  useEffect(() => {
+  // Layout effect, not a plain effect: until measured, the 400px logo sits
+  // in-flow and sticks out past a phone's edge. A plain effect runs after
+  // paint, so that frame (and a sideways scroll) was visible; measuring
+  // before paint hands off to the fixed copy before anything is shown.
+  useLayoutEffect(() => {
     if (reduceMotion) return
     const measure = () => {
       const el = spacerRef.current
@@ -410,8 +420,10 @@ export function AboutSection() {
             key="content"
             transition={{ duration: 0.5, ease: "easeInOut" }}
           >
+            {/* overflow-x-clip: with reduced motion the 400px hero logo stays
+                in-flow (no floating copy) and would widen phones to ~513px. */}
             <Section
-              className="items-center text-center"
+              className="items-center overflow-x-clip text-center"
               id={overviewSection.id}
             >
               <div className="relative">
