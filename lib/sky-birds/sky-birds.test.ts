@@ -127,8 +127,12 @@ describe("sky-birds scene", () => {
   it("60 simulated seconds stay finite, including hawk passes", () => {
     const scene = createSkyBirds(WORLD, BIRD_COUNTS.fine, 11)
     let sawHawk = false
-    for (let f = 0; f < 60 * 60; f++) {
-      scene.advance(1 / 60)
+    // Step at the engine's largest step (MAX_STEP = 1/30 s): the same 60
+    // simulated seconds in half the steps of a 60 fps loop, and the harsher
+    // case for stability. At 1/60 the test took ~8 s alone and timed out
+    // (15 s) when the whole suite ran in parallel.
+    for (let f = 0; f < Math.round(60 / MAX_STEP); f++) {
+      scene.advance(MAX_STEP)
       if (scene.hawk() !== null) sawHawk = true
     }
     const all = [...scene.flocks.near.birds, ...scene.flocks.far.birds]
