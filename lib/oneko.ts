@@ -203,6 +203,10 @@ export function resolveDirection(
   return west ? "W" : "E"
 }
 
+/** Summon / dismiss pop durations (from the settings pause-menu design). */
+const POP_IN_MS = 350
+const POP_OUT_MS = 300
+
 export class Oneko extends EventTarget {
   readonly element: HTMLElement
   private readonly source: string
@@ -328,6 +332,7 @@ export class Oneko extends EventTarget {
       document.body.appendChild(this.element)
     }
     this.draw()
+    if (this.ownsElement) this.pop("in")
 
     // Respect the user's motion preference: build the element but never animate.
     if (!Oneko.canInitialize()) {
@@ -381,9 +386,41 @@ export class Oneko extends EventTarget {
     this.element.removeEventListener("pointerup", this.onPointerUp)
     this.hideSpeech()
     this.speechEl?.remove()
-    if (this.ownsElement) {
-      this.element.remove()
-    }
+    if (!this.ownsElement) return
+    // Shrink away, then detach. Listeners and the loop are already gone, so
+    // a cat built right after (a settings change) never shares input with
+    // the one that is leaving.
+    const leaving = this.pop("out")
+    if (leaving) {
+      const element = this.element
+      leaving.finished.then(
+        () => element.remove(),
+        () => element.remove()
+      )
+    } else this.element.remove()
+  }
+
+  /**
+   * Summon / dismiss pop: scale from (or to) nothing with an overshoot on the
+   * way in. Web Animations, so this framework-agnostic class needs no
+   * stylesheet. Returns null (no animation) under reduced motion or where
+   * element.animate is missing (jsdom), so callers fall back to instant.
+   */
+  private pop(direction: "in" | "out"): Animation | null {
+    if (!Oneko.canInitialize() || typeof this.element.animate !== "function")
+      return null
+    const hidden = { opacity: 0, scale: "0" }
+    const shown = { opacity: 1, scale: "1" }
+    return direction === "in"
+      ? this.element.animate([hidden, shown], {
+          duration: POP_IN_MS,
+          easing: "cubic-bezier(0.3, 1.8, 0.5, 1)",
+        })
+      : this.element.animate([shown, hidden], {
+          duration: POP_OUT_MS,
+          easing: "ease",
+          fill: "forwards",
+        })
   }
 
   private readonly onMouseMove = (event: MouseEvent): void => {

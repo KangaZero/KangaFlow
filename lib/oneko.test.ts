@@ -1,7 +1,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { type Direction, resolveDirection } from "@/lib/oneko"
+import { type Direction, Oneko, resolveDirection } from "@/lib/oneko"
 
 // Sign convention (from Oneko.frame): diffX = catX - targetX, so positive diffX
 // means the target is to the West; positive diffY means the target is North.
@@ -40,5 +40,52 @@ describe("resolveDirection", () => {
       const rad = (angle * Math.PI) / 180
       expect(valid.has(at(Math.cos(rad), Math.sin(rad)))).toBe(true)
     }
+  })
+})
+
+describe("summon / dismiss pop", () => {
+  const motionAllowed = () =>
+    vi.stubGlobal("matchMedia", (query: string) => ({
+      addEventListener: () => undefined,
+      matches: false,
+      media: query,
+      removeEventListener: () => undefined,
+    }))
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    Reflect.deleteProperty(HTMLElement.prototype, "animate")
+    for (const el of document.querySelectorAll(".oneko")) el.remove()
+  })
+
+  it("removes the cat at once where element.animate is missing (jsdom)", () => {
+    motionAllowed()
+    const neko = new Oneko({ followMouse: true })
+    expect(document.querySelector(".oneko")).not.toBeNull()
+    neko.destroy()
+    expect(document.querySelector(".oneko")).toBeNull()
+  })
+
+  it("pops in, and only detaches after the pop-out finishes", async () => {
+    motionAllowed()
+    let finish = () => undefined as void
+    const finished = new Promise<void>((resolve) => {
+      finish = resolve
+    })
+    // jsdom has no Web Animations: provide just enough of element.animate.
+    const animate = vi.fn(() => ({ finished }))
+    Object.defineProperty(HTMLElement.prototype, "animate", {
+      configurable: true,
+      value: animate,
+    })
+    const neko = new Oneko({ followMouse: true })
+    expect(animate).toHaveBeenCalledTimes(1)
+    neko.destroy()
+    expect(animate).toHaveBeenCalledTimes(2)
+    expect(document.querySelector(".oneko")).not.toBeNull()
+    finish()
+    await finished
+    await Promise.resolve()
+    expect(document.querySelector(".oneko")).toBeNull()
   })
 })
