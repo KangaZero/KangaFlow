@@ -9,10 +9,10 @@ import {
   Settings,
   Trophy,
 } from "lucide-react"
-import { motion } from "motion/react"
+import { useReducedMotion } from "motion/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { type ComponentType, type ReactNode, useState } from "react"
+import type { ComponentType, ReactNode } from "react"
 
 import { HeaderDate } from "@/components/header-date"
 import { HeaderStatus } from "@/components/header-status"
@@ -20,15 +20,18 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
 import type { AppPath } from "@/lib/globalStates"
+import { isReducedMotion } from "@/lib/isReducedMotion"
 import { hrefForRoute, PAGE } from "@/lib/pages"
 import { formatShortcut, type ShortcutAction } from "@/lib/shortcuts"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
+import "@/components/site-header.css"
 
 // Thin vertical divider between dock groups.
+// The dock's group divider: a short gold rule (site-header.css).
 function Divider() {
-  return <span aria-hidden className="bg-border mx-0.5 h-5 w-px" />
+  return <span aria-hidden className="site-dock-rule" />
 }
 
 // Circle-reveal pill hover, adapted from reactbits PillNav (rebuilt in pure CSS
@@ -108,14 +111,13 @@ export function SiteHeader() {
   const currentPath = usePathname() as AppPath
   const { locale, setLocale, translate } = useLocale()
   const {
+    animationPref,
     setIsSettingsOpen,
     shortcuts,
     isHelloEffectAnimationComplete,
     showChromeInEnvironment,
   } = useGlobalStates()
-  // Clip the items only while the width sweep plays; drop it afterwards so the
-  // (non-portaled, absolutely-positioned) tooltips aren't clipped by the dock.
-  const [loaded, setLoaded] = useState(false)
+  const reduced = isReducedMotion(animationPref, useReducedMotion())
 
   // Current key tokens for an action's tooltip <Kbd> chips (reflects live edits
   // from the Settings dialog); undefined when the action has no binding.
@@ -149,17 +151,14 @@ export function SiteHeader() {
 
       <HeaderStatus className="ml-auto hidden sm:block" />
 
-      {/* Initial-load reveal (reactbits PillNav): the dock grows from zero
-          width to full while overflow-hidden clips the items during the sweep. */}
-      <motion.nav
-        animate={{ width: "auto" }}
-        className={cn(
-          "border-border bg-card/80 fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 rounded-full border p-1 shadow-lg backdrop-blur-sm sm:absolute sm:bottom-auto",
-          !loaded && "overflow-hidden"
-        )}
-        initial={{ width: 0 }}
-        onAnimationComplete={() => setLoaded(true)}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+      {/* The dock sits in the settings pause menu's slab (site-header.css):
+          skewed, accent frame, gold slab shadow and corner brackets. It
+          slams in, the brackets snap on, then the buttons drop in. The
+          buttons, PillHover and tooltips inside are unchanged. */}
+      <nav
+        aria-label={translate("nav.footer")}
+        className="site-dock fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-1 p-1 sm:absolute sm:bottom-auto"
+        data-reduced={reduced}
       >
         <AnimatedTooltip
           label={translate("nav.home")}
@@ -299,7 +298,7 @@ export function SiteHeader() {
             </PillHover>
           </Button>
         </AnimatedTooltip>
-      </motion.nav>
+      </nav>
     </header>
   )
 }

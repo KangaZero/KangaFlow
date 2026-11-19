@@ -1,0 +1,143 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+   Header dock, "C2a · Bracket slab": the icon buttons sit in the settings
+   pause menu's slab (skewed, accent frame, gold slab shadow, two gold corner
+   brackets). Entrance: the slab slams in with an overshoot, the brackets
+   snap onto its corners, then the buttons drop in left to right. The
+   buttons themselves (Button size="icon" + PillHover) are untouched. Motion
+   is gated by [data-reduced="true"] like the pause menu. */
+
+.site-dock {
+  --dock-hi: var(--primary);
+  --dock-gold: var(--rarity-legendary);
+  --dock-slab: oklch(0.16 0.02 260);
+  --dock-slam: -36px;
+
+  /* The slab is dark in every theme, so the buttons inside take the dark
+     theme's ink (Tailwind's @theme inline utilities read these directly). */
+  --foreground: oklch(0.985 0.001 106.423);
+  --secondary: oklch(0.32 0.02 260);
+  --secondary-foreground: oklch(0.985 0.001 106.423);
+  --muted: oklch(0.36 0.01 260);
+
+  color: var(--foreground);
+  background: var(--dock-slab);
+  border: 2px solid var(--dock-hi);
+  box-shadow: 5px 5px 0 var(--dock-gold);
+  transform: skewX(-10deg);
+  animation: dock-slam 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
+}
+.dark .site-dock {
+  --dock-hi: oklch(0.8 0.12 166);
+}
+.terminal .site-dock {
+  --dock-slab: #11111b;
+}
+
+/* Counter-skew each item (the tooltip wrapper), so buttons and tooltips
+   stand upright inside the slanted slab. */
+.site-dock > * {
+  transform: skewX(10deg);
+}
+
+/* Corner brackets */
+.site-dock::before,
+.site-dock::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 3px solid var(--dock-gold);
+  pointer-events: none;
+  animation: dock-bracket 0.45s 0.3s cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
+}
+.site-dock::before {
+  --from: -10px -10px;
+
+  top: -8px;
+  left: -8px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.site-dock::after {
+  --from: 10px 10px;
+
+  right: -8px;
+  bottom: -8px;
+  border-top: 0;
+  border-left: 0;
+}
+
+.site-dock-rule {
+  width: 2px;
+  height: 18px;
+  margin-inline: 3px;
+  background: var(--dock-gold);
+}
+
+/* Buttons drop in after the slam, left to right. */
+.site-dock > * {
+  animation: dock-drop 0.4s calc(0.42s + var(--k, 0) * 45ms)
+    cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
+}
+.site-dock > :nth-child(1) {
+  --k: 0;
+}
+.site-dock > :nth-child(2) {
+  --k: 1;
+}
+.site-dock > :nth-child(3) {
+  --k: 2;
+}
+.site-dock > :nth-child(4) {
+  --k: 3;
+}
+.site-dock > :nth-child(5) {
+  --k: 4;
+}
+.site-dock > :nth-child(6) {
+  --k: 5;
+}
+.site-dock > :nth-child(7) {
+  --k: 6;
+}
+.site-dock > :nth-child(8) {
+  --k: 7;
+}
+
+/* Phones: the dock lives at the bottom, so it slams up instead of down. */
+@media (width < 40rem) {
+  .site-dock {
+    --dock-slam: 36px;
+  }
+}
+
+/* ── Reduced motion: no entrance (the slam, brackets and drop). The
+   PillHover hover itself is unchanged, as in the original header. ──────── */
+
+.site-dock[data-reduced="true"],
+.site-dock[data-reduced="true"] *,
+.site-dock[data-reduced="true"]::before,
+.site-dock[data-reduced="true"]::after {
+  /* biome-ignore lint/complexity/noImportantStyles: reduced motion must beat the more specific entrance animations (slam, brackets, staggered drop). */
+  animation: none !important;
+}
+
+@keyframes dock-slam {
+  from {
+    opacity: 0;
+    translate: -50% var(--dock-slam);
+  }
+}
+@keyframes dock-bracket {
+  from {
+    opacity: 0;
+    scale: 1.6;
+    translate: var(--from);
+  }
+}
+@keyframes dock-drop {
+  from {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+}
