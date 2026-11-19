@@ -58,10 +58,13 @@ export function usePianoVoices(sound: PianoSound, volume: PianoVolume) {
 
   const start = useCallback((midi: number) => {
     if (voices.current.has(midi)) return
+    // Volume 0 is a real mute: schedule nothing (rather than a note at a
+    // near-zero gain, which exponential ramps can't reach 0 from anyway).
+    const level = VOLUME_GAIN[settings.current.volume]
+    if (level === 0) return
     const ctx = gatedSharedAudio()
     if (!ctx) return
     const { decay, partials } = VOICES[settings.current.sound]
-    const level = VOLUME_GAIN[settings.current.volume]
     const now = ctx.currentTime
     const envelope = ctx.createGain()
     envelope.gain.setValueAtTime(0.0001, now)
