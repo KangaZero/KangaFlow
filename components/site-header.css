@@ -4,20 +4,17 @@
    brackets). Entrance: the slab slams in with an overshoot, the brackets
    snap onto its corners, then the buttons drop in left to right. The
    buttons themselves (Button size="icon" + PillHover) are untouched. Motion
-   is gated by [data-reduced="true"] like the pause menu. */
+   is gated by [data-reduced="true"] like the pause menu. The slab follows
+   the theme (light / dark / terminal). */
 
 .site-dock {
+  /* Light: a pale mint slab, so the buttons keep the light theme's own ink;
+     dark and terminal swap the slab below. The accent frame, gold slab
+     shadow and brackets are the same in every theme. */
   --dock-hi: var(--primary);
   --dock-gold: var(--rarity-legendary);
-  --dock-slab: oklch(0.16 0.02 260);
+  --dock-slab: oklch(0.97 0.012 166);
   --dock-slam: -36px;
-
-  /* The slab is dark in every theme, so the buttons inside take the dark
-     theme's ink (Tailwind's @theme inline utilities read these directly). */
-  --foreground: oklch(0.985 0.001 106.423);
-  --secondary: oklch(0.32 0.02 260);
-  --secondary-foreground: oklch(0.985 0.001 106.423);
-  --muted: oklch(0.36 0.01 260);
 
   color: var(--foreground);
   background: var(--dock-slab);
@@ -26,11 +23,18 @@
   transform: skewX(-10deg);
   animation: dock-slam 0.5s cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
 }
+/* Light only: the theme's near-white --secondary (the current-page fill)
+   would vanish on the mint slab, so tint it with the accent. */
+:root:not(.dark, .terminal) .site-dock {
+  --secondary: color-mix(in oklch, var(--primary) 18%, var(--dock-slab));
+}
 .dark .site-dock {
   --dock-hi: oklch(0.8 0.12 166);
+  --dock-slab: oklch(0.16 0.02 260);
 }
 .terminal .site-dock {
-  --dock-slab: #11111b;
+  /* Catppuccin Mocha mantle; the theme's own ink reads on it. */
+  --dock-slab: #181825;
 }
 
 /* Counter-skew each item (the tooltip wrapper), so buttons and tooltips

@@ -7,20 +7,33 @@
 
 .qa-scope,
 .pz {
-  /* Readable accent ink (dark's --primary is a fill colour, too dark for
-     text), the slab colour and the gold slab shadow. */
+  /* Theme tokens for the slabs. Light: a pale mint slab with dark ink and a
+     hairline edge (a light slab on a light page needs one). Dark and
+     terminal override below. Accent ink, gold and the quest colour are the
+     same idea in every theme. */
   --qa-hi: var(--primary);
-  --qa-slab: oklch(0.16 0.02 260);
-  --qa-slab-hi: oklch(0.55 0.12 175);
+  --qa-slab: oklch(0.97 0.012 166);
+  --qa-ink: oklch(0.2 0.02 260);
+  --qa-edge: 0 0 0 1px color-mix(in oklch, var(--qa-ink) 14%, transparent);
   --qa-gold: var(--rarity-legendary);
+  /* Gold as TEXT: the shadow gold is ~2:1 on the light slab, so light mode
+     inks gold labels darker (dark / terminal reuse the bright gold). */
+  --qa-gold-ink: oklch(0.52 0.12 70);
   --qa-quest: var(--primary);
 }
 .dark :is(.qa-scope, .pz) {
   --qa-hi: oklch(0.8 0.12 166);
+  --qa-slab: oklch(0.16 0.02 260);
+  --qa-ink: white;
+  --qa-edge: 0 0 0 0 transparent;
+  --qa-gold-ink: var(--qa-gold);
 }
 .terminal :is(.qa-scope, .pz) {
-  --qa-slab: #11111b;
-  --qa-slab-hi: #45475a;
+  /* Catppuccin Mocha: mantle slab, text ink. */
+  --qa-slab: #181825;
+  --qa-ink: #cdd6f4;
+  --qa-edge: 0 0 0 1px #313244;
+  --qa-gold-ink: var(--qa-gold);
 }
 
 .qa-scope {
@@ -50,10 +63,12 @@
 }
 .qa-chip {
   padding: 6px 12px;
-  color: white;
+  color: var(--qa-ink);
   font: italic 800 12px var(--font-mono);
   background: var(--qa-slab);
-  box-shadow: 3px 3px 0 var(--qa-quest);
+  box-shadow:
+    3px 3px 0 var(--qa-quest),
+    var(--qa-edge);
   transform: skewX(-12deg);
   animation: qa-slam 0.4s calc(var(--k) * 40ms) cubic-bezier(0.3, 1.6, 0.5, 1)
     backwards;
@@ -74,17 +89,29 @@
 }
 .qa-quest {
   --qc: var(--qa-quest);
+  /* --qc fills and shadows; --qc-ink is the same colour, safe as text. */
+  --qc-ink: var(--qa-hi);
+  /* Text drawn ON the --qc fill (✓ boxes, IN PROGRESS). */
+  --qc-on: white;
 
   position: relative;
-  color: white;
+  color: var(--qa-ink);
   background: var(--qa-slab);
-  box-shadow: 6px 6px 0 var(--qc);
+  box-shadow:
+    6px 6px 0 var(--qc),
+    var(--qa-edge);
   transform: skewX(-6deg);
   animation: qa-slam 0.5s calc(0.15s + var(--k) * 0.12s)
     cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
 }
 .qa-quest[data-kind="side"] {
   --qc: var(--qa-gold);
+  --qc-ink: var(--qa-gold-ink);
+  --qc-on: oklch(0.2 0.02 260);
+}
+/* Terminal's accent is a light green, so text on it goes dark. */
+.terminal .qa-quest[data-kind="main"] {
+  --qc-on: #1e1e2e;
 }
 .qa-quest > * {
   transform: skewX(6deg);
@@ -124,9 +151,10 @@
   place-items: center;
   width: 44px;
   height: 44px;
-  color: var(--qa-slab);
+  color: oklch(0.2 0.02 260);
   font: 900 15px var(--font-mono);
   background: white;
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--qa-ink) 14%, transparent);
 }
 .qa-mark img {
   object-fit: contain;
@@ -138,7 +166,7 @@
   display: block;
 }
 .qa-tag {
-  color: var(--qc);
+  color: var(--qc-ink);
   font: 900 10px var(--font-mono);
   letter-spacing: 0.2em;
 }
@@ -150,13 +178,13 @@
 }
 .qa-role {
   margin: 4px 0 0;
-  color: rgb(255 255 255 / 0.7);
+  color: color-mix(in oklch, var(--qa-ink) 72%, transparent);
   font: 12px var(--font-mono);
 }
 .qa-pitch {
   max-width: 60ch;
   margin: 10px 0 0;
-  color: white;
+  color: var(--qa-ink);
   font: 400 14px / 1.5 var(--font-sans);
   text-wrap: pretty;
 }
@@ -173,23 +201,23 @@
   transform: rotate(-4deg);
 }
 .qa-state[data-state="live"] {
-  color: var(--qa-slab);
+  color: var(--qc-on);
   background: var(--qc);
   animation: qa-blink 1.2s steps(2) infinite;
 }
 .qa-state[data-state="clear"] {
-  color: var(--qc);
-  box-shadow: inset 0 0 0 2px var(--qc);
+  color: var(--qc-ink);
+  box-shadow: inset 0 0 0 2px var(--qc-ink);
   animation: qa-stamp 0.45s 0.9s cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
 }
 .qa-count {
-  color: rgb(255 255 255 / 0.55);
+  color: color-mix(in oklch, var(--qa-ink) 60%, transparent);
   font: 900 10px var(--font-mono);
   letter-spacing: 0.18em;
   white-space: nowrap;
 }
 .qa-quest[data-open] .qa-count {
-  color: var(--qc);
+  color: var(--qc-ink);
 }
 .qa-objectives {
   display: grid;
@@ -202,7 +230,7 @@
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 10px;
-  color: rgb(255 255 255 / 0.88);
+  color: color-mix(in oklch, var(--qa-ink) 90%, transparent);
   font-size: 13px;
   line-height: 1.45;
 }
@@ -213,7 +241,7 @@
   width: 18px;
   height: 18px;
   margin-top: 1px;
-  color: var(--qa-slab);
+  color: var(--qc-on);
   font: 900 11px var(--font-mono);
   background: var(--qc);
 }
@@ -231,9 +259,11 @@
   align-items: center;
   gap: 18px;
   padding: 18px 20px;
-  color: white;
+  color: var(--qa-ink);
   background: var(--qa-slab);
-  box-shadow: 6px 6px 0 var(--qa-hi);
+  box-shadow:
+    6px 6px 0 var(--qa-hi),
+    var(--qa-edge);
   transform: skewX(-6deg);
   animation: qa-slam 0.5s 0.2s cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
 }
@@ -247,6 +277,7 @@
   width: 56px;
   height: 56px;
   background: white;
+  box-shadow: 0 0 0 1px color-mix(in oklch, var(--qa-ink) 14%, transparent);
 }
 .qa-crest img {
   object-fit: contain;
@@ -279,6 +310,8 @@
   border: 0;
   border-radius: 0 0 4px 4px;
   background: white;
+  /* Hairline so white keys stay distinct on a light slab. */
+  box-shadow: inset 0 0 0 1px oklch(0 0 0 / 0.12);
   cursor: pointer;
   transition:
     translate 0.08s,
@@ -418,8 +451,9 @@
 }
 .pz-settings-toggle {
   display: none;
-  color: white;
+  color: var(--qa-ink);
   background: var(--qa-slab);
+  box-shadow: var(--qa-edge);
 }
 :is(.pz-close, .pz-settings-toggle):focus-visible {
   outline: 2px solid var(--qa-gold);
@@ -495,8 +529,8 @@
   text-align: center;
 }
 .pz-options button[aria-pressed="true"] {
-  color: white;
-  background: var(--qa-slab);
+  color: var(--qa-slab);
+  background: var(--qa-ink);
 }
 .pz-row[data-current="true"] :is(.pz-options, .pz-stepper) button {
   color: var(--background);
@@ -774,10 +808,13 @@
   transition: none !important;
 }
 
+/* From the left: a box pushed past the right edge widens the page (a brief
+   sideways scroll on phones while it settles); overflow to the left can't be
+   scrolled to, so it doesn't. */
 @keyframes qa-slam {
   from {
     opacity: 0;
-    translate: 40px 0;
+    translate: -40px 0;
   }
 }
 @keyframes qa-slide {
