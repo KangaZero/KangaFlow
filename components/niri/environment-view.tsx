@@ -4,7 +4,7 @@
 import { SquareIcon, X } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import dynamic from "next/dynamic"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import {
   type CSSProperties,
@@ -61,6 +61,7 @@ import {
   type Viewport,
 } from "@/lib/niri-overview"
 import { loadNiriState, saveNiriState } from "@/lib/niri-persistence"
+import { hrefForRoute, PAGE } from "@/lib/pages"
 import { playSfx } from "@/lib/sfx/play"
 import { matrixToGlyphRain } from "@/lib/terminal/cmatrix"
 import { readSourceFiles } from "@/lib/terminal/source"
@@ -366,6 +367,7 @@ function WindowContent({
 
 export function EnvironmentView() {
   const { translate, locale } = useLocale()
+  const router = useRouter()
   const { resolvedTheme } = useTheme()
   const dark = resolvedTheme !== "light"
   // next-themes' own storage key, read through the safe store: null on the
@@ -648,8 +650,14 @@ export function EnvironmentView() {
   ])
 
   const launch = (app: AppId) => {
-    dispatch({ app, title: appTitle[app], type: "spawn" })
     closePanel()
+    // "About me" lives on the real home page, so the launcher links there
+    // instead of opening the in-desktop About window.
+    if (app === "about") {
+      router.push(hrefForRoute(locale, PAGE.home.route))
+      return
+    }
+    dispatch({ app, title: appTitle[app], type: "spawn" })
   }
 
   const workspace = state.workspaces.find((w) => w.id === state.active)
