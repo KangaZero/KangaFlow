@@ -104,20 +104,26 @@ export const person = {
     // { category: "professional", icon: "vim", name: "Vim" },
   ],
 
-  // Work section. `subtitle`/`subtitleBlur` drive the TrueFocus heading: the
-  // first word reads "Backend" while blurred and "Frontend" while focused.
-  // `logo` keys the mark shown next to the employer.
+  // Work section (rendered as a quest log in components/about/quest-log.tsx).
+  // `kind` picks the MAIN / SIDE QUEST tag, `current` the blinking IN
+  // PROGRESS (vs a CLEAR! stamp), `pitch` the plain one-liner shown on the
+  // closed panel; `logo` keys the employer mark.
   work: {
     experiences: [
       {
         achievements: [
-          "Unified a fragmented ecosystem of legacy tools (Excel, PowerPoint, and Sharepoint docs) into a single, standardized platform, creating a “single source of truth” for enterprise workflows.",
-          "Developed interactive visual builders, including an SAP component canvas and a design-flow engine, allowing users to build and test enterprise applications through a drag-and-drop interface.",
-          "Engineered an “App-Wide Intelligence” layer that enables the platform to automatically read, update, and refactor data across the entire web application to ensure consistency.",
-          "Transformed the Developer Experience (DX) by replacing slow, manual documentation processes with automated tools, significantly reducing project delivery times and operational costs.",
+          "Chat: streamed replies, syntax-highlighted code, a model picker and live views of what the agent and its helpers are doing.",
+          "Canvas: preview and edit HTML, Mermaid and BPMN files right beside the chat, sandboxed so nothing in a file can touch the app.",
+          "Team spaces: a file explorer, shared skills, a knowledge library and an admin console for teams, roles and usage.",
+          "First-run polish: guided tours of every main feature, a friendly welcome, and one accessible table used across the app.",
+          "Beyond the UI: wired it to internal AI and DevOps platforms, helped move it to Azure, and hardened it with strict security headers and sandboxing.",
         ],
         company: "Accenture",
+        current: true,
+        kind: "main",
         logo: "accenture",
+        pitch:
+          "I build an internal web app where teams work with an AI coding agent in the browser: chat with it, watch it work, and review what it changes. Mostly frontend, plus the glue to the platforms behind it.",
         role: "Frontend Developer",
         timeframe: "2023 - Present",
       },
@@ -126,13 +132,15 @@ export const person = {
           "Developed a design system that unified the brand across multiple platforms, improving design consistency by 40%.",
         ],
         company: "Timewitch",
+        current: false,
+        kind: "side",
         logo: "timewitch",
+        pitch:
+          "An internal app for the whole company: one place to see and manage what's going on across teams. I worked on both the screens and the server behind them.",
         role: "Fullstack intern",
         timeframe: "2023",
       },
     ],
-    subtitle: "Frontend Developer",
-    subtitleBlur: "Backend",
   },
   workplace: "Accenture",
 } as const

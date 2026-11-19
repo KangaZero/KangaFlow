@@ -18,7 +18,8 @@ const SUBTITLE_PAUSE = 0.35
 
 type PageHeaderProps = {
   title: string
-  subtitle: string
+  /** Omitted: no subtitle line (About's Work and Education). */
+  subtitle?: string
   className?: string
 } & (
   | { page: PageName; section?: never }
@@ -84,17 +85,19 @@ export function PageHeader({
           transition={{ duration: 0.5, ease: [0.2, 0.7, 0.2, 1] }}
         />
       </Heading>
-      <motion.p
-        {...(section
-          ? { viewport: { once: true }, whileInView: subtitleShown }
-          : { animate: subtitleShown })}
-        className="text-muted-foreground mt-4 max-w-[46ch] font-serif text-lg leading-snug font-light italic sm:text-xl [&:lang(ja)]:text-base [&:lang(ja)]:not-italic"
-        initial={reduced ? false : { filter: "blur(3px)", opacity: 0, y: 4 }}
-        key={locale}
-        transition={{ delay: subtitleDelay, duration: 0.9, ease: "easeOut" }}
-      >
-        {subtitle}
-      </motion.p>
+      {subtitle ? (
+        <motion.p
+          {...(section
+            ? { viewport: { once: true }, whileInView: subtitleShown }
+            : { animate: subtitleShown })}
+          className="text-muted-foreground mt-4 max-w-[46ch] font-serif text-lg leading-snug font-light italic sm:text-xl [&:lang(ja)]:text-base [&:lang(ja)]:not-italic"
+          initial={reduced ? false : { filter: "blur(3px)", opacity: 0, y: 4 }}
+          key={locale}
+          transition={{ delay: subtitleDelay, duration: 0.9, ease: "easeOut" }}
+        >
+          {subtitle}
+        </motion.p>
+      ) : null}
     </header>
   )
 }

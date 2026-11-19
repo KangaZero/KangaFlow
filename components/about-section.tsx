@@ -2,7 +2,7 @@
 
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { ChevronRight, Mail } from "lucide-react"
+import { Mail } from "lucide-react"
 import {
   AnimatePresence,
   motion,
@@ -27,8 +27,8 @@ import {
   SiTypescript,
   SiVuedotjs,
 } from "react-icons/si"
-import accentureMark from "@/assets/accenture-mark.svg"
-import usydCrest from "@/assets/usyd-crest.svg"
+import { OriginCard } from "@/components/about/origin-card"
+import { QuestLog } from "@/components/about/quest-log"
 import { DecryptRole } from "@/components/decrypt-role"
 import { HeroAvatar } from "@/components/hero-avatar"
 import { LocaleTransition } from "@/components/locale-transition"
@@ -96,14 +96,6 @@ const SOCIAL_ICONS: Record<string, IconType> = {
   linkedin: FaLinkedin,
 }
 
-// Employer marks for the Work rows, keyed by the `logo` slug in person.ts.
-// `label` is a text monogram for employers without a glyph worth shrinking;
-// `mono` marks are single-colour art that has to invert on dark themes.
-const WORK_LOGOS = {
-  accenture: { src: accentureMark },
-  timewitch: { label: "TW" },
-} as const
-
 // One shared reveal, played as each block scrolls into view.
 //TODO consider moving all motion variants to their own lib file
 const reveal = {
@@ -116,15 +108,19 @@ function Section({
   title,
   children,
   className,
+  reduced,
 }: {
   id?: string
   title?: React.ReactNode
   children: React.ReactNode
   className?: string
+  /** Sets data-reduced, for sections whose CSS gates its own motion. */
+  reduced?: boolean
 }) {
   return (
     <motion.section
       className={cn("flex w-full scroll-mt-24 flex-col gap-6", className)}
+      data-reduced={reduced}
       id={id}
       initial="hidden"
       transition={{ duration: 0.5, ease: "easeOut" }}
@@ -135,40 +131,6 @@ function Section({
       {title}
       {children}
     </motion.section>
-  )
-}
-
-// Brand marks (employers, school) share one frosted capsule instead of a solid
-// plate: the glass surface adapts to every theme, and only the artwork itself
-// carries colour.
-const BrandMark = ({
-  src,
-  label,
-  mono = false,
-}: {
-  src?: StaticImageData
-  label?: string
-  mono?: boolean
-}) => {
-  return (
-    <span className="bg-foreground/5 ring-foreground/10 relative flex size-10 shrink-0 items-center justify-center rounded-full shadow-sm ring-1 backdrop-blur-md">
-      {src ? (
-        <Image
-          alt=""
-          className={cn(
-            "object-contain p-2.5",
-            mono && "terminal:invert dark:invert"
-          )}
-          fill
-          sizes="40px"
-          src={src}
-        />
-      ) : (
-        <span className="font-heading text-[13px] font-semibold tracking-[0.08em]">
-          {label}
-        </span>
-      )}
-    </span>
   )
 }
 
@@ -274,96 +236,6 @@ function ScrollShrinkLogo({ className }: { className?: string }) {
         <FloatingLogo anchor={anchor} viewportWidth={viewportWidth} />
       ) : null}
     </>
-  )
-}
-
-// Faithful port of the portfolio's React Bits "TrueFocus": non-focused words
-// blur; a frame tracks the focused word; the first word swaps to `subtitleBlur`
-// while blurred. Manual mode = hover / keyboard-focus a word.
-function TrueFocus({
-  subtitle,
-  subtitleBlur,
-  blurAmount = 4.5,
-  animationDuration = 0.3,
-}: {
-  subtitle: string
-  subtitleBlur: string
-  blurAmount?: number
-  animationDuration?: number
-}) {
-  const shouldReduceMotion = useReducedMotion()
-  const words = subtitle.split(" ")
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [lastActiveIndex, setLastActiveIndex] = useState<number | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const wordRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const [rect, setRect] = useState({ height: 0, width: 0, x: 0, y: 0 })
-
-  useEffect(() => {
-    const measure = () => {
-      const el = wordRefs.current[currentIndex]
-      const container = containerRef.current
-      if (!el || !container) return
-      const parent = container.getBoundingClientRect()
-      const active = el.getBoundingClientRect()
-      setRect({
-        height: active.height,
-        width: active.width,
-        x: active.left - parent.left,
-        y: active.top - parent.top,
-      })
-    }
-    measure()
-    const observer = new ResizeObserver(measure)
-    if (containerRef.current) observer.observe(containerRef.current)
-    return () => observer.disconnect()
-  }, [currentIndex])
-
-  return (
-    <div className="focus-container" ref={containerRef}>
-      {words.map((word, index) => {
-        const isActive = index === currentIndex
-        return (
-          <button
-            className={cn("focus-word", isActive && "active")}
-            key={word}
-            onBlur={() => setCurrentIndex(lastActiveIndex ?? 0)}
-            onFocus={() => {
-              setLastActiveIndex(index)
-              setCurrentIndex(index)
-            }}
-            onPointerEnter={() => {
-              setLastActiveIndex(index)
-              setCurrentIndex(index)
-            }}
-            onPointerLeave={() => setCurrentIndex(lastActiveIndex ?? 0)}
-            ref={(el) => {
-              wordRefs.current[index] = el
-            }}
-            style={{ filter: isActive ? "blur(0px)" : `blur(${blurAmount}px)` }}
-            type="button"
-          >
-            {index === 0 && !isActive ? subtitleBlur : word}
-          </button>
-        )
-      })}
-      <motion.div
-        animate={{
-          height: rect.height,
-          opacity: rect.width ? 1 : 0,
-          width: rect.width,
-          x: rect.x,
-          y: rect.y,
-        }}
-        className="focus-frame"
-        transition={{ duration: shouldReduceMotion ? 0 : animationDuration }}
-      >
-        <span className="focus-corner top-left" />
-        <span className="focus-corner top-right" />
-        <span className="focus-corner bottom-left" />
-        <span className="focus-corner bottom-right" />
-      </motion.div>
-    </div>
   )
 }
 
@@ -500,8 +372,12 @@ function FlipTechIcon({
 export function AboutSection() {
   const { locale, translate } = useLocale()
   const { markSocialVisited } = useAchievements()
-  const { isHelloEffectAnimationComplete, setIsHelloEffectAnimationComplete } =
-    useGlobalStates()
+  const {
+    animationPref,
+    isHelloEffectAnimationComplete,
+    setIsHelloEffectAnimationComplete,
+  } = useGlobalStates()
+  const reducedMotion = isReducedMotion(animationPref, useReducedMotion())
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-16 py-8">
@@ -642,84 +518,39 @@ export function AboutSection() {
               >
                 <ProjectCards />
               </Section>
-              {/* Work */}
+              {/* Work: a quest log (components/about/quest-log.tsx) */}
               <Section
+                className="qa-scope"
                 id={workSection.id}
+                reduced={reducedMotion}
                 title={
-                  <TrueFocus
-                    subtitle={person.work.subtitle}
-                    subtitleBlur={person.work.subtitleBlur}
+                  <PageHeader
+                    section={{
+                      index: ABOUT_SECTIONS.indexOf(workSection),
+                      total: ABOUT_SECTIONS.length,
+                    }}
+                    title={translate("about.work")}
                   />
                 }
               >
-                {/* Technical skills — plain text, top of the résumé. */}
-                <div className="flex flex-col gap-1">
-                  <h3 className="font-heading text-sm font-medium">
-                    {translate("about.technical")}
-                  </h3>
-                  <p className="text-muted-foreground text-sm">
-                    {person.technologies.map((tech) => tech.name).join(", ")}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-6">
-                  {person.work.experiences.map((job) => (
-                    <div
-                      className="flex items-start gap-4"
-                      key={`${job.company}-${job.role}`}
-                    >
-                      <BrandMark {...WORK_LOGOS[job.logo]} />
-                      <div className="flex min-w-0 flex-col">
-                        <p className="font-heading text-sm font-medium">
-                          {job.company}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          {job.role} · {job.timeframe}
-                        </p>
-                        <details className="group mt-1.5">
-                          <summary className="text-muted-foreground flex w-fit cursor-pointer items-center gap-1 text-[10px] tracking-wide uppercase select-none [&::-webkit-details-marker]:hidden">
-                            <ChevronRight
-                              aria-hidden
-                              className="size-3 transition-transform group-open:rotate-90"
-                            />
-                            {translate("about.achievements")}
-                            <span className="tabular-nums">
-                              ({job.achievements.length})
-                            </span>
-                          </summary>
-                          <ul className="marker:text-muted-foreground mt-2 flex list-disc flex-col gap-1.5 pl-4 text-xs">
-                            {job.achievements.map((achievement) => (
-                              <li key={achievement}>{achievement}</li>
-                            ))}
-                          </ul>
-                        </details>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <QuestLog reduced={reducedMotion} />
               </Section>
-              {/* Education */}
+              {/* Education: the origin card with the piano */}
               <Section
+                className="qa-scope"
                 id={educationSection.id}
+                reduced={reducedMotion}
                 title={
-                  <h2 className="font-heading text-2xl font-semibold sm:text-3xl">
-                    {translate("about.education")}
-                  </h2>
+                  <PageHeader
+                    section={{
+                      index: ABOUT_SECTIONS.indexOf(educationSection),
+                      total: ABOUT_SECTIONS.length,
+                    }}
+                    title={translate("about.education")}
+                  />
                 }
               >
-                {person.studies.map((study) => (
-                  <div className="flex items-center gap-4" key={study.name}>
-                    <BrandMark mono src={usydCrest} />
-                    <div className="flex min-w-0 flex-col">
-                      <p className="font-heading text-sm font-medium">
-                        {study.name}
-                      </p>
-                      <p className="text-muted-foreground text-xs text-pretty">
-                        {study.title} · {study.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                <OriginCard reduced={reducedMotion} />
               </Section>
             </LocaleTransition>
           </motion.div>
