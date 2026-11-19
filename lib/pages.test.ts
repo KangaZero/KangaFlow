@@ -6,6 +6,7 @@ import {
   navPositionLabel,
   PAGE_NAMES,
   pageFromPathname,
+  positionLabel,
 } from "@/lib/pages"
 
 describe("NAV_ORDER", () => {
@@ -37,5 +38,12 @@ describe("pageFromPathname", () => {
   it("returns undefined off the page map", () => {
     expect(pageFromPathname("/")).toBeUndefined()
     expect(pageFromPathname("/en/contact/")).toBeUndefined()
+  })
+})
+
+describe("positionLabel", () => {
+  it("pads both sides and counts from one", () => {
+    expect(positionLabel(1, 4)).toBe("02 / 04")
+    expect(positionLabel(9, 12)).toBe("10 / 12")
   })
 })

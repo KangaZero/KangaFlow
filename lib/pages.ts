@@ -98,8 +98,13 @@ export const NAV_ORDER = [
 export function navPositionLabel(name: PageName): string | undefined {
   const index = NAV_ORDER.indexOf(name)
   if (index === -1) return undefined
+  return positionLabel(index, NAV_ORDER.length)
+}
+
+/** Zero-based `index` of `total` → the "02 / 04" eyebrow label. */
+export function positionLabel(index: number, total: number): string {
   const pad = (value: number) => String(value).padStart(2, "0")
-  return `${pad(index + 1)} / ${pad(NAV_ORDER.length)}`
+  return `${pad(index + 1)} / ${pad(total)}`
 }
 
 /**
