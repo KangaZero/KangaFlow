@@ -47,6 +47,13 @@ jobs:
       - name: Test
         run: pnpm exec vitest run
 
+      # Refresh the project cards' live GitHub numbers. Never fails the build:
+      # on any API error the committed lib/github-stats.json is kept.
+      - name: Refresh GitHub stats
+        run: node scripts/build-github-stats.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
       - name: Build static export
         run: pnpm build
 

@@ -1,0 +1,44 @@
+{
+  "contributions": {
+    "nixpkgsMaintained": ["brows", "cutechess", "octorus", "sub-batch"],
+    "nixpkgsMergedPRs": 59,
+    "upstreamMergedPRs": 73
+  },
+  "generatedAt": "2026-11-19",
+  "repos": {
+    "hello-world-pp": {
+      "commits": 74,
+      "languages": {
+        "Just": 3690,
+        "Nix": 6846,
+        "Rust": 6177172,
+        "Shell": 275
+      }
+    },
+    "KangaFlow": {
+      "commits": 233,
+      "languages": {
+        "CSS": 115246,
+        "JavaScript": 8997,
+        "Just": 2815,
+        "Nix": 5828,
+        "Shell": 2349,
+        "TypeScript": 2199804
+      }
+    },
+    "neomouse": {
+      "commits": 142,
+      "languages": {
+        "CSS": 7862,
+        "HTML": 675,
+        "Just": 9114,
+        "Nix": 10872,
+        "Ruby": 1990,
+        "Shell": 27617,
+        "Swift": 624796,
+        "TypeScript": 35341,
+        "Vue": 39571
+      }
+    }
+  }
+}

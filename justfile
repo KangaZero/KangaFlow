@@ -41,6 +41,11 @@ map-data:
 placeholders:
     node scripts/build-image-placeholders.mjs
 
+# Refresh the live numbers on the project cards (commits, languages, PRs).
+# Needs a token for code search: GITHUB_TOKEN=$(gh auth token) just stats
+stats:
+    node scripts/build-github-stats.mjs
+
 # Full gate: everything CI runs, in the same order.
 verify: lint typecheck test build
 
