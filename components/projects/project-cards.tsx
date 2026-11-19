@@ -30,7 +30,6 @@ import {
   MoveDrawer,
 } from "@/components/projects/move-drawer"
 import { TradingCard } from "@/components/projects/trading-card"
-import { Button } from "@/components/ui/button"
 import { Kbd } from "@/components/ui/kbd"
 import { useElementSize } from "@/hooks/use-element-size"
 import { isReducedMotion } from "@/lib/isReducedMotion"
@@ -172,6 +171,7 @@ export function ProjectCards() {
   }, [phase, revealed])
 
   const reseal = () => {
+    playSfx("menu-close")
     clearTimers()
     torn.current = false
     safeLocalStorage.removeItem(OPENED_KEY)
@@ -253,9 +253,12 @@ export function ProjectCards() {
       // The frame is the handle: a press counts only when it lands on the
       // face itself (its padding), never on anything inside it, so flips,
       // moves and links keep plain clicks on either side of the card.
+      // The article itself counts too: the hover tilt turns the faces a
+      // little, uncovering a sliver of it right at the edge.
       const onFrame =
-        event.target instanceof Element &&
-        event.target.classList.contains("tc-face")
+        event.target === event.currentTarget ||
+        (event.target instanceof Element &&
+          event.target.classList.contains("tc-face"))
       if (phase !== "done" || !onFrame || event.button !== 0) return
       // Stop the browser's own text/element drag, which would otherwise
       // fire pointercancel a few pixels in and end ours.
@@ -407,14 +410,14 @@ export function ProjectCards() {
               {translate("about.projects.legend.drag")}
             </span>
           </p>
-          <Button
-            className="tc-reseal"
-            onClick={reseal}
-            size="sm"
-            variant="ghost"
-          >
-            {translate("about.projects.reseal")}
-          </Button>
+          <button className="tc-reseal" onClick={reseal} type="button">
+            <span aria-hidden className="tc-reseal-chip">
+              ↺
+            </span>
+            <span className="tc-reseal-label">
+              {translate("about.projects.reseal")}
+            </span>
+          </button>
         </>
       ) : null}
       <MoveDrawer

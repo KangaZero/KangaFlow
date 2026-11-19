@@ -56,13 +56,15 @@
   position: relative;
   height: 500px;
   /* No clipping: card shadows, the SSR aura and lifted cards may spill out.
-     Only the spinning rays are clipped (by .tc-rays-clip). */
+     Only the spinning rays are clipped, sideways (by .tc-rays-clip). */
 }
 
 .tc-rays-clip {
   position: absolute;
   inset: 0;
-  overflow: show;
+  /* Rays may spill above and below the stage, but never sideways: past the
+     viewport edge they would make the whole page scroll horizontally. */
+  overflow: clip visible;
   pointer-events: none;
 }
 .tc-rays {
@@ -135,8 +137,55 @@
   gap: 0.25rem;
 }
 
+/* Reseal: a settings pause-menu row (skewed slab, gold slab shadow,
+   slides right like the menu cursor). The text is counter-skewed upright. */
 .tc-reseal {
+  display: inline-flex;
+  align-items: center;
   justify-self: center;
+  gap: 10px;
+  margin-block-start: 0.5rem;
+  padding: 10px 18px 10px 10px;
+  border: 0;
+  color: white;
+  background: oklch(0.16 0.02 260);
+  box-shadow: 5px 5px 0 var(--tc-gold);
+  cursor: pointer;
+  transform: skewX(-12deg);
+  transition:
+    translate 0.2s cubic-bezier(0.3, 1.6, 0.5, 1),
+    background 0.15s,
+    box-shadow 0.2s;
+}
+.tc-reseal > * {
+  transform: skewX(12deg);
+}
+.tc-reseal:is(:hover, :focus-visible) {
+  background: oklch(0.55 0.12 175);
+  box-shadow: 8px 8px 0 var(--tc-gold);
+  translate: 6px 0;
+}
+.tc-reseal:active {
+  box-shadow: 2px 2px 0 var(--tc-gold);
+  translate: 2px 2px;
+}
+.tc-reseal:focus-visible {
+  outline: 2px solid var(--tc-gold);
+  outline-offset: 4px;
+}
+.tc-reseal-chip {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  color: oklch(0.22 0.05 70);
+  font: 900 14px / 1 var(--font-mono);
+  background: var(--tc-gold);
+}
+.tc-reseal-label {
+  font: italic 900 14px / 1 var(--font-mono);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 /* ── Booster pack ──────────────────────────────────────────────────────── */
@@ -872,6 +921,7 @@
 
 .tc-ribbon {
   position: absolute;
+  pointer-events: none;
   top: -16px;
   left: 50%;
   z-index: 7;
