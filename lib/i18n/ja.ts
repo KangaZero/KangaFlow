@@ -16,9 +16,133 @@ const ja = {
     },
     overview: "概要",
     project: "プロジェクト",
-    projectLinks: {
-      repo: "コード",
-      website: "サイト",
+    projects: {
+      cards: {
+        desktop: {
+          blurb: "ブラウザのタブで起動するデスクトップ。触って遊ぶためのもの。",
+          sub: "Next.js 16 · React 19 · TS 7",
+        },
+        helloWorldPp: {
+          blurb: "あらゆる挨拶を、あらゆる言語で。（画像はイメージ）",
+          sub: "Rust 2024 · clap · MIT",
+        },
+        neomouse: {
+          blurb: "マウスを Vim の操作で。手はホームポジションのまま。",
+          sub: "macOS 14+ · Swift 6 · メニューバー",
+        },
+        supporter: {
+          blurb: "nixpkgs メンテナ、そして OSS コントリビューター。",
+          sub: "nixpkgs · オープンソース",
+        },
+      },
+      drawer: {
+        allMoves: "一覧",
+        close: "閉じる",
+        moves: "技",
+        nextMove: "次の技",
+      },
+      flip: "{name} を裏返す",
+      hero: {
+        commits: "コミット",
+        upstreamPrs: "上流 PR",
+      },
+      languages: "言語：{list}",
+      legend: {
+        choose: "選ぶ",
+        drag: "並べ替え",
+        flip: "裏返す",
+        move: "カードを移動",
+      },
+      links: {
+        enter: "デスクトップへ",
+        profile: "GitHub",
+        prs: "nixpkgs",
+        repo: "コード",
+        website: "サイト",
+      },
+      moveDetails: "{move}：詳細",
+      moves: {
+        agent: {
+          chips: ["WebMCP", "{tools} ツール"],
+          desc: "{tools} 個の WebMCP ツールで、ブラウザの AI がサイトを移動・テーマ変更・閲覧。",
+          name: "エージェント",
+        },
+        bumps: {
+          chips: ["{prs} PR", "新規 + 更新"],
+          desc: "nixpkgs へ {prs} 件マージ：バージョン更新と新規パッケージ。",
+          name: "連続アップデート",
+        },
+        click: {
+          chips: ["クリック", "スクロール"],
+          desc: "トラックパッドに触れずにクリック・スクロール・ジェスチャー。",
+          name: "クリック",
+        },
+        greet: {
+          chips: ["--human-dialect", "--script"],
+          desc: "あらゆる言語・方言・文字で挨拶。",
+          name: "グリート",
+        },
+        hjkl: {
+          chips: ["h j k l", "5j"],
+          desc: "h/j/k/l でホームポジションのままカーソル操作。",
+          name: "hjkl ドライブ",
+        },
+        list: {
+          chips: ["list", "--endonym"],
+          desc: "言語・文字・語族・パラダイムを自称名つきで一覧。",
+          name: "リスト",
+        },
+        maintainer: {
+          chips: ["nixpkgs", "{count} パッケージ"],
+          desc: "nixpkgs で {packages} のメンテナを担当。",
+          name: "メンテナ",
+        },
+        marks: {
+          chips: ["m{a-z}", "'{a-z}"],
+          desc: "カーソル位置をマークに保存して、Vim のように戻る。",
+          name: "マーク",
+        },
+        snippet: {
+          chips: ["-p Rust", "C++20"],
+          desc: "任意の言語・バージョンの Hello World をハイライト付きで。",
+          name: "スニペット",
+        },
+        terminal: {
+          chips: ["Ctrl+/", "nvim"],
+          desc: "本物のターミナル。サイト自身のソースを nvim・ls・cat で読める。",
+          name: "nvim ターミナル",
+        },
+        tiling: {
+          chips: ["Alt+H/J/K/L", "Alt+D"],
+          desc: "niri 風のスクロール列。ウィンドウが横に並び、列ごとに流れる。",
+          name: "タイリング",
+        },
+        upstream: {
+          chips: ["上流 {upstream} 件", "ドキュメント・修正"],
+          desc: "他の人のプロジェクトに {upstream} 件マージ：vite・TanStack Query・MDN・neovim.io・noogle。",
+          name: "上流支援",
+        },
+      },
+      pack: {
+        ariaLabel: "ブースターパックを開ける",
+        banner: "SSR 1 枚確定",
+        cards: "枚入り!",
+        hint: "右端を引きちぎる（または Enter）",
+        name: "パック!",
+        tearHere: "ここから開ける",
+      },
+      rarity: {
+        rare: "R",
+        ssr: "SSR",
+        supporter: "サポーター",
+      },
+      reseal: "パックを封じ直す",
+      stage: {
+        project: "プロジェクト",
+        supporter: "サポーター",
+      },
+      subtitle: "一パック、四枚入り。さあ、破ってみて。",
+      unflip: "表に戻す",
     },
     technical: "技術スキル",
     work: "職務経歴",

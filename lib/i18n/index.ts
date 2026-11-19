@@ -101,3 +101,18 @@ export function t<K extends TranslationKey>(
     get(translations.en, key) ??
     key) as NestedValue<Translation, K>
 }
+
+/**
+ * Fill `{name}` placeholders from `vars`. Unknown names are left as written,
+ * and only word-character names match, so literal braces such as `m{a-z}`
+ * pass through untouched.
+ */
+export function interpolate(
+  template: string,
+  vars: Readonly<Record<string, string | number>>
+): string {
+  return template.replace(/\{(\w+)\}/g, (match, name: string) => {
+    const value = vars[name]
+    return value === undefined ? match : String(value)
+  })
+}

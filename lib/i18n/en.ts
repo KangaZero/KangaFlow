@@ -17,9 +17,133 @@ const en = {
     },
     overview: "Overview",
     project: "Project",
-    projectLinks: {
-      repo: "Code",
-      website: "Website",
+    projects: {
+      cards: {
+        desktop: {
+          blurb: "A desktop that boots in a browser tab. Built to be poked at.",
+          sub: "Next.js 16 · React 19 · TS 7",
+        },
+        helloWorldPp: {
+          blurb: "Every greeting, every language. (art: illustrative)",
+          sub: "Rust 2024 · clap · MIT",
+        },
+        neomouse: {
+          blurb: "Vim motions for your mouse. Hands stay on the home row.",
+          sub: "macOS 14+ · Swift 6 · menu bar",
+        },
+        supporter: {
+          blurb: "nixpkgs maintainer and open-source contributor.",
+          sub: "nixpkgs · open source",
+        },
+      },
+      drawer: {
+        allMoves: "All moves",
+        close: "Close",
+        moves: "Moves",
+        nextMove: "Next move",
+      },
+      flip: "Flip {name}",
+      hero: {
+        commits: "commits",
+        upstreamPrs: "upstream PRs",
+      },
+      languages: "Languages: {list}",
+      legend: {
+        choose: "choose",
+        drag: "rearrange",
+        flip: "flip",
+        move: "move card",
+      },
+      links: {
+        enter: "Enter desktop",
+        profile: "GitHub",
+        prs: "nixpkgs",
+        repo: "Code",
+        website: "Website",
+      },
+      moveDetails: "{move}: details",
+      moves: {
+        agent: {
+          chips: ["WebMCP", "{tools} tools"],
+          desc: "{tools} WebMCP tools let browser AI agents navigate, theme and read the site.",
+          name: "Agent Link",
+        },
+        bumps: {
+          chips: ["{prs} PRs", "init + bump"],
+          desc: "{prs} merged nixpkgs PRs: version bumps and new packages.",
+          name: "Bump Barrage",
+        },
+        click: {
+          chips: ["click", "scroll"],
+          desc: "Click, scroll and gesture without touching the trackpad.",
+          name: "Click & Scroll",
+        },
+        greet: {
+          chips: ["--human-dialect", "--script"],
+          desc: "Hello in any human language, dialect or script.",
+          name: "Greet",
+        },
+        hjkl: {
+          chips: ["h j k l", "5j"],
+          desc: "Steer the cursor with h/j/k/l straight from the home row.",
+          name: "hjkl Drive",
+        },
+        list: {
+          chips: ["list", "--endonym"],
+          desc: "Browse languages, scripts, families and paradigms, with endonyms.",
+          name: "List All",
+        },
+        maintainer: {
+          chips: ["nixpkgs", "{count} packages"],
+          desc: "Listed maintainer of {packages} in nixpkgs.",
+          name: "Maintainer",
+        },
+        marks: {
+          chips: ["m{a-z}", "'{a-z}"],
+          desc: "Save a cursor position as a mark and jump back, vim-style.",
+          name: "Marks",
+        },
+        snippet: {
+          chips: ["-p Rust", "C++20"],
+          desc: "A hello-world program in any language or version, highlighted.",
+          name: "Snippet",
+        },
+        terminal: {
+          chips: ["Ctrl+/", "nvim"],
+          desc: "A real terminal with nvim, ls and cat, reading this site's own source.",
+          name: "nvim Terminal",
+        },
+        tiling: {
+          chips: ["Alt+H/J/K/L", "Alt+D"],
+          desc: "niri-style scrolling columns: windows tile side by side and the strip scrolls.",
+          name: "Tiling Strike",
+        },
+        upstream: {
+          chips: ["{upstream} PRs", "docs + fixes"],
+          desc: "{upstream} PRs merged in other people's projects: vite, TanStack Query, MDN, neovim.io, noogle.",
+          name: "Upstream Assist",
+        },
+      },
+      pack: {
+        ariaLabel: "Tear open the booster pack",
+        banner: "1 SSR GUARANTEED",
+        cards: "CARDS!",
+        hint: "Drag the right edge to tear (or press Enter)",
+        name: "PACK!",
+        tearHere: "TEAR HERE",
+      },
+      rarity: {
+        rare: "R",
+        ssr: "SSR",
+        supporter: "SUPPORTER",
+      },
+      reseal: "Reseal the pack",
+      stage: {
+        project: "Project",
+        supporter: "Supporter",
+      },
+      subtitle: "One pack, four cards. Go on, tear it open.",
+      unflip: "Flip back",
     },
     technical: "Technical skills",
     work: "Work",

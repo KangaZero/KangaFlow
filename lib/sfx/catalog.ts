@@ -38,6 +38,11 @@ export const SFX_NAMES = [
   "menu-tab",
   "menu-open",
   "menu-close",
+  // Project trading cards: booster tear, a card turning over, a card landing
+  // face up (the SSR reuses unlock-mythic).
+  "pack-tear",
+  "card-flip",
+  "card-reveal",
   // Login (recipes ready; wired by the login overhaul port).
   "lock-wake",
   "denied",
@@ -84,6 +89,8 @@ export const SFX_META = {
   boop: { category: "start", minIntervalMs: 60, motion: false },
   "bubble-cover": { category: "navigation", minIntervalMs: 400, motion: true },
   "bubble-pop": { category: "navigation", minIntervalMs: 400, motion: true },
+  "card-flip": { category: "ui", minIntervalMs: 90, motion: false },
+  "card-reveal": { category: "ui", minIntervalMs: 120, motion: true },
   copy: { category: "ui", minIntervalMs: 300, motion: false },
   denied: { category: "login", minIntervalMs: 300, motion: false },
   "error-soft": { category: "ui", minIntervalMs: 250, motion: false },
@@ -102,6 +109,7 @@ export const SFX_META = {
   "oneko-summon": { category: "terminal", minIntervalMs: 300, motion: false },
   "overview-in": { category: "environment", minIntervalMs: 200, motion: true },
   "overview-out": { category: "environment", minIntervalMs: 200, motion: true },
+  "pack-tear": { category: "ui", minIntervalMs: 600, motion: false },
   "term-boot": { category: "terminal", minIntervalMs: 800, motion: false },
   "term-error": { category: "terminal", minIntervalMs: 150, motion: false },
   "theme-switch": { category: "ui", minIntervalMs: 400, motion: false },
@@ -275,6 +283,22 @@ export const SFX_RECIPES: Record<SfxName, (options: SfxOptions) => SfxPlan> = {
     ),
     wet: 0.25,
   }),
+  // Card turning over: an airy flick and one bright pluck.
+  "card-flip": () => ({
+    events: [
+      { at: 0, dur: 0.1, from: 1800, gain: 0.022, kind: "swoosh", to: 4200 },
+      note("pluck", 0.03, 11, 0.25, 0.04),
+    ],
+    wet: 0.2,
+  }),
+  // A card landing face up in the reveal sequence: celesta pair + sparkle.
+  "card-reveal": () => ({
+    events: [
+      ...run("celesta", 0, [9, 13], 0.06, 0.45, 0.05),
+      { at: 0.05, count: 4, gain: 0.025, kind: "sparkle", spread: 0.2 },
+    ],
+    wet: 0.35,
+  }),
   copy: () => ({
     events: [
       note("crystal", 0, 14, 0.7, 0.05),
@@ -413,6 +437,16 @@ export const SFX_RECIPES: Record<SfxName, (options: SfxOptions) => SfxPlan> = {
       note("celesta", 0.25, 0, 0.8, 0.08),
     ],
     wet: 0.4,
+  }),
+  // Booster pack ripping open: paper clicks, a falling swoosh, a soft thud.
+  "pack-tear": () => ({
+    dark: true,
+    events: [
+      { at: 0, count: 7, gain: 0.03, kind: "clicks", spacing: 0.022 },
+      { at: 0.02, dur: 0.3, from: 3800, gain: 0.05, kind: "swoosh", to: 900 },
+      { at: 0.24, f: 160, gain: 0.06, kind: "thud" },
+    ],
+    wet: 0.15,
   }),
   "term-boot": () => ({
     events: [

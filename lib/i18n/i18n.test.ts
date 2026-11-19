@@ -1,7 +1,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { describe, expect, it } from "vitest"
 
-import { isLocale, t } from "@/lib/i18n"
+import { interpolate, isLocale, t } from "@/lib/i18n"
 
 describe("i18n t()", () => {
   it("returns the string for the requested locale", () => {
@@ -23,5 +23,17 @@ describe("i18n t()", () => {
     expect(isLocale("ja")).toBe(true)
     expect(isLocale("de")).toBe(false)
     expect(isLocale(undefined)).toBe(false)
+  })
+})
+
+describe("interpolate()", () => {
+  it("fills known placeholders and repeats", () => {
+    expect(interpolate("{n} of {n} {what}", { n: 3, what: "cards" })).toBe(
+      "3 of 3 cards"
+    )
+  })
+
+  it("leaves unknown names and non-word braces alone", () => {
+    expect(interpolate("{missing} m{a-z}", {})).toBe("{missing} m{a-z}")
   })
 })
