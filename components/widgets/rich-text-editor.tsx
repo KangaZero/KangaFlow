@@ -35,14 +35,15 @@ import {
   formatHtml,
   type InlineFormatState,
   readState,
-  sanitizeHtml,
   setFontSize,
   type TextAlign,
   toggleBold,
   toggleDecoration,
 } from "@/lib/rich-text"
+import { setSanitizedHtml } from "@/lib/sanitize-html"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
+import { useLocale } from "@/providers/locale-provider"
 
 const EMPTY_STATE: InlineFormatState = {
   bold: false,
@@ -120,6 +121,7 @@ export function RichTextEditor({
   const caret = useCaretPosition(editorRef)
   // Modal (vim) editing over the contentEditable when the global toggle is on.
   const { vimMode, noteLineNumbers } = useGlobalStates()
+  const { translate } = useLocale()
   useVimContentEditable(editorRef, { enabled: vimMode })
   // Vim-style line-number gutter (off / absolute / relative).
   const { lines: gutterLines, scrollTop } = useLineNumbers(
@@ -133,8 +135,7 @@ export function RichTextEditor({
   // caret; the DOM is the source of truth for content after mount.
   // biome-ignore lint/correctness/useExhaustiveDependencies: initial content only
   useEffect(() => {
-    if (editorRef.current)
-      editorRef.current.innerHTML = sanitizeHtml(initialHtml)
+    if (editorRef.current) void setSanitizedHtml(editorRef.current, initialHtml)
   }, [])
 
   const refreshState = useCallback(() => {
@@ -166,9 +167,11 @@ export function RichTextEditor({
     const root = editorRef.current
     if (!root) return
     if (showRaw) {
-      applyRawHtml(root, rawHtml) // apply edits, stripping indentation whitespace
-      emitHtml()
-      setShowRaw(false)
+      // Apply edits (sanitized, indentation whitespace stripped), then leave raw.
+      void applyRawHtml(root, rawHtml).then(() => {
+        emitHtml()
+        setShowRaw(false)
+      })
     } else {
       setRawHtml(formatHtml(root.innerHTML)) // pretty-print for reading
       setShowRaw(true)
@@ -194,19 +197,19 @@ export function RichTextEditor({
         <ToolbarToggle
           active={fmt.bold}
           icon={Bold}
-          label="Bold"
+          label={translate("widgets.editor.bold")}
           onToggle={() => run(toggleBold)}
         />
         <ToolbarToggle
           active={fmt.underline}
           icon={Underline}
-          label="Underline"
+          label={translate("widgets.editor.underline")}
           onToggle={() => run((r) => toggleDecoration(r, "underline"))}
         />
         <ToolbarToggle
           active={fmt.strike}
           icon={Strikethrough}
-          label="Strikethrough"
+          label={translate("widgets.editor.strikethrough")}
           onToggle={() => run((r) => toggleDecoration(r, "line-through"))}
         />
 
@@ -214,7 +217,7 @@ export function RichTextEditor({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              aria-label="Font size"
+              aria-label={translate("widgets.editor.fontSize")}
               className="gap-1"
               size="sm"
               type="button"
@@ -243,7 +246,7 @@ export function RichTextEditor({
         {/* Alignment (document-level) */}
         {ALIGNMENTS.map(({ icon: Icon, value }) => (
           <Button
-            aria-label={`Align ${value}`}
+            aria-label={translate(`widgets.editor.align.${value}`)}
             aria-pressed={align === value}
             className={cn(align === value && "bg-muted text-foreground")}
             key={value}
@@ -265,7 +268,7 @@ export function RichTextEditor({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              aria-label="Spacing"
+              aria-label={translate("widgets.editor.spacing")}
               size="icon-sm"
               type="button"
               variant="ghost"
@@ -278,7 +281,7 @@ export function RichTextEditor({
               <div className="flex flex-col gap-1.5">
                 <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <MoveVertical className="size-3.5" />
-                  Line height
+                  {translate("widgets.editor.lineHeight")}
                   <span className="ml-auto font-mono tabular-nums">
                     {lineHeight.toFixed(1)}
                   </span>
@@ -294,7 +297,7 @@ export function RichTextEditor({
               <div className="flex flex-col gap-1.5">
                 <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <MoveHorizontal className="size-3.5" />
-                  Letter spacing
+                  {translate("widgets.editor.letterSpacing")}
                   <span className="ml-auto font-mono tabular-nums">
                     {letterSpacing.toFixed(1)}
                   </span>
@@ -317,7 +320,7 @@ export function RichTextEditor({
         <ToolbarToggle
           active={showRaw}
           icon={Code2}
-          label="Raw HTML"
+          label={translate("widgets.editor.rawHtml")}
           onToggle={toggleRaw}
         />
       </div>
@@ -345,7 +348,7 @@ export function RichTextEditor({
         {/* biome-ignore lint/a11y/useFocusableInteractive: contentEditable is inherently focusable */}
         {/* biome-ignore lint/a11y/useSemanticElements: a rich-text contentEditable cannot be an <input>/<textarea> */}
         <div
-          aria-label="Note content"
+          aria-label={translate("widgets.editor.content")}
           aria-multiline="true"
           className={cn(
             "[&_a]:text-primary-ink min-h-0 flex-1 overflow-auto p-3 text-sm leading-relaxed outline-none [&_a]:underline",
@@ -368,7 +371,7 @@ export function RichTextEditor({
       {/* Raw HTML editor (shown instead of the rendered surface), fading in. */}
       {showRaw ? (
         <textarea
-          aria-label="Raw note HTML"
+          aria-label={translate("widgets.editor.rawContent")}
           className="fade-in animate-in bg-muted/10 text-muted-foreground min-h-0 flex-1 resize-none overflow-auto p-3 font-mono text-xs duration-50 outline-none"
           onChange={(e) => setRawHtml(e.target.value)}
           spellCheck={false}

@@ -21,6 +21,8 @@ import { Calendar } from "@/components/ui/calendar"
 import { CalendarDaysIcon } from "@/components/ui/calendar-days"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
+import { interpolate } from "@/lib/i18n"
+import { isCommitEnter } from "@/lib/keyboard-events"
 import { SPRING_LIST, SPRING_TAP } from "@/lib/motion"
 import { safeLocalStorage } from "@/lib/safe-storage"
 import { cn } from "@/lib/utils"
@@ -36,14 +38,27 @@ type CalEvent = {
   color: string // Tailwind bg class token
 }
 
-const EVENT_COLORS = [
-  "bg-primary",
-  "bg-rose-500",
-  "bg-amber-500",
-  "bg-emerald-500",
-  "bg-sky-500",
-  "bg-violet-500",
+// Picker order. Each name doubles as its i18n key (widgets.colors.*); the
+// Tailwind class is what an event stores, so saved events keep working.
+const EVENT_COLOR_NAMES = [
+  "accent",
+  "rose",
+  "amber",
+  "emerald",
+  "sky",
+  "violet",
 ] as const
+
+type EventColorName = (typeof EVENT_COLOR_NAMES)[number]
+
+const EVENT_COLORS = {
+  accent: "bg-primary",
+  amber: "bg-amber-500",
+  emerald: "bg-emerald-500",
+  rose: "bg-rose-500",
+  sky: "bg-sky-500",
+  violet: "bg-violet-500",
+} as const satisfies Record<EventColorName, string>
 
 function toDateKey(d: Date): string {
   return d.toISOString().slice(0, 10)
@@ -65,6 +80,7 @@ const MONTH_INDICES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const
 // inside CalendarWidget would recreate it each render and remount the caption.
 function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
   const { months, goToMonth, dayPickerProps } = useDayPicker()
+  const { translate } = useLocale()
   const current = months[0]?.date ?? new Date()
   const localeCode = dayPickerProps.locale?.code ?? "en-US"
   const [open, setOpen] = useState(false)
@@ -106,7 +122,7 @@ function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
         {/* Year navigation */}
         <div className="mb-3 flex items-center justify-between">
           <button
-            aria-label="Previous year"
+            aria-label={translate("widgets.calendar.previousYear")}
             className="hover:bg-accent hover:text-accent-foreground rounded p-1 transition-colors"
             onClick={() => shiftYear(-1)}
             type="button"
@@ -115,7 +131,7 @@ function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
           </button>
           <span className="text-sm font-medium tabular-nums">{year}</span>
           <button
-            aria-label="Next year"
+            aria-label={translate("widgets.calendar.nextYear")}
             className="hover:bg-accent hover:text-accent-foreground rounded p-1 transition-colors"
             onClick={() => shiftYear(1)}
             type="button"
@@ -148,14 +164,14 @@ function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
 export function CalendarWidget(): React.JSX.Element {
   const { isCalendarOpen, setIsCalendarOpen, envSettings, vimMode } =
     useGlobalStates()
-  const { locale } = useLocale()
+  const { locale, translate } = useLocale()
   const calLocale = locale === "ja" ? ja : enUS
   const wd = envSettings.widgetDefaults.calendar
   const [events, setEvents] = useState<CalEvent[]>(loadEvents)
   const [selected, setSelected] = useState<Date | undefined>(new Date())
   const [month, setMonth] = useState(() => new Date())
   const [newTitle, setNewTitle] = useState("")
-  const [newColor, setNewColor] = useState<string>(EVENT_COLORS[0])
+  const [newColor, setNewColor] = useState<string>(EVENT_COLORS.accent)
   const eventRef = useRef<HTMLInputElement>(null)
   useVimInput(eventRef, { enabled: vimMode })
 
@@ -200,7 +216,7 @@ export function CalendarWidget(): React.JSX.Element {
       minWidth={300}
       onClose={() => setIsCalendarOpen(false)}
       storageKey="calendar-widget"
-      title="Calendar"
+      title={translate("widgets.calendar.title")}
     >
       <div className="flex h-full flex-col gap-0">
         {/* Month picker — fill the window width. Overriding classNames.root
@@ -246,7 +262,7 @@ export function CalendarWidget(): React.JSX.Element {
                   month: "long",
                   weekday: "short",
                 })
-              : "No date selected"}
+              : translate("widgets.calendar.noDateSelected")}
           </p>
 
           <AnimatePresence initial={false}>
@@ -264,7 +280,12 @@ export function CalendarWidget(): React.JSX.Element {
                 />
                 <span className="flex-1 truncate text-sm">{ev.title}</span>
                 <motion.button
-                  aria-label={`Delete ${ev.title}`}
+                  aria-label={interpolate(
+                    translate("widgets.calendar.deleteEvent"),
+                    {
+                      title: ev.title,
+                    }
+                  )}
                   className="text-muted-foreground hover:text-destructive rounded p-0.5"
                   onClick={() => deleteEvent(ev.id)}
                   transition={SPRING_TAP}
@@ -280,36 +301,42 @@ export function CalendarWidget(): React.JSX.Element {
           {/* Add event */}
           <div className="flex gap-1.5">
             <div className="flex gap-1">
-              {EVENT_COLORS.map((c) => (
-                <motion.button
-                  aria-label={`Color ${c}`}
-                  className={cn(
-                    "size-4 rounded-full",
-                    c,
-                    newColor === c && "ring-ring scale-125 ring-2 ring-offset-1"
-                  )}
-                  key={c}
-                  onClick={() => setNewColor(c)}
-                  transition={SPRING_TAP}
-                  type="button"
-                  whileHover={{ scale: newColor === c ? 1.25 : 1.2 }}
-                  whileTap={{ scale: 0.85 }}
-                />
-              ))}
+              {EVENT_COLOR_NAMES.map((name) => {
+                const c = EVENT_COLORS[name]
+                return (
+                  <motion.button
+                    aria-label={interpolate(translate("widgets.colorOption"), {
+                      color: translate(`widgets.colors.${name}`),
+                    })}
+                    className={cn(
+                      "size-4 rounded-full",
+                      c,
+                      newColor === c &&
+                        "ring-ring scale-125 ring-2 ring-offset-1"
+                    )}
+                    key={c}
+                    onClick={() => setNewColor(c)}
+                    transition={SPRING_TAP}
+                    type="button"
+                    whileHover={{ scale: newColor === c ? 1.25 : 1.2 }}
+                    whileTap={{ scale: 0.85 }}
+                  />
+                )
+              })}
             </div>
             <input
               className="border-border bg-muted/40 placeholder:text-muted-foreground focus:ring-ring min-w-0 flex-1 rounded border px-2 py-1 text-xs focus:ring-1 focus:outline-none"
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") addEvent()
+                if (isCommitEnter(e.nativeEvent)) addEvent()
               }}
-              placeholder="Add event…"
+              placeholder={translate("widgets.calendar.addEventPlaceholder")}
               ref={eventRef}
               type="text"
               value={newTitle}
             />
             <motion.button
-              aria-label="Add event"
+              aria-label={translate("widgets.calendar.addEvent")}
               className="border-border bg-muted/40 hover:bg-muted rounded border p-1"
               onClick={addEvent}
               transition={SPRING_TAP}

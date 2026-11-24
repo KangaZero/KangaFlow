@@ -8,7 +8,6 @@ import {
   htmlToPlainText,
   insertVimText,
   readVim,
-  sanitizeHtml,
 } from "@/lib/rich-text"
 
 describe("htmlToPlainText", () => {
@@ -27,33 +26,6 @@ describe("htmlToPlainText", () => {
 
   it("returns an empty string for markup-only input", () => {
     expect(htmlToPlainText("<span></span>")).toBe("")
-  })
-})
-
-describe("sanitizeHtml", () => {
-  it("removes script and style blocks", () => {
-    expect(sanitizeHtml("<p>ok</p><script>alert(1)</script>")).toBe("<p>ok</p>")
-    expect(sanitizeHtml("<style>*{}</style><b>x</b>")).toBe("<b>x</b>")
-  })
-
-  it("strips inline event handlers", () => {
-    expect(sanitizeHtml('<span onclick="steal()">x</span>')).toBe(
-      "<span>x</span>"
-    )
-    expect(sanitizeHtml("<span onmouseover='x'>y</span>")).toBe(
-      "<span>y</span>"
-    )
-  })
-
-  it("neutralizes javascript: urls", () => {
-    expect(sanitizeHtml('<a href="javascript:alert(1)">x</a>')).toBe(
-      '<a href="alert(1)">x</a>'
-    )
-  })
-
-  it("leaves ordinary formatting markup untouched", () => {
-    const html = '<span style="font-weight:700">bold</span>'
-    expect(sanitizeHtml(html)).toBe(html)
   })
 })
 
@@ -106,22 +78,22 @@ describe("vim DOM ops (formatting-preserving)", () => {
     )
   })
 
-  it("toggling raw/rendered 10 times yields the identical raw form", () => {
+  it("toggling raw/rendered 10 times yields the identical raw form", async () => {
     const root = mount("<div>regular<br></div><div>x</div>")
     const firstRaw = formatHtml(root.innerHTML) // the first "toggle to raw"
     let raw = firstRaw
     for (let i = 0; i < 10; i++) {
-      applyRawHtml(root, raw) // toggle back to rendered
+      await applyRawHtml(root, raw) // toggle back to rendered
       raw = formatHtml(root.innerHTML) // toggle to raw again
       expect(raw).toBe(firstRaw) // must be byte-identical every time
     }
   })
 
-  it("applyRawHtml strips inter-block whitespace but keeps inline spaces", () => {
+  it("applyRawHtml strips inter-block whitespace but keeps inline spaces", async () => {
     const root = mount("")
-    applyRawHtml(root, "<div>a</div>\n<div>b</div>")
+    await applyRawHtml(root, "<div>a</div>\n<div>b</div>")
     expect(readVim(root).text).toBe("a\nb")
-    applyRawHtml(root, "<b>a</b> <b>b</b>")
+    await applyRawHtml(root, "<b>a</b> <b>b</b>")
     expect(root.textContent).toBe("a b")
   })
 

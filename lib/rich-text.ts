@@ -1,8 +1,8 @@
-// Dependency-free rich-text helpers for the notes editor. Inline formatting is
-// applied to the live Selection via the modern Range API (no deprecated
-// document.execCommand). The DOM-mutating helpers must run in the browser; the
-// string helpers (sanitize/excerpt) are pure and SSR-safe so they can run in
-// render and be unit-tested.
+// Rich-text helpers for the notes editor. Inline formatting is applied to the
+// live Selection via the modern Range API (no deprecated document.execCommand).
+// The DOM-mutating helpers must run in the browser; the string helper (excerpt)
+// is pure and SSR-safe so it can run in render and be unit-tested. Untrusted
+// markup goes through setSanitizedHtml (lib/sanitize-html), never innerHTML.
 
 import {
   BLOCK_TAGS,
@@ -10,6 +10,7 @@ import {
   readVimBuffer,
   type VimBuffer,
 } from "@/lib/rich-text-caret"
+import { setSanitizedHtml } from "@/lib/sanitize-html"
 
 export type InlineFormatState = {
   bold: boolean
@@ -272,8 +273,11 @@ function isBoundary(node: Node | null): boolean {
 // nodes that live *between block boundaries* (the pretty-print indentation) so
 // they don't become real content. Inline whitespace (e.g. a space between two
 // spans) is left untouched.
-export function applyRawHtml(root: HTMLElement, raw: string): void {
-  root.innerHTML = sanitizeHtml(raw)
+export async function applyRawHtml(
+  root: HTMLElement,
+  raw: string
+): Promise<void> {
+  await setSanitizedHtml(root, raw)
   const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
   const remove: Text[] = []
   for (let n = walk.nextNode(); n; n = walk.nextNode()) {
@@ -304,15 +308,4 @@ export function htmlToPlainText(html: string): string {
     .replace(/&gt;/gi, ">")
     .replace(/\s+/g, " ")
     .trim()
-}
-
-// Best-effort sanitizer for self-authored, locally-stored note HTML: drop
-// script/style blocks, inline event handlers, and javascript: URLs before the
-// content is written back into a contentEditable.
-export function sanitizeHtml(html: string): string {
-  return html
-    .replace(/<\s*(script|style)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "")
-    .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
-    .replace(/\son\w+\s*=\s*'[^']*'/gi, "")
-    .replace(/javascript:/gi, "")
 }

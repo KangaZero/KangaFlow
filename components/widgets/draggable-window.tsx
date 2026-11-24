@@ -20,6 +20,7 @@ import {
   type WidgetAnchor,
 } from "@/components/niri/settings"
 import { Button } from "@/components/ui/button"
+import { interpolate } from "@/lib/i18n"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import { SPRING_ACCORDION, SPRING_CONTENT } from "@/lib/motion"
 import { safeLocalStorage } from "@/lib/safe-storage"
@@ -28,6 +29,7 @@ import { cn } from "@/lib/utils"
 import { RESIZE_STEP, snapDelta, vimWindowAction } from "@/lib/vim-window"
 import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
+import { useLocale } from "@/providers/locale-provider"
 import { useZOrder } from "@/providers/z-order-provider"
 
 const clamp = (value: number, min: number, max: number): number =>
@@ -117,6 +119,7 @@ export function DraggableWindow({
   children,
 }: DraggableWindowProps): React.JSX.Element | null {
   const { envSettings, animationPref } = useGlobalStates()
+  const { translate } = useLocale()
   const reduceMotion = isReducedMotion(animationPref, useReducedMotion())
   const radius = Math.min(envSettings.windowRadius, MAX_TILE_RADIUS)
   const { bringToFront, activeId } = useZOrder()
@@ -414,7 +417,9 @@ export function DraggableWindow({
                 {title}
               </span>
               <Button
-                aria-label={`Close ${title}`}
+                aria-label={interpolate(translate("widgets.window.close"), {
+                  title,
+                })}
                 className="size-6 shrink-0 transition-transform active:scale-90"
                 onClick={onClose}
                 size="icon"
