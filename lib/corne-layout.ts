@@ -477,7 +477,7 @@ export const HALF_HEIGHT_U = 5.25
 
 // Column stagger (left half, outer → inner): pinky lowest, middle highest.
 const STAGGER_L = [0.5, 0.5, 0.22, 0, 0.12, 0.25] as const
-const STAGGER_R = [...STAGGER_L].reverse()
+const STAGGER_R = STAGGER_L.toReversed()
 
 // Fanned thumbs (left half, outer → inner); the right half mirrors them.
 const THUMB_FAN_L = [

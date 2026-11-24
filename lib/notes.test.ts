@@ -1,7 +1,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { describe, expect, it } from "vitest"
 
-import { normalizeNote, uniqueUntitledTitle } from "@/lib/notes"
+import { formatNoteDate, normalizeNote, uniqueUntitledTitle } from "@/lib/notes"
 
 describe("uniqueUntitledTitle", () => {
   it("uses the bare base when free", () => {
@@ -65,5 +65,23 @@ describe("normalizeNote", () => {
   it("synthesizes an id when missing", () => {
     expect(typeof normalizeNote({}).id).toBe("string")
     expect(normalizeNote({}).id.length).toBeGreaterThan(0)
+  })
+})
+
+describe("formatNoteDate", () => {
+  // Local-time constructor, so the expectation holds in any TZ.
+  const ms = new Date(2026, 7, 2, 14, 30).getTime()
+
+  it("formats in the app locale, not the browser's", () => {
+    expect(formatNoteDate(ms, "ja")).toBe(
+      new Date(ms).toLocaleString("ja", {
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        month: "short",
+      })
+    )
+    expect(formatNoteDate(ms, "ja")).toContain("8月")
+    expect(formatNoteDate(ms, "en")).toContain("Aug")
   })
 })

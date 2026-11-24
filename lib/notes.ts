@@ -2,6 +2,7 @@
 // sanitized HTML string; document-level typography (align/line/letter) and
 // metadata (title/tags/color/pin/timestamps) live alongside it.
 
+import type { Locale } from "@/lib/i18n"
 import type { TextAlign } from "@/lib/rich-text"
 import { asArrayOf, isString, safeLocalStorage } from "@/lib/safe-storage"
 
@@ -64,9 +65,10 @@ export type Note = {
 export const NOTES_STORAGE_KEY = "kangaflow:notes"
 export const NOTES_OPEN_STORAGE_KEY = "kangaflow:notes-open"
 
-// Short absolute timestamp for created/updated labels (e.g. "Aug 2, 14:30").
-export function formatNoteDate(ms: number): string {
-  return new Date(ms).toLocaleString(undefined, {
+// Short absolute timestamp for created/updated labels (e.g. "Aug 2, 14:30"),
+// in the app's locale — not the browser's, which may disagree with /ja/.
+export function formatNoteDate(ms: number, locale: Locale): string {
+  return new Date(ms).toLocaleString(locale, {
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",

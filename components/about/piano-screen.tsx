@@ -182,7 +182,7 @@ function PianoPanel({
   // sustain), and only a new press changes it: letting go one key at a time
   // would otherwise walk the reading down to a single note.
   const describe = (pressed: readonly number[]): Reading => {
-    const sorted = [...pressed].sort((a, b) => a - b)
+    const sorted = pressed.toSorted((a, b) => a - b)
     const notes = sorted.map((midi) => noteName(midi, key)).join(" · ")
     const [low] = sorted
     const high = sorted.at(-1)

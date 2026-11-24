@@ -200,7 +200,7 @@
     translate 0.7s cubic-bezier(0.6, 0, 0.35, 1),
     opacity 0.5s;
 }
-.tc-zone:not([data-phase="sealed"]):not([data-phase="rising"]) .tc-pack {
+.tc-zone:not([data-phase="sealed"], [data-phase="rising"]) .tc-pack {
   translate: -50% 260px;
   opacity: 0;
   pointer-events: none;
@@ -281,8 +281,7 @@
 .tc-pack-title {
   position: absolute;
   top: 57%;
-  right: 0;
-  left: 0;
+  inset-inline: 0;
   display: grid;
   justify-items: center;
   font-family: var(--font-mono);
@@ -368,9 +367,8 @@
 
 .tc-banner {
   position: absolute;
-  right: -6px;
+  inset-inline: -6px;
   bottom: 44px;
-  left: -6px;
   padding: 5px 0;
   color: oklch(0.88 0.14 85);
   font-size: 10px;
@@ -389,9 +387,8 @@
 
 .tc-pack-foot {
   position: absolute;
-  right: 12px;
+  inset-inline: 12px;
   bottom: 12px;
-  left: 12px;
   display: flex;
   justify-content: space-between;
   font-size: 9px;
@@ -480,9 +477,8 @@
   --edge: 10px;
 
   position: absolute;
-  right: 0;
+  inset-inline: 0;
   bottom: 10px;
-  left: 0;
   z-index: var(--z, 3);
   width: 280px;
   aspect-ratio: 63 / 88;
@@ -1012,8 +1008,7 @@
 }
 .tc-cover-label {
   position: absolute;
-  right: 0;
-  left: 0;
+  inset-inline: 0;
   padding-inline-start: 0.32em;
   color: color-mix(in oklch, var(--tc-ink) 65%, transparent);
   font-size: 8px;

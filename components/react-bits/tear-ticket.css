@@ -137,8 +137,7 @@
 
 .tear-ticket__content {
   position: absolute;
-  top: 0;
-  bottom: 0;
+  inset-block: 0;
   left: 0;
   width: calc(var(--tt-w) - var(--tt-stub));
   transition: opacity 500ms ease;
@@ -150,9 +149,8 @@
 
 .tear-ticket__stub {
   position: absolute;
-  top: 0;
+  inset-block: 0;
   right: 0;
-  bottom: 0;
   width: var(--tt-stub);
 }
 

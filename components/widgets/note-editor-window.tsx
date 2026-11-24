@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { RichTextEditor } from "@/components/widgets/rich-text-editor"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
+import { interpolate } from "@/lib/i18n"
+import { isCommitEnter } from "@/lib/keyboard-events"
 import { SPRING_TAP } from "@/lib/motion"
 import {
   formatNoteDate,
@@ -18,6 +20,7 @@ import {
 import type { TextAlign } from "@/lib/rich-text"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
+import { useLocale } from "@/providers/locale-provider"
 
 // A few cascading anchors so freshly-opened editor windows don't stack exactly.
 const CASCADE = [
@@ -41,6 +44,7 @@ export function NoteEditorWindow({
 }): React.JSX.Element {
   const [tagDraft, setTagDraft] = useState("")
   const { vimMode } = useGlobalStates()
+  const { locale, translate } = useLocale()
   const titleRef = useRef<HTMLInputElement>(null)
   const tagRef = useRef<HTMLInputElement>(null)
   useVimInput(titleRef, { enabled: vimMode })
@@ -70,14 +74,18 @@ export function NoteEditorWindow({
       onClose={onClose}
       positionClassName={CASCADE[cascadeIndex % CASCADE.length] ?? CASCADE[0]}
       storageKey={`note-${note.id}`}
-      title={note.title.trim() === "" ? "Untitled note" : note.title}
+      title={
+        note.title.trim() === ""
+          ? translate("widgets.notes.untitled")
+          : note.title
+      }
     >
       <div className="flex h-full min-h-0 flex-col">
         {/* Title */}
         <input
           className="border-border placeholder:text-muted-foreground shrink-0 border-b bg-transparent px-3 py-2 text-sm font-semibold outline-none"
           onChange={(e) => onChange({ title: e.target.value })}
-          placeholder="Title"
+          placeholder={translate("widgets.notes.titlePlaceholder")}
           ref={titleRef}
           value={note.title}
         />
@@ -100,7 +108,9 @@ export function NoteEditorWindow({
             <div className="flex gap-1">
               {NOTE_COLOR_KEYS.map((c) => (
                 <motion.button
-                  aria-label={`Colour ${c}`}
+                  aria-label={interpolate(translate("widgets.colorOption"), {
+                    color: translate(`widgets.colors.${c}`),
+                  })}
                   aria-pressed={note.color === c}
                   className={cn(
                     "size-4 rounded-full",
@@ -118,10 +128,14 @@ export function NoteEditorWindow({
             </div>
             <div className="flex w-full flex-col justify-end">
               <span className="text-muted-foreground ml-auto text-[10px]">
-                Created {formatNoteDate(note.createdOn)}
+                {interpolate(translate("widgets.notes.created"), {
+                  date: formatNoteDate(note.createdOn, locale),
+                })}
               </span>
               <span className="text-muted-foreground ml-auto text-[10px]">
-                Edited {formatNoteDate(note.updatedOn)}
+                {interpolate(translate("widgets.notes.edited"), {
+                  date: formatNoteDate(note.updatedOn, locale),
+                })}
               </span>
             </div>
           </div>
@@ -139,7 +153,12 @@ export function NoteEditorWindow({
                   <Badge className="gap-1" variant="secondary">
                     {tag}
                     <button
-                      aria-label={`Remove ${tag}`}
+                      aria-label={interpolate(
+                        translate("widgets.notes.removeTag"),
+                        {
+                          tag,
+                        }
+                      )}
                       className="text-muted-foreground hover:text-destructive"
                       onClick={() => removeTag(tag)}
                       type="button"
@@ -154,7 +173,7 @@ export function NoteEditorWindow({
               className="placeholder:text-muted-foreground min-w-16 flex-1 bg-transparent px-1 py-0.5 text-xs outline-none"
               onChange={(e) => setTagDraft(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") addTag()
+                if (isCommitEnter(e.nativeEvent)) addTag()
                 if (
                   e.key === "Backspace" &&
                   tagDraft === "" &&
@@ -162,7 +181,7 @@ export function NoteEditorWindow({
                 )
                   removeTag(note.tags[note.tags.length - 1] ?? "")
               }}
-              placeholder="Add tag…"
+              placeholder={translate("widgets.notes.addTag")}
               ref={tagRef}
               value={tagDraft}
             />

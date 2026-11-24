@@ -24,6 +24,7 @@ import { BellIcon, type BellIconHandle } from "@/components/ui/bell"
 import { Button } from "@/components/ui/button"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
+import { isCommitEnter } from "@/lib/keyboard-events"
 import { SPRING_LIST, SPRING_PILL, SPRING_TAP } from "@/lib/motion"
 import { safeLocalStorage } from "@/lib/safe-storage"
 import { playSfx } from "@/lib/sfx/play"
@@ -38,10 +39,11 @@ const ALARM_SFX_INTERVAL_MS = 2200
 const STORAGE_KEY = "kangaflow:alarms"
 
 // ── Mode segmented control ────────────────────────────────────────────────
+// `key` doubles as the label's i18n key (widgets.alarm.modes.*).
 const MODES = [
-  { icon: AlarmClock, key: "alarm", label: "Alarm" },
-  { icon: TimerIcon, key: "stopwatch", label: "Stopwatch" },
-  { icon: Hourglass, key: "timer", label: "Timer" },
+  { icon: AlarmClock, key: "alarm" },
+  { icon: TimerIcon, key: "stopwatch" },
+  { icon: Hourglass, key: "timer" },
 ] as const
 
 type Mode = (typeof MODES)[number]["key"]
@@ -132,6 +134,7 @@ function ModeTabs({
   mode: Mode
   onChange: (m: Mode) => void
 }): React.JSX.Element {
+  const { translate } = useLocale()
   return (
     <div className="bg-muted/40 flex gap-1 rounded-lg p-1">
       {MODES.map((m) => (
@@ -155,7 +158,7 @@ function ModeTabs({
             )}
           >
             <m.icon className="size-3.5" />
-            {m.label}
+            {translate(`widgets.alarm.modes.${m.key}`)}
           </span>
         </button>
       ))}
@@ -549,7 +552,7 @@ export function AlarmWidget(): React.JSX.Element {
       minWidth={260}
       onClose={() => setIsAlarmOpen(false)}
       storageKey="alarm-widget"
-      title="Clock"
+      title={translate("widgets.alarm.clock")}
     >
       <div className="relative flex min-h-full flex-col gap-3 p-3">
         <AlarmRinging
@@ -653,7 +656,7 @@ export function AlarmWidget(): React.JSX.Element {
                 className="border-border bg-muted/40 placeholder:text-muted-foreground focus:ring-ring w-full rounded-md border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
                 onChange={(e) => setNewLabel(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") addAlarm()
+                  if (isCommitEnter(e.nativeEvent)) addAlarm()
                 }}
                 placeholder={translate("widgets.alarm.labelPlaceholder")}
                 ref={labelRef}
@@ -753,7 +756,11 @@ export function AlarmWidget(): React.JSX.Element {
                   ) : (
                     <Play className="size-4" />
                   )}
-                  {stopwatch.running ? "Pause" : "Start"}
+                  {translate(
+                    stopwatch.running
+                      ? "widgets.alarm.pause"
+                      : "widgets.alarm.start"
+                  )}
                 </Button>
               </motion.div>
               <motion.div
@@ -778,7 +785,7 @@ export function AlarmWidget(): React.JSX.Element {
                   ) : (
                     <>
                       <RotateCcw className="size-4" />
-                      Reset
+                      {translate("widgets.alarm.reset")}
                     </>
                   )}
                 </Button>
@@ -824,7 +831,7 @@ export function AlarmWidget(): React.JSX.Element {
             {timer.running ? null : (
               <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 <input
-                  aria-label="Minutes"
+                  aria-label={translate("widgets.alarm.minutes")}
                   className="border-border bg-muted/40 text-foreground focus:ring-ring w-14 rounded-md border px-2 py-1 text-center font-mono text-sm focus:ring-2 focus:outline-none"
                   max={99}
                   min={0}
@@ -839,7 +846,7 @@ export function AlarmWidget(): React.JSX.Element {
                 />
                 min
                 <input
-                  aria-label="Seconds"
+                  aria-label={translate("widgets.alarm.seconds")}
                   className="border-border bg-muted/40 text-foreground focus:ring-ring w-14 rounded-md border px-2 py-1 text-center font-mono text-sm focus:ring-2 focus:outline-none"
                   max={59}
                   min={0}
@@ -873,7 +880,11 @@ export function AlarmWidget(): React.JSX.Element {
                   ) : (
                     <Play className="size-4" />
                   )}
-                  {timer.running ? "Pause" : "Start"}
+                  {translate(
+                    timer.running
+                      ? "widgets.alarm.pause"
+                      : "widgets.alarm.start"
+                  )}
                 </Button>
               </motion.div>
               <motion.div
@@ -888,7 +899,7 @@ export function AlarmWidget(): React.JSX.Element {
                   variant="outline"
                 >
                   <RotateCcw className="size-4" />
-                  Reset
+                  {translate("widgets.alarm.reset")}
                 </Button>
               </motion.div>
             </div>

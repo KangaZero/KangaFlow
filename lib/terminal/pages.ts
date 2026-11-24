@@ -49,9 +49,7 @@ export const TERMINAL_PAGES: readonly TerminalPage[] = PAGE_LINKS.map(
 // Page names, sorted — the completion pool for `cd`.
 export const TERMINAL_PAGE_NAMES: readonly string[] = TERMINAL_PAGES.map(
   (page) => page.name
-)
-  .slice()
-  .sort()
+).toSorted()
 
 export function pageByName(name: string): TerminalPage | undefined {
   return TERMINAL_PAGES.find((page) => page.name === name)

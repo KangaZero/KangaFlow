@@ -11,6 +11,7 @@ import { playSfx } from "@/lib/sfx/play"
 import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
+import { useLocale } from "@/providers/locale-provider"
 import { useNotifications } from "@/providers/notifications-provider"
 
 type ActiveToast = {
@@ -76,6 +77,7 @@ function ToastItem({
   duration: number
   onClose: (id: string) => void
 }): React.JSX.Element {
+  const { translate } = useLocale()
   const Icon = TYPE_ICON[toast.type]
   const iconColor = TYPE_COLOR[toast.type]
   const barColor = TYPE_BG[toast.type]
@@ -107,7 +109,7 @@ function ToastItem({
           {toast.message}
         </p>
         <button
-          aria-label="Dismiss"
+          aria-label={translate("notifications.dismiss")}
           className="text-muted-foreground hover:text-foreground mt-0.5 shrink-0 rounded p-0.5 transition-colors"
           onClick={() => onClose(toast.id)}
           type="button"

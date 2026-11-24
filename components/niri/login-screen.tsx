@@ -38,6 +38,7 @@ import {
 import { WallpaperBackground } from "@/components/niri/wallpaper-background"
 import { verifyPassword } from "@/lib/auth"
 import { isReducedMotion } from "@/lib/isReducedMotion"
+import { isCommitEnter } from "@/lib/keyboard-events"
 import {
   clearExpiredLock,
   dayPart,
@@ -387,7 +388,7 @@ export function LoginScreen({
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent): void => {
       setCapsLock(e.getModifierState("CapsLock"))
-      if (e.key === "Enter") submit()
+      if (isCommitEnter(e.nativeEvent)) submit()
     },
     [submit]
   )

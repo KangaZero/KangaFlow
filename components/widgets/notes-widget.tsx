@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { NoteEditorWindow } from "@/components/widgets/note-editor-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
+import { interpolate } from "@/lib/i18n"
 import { SPRING_REORDER, SPRING_TAP } from "@/lib/motion"
 import {
   createNote,
@@ -21,10 +22,12 @@ import {
 import { htmlToPlainText } from "@/lib/rich-text"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
+import { useLocale } from "@/providers/locale-provider"
 
 export function NotesWidget(): React.JSX.Element {
   const { isNotesOpen, setIsNotesOpen, envSettings, vimMode } =
     useGlobalStates()
+  const { locale, translate } = useLocale()
   const wd = envSettings.widgetDefaults.notes
   const [notes, setNotes] = useState<Note[]>(loadNotes)
   const [openIds, setOpenIds] = useState<string[]>([])
@@ -115,12 +118,16 @@ export function NotesWidget(): React.JSX.Element {
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
             <span className={cn("size-2 shrink-0 rounded-full", colors.dot)} />
             <span className="truncate font-medium">
-              {note.title.trim() === "" ? "Untitled note" : note.title}
+              {note.title.trim() === ""
+                ? translate("widgets.notes.untitled")
+                : note.title}
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
             <button
-              aria-label={note.pinned ? "Unpin" : "Pin"}
+              aria-label={translate(
+                note.pinned ? "widgets.notes.unpin" : "widgets.notes.pin"
+              )}
               aria-pressed={note.pinned}
               className={cn(
                 "text-muted-foreground hover:text-foreground rounded p-1 transition-opacity",
@@ -137,7 +144,7 @@ export function NotesWidget(): React.JSX.Element {
               <Pin className={cn("size-3.5", note.pinned && "fill-current")} />
             </button>
             <button
-              aria-label="Delete note"
+              aria-label={translate("widgets.notes.delete")}
               className="text-muted-foreground hover:text-destructive rounded p-1 opacity-0 transition-opacity group-hover:opacity-100"
               onClick={(e) => {
                 e.stopPropagation()
@@ -167,8 +174,13 @@ export function NotesWidget(): React.JSX.Element {
           </div>
         ) : null}
         <p className="text-muted-foreground/80 mt-1.5 text-[10px]">
-          Created {formatNoteDate(note.createdOn)} · Edited{" "}
-          {formatNoteDate(note.updatedOn)}
+          {interpolate(translate("widgets.notes.created"), {
+            date: formatNoteDate(note.createdOn, locale),
+          })}
+          {" · "}
+          {interpolate(translate("widgets.notes.edited"), {
+            date: formatNoteDate(note.updatedOn, locale),
+          })}
         </p>
       </motion.div>
     )
@@ -187,7 +199,7 @@ export function NotesWidget(): React.JSX.Element {
         minWidth={260}
         onClose={() => setIsNotesOpen(false)}
         storageKey="notes-widget"
-        title="Notes"
+        title={translate("widgets.notes.title")}
       >
         <div className="flex h-full flex-col">
           <div className="border-border flex flex-col gap-2 border-b p-2">
@@ -200,15 +212,15 @@ export function NotesWidget(): React.JSX.Element {
               whileTap={{ scale: 0.97 }}
             >
               <Plus className="size-4" />
-              New note
+              {translate("widgets.notes.newNote")}
             </motion.button>
             <div className="border-border bg-muted/40 flex items-center gap-1.5 rounded-md border px-2">
               <Search className="text-muted-foreground size-3.5 shrink-0" />
               <input
-                aria-label="Search notes"
+                aria-label={translate("widgets.notes.search")}
                 className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent py-1.5 text-sm outline-none"
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search title or tag…"
+                placeholder={translate("widgets.notes.searchPlaceholder")}
                 ref={searchRef}
                 type="search"
                 value={query}
@@ -227,7 +239,7 @@ export function NotesWidget(): React.JSX.Element {
                   className="text-muted-foreground py-8 text-center text-sm"
                   initial={{ opacity: 0 }}
                 >
-                  No notes yet
+                  {translate("widgets.notes.empty")}
                 </motion.p>
               ) : visible.length === 0 ? (
                 <motion.p
@@ -235,7 +247,7 @@ export function NotesWidget(): React.JSX.Element {
                   className="text-muted-foreground py-8 text-center text-sm"
                   initial={{ opacity: 0 }}
                 >
-                  No matches
+                  {translate("widgets.notes.noMatches")}
                 </motion.p>
               ) : null}
             </LayoutGroup>
