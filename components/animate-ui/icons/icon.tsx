@@ -292,9 +292,9 @@ function AnimateIcon({
       }
 
       isAnimateInProgressRef.current = true
-      animateEndPromiseRef.current = new Promise<void>((resolve) => {
-        resolveAnimateEndRef.current = resolve
-      })
+      const animateEnd = Promise.withResolvers<void>()
+      animateEndPromiseRef.current = animateEnd.promise
+      resolveAnimateEndRef.current = animateEnd.resolve
 
       if (cancelledRef.current || gen !== runGenRef.current) {
         isAnimateInProgressRef.current = false

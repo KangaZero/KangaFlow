@@ -186,10 +186,7 @@ const LightRays: React.FC<LightRaysProps> = ({
       gl.canvas.style.width = "100%"
       gl.canvas.style.height = "100%"
 
-      while (containerRef.current.firstChild) {
-        containerRef.current.removeChild(containerRef.current.firstChild)
-      }
-      containerRef.current.appendChild(gl.canvas)
+      containerRef.current.replaceChildren(gl.canvas)
 
       const vert = `
 attribute vec2 position;
