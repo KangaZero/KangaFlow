@@ -625,6 +625,12 @@
   gap: 1px;
   height: clamp(120px, 22vh, 190px);
   min-width: max(100%, 1040px);
+
+  /* svh = the smallest viewport, so the board does not resize as the mobile
+     URL bar slides in/out mid-play. vh above is the fallback. */
+  @supports (height: 1svh) {
+    height: clamp(120px, 22svh, 190px);
+  }
 }
 .pz-board button {
   position: relative;
@@ -759,6 +765,10 @@
   .pz-board {
     height: clamp(140px, 30vh, 220px);
     min-width: calc(52 * 34px);
+
+    @supports (height: 1svh) {
+      height: clamp(140px, 30svh, 220px);
+    }
   }
 }
 

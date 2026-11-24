@@ -253,16 +253,16 @@
   z-index: -1;
   background: var(--primary);
   clip-path: polygon(0 0, 100% 8%, 96% 100%, 3% 92%);
-  transform: scaleX(0);
+  scale: 0 1;
   transform-origin: left;
-  transition: transform 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
+  transition: scale 0.25s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
 .pm-tab[aria-selected="true"] {
   color: var(--primary-foreground);
   transform: skewX(-12deg) translateX(calc(var(--n) * 10px + 14px)) scale(1.08);
 }
 .pm-tab[aria-selected="true"]::before {
-  transform: scaleX(1);
+  scale: 1;
 }
 .pm-tab:focus-visible {
   outline: 2px solid var(--pm-hi);
@@ -390,7 +390,7 @@
 /* Resting option chips use the readable accent ink (dark theme's primary is a
    fill colour). :not(:hover) leaves LiquidButton's own hover inversion alone;
    this file is unlayered, so it would otherwise beat Tailwind's hover utility. */
-.pause-menu .pm-opt:not([aria-pressed="true"]):not(:hover) {
+.pause-menu .pm-opt:not([aria-pressed="true"], :hover) {
   color: var(--pm-hi);
 }
 

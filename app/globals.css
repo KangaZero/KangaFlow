@@ -6,13 +6,16 @@
 @custom-variant dark (&:is(.dark *));
 @custom-variant terminal (&:is(.terminal *));
 
-/* Hide the scrollbar while keeping the element scrollable (Firefox +
-   WebKit/Blink). Applied to floating widget windows. */
+/* Hide the scrollbar while keeping the element scrollable. Applied to floating
+   widget windows. The ::-webkit-scrollbar rule only covers engines without
+   scrollbar-width (Safari < 18.2). */
 @utility scrollbar-none {
   scrollbar-width: none;
 
-  &::-webkit-scrollbar {
-    display: none;
+  @supports not (scrollbar-width: none) {
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 }
 
@@ -470,30 +473,43 @@
  * theme (:root / .dark / .terminal), so light/dark/terminal adapt with no JS and
  * no per-theme overrides here. Thumb = --border (subtle rail), hover =
  * --muted-foreground (clearer grab affordance), track = --background (blends in).
- * scrollbar-width/color cover Firefox; ::-webkit-* cover Chrome/Safari.
+ * Standard scrollbar-width/color everywhere they exist (Chromium 121+,
+ * Firefox, Safari 26.2+); the ::-webkit-* rules are a fallback for older
+ * WebKit/Blink only. Where both exist, the standard properties win and the
+ * pseudo-elements are ignored, so the fallback sits behind @supports not.
  */
 * {
+  --scrollbar-thumb: var(--border);
+  --scrollbar-track: var(--background);
   overscroll-behavior: none;
   scrollbar-width: thin;
-  scrollbar-color: var(--border) var(--background);
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+@supports not (scrollbar-color: auto) {
+  * {
+    /* `thin` would switch off ::-webkit-scrollbar styling in engines that know
+       scrollbar-width but not scrollbar-color (Safari 18.2–26.1). */
+    scrollbar-width: auto;
+  }
 
-*::-webkit-scrollbar-track {
-  background: var(--background);
-}
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
 
-*::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: var(--radius-sm);
-}
+  *::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
 
-*::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
+  *::-webkit-scrollbar-thumb {
+    border-radius: var(--radius-sm);
+    background: var(--scrollbar-thumb);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
 }
 
 @keyframes fadeIn {

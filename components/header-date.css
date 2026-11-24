@@ -19,8 +19,7 @@
   display: none;
   position: absolute;
   top: 0;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   filter: sepia(50%) saturate(3);
 }
 
@@ -33,8 +32,7 @@
   transition: all 0.1s linear;
   position: absolute;
   top: 10px;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   height: 30px;
   overflow: hidden;
 }
@@ -116,8 +114,10 @@
 }
 
 .p5Day {
-  transform: rotate(2deg);
-  scale: 0;
+  /* bounceIn targets: hidden by opacity until the bounce. No static `scale: 0`:
+     bounceIn animates the `scale` property, and the minifier folds a static
+     scale into any `transform` on the same rule — as scale(0), for good. */
+  rotate: 2deg;
   opacity: 0;
 }
 
@@ -130,8 +130,7 @@
   font-size: 2rem;
   margin-left: -0.1rem;
   margin-bottom: 0.6rem;
-  transform: rotate(-20deg);
-  scale: 0;
+  rotate: -20deg;
   opacity: 0;
 }
 
@@ -156,7 +155,7 @@
 /* biome-ignore lint/style/noDescendingSpecificity: ported P5 stylesheet — the `.dark .p5DateMonthDay` override intentionally precedes this base rule. */
 .p5DateMonthDay {
   display: inline-block;
-  transform: translate(0px, 3px);
+  translate: 0 3px;
   font-weight: bold;
   line-height: 1;
   z-index: 2;
@@ -165,8 +164,7 @@
 .p5Month {
   font-size: 0.9rem;
   display: inline-block;
-  transform: rotate(15deg);
-  scale: 0;
+  rotate: 15deg;
   opacity: 0;
 }
 
@@ -185,7 +183,6 @@
   margin-top: -0.5rem;
   margin-left: 0rem;
   z-index: 1;
-  scale: 0;
   opacity: 0;
 }
 
@@ -199,11 +196,10 @@
 
 .p5Date {
   display: inline-block;
-  transform: translate(-6px, 5.5px);
+  translate: -6px 5.5px;
   font-size: 1.5rem;
   font-weight: bold;
   line-height: 0.5;
-  scale: 0;
   opacity: 0;
 }
 
@@ -221,7 +217,6 @@
   transform: rotate(-5deg) translate(0, 6px);
   margin-left: 0.3rem;
   font-size: 1rem;
-  scale: 0;
   opacity: 0;
 }
 
@@ -236,9 +231,8 @@
 .p5Celsius {
   text-shadow: none;
   display: inline-block;
-  transform: rotate(15deg) translate(3, 8px);
+  transform: rotate(15deg) translate(3px, 8px);
   font-size: 0.8rem;
-  scale: 0;
   opacity: 0;
 }
 

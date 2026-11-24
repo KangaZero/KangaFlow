@@ -78,11 +78,17 @@
   background: var(--dock-gold);
 }
 
-/* Buttons drop in after the slam, left to right. */
+/* Buttons drop in after the slam, left to right: --k is each button's 0-based
+   position, staggering the delay 45ms per step. */
 .site-dock > * {
   animation: dock-drop 0.4s calc(0.42s + var(--k, 0) * 45ms)
     cubic-bezier(0.3, 1.6, 0.5, 1) backwards;
 }
+
+/* Fallback for browsers without sibling-index() (Baseline only since Aug
+   2026): a fixed table that covers up to 8 buttons. Any further button falls
+   back to --k: 0 and drops with the first; nothing breaks. Unconditional (not
+   `@supports not`) so even engines that predate @supports get the stagger. */
 .site-dock > :nth-child(1) {
   --k: 0;
 }
@@ -106,6 +112,15 @@
 }
 .site-dock > :nth-child(8) {
   --k: 7;
+}
+
+/* Native: one rule for any number of buttons. `:nth-child(n)` matches every
+   child but carries the same specificity as the table above, so this later
+   rule wins only where sibling-index() is understood. */
+@supports (top: calc(sibling-index() * 1px)) {
+  .site-dock > :nth-child(n) {
+    --k: calc(sibling-index() - 1);
+  }
 }
 
 /* Phones: the dock lives at the bottom, so it slams up instead of down. */

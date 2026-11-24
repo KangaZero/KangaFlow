@@ -26,9 +26,9 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(255, 248, 219, 0.95) 0%,
-    rgba(255, 231, 158, 0.55) 42%,
-    rgba(255, 221, 130, 0) 70%
+    rgb(255 248 219 / 0.95) 0%,
+    rgb(255 231 158 / 0.55) 42%,
+    rgb(255 221 130 / 0) 70%
   );
 }
 
@@ -42,7 +42,7 @@
   height: 100%;
   background-repeat: repeat-x;
   background-size: 50% auto;
-  will-change: transform;
+  will-change: translate;
   animation: blue-sky-drift linear infinite;
 }
 
@@ -52,17 +52,17 @@
   background-image:
     radial-gradient(
       70px 26px at 12% 22%,
-      rgba(255, 255, 255, 0.9),
+      rgb(255 255 255 / 0.9),
       transparent 70%
     ),
     radial-gradient(
       110px 40px at 34% 16%,
-      rgba(255, 255, 255, 0.85),
+      rgb(255 255 255 / 0.85),
       transparent 72%
     ),
     radial-gradient(
       90px 32px at 68% 26%,
-      rgba(255, 255, 255, 0.8),
+      rgb(255 255 255 / 0.8),
       transparent 70%
     );
 }
@@ -73,27 +73,27 @@
   background-image:
     radial-gradient(
       120px 46px at 20% 40%,
-      rgba(255, 255, 255, 0.95),
+      rgb(255 255 255 / 0.95),
       transparent 72%
     ),
     radial-gradient(
       160px 60px at 55% 32%,
-      rgba(255, 255, 255, 0.92),
+      rgb(255 255 255 / 0.92),
       transparent 74%
     ),
     radial-gradient(
       100px 40px at 82% 44%,
-      rgba(255, 255, 255, 0.9),
+      rgb(255 255 255 / 0.9),
       transparent 72%
     );
 }
 
 @keyframes blue-sky-drift {
   from {
-    transform: translate3d(0, 0, 0);
+    translate: 0;
   }
   to {
-    transform: translate3d(-50%, 0, 0);
+    translate: -50%;
   }
 }
 

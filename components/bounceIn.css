@@ -1,5 +1,8 @@
 /* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
-/* https://github.com/animate-css/animate.css/blob/main/source/bouncing_entrances/bounceIn.css*/
+/* https://github.com/animate-css/animate.css/blob/main/source/bouncing_entrances/bounceIn.css
+   Adapted: animates the individual `scale` property instead of
+   `transform: scale3d()`, so it composes with a target's own transform (the
+   rotated .p5Day labels) instead of replacing it for good via fill-mode. */
 @keyframes bounceIn {
   from,
   20%,
@@ -12,29 +15,29 @@
 
   0% {
     opacity: 0;
-    transform: scale3d(0.3, 0.3, 0.3);
+    scale: 0.3;
   }
 
   20% {
-    transform: scale3d(1.1, 1.1, 1.1);
+    scale: 1.1;
   }
 
   40% {
-    transform: scale3d(0.9, 0.9, 0.9);
+    scale: 0.9;
   }
 
   60% {
     opacity: 1;
-    transform: scale3d(1.03, 1.03, 1.03);
+    scale: 1.03;
   }
 
   80% {
-    transform: scale3d(0.97, 0.97, 0.97);
+    scale: 0.97;
   }
 
   to {
     opacity: 1;
-    transform: scale3d(1, 1, 1);
+    scale: 1;
   }
 }
 
