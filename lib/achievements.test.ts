@@ -9,6 +9,7 @@ import {
   createInitialAchievements,
   formatSplit,
   getAchievementDef,
+  highestUnlockedRarity,
   isNewlyUnlocked,
   makeUnlocked,
   NEW_UNLOCK_WINDOW_MS,
@@ -143,5 +144,29 @@ describe("achievement collection helpers", () => {
       rare: 3,
       uncommon: 3,
     })
+  })
+})
+
+describe("highestUnlockedRarity", () => {
+  it("is undefined while nothing is unlocked", () => {
+    expect(highestUnlockedRarity(createInitialAchievements())).toBeUndefined()
+  })
+
+  it("returns the rarest unlocked tier, ignoring locked ones", () => {
+    const achievements = createInitialAchievements().map((achievement) =>
+      achievement.id === "eos" || achievement.id === "puzzle-master"
+        ? makeUnlocked(achievement.id, ISO)
+        : achievement
+    )
+    expect(getAchievementDef("eos").rarity).toBe("common")
+    expect(getAchievementDef("puzzle-master").rarity).toBe("rare")
+    expect(highestUnlockedRarity(achievements)).toBe("rare")
+  })
+
+  it("is mythic once everything is unlocked", () => {
+    const all = createInitialAchievements().map((achievement) =>
+      makeUnlocked(achievement.id, ISO)
+    )
+    expect(highestUnlockedRarity(all)).toBe("mythic")
   })
 })

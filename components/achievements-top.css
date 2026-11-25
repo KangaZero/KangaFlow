@@ -1,0 +1,466 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+   Achievements page, top section ("C · Loose kit"): the quest-log slab DNA of
+   About → Work/Education (skewed slabs, offset shadows, italic 900 mono).
+   - Progress: native <progress>, segmented by a mask; the fill uncovers a
+     common → mythic ramp sized to the track (P1 · Spectrum reveal).
+   - 100%: a hanko seal replaces the n/total stamp (K2).
+   - Search: focus "charges" the slab (S1).
+   Tokens (--qa-*) live in app/globals.css. Motion is opt-in: only when
+   <html data-animations> is not "off" (site setting + OS preference). */
+
+.at-scope {
+  --at-spring: cubic-bezier(0.3, 1.6, 0.5, 1);
+
+  container-type: inline-size;
+  display: grid;
+  gap: 18px;
+  color: var(--qa-ink);
+}
+
+.at-tag {
+  margin: 0;
+  color: var(--qa-hi);
+  font: 900 10px var(--font-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* ── Progress strip ─────────────────────────────────────────────────────── */
+
+.at-strip {
+  --tier: var(--qa-hi);
+
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+}
+.at-strip-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Fully custom native progress: appearance none, border reset, clip; each
+   browser pseudo-element in its own rule (a grouped selector is dropped). */
+.at-progress {
+  container-type: inline-size;
+  appearance: none;
+  flex: 1;
+  display: block;
+  max-inline-size: 28rem;
+  block-size: 12px;
+  overflow: clip;
+  border: 0 solid;
+  background: color-mix(in oklab, var(--qa-ink) 12%, transparent);
+  -webkit-mask-image: repeating-linear-gradient(
+    90deg,
+    #000 0 calc(100% / var(--segments, 1) - 3px),
+    transparent calc(100% / var(--segments, 1) - 3px)
+      calc(100% / var(--segments, 1))
+  );
+  mask-image: repeating-linear-gradient(
+    90deg,
+    #000 0 calc(100% / var(--segments, 1) - 3px),
+    transparent calc(100% / var(--segments, 1) - 3px)
+      calc(100% / var(--segments, 1))
+  );
+  transform: skewX(-12deg);
+}
+.at-progress::-webkit-progress-bar {
+  background: transparent;
+}
+/* The ramp is sized to the TRACK (100cqi), so a longer fill shows more of it. */
+.at-progress::-webkit-progress-value {
+  background:
+    linear-gradient(
+      90deg in oklch,
+      var(--rarity-common),
+      var(--rarity-uncommon),
+      var(--rarity-rare),
+      var(--rarity-legendary),
+      var(--rarity-mythic)
+    )
+    0 0 / 100cqi 100%;
+}
+.at-progress::-moz-progress-bar {
+  background:
+    linear-gradient(
+      90deg in oklch,
+      var(--rarity-common),
+      var(--rarity-uncommon),
+      var(--rarity-rare),
+      var(--rarity-legendary),
+      var(--rarity-mythic)
+    )
+    0 0 / 100cqi 100%;
+}
+
+/* n/total stamp, inked in the rarest tier unlocked so far. */
+.at-stamp {
+  --stamp: color-mix(in oklab, var(--tier) 60%, var(--qa-ink));
+
+  padding: 4px 10px;
+  color: var(--stamp);
+  font: 900 13px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.1em;
+  box-shadow: inset 0 0 0 2px var(--stamp);
+  rotate: -4deg;
+}
+
+/* ── 100% hanko seal ────────────────────────────────────────────────────── */
+
+/* Negative block margins: the 76px seal must not grow the ~28px row, or the
+   chips and toolbar would jump down at the moment of completion. */
+.at-seal {
+  position: relative;
+  flex: none;
+  display: grid;
+  inline-size: 76px;
+  block-size: 76px;
+  margin-block: -24px;
+  /* the 14° tilt widens the box to ~92px: keep it off the edge */
+  margin-inline-end: 8px;
+  rotate: -14deg;
+}
+.at-seal-body {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  border: 3px solid var(--qa-seal);
+  border-radius: 50%;
+  outline: 1.5px solid var(--qa-seal);
+  outline-offset: -9px;
+  color: var(--qa-seal-ink);
+  background: color-mix(in oklab, var(--qa-seal) 7%, transparent);
+  line-height: 1;
+  text-align: center;
+  /* Speckled ink: two dot grids intersected. Without mask support the seal is
+     simply solid, still readable. */
+  -webkit-mask-image:
+    radial-gradient(circle at 30% 40%, transparent 0 0.9px, #000 1.4px),
+    radial-gradient(circle at 70% 65%, transparent 0 0.7px, #000 1.2px);
+  -webkit-mask-size:
+    7px 9px,
+    11px 6px;
+  -webkit-mask-composite: source-in;
+  mask-image:
+    radial-gradient(circle at 30% 40%, transparent 0 0.9px, #000 1.4px),
+    radial-gradient(circle at 70% 65%, transparent 0 0.7px, #000 1.2px);
+  mask-size:
+    7px 9px,
+    11px 6px;
+  mask-composite: intersect;
+}
+.at-seal-body b {
+  font: 900 14px var(--font-mono);
+  letter-spacing: 0.06em;
+}
+.at-seal-body small {
+  margin-block-start: 4px;
+  font: 900 9px var(--font-mono);
+  letter-spacing: 0.16em;
+}
+:lang(ja) .at-seal-body b {
+  font-size: 12px;
+}
+
+/* ── Rarity chips (= .qa-chip, shadow in the rarity colour) ─────────────── */
+
+.at-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.at-chip {
+  --r: var(--qa-hi);
+  /* The rarity colour pulled toward ink, safe as text. */
+  --r-ink: color-mix(in oklab, var(--r) 55%, var(--qa-ink));
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 0;
+  color: var(--qa-ink);
+  font: italic 800 12px var(--font-mono);
+  background: var(--qa-slab);
+  box-shadow:
+    3px 3px 0 var(--r),
+    var(--qa-edge);
+  cursor: pointer;
+  transform: skewX(-12deg);
+}
+.at-chip > * {
+  transform: skewX(12deg);
+}
+.at-chip-gem {
+  inline-size: 8px;
+  block-size: 8px;
+  background: var(--r);
+  rotate: 45deg;
+}
+.at-chip-count {
+  display: inline-flex;
+  color: color-mix(in oklab, var(--qa-ink) 60%, transparent);
+  font-variant-numeric: tabular-nums;
+}
+.at-chip[data-complete] .at-chip-count {
+  color: var(--r-ink);
+}
+.at-chip:hover,
+.at-chip[aria-pressed="true"] {
+  box-shadow:
+    5px 5px 0 var(--r),
+    var(--qa-edge);
+  translate: -2px -2px;
+}
+.at-chip[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--r) 24%, var(--qa-slab));
+}
+.at-chip[aria-pressed="true"] .at-chip-gem {
+  rotate: 225deg;
+}
+.at-chip:focus-visible {
+  outline: 2px solid var(--qa-hi);
+  outline-offset: 4px;
+}
+
+/* ── Toolbar ────────────────────────────────────────────────────────────── */
+
+.at-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+}
+
+/* Search slab (S1 · Charge-up). The ::before tint wipes in on focus; the
+   field's own focus ring is drawn on the slab because the input has none. */
+.at-field {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  inline-size: min(20rem, 100%);
+  block-size: 36px;
+  padding: 0 14px;
+  background: var(--qa-slab);
+  box-shadow:
+    3px 3px 0 var(--qa-quest),
+    var(--qa-edge);
+  transform: skewX(-12deg);
+}
+.at-field > * {
+  transform: skewX(12deg);
+}
+.at-field::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: color-mix(in oklab, var(--qa-hi) 18%, var(--qa-slab));
+  scale: 0 1;
+  transform-origin: left;
+}
+.at-field-icon {
+  flex: none;
+  color: color-mix(in oklab, var(--qa-ink) 60%, transparent);
+}
+.at-field-input {
+  font: italic 700 13px var(--font-mono);
+}
+.at-field:focus-within {
+  box-shadow:
+    6px 6px 0 var(--qa-quest),
+    var(--qa-edge);
+}
+.at-field:focus-within::before {
+  scale: 1;
+}
+.at-field:focus-within .at-field-icon {
+  color: var(--qa-hi);
+}
+.at-field:has(:focus-visible) {
+  outline: 2px solid var(--qa-hi);
+  outline-offset: 3px;
+}
+
+/* Sort: segmented slab; the highlight is a shared-layout Motion span. */
+.at-sort {
+  position: relative;
+  display: inline-flex;
+  gap: 2px;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 3px;
+  border: 0;
+  background: color-mix(in oklab, var(--qa-ink) 8%, transparent);
+  transform: skewX(-12deg);
+}
+.at-sort-option {
+  position: relative;
+  padding: 5px 12px;
+  border: 0;
+  color: color-mix(in oklab, var(--qa-ink) 70%, transparent);
+  font: italic 800 12px var(--font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.at-sort-option:hover {
+  color: var(--qa-ink);
+}
+.at-sort-option[aria-pressed="true"] {
+  color: var(--primary-foreground);
+}
+/* Dark's accent ink is light, so text on it goes dark. */
+.dark .at-sort-option[aria-pressed="true"] {
+  color: var(--qa-slab);
+}
+.at-sort-option:focus-visible {
+  outline: 2px solid var(--qa-hi);
+  outline-offset: 3px;
+}
+.at-sort-indicator {
+  position: absolute;
+  inset: 0;
+  background: var(--qa-hi);
+  box-shadow: 3px 3px 0 color-mix(in oklab, var(--qa-ink) 85%, transparent);
+}
+.at-sort-label {
+  position: relative;
+  display: inline-block;
+  transform: skewX(12deg);
+}
+
+/* Layout toggle (= the pause menu's close slab) */
+.at-layout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 0;
+  color: var(--primary-foreground);
+  font: italic 800 12px var(--font-mono);
+  text-transform: uppercase;
+  background: var(--primary);
+  cursor: pointer;
+  transform: skewX(-12deg);
+}
+.at-layout > * {
+  transform: skewX(12deg);
+}
+.at-layout:hover {
+  translate: -4px 2px;
+}
+.at-layout:focus-visible {
+  outline: 3px solid var(--qa-hi);
+  outline-offset: 3px;
+}
+
+/* Live region: always rendered (so additions are announced), empty at rest. */
+.at-status {
+  color: color-mix(in oklab, var(--qa-ink) 70%, transparent);
+  font: 900 11px var(--font-mono);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.at-status[data-empty] {
+  padding: 3px 8px;
+  color: var(--qa-ink);
+  box-shadow: inset 0 0 0 2px var(--rarity-mythic);
+  rotate: -3deg;
+}
+
+@media (forced-colors: active) {
+  .at-chip[aria-pressed="true"],
+  .at-sort-option[aria-pressed="true"] {
+    outline: 2px solid Highlight;
+  }
+}
+
+/* ── Motion (opt-in) ────────────────────────────────────────────────────── */
+
+:root:not([data-animations="off"]) {
+  & .at-progress::-webkit-progress-value {
+    transition: inline-size 0.3s;
+  }
+  & .at-seal {
+    animation: at-thump 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+  & .at-chip {
+    transition:
+      translate 0.2s var(--at-spring),
+      box-shadow 0.2s var(--at-spring),
+      background-color 0.2s;
+  }
+  & .at-chip-gem {
+    transition: rotate 0.35s var(--at-spring);
+  }
+  & .at-field {
+    transition:
+      translate 0.25s var(--at-spring),
+      box-shadow 0.25s var(--at-spring);
+  }
+  & .at-field::before {
+    transition: scale 0.3s var(--at-spring);
+  }
+  & .at-field-icon {
+    transition:
+      rotate 0.35s var(--at-spring),
+      scale 0.35s var(--at-spring),
+      color 0.2s;
+  }
+  & .at-field:focus-within {
+    translate: -2px -2px;
+  }
+  & .at-field:focus-within .at-field-icon {
+    rotate: -14deg;
+    scale: 1.2;
+  }
+  & .at-layout {
+    transition: translate 0.2s var(--at-spring);
+  }
+  /* Entry slam-in (= qa-slam); chips stagger by position. */
+  & .at-slam {
+    animation: at-slam 0.5s var(--at-spring) backwards;
+    animation-delay: calc(var(--k, 0) * 60ms);
+  }
+  & .at-chips > .at-chip {
+    animation: at-slam 0.4s var(--at-spring) backwards;
+    animation-delay: calc(200ms + var(--k, 0) * 40ms);
+  }
+}
+/* Literal time in @supports: a var() here would always parse as supported. */
+@supports (animation-delay: calc(sibling-index() * 0.1s)) {
+  :root:not([data-animations="off"]) .at-chips > .at-chip {
+    animation-delay: calc(160ms + sibling-index() * 40ms);
+  }
+}
+
+@keyframes at-slam {
+  from {
+    opacity: 0;
+    translate: -40px 0;
+  }
+}
+@keyframes at-thump {
+  0% {
+    opacity: 0;
+    filter: blur(3px);
+    scale: 1.7;
+  }
+  55% {
+    opacity: 1;
+    filter: blur(0);
+    scale: 0.93;
+  }
+}
