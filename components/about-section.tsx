@@ -418,7 +418,7 @@ export function AboutSection() {
             className="flex w-full flex-col gap-16"
             initial={{ opacity: 0 }}
             key="content"
-            transition={{ duration: 0.5, ease: "easeInOut" }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
           >
             {/* overflow-x-clip: with reduced motion the 400px hero logo stays
                 in-flow (no floating copy) and would widen phones to ~513px. */}
