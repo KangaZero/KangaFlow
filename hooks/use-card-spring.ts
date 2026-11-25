@@ -16,10 +16,12 @@ const PARALLAX_PX = 10
  * the spring in lib/card-spring. Writes CSS custom properties on the element
  * (--rx, --ry, --mx, --my, --sx, --sy, --light) and runs a rAF loop only while
  * the spring is moving. `enabled: false` (reduced motion, dragging) parks it.
+ * `tiltDeg` is the tilt at the card's edge (default 14°).
  */
 export function useCardSpring(
   ref: RefObject<HTMLElement | null>,
-  enabled: boolean
+  enabled: boolean,
+  { tiltDeg = TILT_DEG }: { tiltDeg?: number } = {}
 ) {
   useEffect(() => {
     const element = ref.current
@@ -31,8 +33,8 @@ export function useCardSpring(
     const write = () => {
       const { x, y, light } = spring
       const style = element.style
-      style.setProperty("--rx", `${(-y.position * TILT_DEG).toFixed(3)}deg`)
-      style.setProperty("--ry", `${(x.position * TILT_DEG).toFixed(3)}deg`)
+      style.setProperty("--rx", `${(-y.position * tiltDeg).toFixed(3)}deg`)
+      style.setProperty("--ry", `${(x.position * tiltDeg).toFixed(3)}deg`)
       style.setProperty("--mx", `${((x.position + 1) * 50).toFixed(2)}%`)
       style.setProperty("--my", `${((y.position + 1) * 50).toFixed(2)}%`)
       style.setProperty("--sx", `${(x.position * PARALLAX_PX).toFixed(2)}px`)
@@ -81,5 +83,5 @@ export function useCardSpring(
       element.removeEventListener("focusin", onFocus)
       element.removeEventListener("focusout", onLeave)
     }
-  }, [ref, enabled])
+  }, [ref, enabled, tiltDeg])
 }

@@ -33,12 +33,12 @@ import {
 import type { TrackSrc } from "@/components/widgets/tracks"
 import { PLAYLIST } from "@/components/widgets/tracks"
 import {
+  type AchievementLayout,
   ANIMATION_PREFS,
   type AnimationPref,
   type AppPath,
-  COLUMN_OPTIONS,
-  type ColumnCount,
   type GlobalStatesContextValue,
+  isAchievementLayout,
   NOTE_LINE_NUMBER_MODES,
   type NoteLineNumbers,
 } from "@/lib/globalStates"
@@ -55,8 +55,8 @@ import type { MatrixOptions } from "@/lib/terminal/cmatrix"
 import { useThemeTransition } from "@/lib/theme-transition"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 
-const DEFAULT_COLUMN_COUNT: ColumnCount = 3
-const COLUMN_STORAGE_KEY = "kangaflow:columnCount"
+const DEFAULT_ACHIEVEMENT_LAYOUT: AchievementLayout = "binder"
+const ACHIEVEMENT_LAYOUT_STORAGE_KEY = "kangaflow:achievementLayout"
 const ENV_CHROME_STORAGE_KEY = "kangaflow:envChrome"
 
 function loadEnvChrome(): boolean {
@@ -294,9 +294,9 @@ function loadEnvSettings(): EnvSettings {
 }
 
 const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
+  achievementLayout: DEFAULT_ACHIEVEMENT_LAYOUT,
   ambience: false,
   animationPref: "system",
-  columnCount: DEFAULT_COLUMN_COUNT,
   envSettings: DEFAULT_ENV_SETTINGS,
   globalMatrixOptions: null,
   globalMatrixRunning: false,
@@ -318,9 +318,9 @@ const DEFAULT_GLOBAL_STATES: GlobalStatesContextValue = {
   onekoEnabled: DEFAULT_ONEKO_ENABLED,
   onekoFollowCursor: DEFAULT_ONEKO_FOLLOW_CURSOR,
   onekoInverted: false,
+  setAchievementLayout: () => {},
   setAmbience: () => {},
   setAnimationPref: () => {},
-  setColumnCount: () => {},
   setEnvSettings: () => {},
   setGlobalMatrixOptions: () => {},
   setIsAlarmOpen: () => {},
@@ -359,14 +359,9 @@ const GlobalStatesContext = createContext<GlobalStatesContextValue>(
   DEFAULT_GLOBAL_STATES
 )
 
-function isColumnCount(value: number): value is ColumnCount {
-  return (COLUMN_OPTIONS as readonly number[]).includes(value)
-}
-
-function loadColumnCount(): ColumnCount {
-  const raw = safeLocalStorage.getItem(COLUMN_STORAGE_KEY)
-  const parsed = Number(raw)
-  return isColumnCount(parsed) ? parsed : DEFAULT_COLUMN_COUNT
+function loadAchievementLayout(): AchievementLayout {
+  const raw = safeLocalStorage.getItem(ACHIEVEMENT_LAYOUT_STORAGE_KEY)
+  return isAchievementLayout(raw) ? raw : DEFAULT_ACHIEVEMENT_LAYOUT
 }
 
 function GlobalStatesProvider({ children }: { children: ReactNode }) {
@@ -414,8 +409,9 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
   const [shortcuts, setShortcuts] = useState<Shortcut[]>(() => [
     ...DEFAULT_SHORTCUTS,
   ])
-  const [columnCount, setColumnCount] =
-    useState<ColumnCount>(DEFAULT_COLUMN_COUNT)
+  const [achievementLayout, setAchievementLayout] = useState<AchievementLayout>(
+    DEFAULT_ACHIEVEMENT_LAYOUT
+  )
   const [showChromeInEnvironment, setShowChromeInEnvironment] = useState(false)
   const [animationPref, setAnimationPref] = useState<AnimationPref>("system")
   const [vimMode, setVimMode] = useState(false)
@@ -433,7 +429,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setShortcuts(loadShortcuts())
-    setColumnCount(loadColumnCount())
+    setAchievementLayout(loadAchievementLayout())
     setShowChromeInEnvironment(loadEnvChrome())
     setAnimationPref(loadAnimationPref())
     setVimMode(loadVimMode())
@@ -479,9 +475,12 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (hydrated) {
-      safeLocalStorage.setItem(COLUMN_STORAGE_KEY, String(columnCount))
+      safeLocalStorage.setItem(
+        ACHIEVEMENT_LAYOUT_STORAGE_KEY,
+        achievementLayout
+      )
     }
-  }, [hydrated, columnCount])
+  }, [hydrated, achievementLayout])
 
   useEffect(() => {
     if (hydrated) {
@@ -564,9 +563,9 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<GlobalStatesContextValue>(
     () => ({
+      achievementLayout,
       ambience,
       animationPref,
-      columnCount,
       envSettings,
       globalMatrixOptions,
       globalMatrixRunning: globalMatrixOptions !== null,
@@ -588,9 +587,9 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
       onekoEnabled,
       onekoFollowCursor,
       onekoInverted,
+      setAchievementLayout,
       setAmbience,
       setAnimationPref,
-      setColumnCount,
       setEnvSettings,
       setGlobalMatrixOptions,
       setIsAlarmOpen,
@@ -626,7 +625,7 @@ function GlobalStatesProvider({ children }: { children: ReactNode }) {
     }),
     [
       animationPref,
-      columnCount,
+      achievementLayout,
       envSettings,
       noteLineNumbers,
       onekoEnabled,

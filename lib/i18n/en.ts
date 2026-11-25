@@ -91,10 +91,7 @@ const en = {
       },
       languages: "Languages: {list}",
       legend: {
-        choose: "choose",
-        drag: "rearrange",
         flip: "flip",
-        move: "move card",
       },
       links: {
         enter: "Enter desktop",
@@ -199,6 +196,15 @@ const en = {
     work: "Work",
   },
   achievements: {
+    collection: {
+      backBrand: "KANGAFLOW",
+      backSeries: "SERIES 02",
+      lockedCard: "{set} · Locked",
+      open: "open",
+      remaining: "{count} to go",
+      reveal: "New {rarity} card, reveal it",
+      tapToReveal: "Tap to reveal",
+    },
     filter: {
       label: "Filter by rarity",
     },
@@ -257,6 +263,11 @@ const en = {
         title: "Speedophile",
       },
     },
+    layouts: {
+      binder: "Binder",
+      codex: "Codex",
+      table: "Table",
+    },
     locked: "Locked",
     rarities: {
       common: "Common",
@@ -295,8 +306,16 @@ const en = {
       stamp: "UNLOCKED!",
       unlocked: "Achievement unlocked!",
     },
-    toggleColumns: "Toggle layout",
+    toggleLayout: "Toggle layout",
     unlocked: "Unlocked",
+  },
+  cardHand: {
+    legend: {
+      choose: "choose",
+      drag: "rearrange",
+      move: "move card",
+      row: "switch row",
+    },
   },
   command: {
     description: "Run a command or search.",
@@ -611,6 +630,7 @@ const en = {
   },
   settings: {
     actions: {
+      cycleAchievementLayout: "Cycle achievements layout",
       cycleTheme: "Cycle theme",
       goAchievements: "Go to achievements",
       goEnvironment: "Go to environment",
@@ -618,7 +638,6 @@ const en = {
       goTimeline: "Go to timeline",
       openCommandMenu: "Open command menu",
       openMediaPlayer: "Open media player",
-      toggleColumns: "Toggle grid columns",
       toggleHints: "Link hints (Vimium f)",
       toggleLanguage: "Toggle language",
       toggleSettings: "Toggle settings",

@@ -2,6 +2,9 @@
 import { useReducedMotion } from "motion/react"
 import * as React from "react"
 
+import { isReducedMotion } from "@/lib/isReducedMotion"
+import { useGlobalStates } from "@/providers/global-state-provider"
+
 const TILT_VARS = ["--rx", "--ry", "--mx", "--my", "--hyp"] as const
 
 type CardTiltHandlers = {
@@ -13,10 +16,12 @@ type CardTiltHandlers = {
  * Pointer-driven 3D tilt for collectible cards. Writes CSS custom properties
  * straight onto the element (`--rx/--ry` rotation, `--mx/--my` pointer
  * position, `--hyp` distance from centre) and lets CSS do all the rendering,
- * so pointermove never causes a React re-render. No-op under reduced motion.
+ * so pointermove never causes a React re-render. No-op under reduced motion
+ * (the site's animation setting, which falls back to the OS preference).
  */
 export function useCardTilt(maxDegrees = 10): CardTiltHandlers | undefined {
-  const reduceMotion = useReducedMotion()
+  const { animationPref } = useGlobalStates()
+  const reduceMotion = isReducedMotion(animationPref, useReducedMotion())
 
   return React.useMemo(() => {
     if (reduceMotion) return undefined

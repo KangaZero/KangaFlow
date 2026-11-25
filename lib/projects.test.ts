@@ -1,11 +1,10 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 import { describe, expect, it } from "vitest"
-
+import { moveInOrder } from "@/lib/card-order"
 import {
   CONTRIBUTIONS,
   DEFAULT_CARD_ORDER,
   languageShares,
-  moveInOrder,
   moveVars,
   PROJECT_CARD_IDS,
   PROJECT_CARDS,

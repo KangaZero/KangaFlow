@@ -6,11 +6,11 @@
 // about.projects, keyed by the ids below.
 
 import type { StaticImageData } from "next/image"
-
 import avatarImg from "@/assets/avatar.webp"
 import helloWorldPpImg from "@/assets/projects/hello-world-pp.webp"
 import desktopImg from "@/assets/projects/kangaflow-desktop.webp"
 import neomouseImg from "@/assets/projects/neomouse.webp"
+import { parseOrder } from "@/lib/card-order"
 import stats from "@/lib/github-stats.json" with { type: "json" }
 import type { Locale } from "@/lib/i18n"
 import type { PageRoute } from "@/lib/pages"
@@ -242,32 +242,10 @@ export const DEFAULT_CARD_ORDER: readonly ProjectCardId[] = [
   "supporter",
 ]
 
-function isProjectCardId(value: unknown): value is ProjectCardId {
-  return PROJECT_CARD_IDS.some((id) => id === value)
-}
-
 /**
- * A persisted card order (localStorage, untrusted) → a valid permutation:
- * unknown ids dropped, duplicates removed, missing cards appended in default
- * order. Anything unparseable gives the default.
+ * A persisted card order (localStorage, untrusted) → a valid permutation;
+ * see lib/card-order for the rules.
  */
 export function parseCardOrder(value: unknown): ProjectCardId[] {
-  if (!Array.isArray(value)) return [...DEFAULT_CARD_ORDER]
-  const seen = new Set<ProjectCardId>()
-  for (const item of value) if (isProjectCardId(item)) seen.add(item)
-  for (const id of DEFAULT_CARD_ORDER) seen.add(id)
-  return [...seen]
-}
-
-/** Move `id` to slot `to` within `order` (clamped); returns a new array. */
-export function moveInOrder(
-  order: readonly ProjectCardId[],
-  id: ProjectCardId,
-  to: number
-): ProjectCardId[] {
-  const from = order.indexOf(id)
-  if (from === -1) return [...order]
-  const next = order.filter((item) => item !== id)
-  next.splice(Math.max(0, Math.min(next.length, to)), 0, id)
-  return next
+  return parseOrder(value, DEFAULT_CARD_ORDER)
 }

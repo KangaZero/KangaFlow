@@ -18,7 +18,7 @@ export type ShortcutAction =
   | "openCommandMenu"
   | "openMediaPlayer"
   | "toggleLanguage"
-  | "toggleColumns"
+  | "cycleAchievementLayout"
   | "toggleSettings"
   | "toggleTerminal"
   | "toggleHints"
@@ -97,7 +97,7 @@ export const DEFAULT_SHORTCUTS: readonly Shortcut[] = [
     hasShiftKey: false,
   },
   {
-    action: "toggleColumns",
+    action: "cycleAchievementLayout",
     character: "g",
     hasAltOrOptionKey: false,
     hasMetaOrCtrlKey: true,

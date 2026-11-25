@@ -5,10 +5,28 @@ import type { Shortcut } from "@/lib/shortcuts"
 import type { MatrixOptions } from "@/lib/terminal/cmatrix"
 import type { Theme } from "@/lib/themes"
 
-// Achievements grid density — lifted to global state so the "toggle columns"
-// keyboard shortcut can cycle it and the choice persists (localStorage).
-export const COLUMN_OPTIONS = [1, 2, 3] as const
-export type ColumnCount = (typeof COLUMN_OPTIONS)[number]
+// [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+// Achievements collection layout — lifted to global state so the "cycle
+// layout" shortcut and the page's layout button share it, and the choice
+// persists (localStorage). Order = cycle order.
+export const ACHIEVEMENT_LAYOUTS = ["binder", "table", "codex"] as const
+export type AchievementLayout = (typeof ACHIEVEMENT_LAYOUTS)[number]
+
+export function isAchievementLayout(
+  value: unknown
+): value is AchievementLayout {
+  return ACHIEVEMENT_LAYOUTS.some((layout) => layout === value)
+}
+
+/** The layout after `current` in cycle order (wraps). */
+export function nextAchievementLayout(
+  current: AchievementLayout
+): AchievementLayout {
+  const index = ACHIEVEMENT_LAYOUTS.indexOf(current)
+  return (
+    ACHIEVEMENT_LAYOUTS[(index + 1) % ACHIEVEMENT_LAYOUTS.length] ?? current
+  )
+}
 
 // Derived from PAGE (lib/pages), never re-listed: this union used to spell the
 // routes a second time, so adding a page meant remembering to widen a type in
@@ -61,8 +79,8 @@ export type GlobalStatesContextValue = {
   // Persisted settings (localStorage).
   shortcuts: Shortcut[]
   setShortcuts: (shortcuts: Shortcut[]) => void
-  columnCount: ColumnCount
-  setColumnCount: (columns: ColumnCount) => void
+  achievementLayout: AchievementLayout
+  setAchievementLayout: (layout: AchievementLayout) => void
   // Whether the site header/footer stay visible on the /environment page.
   // Persisted; defaults to false (chrome hidden for the immersive desktop).
   showChromeInEnvironment: boolean

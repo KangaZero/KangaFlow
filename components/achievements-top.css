@@ -361,6 +361,12 @@
 .at-layout:hover {
   translate: -4px 2px;
 }
+/* The current layout, as a chip inside the button. */
+.at-layout-name {
+  padding: 1px 7px;
+  color: var(--primary);
+  background: var(--primary-foreground);
+}
 .at-layout:focus-visible {
   outline: 3px solid var(--qa-hi);
   outline-offset: 3px;

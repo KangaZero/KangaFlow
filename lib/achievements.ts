@@ -173,6 +173,18 @@ export function setNumber(id: AchievementId): number {
   return ACHIEVEMENTS.findIndex((achievement) => achievement.id === id) + 1
 }
 
+const padSet = (value: number) => String(value).padStart(2, "0")
+
+/** "#03": the zero-padded set number alone (an empty binder slot). */
+export function setNumberLabel(id: AchievementId): string {
+  return `#${padSet(setNumber(id))}`
+}
+
+/** "#03/11": set number over catalogue size, both zero-padded to 2. */
+export function setLabel(id: AchievementId): string {
+  return `${setNumberLabel(id)}/${padSet(ACHIEVEMENTS.length)}`
+}
+
 // An unlock counts as "new" for this long after it happened.
 export const NEW_UNLOCK_WINDOW_MS = 24 * 60 * 60 * 1000
 

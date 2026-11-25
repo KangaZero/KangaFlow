@@ -1,0 +1,53 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+   Shared fan geometry for hooks/use-card-hand: every card sits on the same
+   spot and fans out by its slot offset (--off, set inline: index − middle).
+   The hook writes --dx/--dy on the dragged card; data-dragging/-settling
+   come from its state. Consumers set size, z-order, hover lift and any
+   choreography (the projects pack phases live in projects.css). */
+
+/* Registered so getComputedStyle hands use-card-hand a resolved length
+   ("106.1px"), even when a consumer derives it (calc of cqi/clamp): an
+   unregistered custom property reads back as the unresolved token string. */
+@property --spread {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 150px;
+}
+
+.card-hand {
+  position: relative;
+}
+
+.card-hand-card {
+  --off: 0;
+  /* Fan: each slot from the centre turns by --fan-angle. */
+  --fan-angle: 8deg;
+  --r: calc(var(--off) * var(--fan-angle));
+  --spread: 150px;
+  --lift: 0px;
+
+  position: absolute;
+  inset-inline: 0;
+  margin-inline: auto;
+  transform: translateX(calc(var(--off) * var(--spread)))
+    translateY(calc(var(--lift) * -1)) rotate(var(--r));
+  transform-origin: 50% 115%;
+  transition:
+    transform 0.65s cubic-bezier(0.3, 1.25, 0.45, 1),
+    opacity 0.3s;
+}
+
+.card-hand-card[data-dragging="true"] {
+  --lift: 36px;
+  z-index: 60;
+  cursor: grabbing;
+  scale: 1.05;
+  translate: var(--dx, 0px) var(--dy, 0px);
+  transition: none;
+}
+.card-hand-card[data-settling="true"] {
+  translate: 0 0;
+  transition:
+    translate 0.45s cubic-bezier(0.3, 1.4, 0.5, 1),
+    transform 0.5s cubic-bezier(0.3, 1.3, 0.45, 1);
+}

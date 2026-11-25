@@ -3,30 +3,25 @@
 
 import "@/components/achievement-slab.css"
 
-import { Lock } from "lucide-react"
-
+import { AchievementCardFace } from "@/components/achievement-card-face"
 import { useCardTilt } from "@/hooks/use-card-tilt"
 import { getAchievementLabels } from "@/lib/achievement-labels"
 import {
-  ACHIEVEMENTS,
   type Achievement,
   RARITY_GRADE,
-  RARITY_ICON,
   rarityColorVar,
-  rarityStars,
-  setNumber,
+  setLabel,
 } from "@/lib/achievements"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
-
-const pad = (value: number) => String(value).padStart(2, "0")
-const SET_TOTAL = pad(ACHIEVEMENTS.length)
 
 type AchievementSlabProps = {
   achievement: Achievement
   isNew?: boolean
   /** When given, the slab is a button that opens the inspect view. */
   onInspect?: () => void
+  /** Shared-element name for the card inside (see AchievementCardFace). */
+  morphName?: string | undefined
   className?: string
 }
 
@@ -40,17 +35,17 @@ export function AchievementSlab({
   achievement,
   isNew = false,
   onInspect,
+  morphName,
   className,
 }: AchievementSlabProps) {
   const { locale, translate } = useLocale()
   const tilt = useCardTilt()
-  const { def, hidden, title, description, rarityLabel } = getAchievementLabels(
+  const { def, title, rarityLabel } = getAchievementLabels(
     achievement,
     translate
   )
-  const Icon = RARITY_ICON[def.rarity]
   const locked = !achievement.isUnlocked
-  const setLabel = `#${pad(setNumber(achievement.id))}/${SET_TOTAL}`
+  const set = setLabel(achievement.id)
   const unlockedDate = achievement.isUnlocked
     ? new Date(achievement.unlockedAt).toLocaleDateString(locale)
     : null
@@ -74,51 +69,11 @@ export function AchievementSlab({
           </small>
         </span>
         <span>{`${translate("achievements.slab.series")} · ${rarityLabel}`}</span>
-        <span>{`${setLabel} · ${unlockedDate ?? translate("achievements.slab.notPulled")}`}</span>
+        <span>{`${set} · ${unlockedDate ?? translate("achievements.slab.notPulled")}`}</span>
       </span>
 
       <span className="ach-slab__well">
-        <span
-          className="ach-card"
-          data-locked={locked}
-          data-rarity={def.rarity}
-        >
-          <span className="ach-card__face">
-            <span className="ach-card__frame">
-              <span className="ach-card__head">
-                <span className="ach-card__title">{title}</span>
-                <span className="ach-card__pill">{rarityLabel}</span>
-              </span>
-              <span className="ach-card__art">
-                <Icon aria-hidden />
-              </span>
-              <span className="ach-card__body">{description}</span>
-              <span className="ach-card__foot">
-                <span>{setLabel}</span>
-                <span className="ach-card__stars">
-                  {rarityStars(def.rarity)}
-                </span>
-                <span>{unlockedDate}</span>
-              </span>
-            </span>
-            <span className="ach-card__holo" />
-            <span className="ach-card__glare" />
-          </span>
-
-          {locked ? (
-            <span className="ach-card__sealed">
-              {hidden ? (
-                <span className="ach-card__sealed-q">?</span>
-              ) : (
-                <Lock aria-hidden />
-              )}
-              <span>{translate("achievements.slab.sealed")}</span>
-              {hidden ? null : (
-                <span className="ach-card__sealed-hint">{description}</span>
-              )}
-            </span>
-          ) : null}
-        </span>
+        <AchievementCardFace achievement={achievement} morphName={morphName} />
       </span>
 
       <span className="ach-slab__glare" />

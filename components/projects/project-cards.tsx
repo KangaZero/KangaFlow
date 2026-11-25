@@ -12,7 +12,8 @@
 // with Shift+←/→ to rearrange the hand; the inside of either face keeps
 // plain clicks (flip, moves, links), so a drag never swallows them. The
 // order and "already opened" are kept in localStorage so a returning
-// visitor lands on their hand.
+// visitor lands on their hand. Drag + keyboard reordering live in
+// hooks/use-card-hand (shared with the achievement table).
 
 import { useReducedMotion } from "motion/react"
 import {
@@ -23,6 +24,7 @@ import {
   useRef,
   useState,
 } from "react"
+import "@/components/card-hand.css"
 import { BoosterPack } from "@/components/projects/booster-pack"
 import {
   type DrawerState,
@@ -31,15 +33,14 @@ import {
 } from "@/components/projects/move-drawer"
 import { TradingCard } from "@/components/projects/trading-card"
 import { Kbd } from "@/components/ui/kbd"
+import { useCardHand } from "@/hooks/use-card-hand"
 import { useElementSize } from "@/hooks/use-element-size"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import {
   DEFAULT_CARD_ORDER,
-  moveInOrder,
   PROJECT_CARD_IDS,
   PROJECT_CARDS,
   type ProjectCardId,
-  parseCardOrder,
   revealOrder,
 } from "@/lib/projects"
 import { safeLocalStorage } from "@/lib/safe-storage"
@@ -61,21 +62,25 @@ const SPREAD_AT = 700
 const REVEAL_AT = 1350
 const REVEAL_STEP = 380
 const SSR_PAUSE = 300
-/** Pointer travel before a press becomes a drag (so a click still flips). */
-const DRAG_SLOP = 6
 
-type Drag = {
-  id: ProjectCardId
-  element: HTMLElement
-  pointerId: number
-  startX: number
-  startY: number
-  /** Hand centre (px, viewport) and slot width, measured at press. */
-  centre: number
-  spread: number
-  /** Distance the card's home slot has moved since the press. */
-  shift: number
-  moved: boolean
+/** Reorder sound, shared by drag and Shift+←/→. */
+function playMoveSound(): void {
+  playSfx("menu-move")
+}
+
+/**
+ * The frame is the drag handle: a press counts only when it lands on the face
+ * itself (its padding), never on anything inside it, so flips, moves and links
+ * keep plain clicks on either side of the card. The article itself counts
+ * too: the hover tilt turns the faces a little, uncovering a sliver of it
+ * right at the edge.
+ */
+function isFrameHandle(event: ReactPointerEvent<HTMLElement>): boolean {
+  return (
+    event.target === event.currentTarget ||
+    (event.target instanceof Element &&
+      event.target.classList.contains("tc-face"))
+  )
 }
 
 export function ProjectCards() {
@@ -86,18 +91,11 @@ export function ProjectCards() {
   const [phase, setPhase] = useState<Phase>("sealed")
   const [revealed, setRevealed] =
     useState<ReadonlySet<ProjectCardId>>(NONE_REVEALED)
-  const [order, setOrder] =
-    useState<readonly ProjectCardId[]>(DEFAULT_CARD_ORDER)
   const [flipped, setFlipped] = useState<ProjectCardId | null>(null)
   const [ssrOut, setSsrOut] = useState(false)
   const [drawer, setDrawer] = useState<DrawerState | null>(null)
-  const [dragging, setDragging] = useState<ProjectCardId | null>(null)
-  const [settling, setSettling] = useState<ProjectCardId | null>(null)
 
   const zoneRef = useRef<HTMLDivElement>(null)
-  const handRef = useRef<HTMLDivElement>(null)
-  const orderRef = useRef(order)
-  orderRef.current = order
   const timers = useRef<number[]>([])
   const torn = useRef(false)
   const { width: zoneWidth } = useElementSize(zoneRef)
@@ -112,12 +110,36 @@ export function ProjectCards() {
   }, [])
   useEffect(() => clearTimers, [clearTimers])
 
-  // Restore a returning visitor's hand (after hydration: storage is
-  // client-only, so the prerendered HTML is always the sealed pack).
+  const focusSelector = useCallback(
+    (id: ProjectCardId) => (id === flipped ? ".tc-unflip" : ".tc-hit"),
+    [flipped]
+  )
+  const {
+    dragging,
+    focusCard,
+    handRef,
+    onCardPointerDown,
+    onHandKeyDown: onHandArrows,
+    order,
+    settling,
+  } = useCardHand({
+    enabled: phase === "done",
+    focusSelector,
+    ids: DEFAULT_CARD_ORDER,
+    isHandle: isFrameHandle,
+    onReorder: playMoveSound,
+    preventNativeDrag: true,
+    storageKey: ORDER_KEY,
+  })
+  const orderRef = useRef(order)
   useEffect(() => {
-    setOrder(
-      safeLocalStorage.getJson(ORDER_KEY, DEFAULT_CARD_ORDER, parseCardOrder)
-    )
+    orderRef.current = order
+  }, [order])
+
+  // Restore a returning visitor's opened pack (after hydration: storage is
+  // client-only, so the prerendered HTML is always the sealed pack). The hand
+  // order is restored by useCardHand.
+  useEffect(() => {
     if (safeLocalStorage.getItem(OPENED_KEY) === "1") {
       torn.current = true
       setRevealed(ALL_REVEALED)
@@ -188,126 +210,14 @@ export function ProjectCards() {
     playSfx("card-flip")
   }
 
-  const reorder = (id: ProjectCardId, to: number) => {
-    const next = moveInOrder(orderRef.current, id, to)
-    orderRef.current = next
-    setOrder(next)
-    safeLocalStorage.setJson(ORDER_KEY, next)
-    playSfx("menu-move")
-  }
-
-  // ── Drag to rearrange ────────────────────────────────────────────────
-  // The dragged card follows the pointer via --dx/--dy; its slot is the
-  // nearest fan position. When the slot changes the order (and so the
-  // card's home) moves, and `shift` compensates so it stays under the
-  // pointer while the others spring into their new seats.
-  const drag = useRef<Drag | null>(null)
-
-  const onPointerMove = (event: PointerEvent) => {
-    const state = drag.current
-    if (!state || event.pointerId !== state.pointerId) return
-    const dx = event.clientX - state.startX
-    const dy = event.clientY - state.startY
-    if (!state.moved) {
-      if (Math.hypot(dx, dy) < DRAG_SLOP) return
-      state.moved = true
-      state.element.setPointerCapture(state.pointerId)
-      setDragging(state.id)
-    }
-    const slots = orderRef.current.length
-    const slot = Math.max(
-      0,
-      Math.min(
-        slots - 1,
-        Math.round(
-          (event.clientX - state.centre) / state.spread + (slots - 1) / 2
-        )
-      )
-    )
-    const from = orderRef.current.indexOf(state.id)
-    if (slot !== from) {
-      state.shift += (slot - from) * state.spread
-      reorder(state.id, slot)
-    }
-    state.element.style.setProperty("--dx", `${dx - state.shift}px`)
-    state.element.style.setProperty("--dy", `${dy}px`)
-  }
-
-  const onPointerUp = (event: PointerEvent) => {
-    const state = drag.current
-    if (!state || event.pointerId !== state.pointerId) return
-    window.removeEventListener("pointermove", onPointerMove)
-    window.removeEventListener("pointerup", onPointerUp)
-    window.removeEventListener("pointercancel", onPointerUp)
-    drag.current = null
-    if (!state.moved) return
-    state.element.style.setProperty("--dx", "0px")
-    state.element.style.setProperty("--dy", "0px")
-    setDragging(null)
-    setSettling(state.id)
-    later(500, () => setSettling(null))
-  }
-
-  const onCardPointerDown =
-    (id: ProjectCardId) => (event: ReactPointerEvent<HTMLElement>) => {
-      // The frame is the handle: a press counts only when it lands on the
-      // face itself (its padding), never on anything inside it, so flips,
-      // moves and links keep plain clicks on either side of the card.
-      // The article itself counts too: the hover tilt turns the faces a
-      // little, uncovering a sliver of it right at the edge.
-      const onFrame =
-        event.target === event.currentTarget ||
-        (event.target instanceof Element &&
-          event.target.classList.contains("tc-face"))
-      if (phase !== "done" || !onFrame || event.button !== 0) return
-      // Stop the browser's own text/element drag, which would otherwise
-      // fire pointercancel a few pixels in and end ours.
-      event.preventDefault()
-      const hand = handRef.current
-      if (!hand) return
-      const rect = hand.getBoundingClientRect()
-      const spread = Number.parseFloat(
-        getComputedStyle(event.currentTarget).getPropertyValue("--spread")
-      )
-      drag.current = {
-        centre: rect.left + rect.width / 2,
-        element: event.currentTarget,
-        id,
-        moved: false,
-        pointerId: event.pointerId,
-        shift: 0,
-        spread: Number.isFinite(spread) && spread > 0 ? spread : 190,
-        startX: event.clientX,
-        startY: event.clientY,
-      }
-      window.addEventListener("pointermove", onPointerMove)
-      window.addEventListener("pointerup", onPointerUp)
-      window.addEventListener("pointercancel", onPointerUp)
-    }
-
   // ── Keyboard ─────────────────────────────────────────────────────────
-  // ←/→ (h/l) move between cards, Shift+←/→ moves the focused card,
-  // Escape turns a flipped card back. Keys bubbling up from the portalled
-  // drawer are ignored (React events cross portals).
-  const focusCard = (id: ProjectCardId) => {
-    handRef.current
-      ?.querySelector<HTMLElement>(
-        `[data-card-id="${id}"] ${id === flipped ? ".tc-unflip" : ".tc-hit"}`
-      )
-      ?.focus()
-  }
-
+  // ←/→ (h/l) and Shift+←/→ come from useCardHand; Escape turns a flipped
+  // card back. Keys bubbling up from the portalled drawer are ignored (React
+  // events cross portals): the hook only acts on targets inside the hand.
   const onHandKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     const hand = handRef.current
-    const target = event.target
-    if (phase !== "done" || !hand || !(target instanceof Element)) return
-    if (
-      !hand.contains(target) ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.altKey
-    )
-      return
+    if (phase !== "done" || !hand || !(event.target instanceof Element)) return
+    if (!hand.contains(event.target)) return
     if (event.key === "Escape" && flipped !== null) {
       event.preventDefault()
       const id = flipped
@@ -315,23 +225,7 @@ export function ProjectCards() {
       requestAnimationFrame(() => focusCard(id))
       return
     }
-    const step =
-      event.key === "ArrowLeft" || event.key === "h"
-        ? -1
-        : event.key === "ArrowRight" || event.key === "l"
-          ? 1
-          : 0
-    const host = target.closest<HTMLElement>("[data-card-id]")
-    const id = PROJECT_CARD_IDS.find((card) => card === host?.dataset.cardId)
-    if (step === 0 || !id) return
-    event.preventDefault()
-    const from = order.indexOf(id)
-    if (event.shiftKey) {
-      reorder(id, from + step)
-      return
-    }
-    const next = order[from + step]
-    if (next) focusCard(next)
+    onHandArrows(event)
   }
 
   // ── Drawer ───────────────────────────────────────────────────────────
@@ -365,7 +259,11 @@ export function ProjectCards() {
           <span className="tc-rays" />
         </span>
         {/* biome-ignore lint/a11y/noStaticElementInteractions: keyboard delegation for the cards' own buttons (roving arrows, Shift-reorder, Escape), not a control itself. */}
-        <div className="tc-hand" onKeyDown={onHandKeyDown} ref={handRef}>
+        <div
+          className="card-hand tc-hand"
+          onKeyDown={onHandKeyDown}
+          ref={handRef}
+        >
           {order.map((id, index) => (
             <TradingCard
               card={PROJECT_CARDS[id]}
@@ -395,7 +293,7 @@ export function ProjectCards() {
           <p className="tc-legend">
             <span>
               <Kbd>←→</Kbd>
-              {translate("about.projects.legend.choose")}
+              {translate("cardHand.legend.choose")}
             </span>
             <span>
               <Kbd>Enter</Kbd>
@@ -403,11 +301,11 @@ export function ProjectCards() {
             </span>
             <span>
               <Kbd>⇧←→</Kbd>
-              {translate("about.projects.legend.move")}
+              {translate("cardHand.legend.move")}
             </span>
             <span>
               <Kbd>⠿</Kbd>
-              {translate("about.projects.legend.drag")}
+              {translate("cardHand.legend.drag")}
             </span>
           </p>
           <button className="tc-reseal" onClick={reseal} type="button">

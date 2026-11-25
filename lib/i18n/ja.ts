@@ -90,10 +90,7 @@ const ja = {
       },
       languages: "言語：{list}",
       legend: {
-        choose: "選ぶ",
-        drag: "並べ替え",
         flip: "裏返す",
-        move: "カードを移動",
       },
       links: {
         enter: "デスクトップへ",
@@ -198,6 +195,15 @@ const ja = {
     work: "職務経歴",
   },
   achievements: {
+    collection: {
+      backBrand: "KANGAFLOW",
+      backSeries: "SERIES 02",
+      lockedCard: "{set}・未解除",
+      open: "開く",
+      remaining: "あと{count}枚",
+      reveal: "新しい{rarity}カード、開封する",
+      tapToReveal: "タップして開封",
+    },
     filter: {
       label: "レア度で絞り込み",
     },
@@ -256,6 +262,11 @@ const ja = {
         title: "スピード狂",
       },
     },
+    layouts: {
+      binder: "バインダー",
+      codex: "図鑑",
+      table: "テーブル",
+    },
     locked: "未解除",
     rarities: {
       common: "コモン",
@@ -294,8 +305,16 @@ const ja = {
       stamp: "解除！",
       unlocked: "実績を解除しました！",
     },
-    toggleColumns: "レイアウト切替",
+    toggleLayout: "レイアウト切替",
     unlocked: "解除済み",
+  },
+  cardHand: {
+    legend: {
+      choose: "選ぶ",
+      drag: "並べ替え",
+      move: "カードを移動",
+      row: "列を移動",
+    },
   },
   command: {
     description: "コマンドを実行または検索。",
@@ -619,6 +638,7 @@ const ja = {
   },
   settings: {
     actions: {
+      cycleAchievementLayout: "実績レイアウトの切り替え",
       cycleTheme: "テーマ切り替え",
       goAchievements: "実績へ移動",
       goEnvironment: "環境へ移動",
@@ -626,7 +646,6 @@ const ja = {
       goTimeline: "タイムラインへ移動",
       openCommandMenu: "コマンドメニューを開く",
       openMediaPlayer: "メディアプレーヤーを開く",
-      toggleColumns: "列数の切り替え",
       toggleHints: "リンクヒント（Vimium f）",
       toggleLanguage: "言語の切り替え",
       toggleSettings: "設定の切り替え",

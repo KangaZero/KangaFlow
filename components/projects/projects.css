@@ -13,32 +13,8 @@
 }
 
 .tc-section {
-  /* Brushed-chrome stock shared by the pack and the card backs. */
-  --tc-chrome: linear-gradient(
-    180deg,
-    oklch(0.95 0.005 240) 0%,
-    oklch(0.72 0.015 240) 34%,
-    oklch(0.97 0.004 240) 52%,
-    oklch(0.63 0.017 240) 72%,
-    oklch(0.86 0.01 240) 100%
-  );
-  --tc-iris:
-    linear-gradient(
-      125deg,
-      oklch(0.86 0.12 170 / 0.55),
-      oklch(0.84 0.12 230 / 0.45),
-      oklch(0.88 0.12 320 / 0.45),
-      oklch(0.92 0.12 95 / 0.5),
-      oklch(0.86 0.12 170 / 0.55)
-    )
-    0 0 / 300% 300%;
-  --tc-brush: repeating-linear-gradient(
-    90deg,
-    rgb(255 255 255 / 0.14) 0 1px,
-    rgb(0 0 0 / 0.05) 1px 2px,
-    transparent 2px 4px
-  );
-  --tc-ink: oklch(0.22 0.03 240);
+  /* Chrome stock (--tc-chrome/-iris/-brush/-ink) lives in globals.css:
+     shared with the achievement card backs. */
   --tc-gold: var(--rarity-legendary);
   /* TearTicket paper (shows at the torn edge and the stub). */
   --tc-paper: oklch(0.77 0.015 240);
@@ -461,14 +437,9 @@
   --tc2: oklch(0.62 0.03 260);
 }
 
+/* Fan geometry, drag and settle: components/card-hand.css (.card-hand-card). */
 .tc-card {
-  --off: 0;
-  /* Fan: each slot from the centre turns by --fan-angle. */
-  --fan-angle: 8deg;
-  --r: calc(var(--off) * var(--fan-angle));
   --i: 0;
-  --spread: 150px;
-  --lift: 0px;
   --flip: 0deg;
   --light: 0;
   --mx: 50%;
@@ -476,21 +447,12 @@
   /* Frame width: the coloured border is the drag handle. */
   --edge: 10px;
 
-  position: absolute;
-  inset-inline: 0;
   bottom: 10px;
   z-index: var(--z, 3);
   width: 280px;
   aspect-ratio: 63 / 88;
-  margin-inline: auto;
   perspective: 1400px;
   pointer-events: auto;
-  transform: translateX(calc(var(--off) * var(--spread)))
-    translateY(calc(var(--lift) * -1)) rotate(var(--r));
-  transform-origin: 50% 115%;
-  transition:
-    transform 0.65s cubic-bezier(0.3, 1.25, 0.45, 1),
-    opacity 0.3s;
   transition-delay: calc(var(--i) * 70ms);
 }
 .tc-zone[data-phase="done"] .tc-card {
@@ -537,20 +499,6 @@
 }
 .tc-zone[data-phase="done"] .tc-inner {
   cursor: auto;
-}
-.tc-card[data-dragging="true"] {
-  --lift: 36px;
-  z-index: 60;
-  cursor: grabbing;
-  scale: 1.05;
-  translate: var(--dx, 0px) var(--dy, 0px);
-  transition: none;
-}
-.tc-card[data-settling="true"] {
-  translate: 0 0;
-  transition:
-    translate 0.45s cubic-bezier(0.3, 1.4, 0.5, 1),
-    transform 0.5s cubic-bezier(0.3, 1.3, 0.45, 1);
 }
 
 /* An <article> keeps a real 3D context (a <button>'s anonymous box would

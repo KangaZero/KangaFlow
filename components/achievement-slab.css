@@ -10,10 +10,11 @@
   initial-value: 0deg;
 }
 
-/* Inner elements are spans (so the slab can be a <button>). Default them to
-   block with the WHOLE selector inside :where() → specificity 0, so every
-   component rule below (flex/grid) still wins. */
-:where(.ach-slab span[class^="ach-"]) {
+/* Inner elements are spans (so the slab / card can be a <button>). Default
+   them to block with the WHOLE selector inside :where() → specificity 0, so
+   every component rule below (flex/grid) still wins. Covers bare cards too
+   (the collection renders .ach-card without a slab). */
+:where(.ach-slab span[class^="ach-"], span[class^="ach-card"]) {
   display: block;
 }
 
@@ -270,7 +271,7 @@
   box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--c) 40%, transparent);
 }
 .ach-card__art svg {
-  width: 42%;
+  width: 50%;
   height: auto;
   color: var(--c);
   filter: drop-shadow(
@@ -387,11 +388,323 @@
   text-transform: none;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ach-card[data-rarity="mythic"] .ach-card__face {
+/* ═══ Rarity finishes — each tier is a different card STOCK, not a hue ═══
+   common    · matte: flat frame, paper grain, no foil
+   uncommon  · satin: fine diagonal stripes, one soft sheen band
+   rare      · rainbow foil: prism stripes over the whole card, drifting tint
+   legendary · gold etched: brushed gold, gold sunburst foil + glitter
+   mythic    · prismatic full-art: spinning prism frame, cosmos + glitter over
+               a translucent text panel, rainbow title
+   Legendary + mythic keep a little foil at rest (--hyp-idle). */
+.ach-card[data-rarity="common"] {
+  --holo-o: 0;
+}
+.ach-card[data-rarity="common"] .ach-card__face {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E"),
+    linear-gradient(
+      160deg,
+      color-mix(in oklch, var(--c) 75%, white),
+      color-mix(in oklch, var(--c) 70%, black)
+    );
+}
+.ach-card[data-rarity="common"] .ach-card__art {
+  background: color-mix(in oklch, var(--c) 14%, var(--muted));
+}
+.ach-card[data-rarity="uncommon"] {
+  --holo-o: 0.5;
+}
+.ach-card[data-rarity="uncommon"] .ach-card__face {
+  background:
+    repeating-linear-gradient(
+      135deg,
+      oklch(1 0 0 / 0.16) 0 1.5px,
+      transparent 1.5px 5px
+    ),
+    linear-gradient(
+      160deg,
+      color-mix(in oklch, var(--c) 92%, white),
+      color-mix(in oklch, var(--c) 55%, black)
+    );
+}
+.ach-card[data-rarity="uncommon"] .ach-card__holo {
+  --foil: linear-gradient(
+    115deg,
+    transparent 38%,
+    oklch(1 0 0 / 0.55) 50%,
+    transparent 62%
+  );
+  filter: none;
+  mix-blend-mode: soft-light;
+}
+.ach-card[data-rarity="rare"] {
+  --holo-o: 0.75;
+}
+.ach-card[data-rarity="rare"] .ach-card__face {
+  background:
+    linear-gradient(
+      115deg,
+      oklch(0.75 0.2 20 / 0.35),
+      oklch(0.85 0.18 90 / 0.35),
+      oklch(0.8 0.2 150 / 0.35),
+      oklch(0.75 0.18 230 / 0.35)
+    )
+    0 0 / 300% 300%,
+    linear-gradient(
+      160deg,
+      color-mix(in oklch, var(--c) 95%, white),
+      color-mix(in oklch, var(--c) 55%, black)
+    );
+}
+.ach-card[data-rarity="legendary"] {
+  --holo-o: 0.6;
+  --gold-hi: oklch(0.95 0.09 95);
+  --gold-lo: oklch(0.62 0.13 70);
+}
+.ach-card[data-rarity="legendary"] .ach-card__face {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      oklch(1 0 0 / 0.14) 0 1px,
+      oklch(0 0 0 / 0.06) 1px 2px,
+      transparent 2px 4px
+    ),
+    linear-gradient(
+      135deg,
+      var(--gold-hi),
+      var(--c) 28%,
+      var(--gold-lo) 46%,
+      var(--gold-hi) 58%,
+      var(--c) 76%,
+      var(--gold-lo)
+    );
+}
+.ach-card[data-rarity="legendary"] .ach-card__frame {
+  box-shadow:
+    inset 0 0 0 0.3rem color-mix(in oklch, var(--c) 30%, transparent),
+    inset 0 0 0 calc(0.3rem + 1px) var(--c);
+}
+/* A gold icon on gold rays vanished: pool a dark vignette behind it. */
+.ach-card[data-rarity="legendary"] .ach-card__art {
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      oklch(0.18 0.03 70 / 0.9) 0 22%,
+      transparent 58%
+    ),
+    radial-gradient(
+      circle at 50% 60%,
+      color-mix(in oklch, var(--c) 45%, transparent),
+      transparent 65%
+    ),
+    repeating-conic-gradient(
+      from 0deg at 50% 60%,
+      color-mix(in oklch, var(--c) 18%, var(--muted)) 0 10deg,
+      var(--muted) 10deg 20deg
+    );
+}
+.ach-card[data-rarity="legendary"] .ach-card__art svg {
+  filter: drop-shadow(0 0 1px oklch(0.15 0.03 70))
+    drop-shadow(0 4px 10px color-mix(in oklch, var(--c) 70%, transparent));
+}
+.ach-card[data-rarity="legendary"] .ach-card__holo {
+  --foil: repeating-conic-gradient(
+    from 0deg at var(--mx) var(--my),
+    oklch(0.93 0.08 95 / 0.9) 0 3deg,
+    transparent 3deg 9deg
+  );
+  background:
+    radial-gradient(circle at 20% 30%, white 0 1px, transparent 1.6px) 0 0 /
+    19px 19px,
+    radial-gradient(circle at 70% 80%, white 0 1px, transparent 1.6px) 0 0 /
+    27px 27px,
+    var(--foil);
+}
+.ach-card[data-rarity="mythic"] {
+  --holo-o: 0.85;
+  --text-foil: 0.55;
+}
+.ach-card[data-rarity="mythic"] .ach-card__frame {
+  background: color-mix(in oklch, var(--card) 78%, transparent);
+  box-shadow: inset 0 0 0 1px oklch(1 0 0 / 0.35);
+}
+.ach-card[data-rarity="mythic"] .ach-card__holo {
+  background:
+    radial-gradient(circle at 15% 25%, white 0 1px, transparent 1.5px) 0 0 /
+    17px 17px,
+    radial-gradient(circle at 60% 70%, white 0 0.8px, transparent 1.3px) 0 0 /
+    23px 23px,
+    radial-gradient(
+      ellipse at 30% 20%,
+      oklch(0.7 0.25 300 / 0.8),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 75% 75%,
+      oklch(0.75 0.2 200 / 0.8),
+      transparent 55%
+    ),
+    var(--foil) var(--mx) var(--my) / 300% 300%;
+}
+.ach-card[data-rarity="mythic"] .ach-card__title {
+  background:
+    linear-gradient(
+      90deg,
+      oklch(var(--prism-l) 0.2 20),
+      oklch(var(--prism-l) 0.18 90),
+      oklch(var(--prism-l) 0.2 160),
+      oklch(var(--prism-l) 0.18 240),
+      oklch(var(--prism-l) 0.22 320),
+      oklch(var(--prism-l) 0.2 20)
+    )
+    0 0 / 200% 100%;
+  background-clip: text;
+  color: transparent;
+}
+/* Foil eases off over the description so it stays readable. */
+.ach-card__holo {
+  mask-image: linear-gradient(
+    to bottom,
+    black 0 56%,
+    rgb(0 0 0 / var(--text-foil, 0.3)) 66% 100%
+  );
+}
+.ach-card:is([data-rarity="legendary"], [data-rarity="mythic"])
+  .ach-card__holo {
+  opacity: calc(var(--holo-o) * (0.35 + max(var(--hyp), 0.35) * 0.65));
+}
+
+/* Motion is opt-in: html[data-animations="off"] mirrors the site setting
+   (which already folds in the OS reduced-motion preference). */
+:root:not([data-animations="off"]) {
+  & .ach-card[data-rarity="rare"] .ach-card__face,
+  &
+    .ach-card:is([data-rarity="legendary"], [data-rarity="mythic"])
+    .ach-card__holo {
+    animation: ach-foil-drift 6s ease-in-out infinite alternate;
+  }
+  & .ach-card[data-rarity="mythic"] .ach-card__holo {
+    animation-name: ach-mythic-drift;
+    animation-duration: 8s;
+  }
+  & .ach-card[data-rarity="mythic"] .ach-card__title {
+    animation: ach-title-prism 4s linear infinite;
+  }
+  /* Card art: the icon's `.m` part moves while the card is hovered. */
+  & .ach-art .m {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  & .ach-card:hover .ach-art .m {
+    animation: ach-art-bob 0.9s ease-in-out infinite alternate;
+  }
+  & .ach-card:hover .ach-art[data-art="new-beginnings"] .m {
+    transform-origin: left center;
+    animation: ach-art-door 1.2s ease-in-out infinite alternate;
+  }
+  & .ach-card:hover .ach-art[data-art="eos"] .m {
+    transform-box: view-box;
+    transform-origin: 24px 24px;
+    animation: ach-art-spin 6s linear infinite;
+  }
+  & .ach-card:hover .ach-art[data-art="sand-mandala"] .m {
+    animation: ach-art-drift 1.4s ease-out infinite;
+  }
+  & .ach-card:hover .ach-art[data-art="go-touch-grass"] .m {
+    transform-origin: center bottom;
+    animation: ach-art-sway 1.6s ease-in-out infinite alternate;
+  }
+  & .ach-card:hover .ach-art[data-art="out-of-bounds"] .m {
+    animation: ach-art-exit 1s ease-in-out infinite alternate;
+  }
+  & .ach-card:hover .ach-art[data-art="psychopath"] .m {
+    animation: ach-art-shoo 0.5s ease-in-out infinite alternate;
+  }
+  & .ach-card:hover .ach-art[data-art="speedophile"] .m {
+    animation: ach-art-zap 0.35s steps(2) infinite;
+  }
+}
+:root[data-animations="off"] {
+  & .ach-card[data-rarity="mythic"] .ach-card__face {
     animation: none;
   }
-  .ach-slab__case {
+  & .ach-slab__case {
     transition: none;
+  }
+}
+@keyframes ach-foil-drift {
+  to {
+    background-position:
+      0 0,
+      0 0,
+      100% 100%;
+  }
+}
+@keyframes ach-mythic-drift {
+  to {
+    background-position:
+      17px 17px,
+      23px 0,
+      0 0,
+      0 0,
+      100% 100%;
+  }
+}
+@keyframes ach-title-prism {
+  to {
+    background-position: 200% 0;
+  }
+}
+@keyframes ach-art-bob {
+  from {
+    rotate: -7deg;
+  }
+  to {
+    rotate: 7deg;
+    scale: 1.06;
+  }
+}
+@keyframes ach-art-door {
+  to {
+    scale: 0.55 1;
+  }
+}
+@keyframes ach-art-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+@keyframes ach-art-drift {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: 6px -3px;
+  }
+}
+@keyframes ach-art-sway {
+  from {
+    skew: -6deg 0;
+  }
+  to {
+    skew: 6deg 0;
+  }
+}
+@keyframes ach-art-exit {
+  to {
+    translate: 4px 0;
+  }
+}
+@keyframes ach-art-shoo {
+  to {
+    rotate: -6deg;
+    translate: -3px 0;
+  }
+}
+@keyframes ach-art-zap {
+  50% {
+    opacity: 0.35;
   }
 }

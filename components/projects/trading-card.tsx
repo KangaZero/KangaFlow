@@ -147,7 +147,7 @@ export function TradingCard({
   return (
     <article
       aria-labelledby={nameId}
-      className={`tc-card tc-type-${card.type}`}
+      className={`card-hand-card tc-card tc-type-${card.type}`}
       data-card-id={card.id}
       data-dragging={dragging}
       data-flipped={flipped}

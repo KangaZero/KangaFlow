@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect } from "react"
-import { type AppPath, COLUMN_OPTIONS } from "@/lib/globalStates"
+import { type AppPath, nextAchievementLayout } from "@/lib/globalStates"
 import { enterHints, isHintActive } from "@/lib/hint-store"
 import { hrefForRoute, PAGE } from "@/lib/pages"
 import { matchesShortcut } from "@/lib/shortcuts"
@@ -30,8 +30,8 @@ export function ShortcutDispatcher() {
     isTerminalOpen,
     setIsTerminalOpen,
     setTerminalFile,
-    columnCount,
-    setColumnCount,
+    achievementLayout,
+    setAchievementLayout,
     isHelloEffectAnimationComplete,
   } = useGlobalStates()
 
@@ -80,12 +80,9 @@ export function ShortcutDispatcher() {
             return //Without this language change may cause animation to never complete resulting in never rendering the about section and stuck on the hello-effect
           setLocale(locale === "en" ? "ja" : "en")
           break
-        case "toggleColumns": {
-          const index = COLUMN_OPTIONS.indexOf(columnCount)
-          const next = COLUMN_OPTIONS[(index + 1) % COLUMN_OPTIONS.length]
-          if (next) setColumnCount(next)
+        case "cycleAchievementLayout":
+          setAchievementLayout(nextAchievementLayout(achievementLayout))
           break
-        }
         case "toggleSettings":
           setIsSettingsOpen(!isSettingsOpen)
           break
@@ -119,8 +116,8 @@ export function ShortcutDispatcher() {
     isTerminalOpen,
     setIsTerminalOpen,
     setTerminalFile,
-    columnCount,
-    setColumnCount,
+    achievementLayout,
+    setAchievementLayout,
     isHelloEffectAnimationComplete,
     currentPath,
   ])

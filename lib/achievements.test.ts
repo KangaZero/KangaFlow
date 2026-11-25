@@ -14,7 +14,9 @@ import {
   makeUnlocked,
   NEW_UNLOCK_WINDOW_MS,
   reconcile,
+  setLabel,
   setNumber,
+  setNumberLabel,
   sortAchievements,
 } from "@/lib/achievements"
 
@@ -168,5 +170,13 @@ describe("highestUnlockedRarity", () => {
       makeUnlocked(achievement.id, ISO)
     )
     expect(highestUnlockedRarity(all)).toBe("mythic")
+  })
+})
+
+describe("setLabel", () => {
+  it("zero-pads the set number and the catalogue size", () => {
+    expect(setLabel("new-beginnings")).toBe("#01/11")
+    expect(setLabel("speedophile")).toBe("#11/11")
+    expect(setNumberLabel("eos")).toBe("#02")
   })
 })

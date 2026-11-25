@@ -2,13 +2,22 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import { LayoutGrid, Search } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
+import { useReducedMotion } from "motion/react"
 import * as React from "react"
 
+import { AchievementBinder } from "@/components/achievement-binder"
+import { AchievementCodex } from "@/components/achievement-codex"
+import { cardMorphName } from "@/components/achievement-collection-card"
+import {
+  type AchievementCollection,
+  AchievementCollectionProvider,
+} from "@/components/achievement-collection-context"
 import { AchievementDetails } from "@/components/achievement-details"
 import { AchievementRarityChips } from "@/components/achievement-rarity-chips"
 import { AchievementSlab } from "@/components/achievement-slab"
 import { AchievementSortPills } from "@/components/achievement-sort-pills"
+import { AchievementTable } from "@/components/achievement-table"
+import { useUnlockFx } from "@/components/achievement-unlock-fx"
 import { AchievementsProgress } from "@/components/achievements-progress"
 import {
   Dialog,
@@ -17,6 +26,7 @@ import {
 } from "@/components/animate-ui/components/radix/dialog"
 import { PageHeader } from "@/components/page-header"
 import { Input } from "@/components/ui/input"
+import { useRevealedAchievements } from "@/hooks/use-revealed-achievements"
 import { getAchievementLabels } from "@/lib/achievement-labels"
 import {
   type AchievementId,
@@ -26,16 +36,22 @@ import {
   sortAchievements,
 } from "@/lib/achievements"
 import { fuzzyScore } from "@/lib/fuzzy"
-import { COLUMN_OPTIONS } from "@/lib/globalStates"
+import { nextAchievementLayout } from "@/lib/globalStates"
+import { isReducedMotion } from "@/lib/isReducedMotion"
 import { useAchievements } from "@/providers/achievements-provider"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 import "@/components/achievements-top.css"
+import "@/components/achievement-collection.css"
 
 export function AchievementsView() {
   const { achievements } = useAchievements()
   const { translate } = useLocale()
-  const { columnCount, setColumnCount } = useGlobalStates()
+  const { achievementLayout, setAchievementLayout, animationPref } =
+    useGlobalStates()
+  const reduced = isReducedMotion(animationPref, useReducedMotion())
+  const { api: fx, layer: fxLayer } = useUnlockFx()
+  const { revealed, reveal } = useRevealedAchievements()
   const [search, setSearch] = React.useState("")
   const [rarityFilter, setRarityFilter] = React.useState<Rarity[]>([])
   const [sort, setSort] = React.useState<AchievementSort>("set")
@@ -80,10 +96,35 @@ export function AchievementsView() {
     )
   }
 
-  function cycleColumns() {
-    const index = COLUMN_OPTIONS.indexOf(columnCount)
-    const next = COLUMN_OPTIONS[(index + 1) % COLUMN_OPTIONS.length]
-    if (next) setColumnCount(next)
+  // Layout and sort changes are Transitions: the keyed <ViewTransition>s
+  // cross-fade the layout and glide reordered cards (no-ops when the browser
+  // or the motion setting says no).
+  function cycleLayout() {
+    React.startTransition(() =>
+      setAchievementLayout(nextAchievementLayout(achievementLayout))
+    )
+  }
+  function changeSort(next: AchievementSort) {
+    React.startTransition(() => setSort(next))
+  }
+  const inspect = React.useCallback((id: AchievementId) => {
+    React.startTransition(() => setInspectedId(id))
+  }, [])
+  function closeInspect() {
+    React.startTransition(() => setInspectedId(null))
+  }
+
+  // Every card stays in its place; the filters only dim what they exclude.
+  const ordered = sortAchievements(achievements, sort)
+  const visible = new Set(filtered.map((achievement) => achievement.id))
+  const collection: AchievementCollection = {
+    fx,
+    inspect,
+    inspectedId,
+    markRevealed: reveal,
+    reduced,
+    revealed,
+    visible,
   }
 
   const hasFilters = query.length > 0 || rarityFilter.length > 0
@@ -129,10 +170,13 @@ export function AchievementsView() {
               />
             </div>
           </search>
-          <AchievementSortPills onChange={setSort} value={sort} />
-          <button className="at-layout" onClick={cycleColumns} type="button">
+          <AchievementSortPills onChange={changeSort} value={sort} />
+          <button className="at-layout" onClick={cycleLayout} type="button">
             <LayoutGrid aria-hidden className="size-3.5" />
-            <span>{translate("achievements.toggleColumns")}</span>
+            <span>{translate("achievements.toggleLayout")}</span>
+            <b className="at-layout-name">
+              {translate(`achievements.layouts.${achievementLayout}`)}
+            </b>
           </button>
           {/* Always mounted so screen readers announce changes to it. */}
           <span
@@ -145,54 +189,40 @@ export function AchievementsView() {
         </div>
       </section>
 
-      <motion.div
-        className="grid gap-5"
-        layout
-        style={{
-          gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))`,
-        }}
-      >
-        <AnimatePresence mode="popLayout">
-          {filtered.map((achievement) => {
-            const slab = (
-              <AchievementSlab
-                achievement={achievement}
-                isNew={isNewlyUnlocked(achievement, now)}
-                onInspect={() => setInspectedId(achievement.id)}
-              />
-            )
-            return (
-              <motion.div
-                animate={{ opacity: 1, scale: 1 }}
-                className={
-                  columnCount === 1
-                    ? "bg-card grid items-center gap-7 rounded-2xl border p-4 sm:grid-cols-[13.75rem_1fr]"
-                    : undefined
-                }
-                exit={{ opacity: 0, scale: 0.9 }}
-                initial={{ opacity: 0, scale: 0.9 }}
-                key={achievement.id}
-                layout
-              >
-                {slab}
-                {columnCount === 1 ? (
-                  <AchievementDetails achievement={achievement} />
-                ) : null}
-              </motion.div>
-            )
-          })}
-        </AnimatePresence>
-      </motion.div>
+      <AchievementCollectionProvider value={collection}>
+        <section className="acl-scope">
+          <React.ViewTransition
+            default="none"
+            enter="acl-swap-in"
+            exit="acl-swap-out"
+            key={achievementLayout}
+          >
+            <div>
+              {achievementLayout === "binder" ? (
+                <AchievementBinder achievements={ordered} />
+              ) : achievementLayout === "table" ? (
+                <AchievementTable achievements={achievements} />
+              ) : (
+                <AchievementCodex achievements={ordered} />
+              )}
+            </div>
+          </React.ViewTransition>
+        </section>
+      </AchievementCollectionProvider>
+      {fxLayer}
 
       <Dialog
         onOpenChange={(open) => {
-          if (!open) setInspectedId(null)
+          if (!open) closeInspect()
         }}
         open={inspected != null}
       >
         <DialogContent
           aria-describedby={undefined}
           className="gap-8 sm:max-w-3xl md:grid-cols-[minmax(0,20rem)_1fr] md:items-center"
+          // The card morphs in through the view transition; the dialog's own
+          // spring would hand it an invisible target, so it snaps instead.
+          {...(reduced ? {} : { transition: { duration: 0 } })}
         >
           {inspected ? (
             <>
@@ -202,6 +232,7 @@ export function AchievementsView() {
               <AchievementSlab
                 achievement={inspected}
                 isNew={isNewlyUnlocked(inspected, now)}
+                morphName={cardMorphName(inspected.id)}
               />
               <AchievementDetails achievement={inspected} />
             </>
