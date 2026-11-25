@@ -24,7 +24,7 @@ import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { interpolate } from "@/lib/i18n"
 import { isCommitEnter } from "@/lib/keyboard-events"
 import { SPRING_LIST, SPRING_TAP } from "@/lib/motion"
-import { safeLocalStorage } from "@/lib/safe-storage"
+import { asArrayOf, safeLocalStorage } from "@/lib/safe-storage"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
@@ -64,9 +64,28 @@ function toDateKey(d: Date): string {
   return d.toISOString().slice(0, 10)
 }
 
+// Stored data is untrusted: check every field instead of casting.
+function isCalEvent(value: unknown): value is CalEvent {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof value.id === "string" &&
+    "date" in value &&
+    typeof value.date === "string" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value.date) &&
+    "title" in value &&
+    typeof value.title === "string" &&
+    "color" in value &&
+    typeof value.color === "string"
+  )
+}
+
 function loadEvents(): CalEvent[] {
-  return safeLocalStorage.getJson<CalEvent[]>(STORAGE_KEY, [], (raw) =>
-    Array.isArray(raw) ? (raw as CalEvent[]) : null
+  return safeLocalStorage.getJson<CalEvent[]>(
+    STORAGE_KEY,
+    [],
+    asArrayOf(isCalEvent)
   )
 }
 

@@ -15,8 +15,6 @@ import {
   useRef,
   useState,
 } from "react"
-import { Glass } from "@/components/canvasui/Glass"
-import { GlyphRain } from "@/components/canvasui/GlyphRain"
 import { AboutWindow } from "@/components/niri/apps/about-window"
 import { BrowserWindow } from "@/components/niri/apps/browser-window"
 import {
@@ -25,14 +23,12 @@ import {
   niriReducer,
 } from "@/components/niri/engine"
 import { keyToAction } from "@/components/niri/keymap"
-import { LoginScreen } from "@/components/niri/login-screen"
 import { NiriHelpDialog } from "@/components/niri/niri-help-dialog"
 import { NoctaliaBar } from "@/components/niri/noctalia-bar"
 import {
   type LauncherApp,
   NoctaliaLauncher,
 } from "@/components/niri/noctalia-launcher"
-import { NoctaliaSettings } from "@/components/niri/noctalia-settings"
 import { NotificationToast } from "@/components/niri/notification-toast"
 import {
   ACCENT_COLORS,
@@ -64,13 +60,32 @@ import { loadNiriState, saveNiriState } from "@/lib/niri-persistence"
 import { hrefForRoute, PAGE } from "@/lib/pages"
 import { playSfx } from "@/lib/sfx/play"
 import { matrixToGlyphRain } from "@/lib/terminal/cmatrix"
-import { readSourceFiles } from "@/lib/terminal/source"
+import { SOURCE_FILES } from "@/lib/terminal/source"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
 import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 import { NIRI_TILE_ID, useZOrder } from "@/providers/z-order-provider"
+
+// Heavy, conditional pieces load on demand instead of with the environment's
+// first chunk: Glass/GlyphRain are WebGL/canvas (true-glass panes, cmatrix),
+// NoctaliaSettings only opens from its panel, and LoginScreen is gone after
+// the first login (it keeps SSR: it is what the page first shows).
+const Glass = dynamic(
+  () => import("@/components/canvasui/Glass").then((m) => m.Glass),
+  { ssr: false }
+)
+const GlyphRain = dynamic(
+  () => import("@/components/canvasui/GlyphRain").then((m) => m.GlyphRain),
+  { ssr: false }
+)
+const LoginScreen = dynamic(() =>
+  import("@/components/niri/login-screen").then((m) => m.LoginScreen)
+)
+const NoctaliaSettings = dynamic(() =>
+  import("@/components/niri/noctalia-settings").then((m) => m.NoctaliaSettings)
+)
 
 // xterm / CodeMirror reach for `document` at import, so the two heavy app
 // windows load client-only (mirrors terminal-dialog's boundary).
@@ -483,7 +498,6 @@ export function EnvironmentView() {
   const { bringToFront, closeActive, activeId } = useZOrder()
   const [stripZ, setStripZ] = useState<number>(Z_LAYERS.window)
 
-  const files = useMemo(() => readSourceFiles(), [])
   const stripRef = useRef<HTMLDivElement>(null)
 
   // Launcher entries, localised. `name`/`subtitle` framing is translated; brand
@@ -1004,7 +1018,7 @@ export function EnvironmentView() {
                                   >
                                     <WindowContent
                                       dark={dark}
-                                      files={files}
+                                      files={SOURCE_FILES}
                                       onClose={() =>
                                         dispatch({ type: "close" })
                                       }
@@ -1125,7 +1139,7 @@ export function EnvironmentView() {
                                       <div className="pointer-events-none relative min-h-0 flex-1 overflow-hidden">
                                         <WindowContent
                                           dark={dark}
-                                          files={files}
+                                          files={SOURCE_FILES}
                                           onClose={() =>
                                             dispatch({ type: "close" })
                                           }
@@ -1226,7 +1240,7 @@ export function EnvironmentView() {
               >
                 <WindowContent
                   dark={dark}
-                  files={files}
+                  files={SOURCE_FILES}
                   onClose={closeThis}
                   routePath={pathname}
                   win={win}

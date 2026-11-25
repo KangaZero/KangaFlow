@@ -7,11 +7,7 @@ import { isLocale } from "@/lib/i18n"
 
 // Server component: rendered once per locale at build time, so translations are
 // resolved with the explicit route locale (no client hook needed here).
-export default async function Home({
-  params,
-}: {
-  params: Promise<{ lang: string }>
-}) {
+export default async function Home({ params }: PageProps<"/[lang]">) {
   const { lang } = await params
   if (!isLocale(lang)) {
     notFound()

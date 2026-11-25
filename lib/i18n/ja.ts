@@ -601,6 +601,11 @@ const ja = {
     unfavorite: "お気に入りを解除",
     volume: "音量",
   },
+  meta: {
+    description:
+      "Samuel Yong のポートフォリオ。プロジェクト、経歴タイムライン、隠し実績を詰め込んだ遊べるデスクトップ。",
+    siteName: "KangaFlow",
+  },
   nav: {
     achievements: "実績",
     environment: "環境",

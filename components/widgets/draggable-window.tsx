@@ -20,6 +20,7 @@ import {
   type WidgetAnchor,
 } from "@/components/niri/settings"
 import { Button } from "@/components/ui/button"
+import { useIsClient } from "@/lib/hooks/use-is-client"
 import { interpolate } from "@/lib/i18n"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import { SPRING_ACCORDION, SPRING_CONTENT } from "@/lib/motion"
@@ -40,11 +41,44 @@ type StoredState = {
   size?: { width: number; height: number }
 }
 
+const isFiniteNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value)
+
+const numberAt = (value: object, key: string): number | undefined => {
+  const field: unknown = Reflect.get(value, key)
+  return isFiniteNumber(field) ? field : undefined
+}
+
+function readPosition(value: unknown): StoredState["position"] {
+  if (typeof value !== "object" || value === null) return undefined
+  const x = numberAt(value, "x")
+  const y = numberAt(value, "y")
+  return x === undefined || y === undefined ? undefined : { x, y }
+}
+
+function readSize(value: unknown): StoredState["size"] {
+  if (typeof value !== "object" || value === null) return undefined
+  const width = numberAt(value, "width")
+  const height = numberAt(value, "height")
+  return width === undefined || height === undefined
+    ? undefined
+    : { height, width }
+}
+
+// Stored geometry is untrusted: keep only well-formed position/size, so a
+// corrupt entry resets that part instead of placing the window at NaN.
+function parseStoredState(raw: unknown): StoredState | null {
+  if (typeof raw !== "object" || raw === null) return null
+  const position = readPosition(Reflect.get(raw, "position"))
+  const size = readSize(Reflect.get(raw, "size"))
+  return { ...(position ? { position } : {}), ...(size ? { size } : {}) }
+}
+
 function loadState(key: string): StoredState {
   return safeLocalStorage.getJson<StoredState>(
     STORAGE_PREFIX + key,
     {},
-    (raw) => (raw && typeof raw === "object" ? (raw as StoredState) : null)
+    parseStoredState
   )
 }
 
@@ -137,7 +171,8 @@ export function DraggableWindow({
   const isActive = activeId === storageKey
   const windowRef = useRef<HTMLDivElement>(null)
   const gPendingRef = useRef(false)
-  const [mounted, setMounted] = useState(false)
+  // False for the prerender + hydration pass, true after (no extra effect).
+  const mounted = useIsClient()
   // Per-window stacking value from the shared click-to-front counter; bumped
   // when the window opens and on every pointer-down so the active widget rises
   // above its peers.
@@ -210,7 +245,6 @@ export function DraggableWindow({
         ? { marginTop: -growShift }
         : {}
 
-  useEffect(() => setMounted(true), [])
   // Opening (or re-opening) a widget brings it to the front and registers it as
   // the close target for the unified close shortcut.
   // biome-ignore lint/correctness/useExhaustiveDependencies: `focus` closes over stable refs; depending on it (recreated each render) would re-raise every render.

@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
+// The terminal (xterm) is a dynamic chunk; start fetching it as soon as the
+// button is pointed at or focused, so the click opens it without a network
+// wait. import() is cached, so repeat calls are free.
+function preloadTerminal(): void {
+  void import("@/components/terminal-body")
+}
+
 // Floating "view this page's source" affordance (all themes). Opens the terminal
 // dialog straight into `nvim` on the given repo file.
 export function PageCodeButton({ file }: { file: string }) {
@@ -24,6 +31,8 @@ export function PageCodeButton({ file }: { file: string }) {
             setTerminalFile(file)
             setIsTerminalOpen(true)
           }}
+          onFocus={preloadTerminal}
+          onPointerEnter={preloadTerminal}
           size="icon"
           variant="outline"
         >

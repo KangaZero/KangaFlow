@@ -1,8 +1,14 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+// The <html>/<body> shell shared by both root layouts: app/[lang]/layout (the
+// site, so the prerendered <html lang> is the route's locale) and
+// app/(redirect)/layout (the bare "/" that bounces to a locale). Fonts and the
+// global stylesheet are declared once here.
 import { DotGothic16, Fraunces, Geist, Shippori_Mincho } from "next/font/google"
 import localFont from "next/font/local"
+import type { ReactNode } from "react"
 
-import "./globals.css"
+import "@/app/globals.css"
+import type { Locale } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/providers/theme-provider"
 
@@ -14,7 +20,6 @@ const fontSans = Geist({
 // Self-hosted so the build has no runtime dependency on the Google Fonts CDN.
 // The variable woff2 (latin, weight axis 100–800) covers every weight we use.
 const jetbrainsMono = localFont({
-  display: "swap",
   src: "../assets/fonts/jetbrains-mono-latin.woff2",
   variable: "--font-mono",
   weight: "100 800",
@@ -23,7 +28,6 @@ const jetbrainsMono = localFont({
 // Dot-matrix Japanese heading face (matches the portfolio's --font-heading-ja);
 // used by the scrambling header status.
 const dotGothic = DotGothic16({
-  preload: true,
   subsets: ["latin"],
   variable: "--font-heading-ja",
   weight: "400",
@@ -47,11 +51,13 @@ const shipporiMincho = Shippori_Mincho({
   weight: "400",
 })
 
-export default function RootLayout({
+export function RootDocument({
+  lang,
   children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+}: {
+  lang: Locale
+  children: ReactNode
+}) {
   return (
     <html
       className={cn(
@@ -63,7 +69,7 @@ export default function RootLayout({
         fraunces.variable,
         shipporiMincho.variable
       )}
-      lang="en"
+      lang={lang}
       suppressHydrationWarning
     >
       <body>

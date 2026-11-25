@@ -69,6 +69,7 @@ import {
   tapOf,
 } from "@/lib/corne-layout"
 import { useCorneKeyboard } from "@/lib/hooks/use-corne-keyboard"
+import { useIsClient } from "@/lib/hooks/use-is-client"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import {
   type DockMode,
@@ -161,7 +162,8 @@ export function KeyboardWidget(): React.JSX.Element | null {
   // Shared with the settings panel (EnvSettings is the one source of truth).
   const { qwertyMapping } = envSettings.widgetDefaults.keyboard.options
 
-  const [mounted, setMounted] = useState(false)
+  // False for the prerender + hydration pass, true after (no extra effect).
+  const mounted = useIsClient()
   const [prefs] = useState<KeyboardPrefs>(loadPrefs)
   const [dock, setDock] = useState<DockMode>(prefs.dock)
   const [showExt, setShowExt] = useState(prefs.showExt)
@@ -214,8 +216,6 @@ export function KeyboardWidget(): React.JSX.Element | null {
   const layer = activeLayer(engine)
   const shiftOn = isShiftActive(engine)
   const ctrlOn = isCtrlActive(engine)
-
-  useEffect(() => setMounted(true), [])
 
   // ── announcements (aria-live) ──
   const announce = useCallback(

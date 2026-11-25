@@ -26,7 +26,7 @@ import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
 import { isCommitEnter } from "@/lib/keyboard-events"
 import { SPRING_LIST, SPRING_PILL, SPRING_TAP } from "@/lib/motion"
-import { safeLocalStorage } from "@/lib/safe-storage"
+import { asArrayOf, safeLocalStorage } from "@/lib/safe-storage"
 import { playSfx } from "@/lib/sfx/play"
 import { cn } from "@/lib/utils"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -234,10 +234,27 @@ type Alarm = {
   enabled: boolean
 }
 
-function loadAlarms(): Alarm[] {
-  return safeLocalStorage.getJson<Alarm[]>(STORAGE_KEY, [], (raw) =>
-    Array.isArray(raw) ? (raw as Alarm[]) : null
+// Stored data is untrusted (an old version, devtools, another tab): check every
+// field instead of casting, so a malformed entry falls back to "no alarms"
+// rather than crashing the widget later.
+function isAlarm(value: unknown): value is Alarm {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof value.id === "string" &&
+    "time" in value &&
+    typeof value.time === "string" &&
+    /^\d{2}:\d{2}$/.test(value.time) &&
+    "label" in value &&
+    typeof value.label === "string" &&
+    "enabled" in value &&
+    typeof value.enabled === "boolean"
   )
+}
+
+function loadAlarms(): Alarm[] {
+  return safeLocalStorage.getJson<Alarm[]>(STORAGE_KEY, [], asArrayOf(isAlarm))
 }
 
 function saveAlarms(alarms: Alarm[]): void {

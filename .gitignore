@@ -30,6 +30,8 @@ pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# Public, non-secret build config (the Pages sub-path): committed on purpose.
+!.env.production
 
 # typescript
 *.tsbuildinfo

@@ -1,4 +1,3 @@
-"use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import "./blue-sky.css"

@@ -37,7 +37,9 @@ function LocaleProvider({
     setLocaleState(initialLocale)
   }, [initialLocale])
 
-  // Persist the active locale and mirror it onto <html lang> for a11y/SEO.
+  // Persist the active locale and mirror it onto <html lang>. The prerender
+  // already ships the route's lang; this keeps it right after an in-place
+  // switch (setLocale changes the URL with replaceState, not a navigation).
   React.useEffect(() => {
     persistLocale(locale)
     document.documentElement.lang = locale

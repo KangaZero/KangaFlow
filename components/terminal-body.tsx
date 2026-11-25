@@ -1,4 +1,5 @@
 "use client"
+
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 // ─── KNOWN ISSUES / TODO ────────────────────────────────────────────────────
@@ -32,6 +33,7 @@ import type {
   ITerminalInitOnlyOptions,
   ITerminalOptions,
 } from "@xterm/xterm"
+import dynamic from "next/dynamic"
 import "@/components/terminal-crt.css"
 
 import { useReducedMotion } from "motion/react"
@@ -40,7 +42,6 @@ import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useXTerm } from "react-xtermjs"
-import { GlyphRain } from "@/components/canvasui/GlyphRain"
 import { CodeEditor } from "@/components/code-editor"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import { getWindowContent, setWindowContent } from "@/lib/niri-window-cache"
@@ -96,6 +97,12 @@ import { useAchievements } from "@/providers/achievements-provider"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
+// The cmatrix overlay only exists while `cmatrix` runs: its own chunk.
+const GlyphRain = dynamic(
+  () => import("@/components/canvasui/GlyphRain").then((m) => m.GlyphRain),
+  { ssr: false }
+)
+
 // xterm exposes its font measurement behind a private `_core` (its own addons
 // reach in the same way). fit() reads the render service's cached cell dims,
 // which stay at fallback metrics until the char size service re-measures —
@@ -113,7 +120,6 @@ const xtermCore = (term: unknown): XtermCore =>
 // text; xterm's `customGlyphs` draws the powerline separators; this fills only
 // the true Private-Use-Area icon glyphs.
 const nerdSymbols = localFont({
-  display: "swap",
   src: "../assets/fonts/symbols-nerd.woff2",
   style: "normal",
   weight: "400",

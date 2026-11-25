@@ -9,6 +9,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/animate-ui/components/radix/dialog"
+import { SOURCE_FILES } from "@/lib/terminal/source"
 import { paletteForTheme } from "@/lib/terminal/theme"
 import { DEFAULT_THEME } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
@@ -22,7 +23,7 @@ const TerminalBody = dynamic(
   { ssr: false }
 )
 
-export function TerminalDialog({ files }: { files: Record<string, string> }) {
+export function TerminalDialog() {
   const { translate } = useLocale()
   const { resolvedTheme } = useTheme()
   const pathname = usePathname()
@@ -43,7 +44,7 @@ export function TerminalDialog({ files }: { files: Record<string, string> }) {
         </DialogTitle>
         {isTerminalOpen ? (
           <TerminalBody
-            files={files}
+            files={SOURCE_FILES}
             initialFile={terminalFile}
             onClose={() => setIsTerminalOpen(false)}
             routePath={pathname}

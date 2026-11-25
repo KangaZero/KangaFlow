@@ -31,6 +31,7 @@ import { TrackList } from "@/components/widgets/track-list"
 import { formatSecondsToMMSS, PLAYLIST } from "@/components/widgets/tracks"
 import { WidgetTooltip } from "@/components/widgets/widget-tooltip"
 import { withBasePath } from "@/lib/base-path"
+import { useIsClient } from "@/lib/hooks/use-is-client"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import {
   SPRING_ACCORDION,
@@ -74,7 +75,8 @@ export function MediaPlayer() {
 
   const [currentTimeSec, setCurrentTimeSec] = useState(0)
   const [audioDuration, setAudioDuration] = useState<number | null>(null)
-  const [mounted, setMounted] = useState(false)
+  // False for the prerender + hydration pass, true after (no extra effect).
+  const mounted = useIsClient()
   const [favorites, setFavorites] = useState<ReadonlySet<number>>(loadFavorites)
 
   const audioRef = useRef<HTMLAudioElement>(null)
@@ -160,8 +162,6 @@ export function MediaPlayer() {
       document.title = prev
     }
   }, [isPlaying, track.title, track.composer, shouldReduceMotion])
-
-  useEffect(() => setMounted(true), [])
 
   const hasAudio = Boolean(track.src)
   const duration = audioDuration ?? track.duration

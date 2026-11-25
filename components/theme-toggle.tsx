@@ -3,10 +3,11 @@
 
 import { Moon, Sun, Terminal } from "lucide-react"
 import { useTheme } from "next-themes"
-import * as React from "react"
+import type * as React from "react"
 
 import { ThemeToggler } from "@/components/animate-ui/primitives/effects/theme-toggler"
 import { Button } from "@/components/ui/button"
+import { useIsClient } from "@/lib/hooks/use-is-client"
 import { DEFAULT_THEME, isTheme, nextTheme, type Theme } from "@/lib/themes"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -27,11 +28,8 @@ type ThemeIconRender = (icons: {
 export function ThemeToggle({ children }: { children: ThemeIconRender }) {
   const { theme, setTheme } = useTheme()
   const { translate } = useLocale()
-  const [mounted, setMounted] = React.useState(false)
-
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
+  // False for the prerender + hydration pass, true after (no extra effect).
+  const mounted = useIsClient()
 
   const current: Theme = isTheme(theme) ? theme : DEFAULT_THEME
 

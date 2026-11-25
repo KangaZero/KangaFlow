@@ -4,7 +4,6 @@
 import { useReducedMotion } from "motion/react"
 import { useEffect } from "react"
 import { isReducedMotion } from "@/lib/isReducedMotion"
-import { Oneko } from "@/lib/oneko"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -31,11 +30,22 @@ export function Neko() {
     if (!onekoEnabled || reduceMotion) {
       return
     }
-    const neko = new Oneko({
-      followMouse: onekoFollowCursor,
-      speechMessages: messages,
+    // The cat's code (lib/oneko) is fetched only once someone enables it;
+    // `cancelled` covers the settings changing before the import resolves.
+    let cancelled = false
+    let destroy: (() => void) | undefined
+    void import("@/lib/oneko").then(({ Oneko }) => {
+      if (cancelled) return
+      const neko = new Oneko({
+        followMouse: onekoFollowCursor,
+        speechMessages: messages,
+      })
+      destroy = () => neko.destroy()
     })
-    return () => neko.destroy()
+    return () => {
+      cancelled = true
+      destroy?.()
+    }
   }, [messages, onekoEnabled, onekoFollowCursor, reduceMotion])
 
   // The settings-title easter egg summons a "negative" neko. Flagged on <html>

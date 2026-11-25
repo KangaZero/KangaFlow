@@ -2,18 +2,17 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import dynamic from "next/dynamic"
 import { useTheme } from "next-themes"
-import { Activity, useEffect, useState } from "react"
+import { Activity } from "react"
 import { BlueSky } from "@/components/blue-sky"
-import { Clouds } from "@/components/canvasui/Clouds"
-import { DeepSea } from "@/components/deep-sea"
-import { SkyBirds } from "@/components/sky-birds"
+import { useIsClient } from "@/lib/hooks/use-is-client"
 import { isReducedMotion } from "@/lib/isReducedMotion"
 import { DEFAULT_THEME } from "@/lib/themes"
 import { useGlobalStates } from "@/providers/global-state-provider"
 
-// The WebGL backgrounds pull heavy code (ogl, raw WebGL2 shaders), so they
-// load only when their theme is active — a light-theme visitor never downloads
-// them. BlueSky is pure CSS, so it ships inline.
+// Every canvas/WebGL background is its own chunk that loads only when its
+// theme is active, so a visitor downloads one theme's scene, not all of them
+// (LightRays/PixelBlast pull ogl + raw WebGL2 shaders; Clouds, DeepSea and
+// SkyBirds are large canvas scenes). BlueSky is pure CSS, so it ships inline.
 const LightRays = dynamic(
   () => import("@/components/LightRays").then((m) => m.LightRays),
   {
@@ -23,6 +22,18 @@ const LightRays = dynamic(
 const PixelBlast = dynamic(() => import("@/components/PixelBlast"), {
   ssr: false,
 })
+const Clouds = dynamic(
+  () => import("@/components/canvasui/Clouds").then((m) => m.Clouds),
+  { ssr: false }
+)
+const DeepSea = dynamic(
+  () => import("@/components/deep-sea").then((m) => m.DeepSea),
+  { ssr: false }
+)
+const SkyBirds = dynamic(
+  () => import("@/components/sky-birds").then((m) => m.SkyBirds),
+  { ssr: false }
+)
 
 const FILL = "h-full w-full"
 
@@ -88,9 +99,8 @@ export function ThemeBackground() {
   const { resolvedTheme } = useTheme()
   const reducedMotion = useReducedMotion()
   const { animationPref } = useGlobalStates()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => setMounted(true), [])
+  // False for the prerender + hydration pass, true after (no extra effect).
+  const mounted = useIsClient()
 
   // Crossfade on theme change: keyed by theme, so the outgoing layer fades out
   // while the incoming fades in (with a gentle zoom for a soft cross-dissolve).

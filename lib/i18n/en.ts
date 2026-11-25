@@ -600,6 +600,11 @@ const en = {
     unfavorite: "Unfavorite",
     volume: "Volume",
   },
+  meta: {
+    description:
+      "Samuel Yong's portfolio: a playful desktop of projects, a career timeline and hidden achievements.",
+    siteName: "KangaFlow",
+  },
   nav: {
     achievements: "Achievements",
     environment: "Environment",

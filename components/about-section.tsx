@@ -10,8 +10,7 @@ import {
   useReducedMotion,
   useScroll,
 } from "motion/react"
-import Image, { type StaticImageData } from "next/image"
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import type { IconType } from "react-icons"
 import { FaGithub, FaLinkedin } from "react-icons/fa6"
@@ -44,12 +43,12 @@ import { isReducedMotion } from "@/lib/isReducedMotion"
 import { person } from "@/lib/person"
 import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
-import "./about-section.css"
+import "@/components/about-section.css"
 import { AppleHelloIntro } from "@/components/ui/apple-hello-effect"
+import { KangaFlowLogo } from "@/components/ui/kangaflow-logo"
 import type { Mutable } from "@/lib/typescript-hooks/mutable"
 import { useAchievements } from "@/providers/achievements-provider"
 import { useGlobalStates } from "@/providers/global-state-provider"
-import { KangaFlowLogo } from "./ui/kangaflow-logo"
 // Section ids + i18n labels — the single source shared with the scroll-spy
 // sidebar (components/section-sidebar.tsx). Order = document order.
 export const ABOUT_SECTIONS = [
