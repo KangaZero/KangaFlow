@@ -1,7 +1,7 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { LayoutGrid } from "lucide-react"
+import { LayoutGrid, Search } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import * as React from "react"
 
@@ -16,7 +16,6 @@ import {
   DialogTitle,
 } from "@/components/animate-ui/components/radix/dialog"
 import { PageHeader } from "@/components/page-header"
-import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { getAchievementLabels } from "@/lib/achievement-labels"
 import {
@@ -31,6 +30,7 @@ import { COLUMN_OPTIONS } from "@/lib/globalStates"
 import { useAchievements } from "@/providers/achievements-provider"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
+import "@/components/achievements-top.css"
 
 export function AchievementsView() {
   const { achievements } = useAchievements()
@@ -44,6 +44,7 @@ export function AchievementsView() {
   )
   // Captured once per visit: "NEW" badges should not flicker off mid-session.
   const [now] = React.useState(() => Date.now())
+  const searchId = React.useId()
 
   const heading = translate("achievements.heading")
   const query = search.trim()
@@ -101,31 +102,48 @@ export function AchievementsView() {
         title={heading}
       />
 
-      <section className="flex flex-col gap-4">
-        <AchievementsProgress className="max-w-sm" />
+      <section className="at-scope">
+        <AchievementsProgress className="at-slam" />
         <AchievementRarityChips
           onToggle={toggleRarity}
           selected={rarityFilter}
         />
+        <div className="at-tools at-slam" style={{ "--k": 3 }}>
+          <search>
+            <label className="sr-only" htmlFor={searchId}>
+              {translate("achievements.search.placeholder")}
+            </label>
+            <div className="at-field">
+              <Search aria-hidden className="at-field-icon size-3.5" />
+              <Input
+                autoCapitalize="none"
+                autoComplete="off"
+                autoCorrect="off"
+                className="at-field-input h-auto rounded-none border-0 bg-transparent p-0 focus-visible:ring-0 dark:bg-transparent"
+                id={searchId}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={translate("achievements.search.placeholder")}
+                spellCheck={false}
+                type="search"
+                value={search}
+              />
+            </div>
+          </search>
+          <AchievementSortPills onChange={setSort} value={sort} />
+          <button className="at-layout" onClick={cycleColumns} type="button">
+            <LayoutGrid aria-hidden className="size-3.5" />
+            <span>{translate("achievements.toggleColumns")}</span>
+          </button>
+          {/* Always mounted so screen readers announce changes to it. */}
+          <span
+            className="at-status"
+            data-empty={hasFilters && filtered.length === 0 ? "" : undefined}
+            role="status"
+          >
+            {resultText}
+          </span>
+        </div>
       </section>
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Input
-          aria-label={translate("achievements.search.placeholder")}
-          className="max-w-xs"
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder={translate("achievements.search.placeholder")}
-          value={search}
-        />
-        <AchievementSortPills onChange={setSort} value={sort} />
-        <Button onClick={cycleColumns} variant="ghost">
-          <LayoutGrid />
-          {translate("achievements.toggleColumns")}
-        </Button>
-        {resultText ? (
-          <span className="text-muted-foreground text-xs">{resultText}</span>
-        ) : null}
-      </div>
 
       <motion.div
         className="grid gap-5"

@@ -3,38 +3,8 @@
    (skewed slabs, slab shadows, slam-ins). Jobs are quests, the tech list a
    row of tool chips, Education an origin card with a playable piano and a
    full-screen 88-key piano (.pz, portalled). Motion is gated by
-   [data-reduced="true"] like the pause menu. */
-
-.qa-scope,
-.pz {
-  /* Theme tokens for the slabs. Light: a pale mint slab with dark ink and a
-     hairline edge (a light slab on a light page needs one). Dark and
-     terminal override below. Accent ink, gold and the quest colour are the
-     same idea in every theme. */
-  --qa-hi: var(--primary);
-  --qa-slab: oklch(0.97 0.012 166);
-  --qa-ink: oklch(0.2 0.02 260);
-  --qa-edge: 0 0 0 1px color-mix(in oklch, var(--qa-ink) 14%, transparent);
-  --qa-gold: var(--rarity-legendary);
-  /* Gold as TEXT: the shadow gold is ~2:1 on the light slab, so light mode
-     inks gold labels darker (dark / terminal reuse the bright gold). */
-  --qa-gold-ink: oklch(0.52 0.12 70);
-  --qa-quest: var(--primary);
-}
-.dark :is(.qa-scope, .pz) {
-  --qa-hi: oklch(0.8 0.12 166);
-  --qa-slab: oklch(0.16 0.02 260);
-  --qa-ink: white;
-  --qa-edge: 0 0 0 0 transparent;
-  --qa-gold-ink: var(--qa-gold);
-}
-.terminal :is(.qa-scope, .pz) {
-  /* Catppuccin Mocha: mantle slab, text ink. */
-  --qa-slab: #181825;
-  --qa-ink: #cdd6f4;
-  --qa-edge: 0 0 0 1px #313244;
-  --qa-gold-ink: var(--qa-gold);
-}
+   [data-reduced="true"] like the pause menu. The --qa-* slab tokens live in
+   app/globals.css (shared with the achievements page). */
 
 .qa-scope {
   container-type: inline-size;
@@ -107,7 +77,7 @@
 .qa-quest[data-kind="side"] {
   --qc: var(--qa-gold);
   --qc-ink: var(--qa-gold-ink);
-  --qc-on: oklch(0.2 0.02 260);
+  --qc-on: var(--qa-on-bright);
 }
 /* Terminal's accent is a light green, so text on it goes dark. */
 .terminal .qa-quest[data-kind="main"] {
@@ -151,7 +121,7 @@
   place-items: center;
   width: 44px;
   height: 44px;
-  color: oklch(0.2 0.02 260);
+  color: var(--qa-on-bright);
   font: 900 15px var(--font-mono);
   background: white;
   box-shadow: 0 0 0 1px color-mix(in oklch, var(--qa-ink) 14%, transparent);

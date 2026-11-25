@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils"
 import { useLocale } from "@/providers/locale-provider"
 
 /**
- * Segmented sort control. The active highlight is ONE element shared through
- * `layoutId`, so switching sort makes it glide between pills instead of
- * blinking off one and on the other.
+ * Segmented sort control as a skewed slab (achievements-top.css). The active
+ * highlight is ONE element shared through `layoutId`, so switching sort makes
+ * it glide between options instead of blinking off one and on the other.
  */
 export function AchievementSortPills({
   value,
@@ -28,24 +28,16 @@ export function AchievementSortPills({
 
   return (
     <LayoutGroup id={groupId}>
-      <fieldset
-        aria-label={translate("achievements.sort.label")}
-        className={cn(
-          "bg-muted inline-flex h-9 items-center gap-0.5 rounded-full p-1",
-          className
-        )}
-      >
+      <fieldset className={cn("at-sort", className)}>
+        <legend className="sr-only">
+          {translate("achievements.sort.label")}
+        </legend>
         {ACHIEVEMENT_SORTS.map((sort) => {
           const active = sort === value
           return (
             <motion.button
               aria-pressed={active}
-              className={cn(
-                "relative h-7 cursor-pointer rounded-full px-3 text-xs transition-colors",
-                active
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
+              className="at-sort-option"
               key={sort}
               onClick={() => onChange(sort)}
               type="button"
@@ -54,12 +46,12 @@ export function AchievementSortPills({
               {active ? (
                 <motion.span
                   aria-hidden
-                  className="bg-background absolute inset-0 rounded-full shadow-sm"
+                  className="at-sort-indicator"
                   layoutId="achievement-sort-indicator"
                   transition={{ damping: 30, stiffness: 400, type: "spring" }}
                 />
               ) : null}
-              <span className="relative">
+              <span className="at-sort-label">
                 {translate(`achievements.sort.${sort}`)}
               </span>
             </motion.button>

@@ -436,6 +436,46 @@
   --primary-ink-shift: 0%;
 }
 
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+   Quest-log slab tokens (--qa-*), shared by About → Work/Education
+   (components/about/about-sections.css) and the achievements top section
+   (components/achievements-top.css). Light: a pale mint slab with dark ink and
+   a hairline edge (a light slab on a light page needs one). */
+:root {
+  --qa-hi: var(--primary);
+  --qa-slab: oklch(0.97 0.012 166);
+  --qa-ink: oklch(0.2 0.02 260);
+  --qa-edge: 0 0 0 1px color-mix(in oklch, var(--qa-ink) 14%, transparent);
+  --qa-gold: var(--rarity-legendary);
+  /* Gold as TEXT: the shadow gold is ~2:1 on the light slab, so light mode
+     inks gold labels darker (dark / terminal reuse the bright gold). */
+  --qa-gold-ink: oklch(0.52 0.12 70);
+  --qa-quest: var(--primary);
+  /* Fixed dark ink for text drawn ON bright fills (gold, white marks); does
+     not flip with the theme, unlike --qa-ink. */
+  --qa-on-bright: oklch(0.2 0.02 260);
+  /* Hanko seal: the theme's red, so terminal gets its own pink-red. As TEXT
+     the light-theme red is 4.3:1 on white, so light mode inks it darker. */
+  --qa-seal: var(--destructive);
+  --qa-seal-ink: color-mix(in oklab, var(--qa-seal) 80%, var(--qa-on-bright));
+}
+.dark {
+  --qa-hi: oklch(0.8 0.12 166);
+  --qa-slab: oklch(0.16 0.02 260);
+  --qa-ink: white;
+  --qa-edge: 0 0 0 0 transparent;
+  --qa-gold-ink: var(--qa-gold);
+  --qa-seal-ink: var(--qa-seal);
+}
+.terminal {
+  /* Catppuccin Mocha: mantle slab, text ink. */
+  --qa-slab: #181825;
+  --qa-ink: #cdd6f4;
+  --qa-edge: 0 0 0 1px #313244;
+  --qa-gold-ink: var(--qa-gold);
+  --qa-seal-ink: var(--qa-seal);
+}
+
 /* Dark ink themes shade the xterm viewport (see --xterm-viewport-tint).
    Pinned to <html>: xterm's own root element also carries a `terminal` class,
    so a bare `.terminal` rule would match inside the terminal too. */

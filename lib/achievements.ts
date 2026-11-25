@@ -221,6 +221,20 @@ export function formatSplit(ms: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}.${String(centis).padStart(2, "0")}`
 }
 
+// Rarest tier among the unlocked achievements (RARITIES order), or undefined
+// when nothing is unlocked. Tints the achievements page's progress stamp.
+export function highestUnlockedRarity(
+  achievements: readonly Achievement[]
+): Rarity | undefined {
+  return RARITIES.findLast((rarity) =>
+    achievements.some(
+      (achievement) =>
+        achievement.isUnlocked &&
+        getAchievementDef(achievement.id).rarity === rarity
+    )
+  )
+}
+
 // One star per rarity tier, derived from RARITIES order (common ★ … mythic ★★★★★).
 export function rarityStars(rarity: Rarity): string {
   return "★".repeat(RARITIES.indexOf(rarity) + 1)
