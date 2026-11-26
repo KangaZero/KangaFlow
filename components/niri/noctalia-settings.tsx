@@ -27,7 +27,7 @@ import {
   Type,
 } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
-import { useEffect, useState } from "react"
+import { useEffect, useId, useState } from "react"
 import { GLASS_SURFACE, WINDOW_ELEVATION } from "@/components/niri/glass"
 import {
   ACCENT_COLORS,
@@ -297,9 +297,11 @@ function Segmented<T extends string | number>(props: {
   onSelect: (option: T) => void
 }): React.JSX.Element {
   const { label, options, value, format, onSelect } = props
-  // Unique per instance so the sliding highlight only animates within this
-  // control (only one settings section renders at a time, so labels don't clash).
-  const layoutId = `segmented-${label}`
+  // Unique per instance (useId), so the sliding highlight only animates within
+  // this control. It was built from the label, but one section can hold several
+  // controls with the same label (each widget's "Default position"): Motion then
+  // treats them as ONE shared element and the selected fill vanishes.
+  const layoutId = `segmented-${useId()}`
   return (
     <fieldset
       aria-label={label}
