@@ -3,12 +3,14 @@
 
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/animate-ui/components/radix/dialog"
 import { GLASS_SURFACE, WINDOW_ELEVATION } from "@/components/niri/glass"
+import { EscCloseLabel } from "@/components/ui/esc-close-label"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import type { TranslationKey } from "@/lib/i18n"
 import { IS_MAC } from "@/lib/shortcuts"
@@ -73,9 +75,21 @@ export function NiriHelpDialog({
           WINDOW_ELEVATION.rest
         )}
         data-env-surface="dialog"
+        showCloseButton={false}
       >
+        {/* The shared ESC tag (as in the terminal and the settings pause
+            menu), in place of the dialog's default round ✕. */}
+        <DialogClose
+          aria-label={translate("environment.help.dismiss")}
+          className="esc-close absolute top-4 right-4"
+        >
+          <EscCloseLabel />
+        </DialogClose>
         <DialogHeader>
-          <DialogTitle className="text-[17px] tracking-[-0.01em]">
+          <DialogTitle
+            className="text-[17px] tracking-[-0.01em]"
+            data-env-part="heading"
+          >
             {translate("environment.help.title")}
           </DialogTitle>
           <DialogDescription>

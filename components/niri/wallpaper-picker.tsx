@@ -66,6 +66,7 @@ export function WallpaperPicker({
                   ? "ring-primary shadow-[0_8px_20px_-12px_rgba(0,0,0,0.5)] ring-2 ring-offset-2"
                   : "ring-foreground/10 ring-1"
               )}
+              data-env-part="wall-tile"
             >
               <WallpaperBackground
                 className="absolute inset-0"

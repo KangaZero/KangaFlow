@@ -237,6 +237,198 @@
   & [data-env-surface] svg.lucide {
     stroke-width: 2.5;
   }
+
+  /* ── Round 2: one part vocabulary, reused by windows, widgets, the login
+     card and the settings controls ── */
+
+  /* Keys: bordered keycaps. key-primary and win-close are the filled ones.
+     A "flat" key keeps the frame but not the skew: it marks Motion-animated
+     buttons (whileHover/whileTap), whose inline transform would drop it. */
+  &
+    :is(
+      [data-env-part~="key"],
+      [data-env-part="key-primary"],
+      [data-env-part="win-ctrl"],
+      [data-env-part="win-close"]
+    ) {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 55%, transparent);
+    border-radius: 0;
+    font-weight: 800;
+    &:hover {
+      border-color: var(--qa-gold);
+    }
+    &:focus-visible {
+      outline: 3px solid var(--qa-hi);
+      outline-offset: 2px;
+    }
+  }
+  &
+    :is(
+      [data-env-part="key"],
+      [data-env-part="key-primary"],
+      [data-env-part="win-ctrl"],
+      [data-env-part="win-close"]
+    ) {
+    transform: skewX(var(--kf-skew));
+    & > :is(svg, span) {
+      transform: skewX(calc(var(--kf-skew) * -1));
+    }
+  }
+  & :is([data-env-part="key-primary"], [data-env-part="win-close"]) {
+    border-color: var(--primary);
+    color: var(--primary-foreground);
+    background: var(--primary);
+    box-shadow: 3px 3px 0 var(--qa-gold);
+    & > svg {
+      color: var(--primary-foreground);
+    }
+  }
+  /* Title-bar controls: compact keys, still a 24px-wide target. */
+  & :is([data-env-part="win-ctrl"], [data-env-part="win-close"]) {
+    min-inline-size: 24px;
+    min-block-size: 20px;
+    padding-inline: 4px;
+  }
+
+  /* Fields: slab inputs; focus lights the frame, invalid turns it red. */
+  & [data-env-part="field"] {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 45%, transparent);
+    border-radius: 0;
+    background: color-mix(in oklch, var(--qa-slab) 70%, transparent);
+    box-shadow: none;
+    &:is(:focus-visible, :focus-within) {
+      border-color: var(--qa-hi);
+      box-shadow: 3px 3px 0 var(--qa-gold);
+    }
+    &[data-invalid="true"] {
+      border-color: var(--destructive);
+      box-shadow: 3px 3px 0 var(--destructive);
+    }
+  }
+
+  /* Tracks (sliders, the media seek bar) and their thumbs. */
+  & [data-slot="slider-track"] {
+    block-size: 6px;
+    border-radius: 0;
+    background: color-mix(in oklch, var(--qa-hi) 18%, transparent);
+  }
+  & [data-slot="slider-range"] {
+    border-radius: 0;
+    background: var(--qa-hi);
+  }
+  & [data-slot="slider-thumb"] {
+    border: 2px solid var(--qa-hi);
+    border-radius: 0;
+    background: var(--qa-slab);
+    box-shadow: 2px 2px 0 var(--qa-gold);
+    transform: skewX(var(--kf-skew));
+  }
+
+  /* Switch: a skewed slab key. The frame is an inset shadow, not a border,
+     so the thumb's translate stops still line up. */
+  & [data-env-part="switch"] {
+    border-radius: 0;
+    box-shadow: inset 0 0 0 2px
+      color-mix(in oklch, var(--qa-hi) 55%, transparent);
+    transform: skewX(var(--kf-skew));
+    & > span {
+      border-radius: 0;
+      box-shadow: 2px 2px 0 var(--qa-gold);
+    }
+    &[aria-checked="true"] {
+      background: var(--qa-hi);
+    }
+  }
+
+  /* Small accent tag (notification centre "Clear all"). */
+  & [data-env-part="tag"] {
+    border-radius: 0;
+    font-style: italic;
+    font-weight: 800;
+    color: var(--primary-foreground);
+    background: var(--primary);
+    transform: skewX(-12deg);
+  }
+
+  /* Widgets and floating windows: gold drag grip. */
+  & [data-env-part="grip"] {
+    color: var(--qa-gold);
+  }
+
+  /* Calendar (react-day-picker's own class hooks): today is a lit key, the
+     weekday row gold italics, month nav keys. */
+  & .rdp-today:not([data-selected="true"]) button {
+    border-radius: 0;
+    font-weight: 800;
+    color: var(--qa-slab);
+    background: var(--qa-hi);
+    transform: skewX(var(--kf-skew));
+  }
+  & .rdp-weekday {
+    font-style: italic;
+    font-weight: 800;
+    color: var(--qa-gold-ink);
+  }
+  & :is(.rdp-button_previous, .rdp-button_next) {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 55%, transparent);
+    border-radius: 0;
+    transform: skewX(var(--kf-skew));
+  }
+
+  /* Login card: the shared slab frame (data-env-surface); a wrong password
+     turns frame and shadow red. The Motion shake stays as it is. */
+  & [data-env-surface="card"][data-invalid="true"] {
+    border-color: var(--destructive);
+    box-shadow: var(--kf-shadow) var(--kf-shadow) 0 var(--destructive);
+  }
+  & [data-env-part="avatar"] {
+    border-radius: 0;
+    box-shadow: 3px 3px 0 var(--qa-gold);
+    transform: skewX(var(--kf-skew));
+  }
+  /* Error text: --qa-seal-ink (the plain destructive red is ~4.3:1 on the
+     light card). */
+  & [data-env-part="status"]:not(:empty) {
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--qa-seal-ink);
+  }
+
+  /* Launcher search: bold italic entry with an accent caret. */
+  & [data-env-part="search"] {
+    font-style: italic;
+    font-weight: 800;
+    caret-color: var(--qa-hi);
+  }
+
+  /* Wallpaper picker: square tiles; the chosen one is framed and lit. */
+  & [data-env-part="wall-tile"] {
+    border-radius: 0;
+  }
+  & button[aria-pressed="true"] > [data-env-part="wall-tile"] {
+    box-shadow:
+      0 0 0 2px var(--qa-hi),
+      4px 4px 0 var(--qa-gold);
+  }
+
+  /* Overview: Motion owns the tile's radius, scale and its inset selection
+     ring, so the skin adds only the gold offset shadow to the selected tile,
+     sized by --ov-inv to read at full size on the scaled-down tile. */
+  & [data-env-part="ov-tile"][data-selected="true"] {
+    box-shadow: calc(8px * var(--ov-inv, 1)) calc(8px * var(--ov-inv, 1)) 0
+      var(--qa-gold);
+  }
+  /* Workspace label: a square accent tag (Motion fades it, so no transform
+     or clip here). */
+  & [data-env-part="ws-label"] {
+    border-color: var(--primary);
+    border-radius: 0;
+    font-style: italic;
+    font-weight: 800;
+    color: var(--primary-foreground);
+    background: var(--primary);
+  }
 }
 
 /* ── Motion: the pause menu's own curves (components/ui/slab-motion.css).

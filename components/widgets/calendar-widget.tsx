@@ -345,6 +345,7 @@ export function CalendarWidget(): React.JSX.Element {
             </div>
             <input
               className="border-border bg-muted/40 placeholder:text-muted-foreground focus:ring-ring min-w-0 flex-1 rounded border px-2 py-1 text-xs focus:ring-1 focus:outline-none"
+              data-env-part="field"
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => {
                 if (isCommitEnter(e.nativeEvent)) addEvent()
@@ -357,6 +358,7 @@ export function CalendarWidget(): React.JSX.Element {
             <motion.button
               aria-label={translate("widgets.calendar.addEvent")}
               className="border-border bg-muted/40 hover:bg-muted rounded border p-1"
+              data-env-part="key flat"
               onClick={addEvent}
               transition={SPRING_TAP}
               type="button"

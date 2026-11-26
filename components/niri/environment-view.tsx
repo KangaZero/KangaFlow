@@ -270,9 +270,16 @@ function OverviewTile({
     <motion.div
       animate={{ ...over, borderRadius: OVERVIEW_RADIUS / OVERVIEW_SCALE }}
       className="absolute top-0 left-0 overflow-hidden"
+      // Motion owns this tile's radius and transform; the KangaFlow skin only
+      // adds a frame and shadow through box-shadow.
+      data-env-part="ov-tile"
+      data-selected={selected}
       exit={{ ...desk, borderRadius: 0 }}
       initial={{ ...desk, borderRadius: 0 }}
       style={{
+        // Inverse of the overview scale, so the skin's frame and shadow read
+        // at their real size on the scaled-down tile.
+        "--ov-inv": 1 / OVERVIEW_SCALE,
         height: viewport.height,
         transformOrigin: "0 0",
         width: viewport.width,
@@ -292,7 +299,10 @@ function OverviewTile({
       {empty ? (
         <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
           {/* Glass chip so the empty-workspace mark reads over any wallpaper. */}
-          <span className="glass-ink text-muted-foreground rounded-lg bg-(--glass-fill) px-3 text-4xl tracking-[0.3em] backdrop-blur-md">
+          <span
+            className="glass-ink text-muted-foreground rounded-lg bg-(--glass-fill) px-3 text-4xl tracking-[0.3em] backdrop-blur-md"
+            data-env-part="hint"
+          >
             —
           </span>
         </span>
@@ -326,6 +336,7 @@ function OverviewTile({
         animate={{ opacity: 1 }}
         aria-hidden
         className="bg-card/70 text-foreground border-border pointer-events-none absolute z-30 rounded-full border font-medium whitespace-nowrap backdrop-blur-md"
+        data-env-part="ws-label"
         exit={{ opacity: 0 }}
         initial={{ opacity: 0 }}
         style={{
@@ -1000,18 +1011,35 @@ export function EnvironmentView() {
                                   >
                                     {win.title}
                                   </span>
-                                  <SquareIcon
-                                    className="text-muted-foreground size-3.5 hover:scale-110"
+                                  {/* Real buttons (they were bare icons with
+                                      onClick: no keyboard access, no name).
+                                      Unstyled here, so Default looks the
+                                      same; the KangaFlow skin draws keycaps. */}
+                                  <button
+                                    aria-label={translate(
+                                      "environment.window.fullscreen"
+                                    )}
+                                    className="focus-visible:outline-primary grid place-items-center rounded-sm focus-visible:outline-2"
+                                    data-env-part="win-ctrl"
                                     onClick={(e) => {
                                       e.stopPropagation()
                                       dispatch({
                                         type: "fullscreen",
                                       })
                                     }}
-                                  />
-
-                                  <X
-                                    className="text-muted-foreground size-3.5 hover:scale-110"
+                                    type="button"
+                                  >
+                                    <SquareIcon
+                                      aria-hidden="true"
+                                      className="text-muted-foreground size-3.5 hover:scale-110"
+                                    />
+                                  </button>
+                                  <button
+                                    aria-label={translate(
+                                      "environment.window.close"
+                                    )}
+                                    className="focus-visible:outline-primary grid place-items-center rounded-sm focus-visible:outline-2"
+                                    data-env-part="win-close"
                                     onClick={(e) => {
                                       e.stopPropagation()
                                       dispatch({
@@ -1022,7 +1050,13 @@ export function EnvironmentView() {
                                       })
                                       dispatch({ type: "close" })
                                     }}
-                                  />
+                                    type="button"
+                                  >
+                                    <X
+                                      aria-hidden="true"
+                                      className="text-muted-foreground size-3.5 hover:scale-110"
+                                    />
+                                  </button>
                                 </div>
                                 <div className="relative min-h-0 flex-1 overflow-hidden">
                                   {trueGlass ? (

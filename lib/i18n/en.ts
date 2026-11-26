@@ -408,6 +408,7 @@ const en = {
       close: "Close window",
       cycleWidth: "Cycle column width",
       description: "niri-style tiling — Alt is the modifier.",
+      dismiss: "Close keyboard shortcuts",
       float: "Toggle floating",
       focusColumn: "Focus column left / right",
       focusWindow: "Focus window up / down",
@@ -471,7 +472,9 @@ const en = {
       barRight: "Right",
       barTop: "Top",
       close: "Close settings",
+      collapseSidebar: "Collapse sidebar",
       corners: "Corners",
+      expandSidebar: "Expand sidebar",
       font: "Font",
       fontMono: "Mono",
       fontSans: "Sans",
@@ -545,6 +548,7 @@ const en = {
     title: "Environment",
     window: {
       close: "Close window",
+      fullscreen: "Toggle fullscreen",
     },
   },
   headerCard: {

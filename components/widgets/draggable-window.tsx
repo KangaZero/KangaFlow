@@ -369,6 +369,7 @@ export function DraggableWindow({
               attention && !reduceMotion && "window-attention",
               anchorClass
             )}
+            data-env-surface="window"
             data-focused={isActive}
             drag
             dragConstraints={dragBounds.current}
@@ -426,6 +427,7 @@ export function DraggableWindow({
                 small title, close; the title brightens when the window is active. */}
             <div
               className="flex h-8 shrink-0 cursor-grab items-center gap-2 pr-1.5 pl-3 select-none active:cursor-grabbing"
+              data-env-part="titlebar"
               onPointerDown={(e) => {
                 const el = windowRef.current
                 if (el != null) {
@@ -447,6 +449,7 @@ export function DraggableWindow({
                   "flex-1 truncate text-[11.5px] font-medium tracking-wide transition-colors duration-300",
                   isActive ? "text-foreground" : "text-muted-foreground"
                 )}
+                data-env-part="title"
               >
                 {title}
               </span>
@@ -455,6 +458,7 @@ export function DraggableWindow({
                   title,
                 })}
                 className="size-6 shrink-0 transition-transform active:scale-90"
+                data-env-part="win-close"
                 onClick={onClose}
                 size="icon"
                 variant="ghost"
@@ -530,6 +534,7 @@ export function DraggableWindow({
               <svg
                 aria-hidden={true}
                 className="text-muted-foreground/40 absolute right-1 bottom-1"
+                data-env-part="grip"
                 fill="none"
                 height={8}
                 viewBox="0 0 8 8"

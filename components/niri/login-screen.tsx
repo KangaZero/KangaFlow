@@ -137,6 +137,8 @@ export function LoginScreen({
   const [now, setNow] = useState<number | null>(null)
 
   const passwordId = useId()
+  // The status line (wrong password, attempts) describes the password field.
+  const statusId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
   const cardRef = useRef<HTMLDivElement>(null)
   const passwordRef = useRef<HTMLInputElement>(null)
@@ -535,7 +537,9 @@ export function LoginScreen({
               ember={1.25}
               intensity={CARD_INTENSITY}
               melt={5}
-              radius={18}
+              // The flame traces the card's corners; the KangaFlow skin squares
+              // the card (skin-kangaflow.css), so the flame follows.
+              radius={envSettings.skin === "kangaflow" ? 0 : 18}
               ref={cardFlameRef}
               rim={2.15}
               scale={0.85}
@@ -560,6 +564,8 @@ export function LoginScreen({
                     ? "border-destructive/60"
                     : "border-foreground/15"
                 )}
+                data-env-surface="card"
+                data-invalid={deniedActive}
                 initial={{ opacity: 0 }}
                 style={{ transformOrigin: "center" }}
                 transition={
@@ -572,6 +578,7 @@ export function LoginScreen({
                   <div
                     aria-hidden
                     className="from-primary/90 to-primary/40 relative size-11 shrink-0 overflow-hidden rounded-full bg-gradient-to-br"
+                    data-env-part="avatar"
                   >
                     <div
                       className="absolute inset-x-1 top-1.5 bottom-0 bg-white/90"
@@ -582,7 +589,7 @@ export function LoginScreen({
                     />
                   </div>
                   <div>
-                    <p className="font-semibold">
+                    <p className="font-semibold" data-env-part="heading">
                       {person.firstName.split(" ")[0]} {person.lastName}
                     </p>
                     <p className="text-muted-foreground mt-0.5 font-mono text-[11px] tracking-[0.14em] uppercase">
@@ -634,6 +641,8 @@ export function LoginScreen({
                         ? "border-destructive/75 bg-destructive/10"
                         : "border-foreground/15 bg-foreground/5 focus-within:border-primary focus-within:ring-primary/20 focus-within:ring-4"
                     )}
+                    data-env-part="field"
+                    data-invalid={deniedActive}
                   >
                     {deniedActive && deniedKey > 0 && !reduced ? (
                       <span
@@ -647,6 +656,8 @@ export function LoginScreen({
                     </label>
                     {showPassword ? (
                       <input
+                        aria-describedby={statusId}
+                        aria-invalid={deniedActive}
                         autoComplete="current-password"
                         className={inputClass}
                         disabled={loading}
@@ -691,6 +702,8 @@ export function LoginScreen({
                             spilling over — and swallowing clicks on — the eye
                             toggle beside it. */}
                         <input
+                          aria-describedby={statusId}
+                          aria-invalid={deniedActive}
                           autoComplete="current-password"
                           className="absolute inset-0 size-full opacity-0"
                           disabled={loading}
@@ -713,6 +726,7 @@ export function LoginScreen({
                       )}
                       aria-pressed={showPassword}
                       className="text-muted-foreground hover:text-foreground focus-visible:ring-primary relative grid size-7 shrink-0 place-items-center rounded-md transition-colors outline-none focus-visible:ring-2"
+                      data-env-part="key"
                       onClick={toggleShowPassword}
                       type="button"
                     >
@@ -725,6 +739,7 @@ export function LoginScreen({
                     <button
                       aria-label={translate("environment.login.unlock")}
                       className="bg-primary text-primary-foreground focus-visible:ring-primary relative grid size-8 shrink-0 place-items-center rounded-lg shadow-[0_6px_18px_-6px_var(--primary)] transition-transform outline-none hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 disabled:opacity-50"
+                      data-env-part="key-primary"
                       disabled={loading}
                       onClick={submit}
                       type="button"
@@ -754,6 +769,8 @@ export function LoginScreen({
                       // screen readers only.
                       locked && "sr-only"
                     )}
+                    data-env-part="status"
+                    id={statusId}
                   >
                     {status}
                   </span>

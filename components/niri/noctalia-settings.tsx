@@ -257,6 +257,7 @@ function ToggleSwitch(props: {
           checked ? "bg-primary" : "bg-foreground/15",
           !reduce && "transition-colors duration-200"
         )}
+        data-env-part="switch"
         onClick={onToggle}
         role="switch"
         type="button"
@@ -504,6 +505,7 @@ function SecuritySection(): React.JSX.Element {
 
       <input
         className={inputClass}
+        data-env-part="field"
         onChange={(e) => setPwdInput(e.target.value)}
         placeholder={translate("environment.settings.security.newPlaceholder")}
         type="password"
@@ -511,6 +513,7 @@ function SecuritySection(): React.JSX.Element {
       />
       <input
         className={inputClass}
+        data-env-part="field"
         onChange={(e) => setConfirmInput(e.target.value)}
         placeholder={translate(
           "environment.settings.security.confirmPlaceholder"
@@ -522,6 +525,7 @@ function SecuritySection(): React.JSX.Element {
       <div className="flex gap-2">
         <button
           className="bg-primary text-primary-foreground flex-1 rounded-lg py-2 text-sm font-medium transition-[filter,transform] hover:brightness-105 active:scale-[0.98]"
+          data-env-part="key-primary"
           onClick={() => void handleSet()}
           type="button"
         >
@@ -529,6 +533,7 @@ function SecuritySection(): React.JSX.Element {
         </button>
         <button
           className="bg-foreground/[0.08] text-muted-foreground hover:text-destructive rounded-lg px-3 py-2 text-sm transition-colors disabled:opacity-40"
+          data-env-part="key"
           disabled={!isSet}
           onClick={handleClear}
           type="button"
@@ -702,6 +707,7 @@ export function NoctaliaSettings(props: {
               <button
                 aria-label={translate("environment.settings.close")}
                 className="text-muted-foreground hover:bg-foreground/10 hover:text-foreground rounded-lg p-1.5 transition-colors md:hidden"
+                data-env-part="key"
                 onClick={onClose}
                 type="button"
               >
@@ -710,8 +716,13 @@ export function NoctaliaSettings(props: {
 
               {/* Desktop: ArrowLeft toggles sidebar open/closed */}
               <button
-                aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                aria-label={translate(
+                  sidebarOpen
+                    ? "environment.settings.collapseSidebar"
+                    : "environment.settings.expandSidebar"
+                )}
                 className="text-muted-foreground hover:bg-foreground/10 hover:text-foreground focus-visible:outline-primary hidden rounded-lg p-1.5 transition-colors focus-visible:outline-2 md:inline-flex"
+                data-env-part="key"
                 onClick={() => setSidebarOpen((prev) => !prev)}
                 type="button"
               >

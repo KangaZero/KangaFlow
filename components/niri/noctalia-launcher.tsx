@@ -507,6 +507,7 @@ export function NoctaliaLauncher(props: {
               <input
                 aria-label={translate("environment.launcher.search")}
                 className="wwfull text-foreground placeholder:text-muted-foreground bg-transparent px-2 py-1.5 text-base focus:outline-none"
+                data-env-part="search"
                 onChange={handleQueryChange}
                 onKeyDown={handleKeyDown}
                 placeholder={translate(

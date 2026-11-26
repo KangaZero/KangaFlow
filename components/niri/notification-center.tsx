@@ -144,6 +144,7 @@ export function NotificationCenter({
           {notifications.length > 0 ? (
             <button
               className="text-muted-foreground hover:text-foreground rounded px-1.5 py-0.5 text-xs transition-colors disabled:opacity-40"
+              data-env-part="tag"
               disabled={clearing}
               onClick={handleClearAll}
               type="button"

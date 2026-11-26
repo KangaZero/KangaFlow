@@ -441,6 +441,7 @@ export function MediaPlayer() {
               >
                 <Button
                   aria-label={translate("mediaPlayer.previous")}
+                  data-env-part="key"
                   onClick={() => {
                     goToPrevious()
                     if (!isPlaying) setIsPlaying(true)
@@ -463,6 +464,7 @@ export function MediaPlayer() {
                   isPlaying ? "mediaPlayer.pause" : "mediaPlayer.play"
                 )}
                 className="relative size-11 rounded-full"
+                data-env-part="key-primary"
                 onClick={() => setIsPlaying((p) => !p)}
                 size="icon"
               >
@@ -515,6 +517,7 @@ export function MediaPlayer() {
               >
                 <Button
                   aria-label={translate("mediaPlayer.next")}
+                  data-env-part="key"
                   onClick={() => {
                     goToNext()
                     if (!isPlaying) setIsPlaying(true)

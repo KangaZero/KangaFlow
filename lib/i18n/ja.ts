@@ -408,6 +408,7 @@ const ja = {
       close: "ウィンドウを閉じる",
       cycleWidth: "列幅を循環",
       description: "niri 風タイル操作 — 修飾キーは Alt。",
+      dismiss: "キーボードショートカットを閉じる",
       float: "フローティング切り替え",
       focusColumn: "列を左右へフォーカス",
       focusWindow: "ウィンドウを上下へフォーカス",
@@ -472,7 +473,9 @@ const ja = {
       barRight: "右",
       barTop: "上",
       close: "設定を閉じる",
+      collapseSidebar: "サイドバーを閉じる",
       corners: "角丸",
+      expandSidebar: "サイドバーを開く",
       font: "フォント",
       fontMono: "等幅",
       fontSans: "ゴシック",
@@ -546,6 +549,7 @@ const ja = {
     title: "環境",
     window: {
       close: "ウィンドウを閉じる",
+      fullscreen: "フルスクリーン切り替え",
     },
   },
   headerCard: {
