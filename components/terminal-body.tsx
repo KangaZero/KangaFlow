@@ -272,7 +272,7 @@ function ZjStatusBar({
   const clock = useClock()
   return (
     <div
-      className="flex items-stretch overflow-hidden font-mono text-xs"
+      className="flex shrink-0 items-stretch overflow-hidden font-mono text-xs"
       style={{ background: palette.base, color: palette.text }}
     >
       <span
@@ -380,7 +380,6 @@ export function TerminalBody({
   const {
     globalMatrixRunning,
     setGlobalMatrixOptions,
-    envSettings,
     animationPref,
     onekoEnabled,
     setOnekoEnabled,
@@ -438,8 +437,6 @@ export function TerminalBody({
       ? saved.matrixOptions
       : null
   )
-  const isVerticalBar =
-    envSettings.barPosition === "left" || envSettings.barPosition === "right"
 
   const dark = resolvedTheme !== "light"
   // Live palette for the once-bound data handler (the prompt is themed per
@@ -1190,16 +1187,14 @@ export function TerminalBody({
   // The standalone dialog gets a slim tab strip on top; as a niri window the
   // compositor already draws a title bar, so it is omitted there.
   const showTabStrip = !windowId
-  const screenHeight = showTabStrip
-    ? isVerticalBar
-      ? "h-[calc(92.8vh-2rem)]"
-      : "h-[calc(86.6vh-2rem)]"
-    : isVerticalBar
-      ? "h-[92.8vh]"
-      : "h-[86.6vh]"
 
+  // One flex column: the screen takes exactly the space the window or dialog
+  // has left after the tab strip and status bar, and the ResizeObserver on the
+  // xterm host refits on every change. (It used to be a fixed share of the
+  // viewport, 86.6vh / 92.8vh: any shorter window hid its bottom rows, the
+  // prompt included, and the env page's UI-scale zoom multiplied it again.)
   return (
-    <>
+    <div className="flex h-full min-h-0 w-full flex-col">
       {showTabStrip ? (
         <TerminalTabStrip
           editorOpen={editor !== null}
@@ -1209,7 +1204,7 @@ export function TerminalBody({
         />
       ) : null}
       <div
-        className="terminal-screen relative h-full w-full flex-1"
+        className="terminal-screen relative min-h-0 w-full flex-1"
         data-crt={crtOn ? "on" : "off"}
         data-crt-flicker={reduceMotion ? "off" : "on"}
         style={{
@@ -1219,9 +1214,8 @@ export function TerminalBody({
       >
         {/* Scrim behind the transparent xterm canvas: readability backing that
             still lets the wallpaper through (light theme only; dark = none). */}
-        {/* TODO find out how to resize automaticaly */}
         <div
-          className={`${screenHeight} rounded-t-m w-full`}
+          className="rounded-t-m h-full w-full"
           ref={ref}
           style={{ background: palette.scrim }}
         />
@@ -1246,6 +1240,6 @@ export function TerminalBody({
         ) : null}
       </div>
       <ZjStatusBar mode={bar.mode} palette={palette} tab={bar.tab} />
-    </>
+    </div>
   )
 }

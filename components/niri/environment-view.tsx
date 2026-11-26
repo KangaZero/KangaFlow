@@ -765,7 +765,15 @@ export function EnvironmentView() {
           // Omit `zoom` entirely at 1× so `main` never becomes a stacking
           // context at the default scale — that would trap the tiled strip and
           // panels below the body-level floats (defeating the z-order system).
-          ...(settings.uiScale === 1 ? {} : { zoom: settings.uiScale }),
+          // CSS zoom also multiplies viewport units, so h-svh would become
+          // uiScale × the viewport and overflow-hidden would cut off the
+          // bottom (the terminal's prompt). Divide it back out while zoomed.
+          ...(settings.uiScale === 1
+            ? {}
+            : {
+                height: `calc(100svh / ${settings.uiScale})`,
+                zoom: settings.uiScale,
+              }),
           // Accent overrides the desktop's --primary token (default = theme).
           ...(settings.accent === "default"
             ? {}
