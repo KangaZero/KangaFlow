@@ -11,8 +11,8 @@ import { useGlobalStates } from "@/providers/global-state-provider"
 
 // Every canvas/WebGL background is its own chunk that loads only when its
 // theme is active, so a visitor downloads one theme's scene, not all of them
-// (LightRays/PixelBlast pull ogl + raw WebGL2 shaders; Clouds, DeepSea and
-// SkyBirds are large canvas scenes). BlueSky is pure CSS, so it ships inline.
+// (LightRays/PixelBlast pull ogl + raw WebGL2 shaders; Clouds and DeepSea are
+// large canvas scenes). BlueSky is pure CSS, so it ships inline.
 const LightRays = dynamic(
   () => import("@/components/LightRays").then((m) => m.LightRays),
   {
@@ -28,10 +28,6 @@ const Clouds = dynamic(
 )
 const DeepSea = dynamic(
   () => import("@/components/deep-sea").then((m) => m.DeepSea),
-  { ssr: false }
-)
-const SkyBirds = dynamic(
-  () => import("@/components/sky-birds").then((m) => m.SkyBirds),
   { ssr: false }
 )
 
@@ -72,22 +68,15 @@ function activeBackground(theme: string | undefined, isReducedMotion: boolean) {
       )
     default:
       return (
-        <>
-          <Clouds
-            className={FILL}
-            cover={0.1}
-            refraction={0.1}
-            speed={isReducedMotion ? 0 : 0.6}
-            wind={0.2}
-          >
-            <BlueSky className={FILL} />
-          </Clouds>
-          {/* Birds sit ABOVE the cloud layer (crisp, and the HTML-in-Canvas
-              content never repaints per frame). */}
-          <Activity mode={isReducedMotion ? "hidden" : "visible"}>
-            <SkyBirds />
-          </Activity>
-        </>
+        <Clouds
+          className={FILL}
+          cover={0.1}
+          refraction={0.1}
+          speed={isReducedMotion ? 0 : 0.6}
+          wind={0.2}
+        >
+          <BlueSky className={FILL} />
+        </Clouds>
       )
   }
 }

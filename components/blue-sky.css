@@ -1,6 +1,6 @@
 /* Self-authored daytime blue-sky background — no dependencies, no WebGL.
    A vertical sky gradient with a warm sun, two parallax cloud layers, all
-   GPU-composited (birds: components/sky-birds). Decorative; motion respects the user's
+   GPU-composited. Decorative; motion respects the user's
    reduced-motion preference. Palette: cool blue (sky) + warm amber (sun) form a
    complementary pair; white clouds sit as the neutral. */
 
