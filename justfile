@@ -21,12 +21,15 @@ fix:
 lint:
     pnpm exec biome ci .
 
-# Type-check with the native TypeScript 7 compiler. `--incremental false`:
+# Type-check with the native TypeScript 7 compiler, via the package.json
+# script so CI and just share one command. It runs `next typegen` first:
+# PageProps/LayoutProps are globals generated into .next/types, absent on a
+# clean checkout (CI), so a bare `tsc` reds there. `--incremental false`:
 # tsconfig's `incremental: true` (for next's builds) makes a plain `--noEmit`
 # trust tsconfig.tsbuildinfo, and TS7 then missed errors in files that depend
 # on a changed type (a false green). CI starts clean, so this only bit locally.
 typecheck:
-    pnpm exec tsc --noEmit --incremental false
+    pnpm typecheck
 
 # Run the test suite once (non-watch).
 test:

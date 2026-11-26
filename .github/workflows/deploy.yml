@@ -41,8 +41,10 @@ jobs:
       - name: Lint & format (Biome, no writes)
         run: pnpm exec biome ci .
 
+      # `next typegen` first: PageProps/LayoutProps are globals generated into
+      # .next/types, which a clean checkout does not have.
       - name: Type check
-        run: pnpm exec tsc --noEmit --incremental false
+        run: pnpm typecheck
 
       - name: Test
         run: pnpm exec vitest run
