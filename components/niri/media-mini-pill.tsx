@@ -130,7 +130,9 @@ export function MediaMiniPill({
     return (
       <div
         className={cn(
-          "bg-foreground/6 text-muted-foreground flex items-center gap-1.5",
+          // foreground/80, not muted: muted text on the translucent bar glass
+          // fell under AA over light wallpapers.
+          "bg-foreground/6 text-foreground/80 flex items-center gap-1.5",
           vertical ? "flex-col px-0.5 py-1" : "h-7.5 pr-2.5 pl-1"
         )}
         style={{ borderRadius: `${Math.max(barRadius - 3, 6)}px` }}

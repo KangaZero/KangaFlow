@@ -143,7 +143,8 @@ export function NotificationCenter({
           </span>
           {notifications.length > 0 ? (
             <button
-              className="text-muted-foreground hover:text-foreground rounded px-1.5 py-0.5 text-xs transition-colors disabled:opacity-40"
+              // foreground/80, not muted: muted fell under AA on the glass popover.
+              className="text-foreground/80 hover:text-foreground rounded px-1.5 py-0.5 text-xs transition-colors disabled:opacity-40"
               data-env-part="tag"
               disabled={clearing}
               onClick={handleClearAll}
