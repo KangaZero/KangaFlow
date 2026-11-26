@@ -24,6 +24,7 @@ import { BellIcon, type BellIconHandle } from "@/components/ui/bell"
 import { Button } from "@/components/ui/button"
 import { DraggableWindow } from "@/components/widgets/draggable-window"
 import { useVimInput } from "@/lib/hooks/use-vim-input"
+import { interpolate } from "@/lib/i18n"
 import { isCommitEnter } from "@/lib/keyboard-events"
 import { SPRING_LIST, SPRING_PILL, SPRING_TAP } from "@/lib/motion"
 import { asArrayOf, safeLocalStorage } from "@/lib/safe-storage"
@@ -748,6 +749,11 @@ export function AlarmWidget(): React.JSX.Element {
                 ] as const
               ).map((opt) => (
                 <motion.button
+                  // The visible "5m" is compact; say the full phrase.
+                  aria-label={interpolate(
+                    translate("notifications.remindInLabel"),
+                    { minutes: opt.minutes }
+                  )}
                   className="border-border bg-muted/40 hover:bg-muted rounded-md border px-2 py-1 text-xs transition-colors"
                   data-env-part="chip"
                   key={opt.minutes}
