@@ -306,6 +306,89 @@
     }
   }
 
+  /* ── Media track list ── Rows are Motion layout elements (they reorder),
+     so no transform or clip-path: the current row is a slab through its
+     background, border and the gold shadow only. */
+  & [data-env-part="track-row"] {
+    border-radius: 0;
+  }
+  & [data-env-part="track-active"] {
+    border: 2px solid var(--qa-hi);
+    border-radius: 0;
+    background: color-mix(in oklch, var(--qa-hi) 14%, transparent);
+    box-shadow: 3px 3px 0 var(--qa-gold);
+  }
+  & [data-env-part="track-row"][data-active="true"] {
+    font-style: italic;
+    & .tabular-nums {
+      font-weight: 800;
+      color: var(--qa-gold-ink);
+    }
+  }
+
+  /* ── Clock widget ── */
+  /* Mode tabs: separate skewed keys; the current one is lit. */
+  & [data-env-part="tabs"] {
+    gap: 4px;
+    border-radius: 0;
+    background: transparent;
+  }
+  & [data-env-part="tab"] {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 55%, transparent);
+    border-radius: 0;
+    font-weight: 800;
+    transform: skewX(var(--kf-skew));
+  }
+  /* Label upright inside the slanted key, like the other keys. */
+  & [data-env-part="tab-label"] {
+    transform: skewX(calc(var(--kf-skew) * -1));
+  }
+  & [data-env-part="tab"][aria-pressed="true"] [data-env-part="tab-label"] {
+    color: var(--qa-slab);
+  }
+  & [data-env-part="tab-fill"] {
+    border-radius: 0;
+    background: var(--qa-hi);
+    box-shadow: 3px 3px 0 var(--qa-gold);
+  }
+  /* The big digits: the lock clock's leaning poster type. */
+  & [data-env-part="big-clock"] {
+    font-style: italic;
+    font-weight: 800;
+    text-shadow: 0.06em 0.06em 0 var(--primary);
+    transform: skewX(var(--kf-skew));
+  }
+  /* Alarm and lap rows (Motion-animated: no transform). */
+  & [data-env-part="list-row"] {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 35%, transparent);
+    border-radius: 0;
+  }
+  & [data-env-part="list-row"][data-active="true"] {
+    border-color: var(--qa-hi);
+    box-shadow: 3px 3px 0 var(--qa-gold);
+  }
+  /* Chips are Motion buttons (tap scale owns transform), so they read as
+     keycaps through the frame and a thick bottom edge instead of a skew. */
+  & :is([data-env-part="chip"], [data-env-part="chip-primary"]) {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 55%, transparent);
+    border-block-end-width: 4px;
+    border-radius: 0;
+    font-weight: 800;
+  }
+  & [data-env-part="chip-primary"] {
+    border-color: var(--primary);
+    box-shadow: 3px 3px 0 var(--qa-gold);
+  }
+
+  /* Scrollbars inside the skin's surfaces: the global rule draws them from
+     these two variables (scrollbar-color, plus the ::-webkit fallback), so
+     only the variables change. Thumb --qa-hi on a transparent track reads
+     ≥3:1 on the slab and window fills. */
+  & :is([data-env-surface], [data-env-surface] *) {
+    --scrollbar-thumb: var(--qa-hi);
+    --scrollbar-track: transparent;
+  }
+
   /* Tracks (sliders, the media seek bar) and their thumbs. */
   & [data-slot="slider-track"] {
     block-size: 6px;

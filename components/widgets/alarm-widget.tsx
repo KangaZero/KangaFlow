@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react"
 import { AnimatePresence, LayoutGroup, motion } from "motion/react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useId, useRef, useState } from "react"
 import { Counter } from "@/components/Counter"
 import { AlarmClockIcon } from "@/components/ui/alarm-clock"
 import { BellIcon, type BellIconHandle } from "@/components/ui/bell"
@@ -96,13 +96,17 @@ function AlarmRinging({
               <Bell className="size-6" />
             </motion.span>
           </div>
-          <div className="text-5xl leading-none font-light tracking-tight tabular-nums">
+          <div
+            className="text-5xl leading-none font-light tracking-tight tabular-nums"
+            data-env-part="big-clock"
+          >
             {ringing.time}
           </div>
           <div className="text-muted-foreground text-sm">{ringing.label}</div>
           <div className="mt-1 grid w-full max-w-60 grid-cols-2 gap-2">
             <motion.button
               className="bg-muted hover:bg-muted/80 rounded-xl py-2.5 text-sm font-semibold transition-colors"
+              data-env-part="chip"
               onClick={onSnooze}
               transition={SPRING_TAP}
               type="button"
@@ -112,6 +116,7 @@ function AlarmRinging({
             </motion.button>
             <motion.button
               className="bg-primary text-primary-foreground rounded-xl py-2.5 text-sm font-semibold"
+              data-env-part="chip-primary"
               onClick={onStop}
               ref={stopRef}
               transition={SPRING_TAP}
@@ -135,11 +140,15 @@ function ModeTabs({
   onChange: (m: Mode) => void
 }): React.JSX.Element {
   const { translate } = useLocale()
+  // Unique per instance, so two clock widgets never share one Motion pill.
+  const pillId = `alarm-mode-pill-${useId()}`
   return (
-    <div className="bg-muted/40 flex gap-1 rounded-lg p-1">
+    <div className="bg-muted/40 flex gap-1 rounded-lg p-1" data-env-part="tabs">
       {MODES.map((m) => (
         <button
+          aria-pressed={mode === m.key}
           className="relative flex-1 rounded-md px-2 py-1.5 text-xs font-medium"
+          data-env-part="tab"
           key={m.key}
           onClick={() => onChange(m.key)}
           type="button"
@@ -147,7 +156,8 @@ function ModeTabs({
           {mode === m.key ? (
             <motion.span
               className="bg-background absolute inset-0 rounded-md shadow-sm"
-              layoutId="alarm-mode-pill"
+              data-env-part="tab-fill"
+              layoutId={pillId}
               transition={SPRING_PILL}
             />
           ) : null}
@@ -156,6 +166,7 @@ function ModeTabs({
               "relative flex items-center justify-center gap-1",
               mode === m.key ? "text-foreground" : "text-muted-foreground"
             )}
+            data-env-part="tab-label"
           >
             <m.icon className="size-3.5" />
             {translate(`widgets.alarm.modes.${m.key}`)}
@@ -203,6 +214,7 @@ function ClockDisplay({
         "flex items-baseline justify-center font-semibold tabular-nums",
         muted && "text-muted-foreground"
       )}
+      data-env-part="big-clock"
     >
       {segments.map((seg, i) => (
         <span className="flex items-baseline" key={seg.key}>
@@ -620,6 +632,8 @@ export function AlarmWidget(): React.JSX.Element {
                       alarm.id === editingId && "ring-ring ring-2",
                       !alarm.enabled && "opacity-50"
                     )}
+                    data-active={alarm.id === firing}
+                    data-env-part="list-row"
                     exit={{ opacity: 0, x: -8 }}
                     initial={{ opacity: 0, x: -8 }}
                     key={alarm.id}
@@ -665,12 +679,14 @@ export function AlarmWidget(): React.JSX.Element {
             <div className="border-border flex flex-col gap-1.5 border-t pt-2">
               <input
                 className="border-border bg-muted/40 focus:ring-ring w-full rounded-md border px-2 py-1.5 font-mono text-sm focus:ring-2 focus:outline-none"
+                data-env-part="field"
                 onChange={(e) => setNewTime(e.target.value)}
                 type="time"
                 value={newTime}
               />
               <input
                 className="border-border bg-muted/40 placeholder:text-muted-foreground focus:ring-ring w-full rounded-md border px-2 py-1.5 text-sm focus:ring-2 focus:outline-none"
+                data-env-part="field"
                 onChange={(e) => setNewLabel(e.target.value)}
                 onKeyDown={(e) => {
                   if (isCommitEnter(e.nativeEvent)) addAlarm()
@@ -684,6 +700,7 @@ export function AlarmWidget(): React.JSX.Element {
                 {editingId != null ? (
                   <Button
                     className="gap-1.5"
+                    data-env-part="key"
                     onClick={resetForm}
                     size="sm"
                     variant="outline"
@@ -700,6 +717,7 @@ export function AlarmWidget(): React.JSX.Element {
                 >
                   <Button
                     className="w-full gap-1.5"
+                    data-env-part="key-primary"
                     onClick={addAlarm}
                     size="sm"
                   >
@@ -731,6 +749,7 @@ export function AlarmWidget(): React.JSX.Element {
               ).map((opt) => (
                 <motion.button
                   className="border-border bg-muted/40 hover:bg-muted rounded-md border px-2 py-1 text-xs transition-colors"
+                  data-env-part="chip"
                   key={opt.minutes}
                   onClick={() =>
                     remind(
@@ -767,7 +786,12 @@ export function AlarmWidget(): React.JSX.Element {
                 whileHover={{ scale: 1.04 }}
                 whileTap={{ scale: 0.94 }}
               >
-                <Button className="gap-1.5" onClick={toggleStopwatch} size="sm">
+                <Button
+                  className="gap-1.5"
+                  data-env-part="key-primary"
+                  onClick={toggleStopwatch}
+                  size="sm"
+                >
                   {stopwatch.running ? (
                     <Pause className="size-4" />
                   ) : (
@@ -789,6 +813,7 @@ export function AlarmWidget(): React.JSX.Element {
                     stopped it resets (both disabled at zero elapsed). */}
                 <Button
                   className="gap-1.5"
+                  data-env-part="key"
                   disabled={stopwatch.elapsed === 0}
                   onClick={stopwatch.running ? stopwatch.lap : stopwatch.reset}
                   size="sm"
@@ -816,6 +841,7 @@ export function AlarmWidget(): React.JSX.Element {
                     <motion.div
                       animate={{ opacity: 1, y: 0 }}
                       className="bg-muted/30 flex items-center justify-between rounded-md px-2.5 py-1 font-mono text-xs tabular-nums"
+                      data-env-part="list-row"
                       exit={{ opacity: 0 }}
                       initial={{ opacity: 0, y: -6 }}
                       // biome-ignore lint/suspicious/noArrayIndexKey: laps are append-only and never reordered, so the index is a stable identity.
@@ -850,6 +876,7 @@ export function AlarmWidget(): React.JSX.Element {
                 <input
                   aria-label={translate("widgets.alarm.minutes")}
                   className="border-border bg-muted/40 text-foreground focus:ring-ring w-14 rounded-md border px-2 py-1 text-center font-mono text-sm focus:ring-2 focus:outline-none"
+                  data-env-part="field"
                   max={99}
                   min={0}
                   onChange={(e) =>
@@ -865,6 +892,7 @@ export function AlarmWidget(): React.JSX.Element {
                 <input
                   aria-label={translate("widgets.alarm.seconds")}
                   className="border-border bg-muted/40 text-foreground focus:ring-ring w-14 rounded-md border px-2 py-1 text-center font-mono text-sm focus:ring-2 focus:outline-none"
+                  data-env-part="field"
                   max={59}
                   min={0}
                   onChange={(e) =>
@@ -888,6 +916,7 @@ export function AlarmWidget(): React.JSX.Element {
               >
                 <Button
                   className="gap-1.5"
+                  data-env-part="key-primary"
                   disabled={timer.remaining === 0 && !timer.running}
                   onClick={timer.running ? timer.pause : timer.start}
                   size="sm"
@@ -911,6 +940,7 @@ export function AlarmWidget(): React.JSX.Element {
               >
                 <Button
                   className="gap-1.5"
+                  data-env-part="key"
                   onClick={timer.reset}
                   size="sm"
                   variant="outline"

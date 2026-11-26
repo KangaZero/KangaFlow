@@ -37,7 +37,10 @@ export const TrackList = memo(function TrackList({
       <LayoutGroup>
         {favoritedIndices.length > 0 ? (
           <div>
-            <p className="text-muted-foreground px-2.5 py-1 text-[10px] font-medium tracking-wide uppercase">
+            <p
+              className="text-muted-foreground px-2.5 py-1 text-[10px] font-medium tracking-wide uppercase"
+              data-env-part="group"
+            >
               {translate("mediaPlayer.favorites")}
             </p>
             {favoritedIndices.map((i, row) => {
@@ -53,6 +56,8 @@ export const TrackList = memo(function TrackList({
                       ? "text-foreground"
                       : "text-foreground hover:bg-muted/60"
                   )}
+                  data-active={isActive}
+                  data-env-part="track-row"
                   initial={{ opacity: 0, y: -6 }}
                   key={trackId}
                   layout
@@ -67,6 +72,7 @@ export const TrackList = memo(function TrackList({
                   {isActive ? (
                     <motion.span
                       className="bg-primary/15 ring-primary/30 absolute inset-0 rounded-lg ring-1"
+                      data-env-part="track-active"
                       layoutId="track-list-active"
                       transition={SPRING_PILL}
                     />
@@ -144,7 +150,10 @@ export const TrackList = memo(function TrackList({
             }
           >
             {favoritedIndices.length > 0 ? (
-              <p className="text-muted-foreground px-2.5 py-1 text-[10px] font-medium tracking-wide uppercase">
+              <p
+                className="text-muted-foreground px-2.5 py-1 text-[10px] font-medium tracking-wide uppercase"
+                data-env-part="group"
+              >
                 {translate("mediaPlayer.allTracks")}
               </p>
             ) : null}
@@ -162,6 +171,8 @@ export const TrackList = memo(function TrackList({
                       ? "text-foreground"
                       : "text-foreground hover:bg-muted/60"
                   )}
+                  data-active={isActive}
+                  data-env-part="track-row"
                   initial={{ opacity: 0, y: -6 }}
                   key={trackId}
                   layout
@@ -176,6 +187,7 @@ export const TrackList = memo(function TrackList({
                   {isActive ? (
                     <motion.span
                       className="bg-primary/15 ring-primary/30 absolute inset-0 rounded-lg ring-1"
+                      data-env-part="track-active"
                       layoutId="track-list-active"
                       transition={SPRING_PILL}
                     />
