@@ -132,12 +132,22 @@ export function MediaMiniPill({
         className={cn(
           // foreground/80, not muted: muted text on the translucent bar glass
           // fell under AA over light wallpapers.
-          "bg-foreground/6 text-foreground/80 flex items-center gap-1.5",
+          "bg-foreground/6 text-foreground/80 flex items-center gap-1.5 rounded-(--env-radius)",
           vertical ? "flex-col px-0.5 py-1" : "h-7.5 pr-2.5 pl-1"
         )}
-        style={{ borderRadius: `${Math.max(barRadius - 3, 6)}px` }}
+        data-env-part="bar-media"
+        // A variable, not an inline border-radius, so the KangaFlow skin can
+        // square it (inline styles beat any stylesheet).
+        style={
+          {
+            "--env-radius": `${Math.max(barRadius - 3, 6)}px`,
+          } as React.CSSProperties
+        }
       >
-        <span className="bg-foreground/10 grid size-6 place-items-center rounded-full">
+        <span
+          className="bg-foreground/10 grid size-6 place-items-center rounded-full"
+          data-env-part="bar-media-disc"
+        >
           <Music aria-hidden className="size-3" />
         </span>
         {vertical ? (
@@ -157,9 +167,10 @@ export function MediaMiniPill({
     <motion.div
       aria-label={`${translate("mediaPlayer.nowPlaying")}: ${track.title}`}
       className={cn(
-        "bg-foreground/6 hover:bg-foreground/9 text-foreground focus-visible:ring-primary flex items-center gap-1.5 transition-colors outline-none focus-visible:ring-2",
+        "bg-foreground/6 hover:bg-foreground/9 text-foreground focus-visible:ring-primary flex items-center gap-1.5 rounded-(--env-radius) transition-colors outline-none focus-visible:ring-2",
         vertical ? "flex-col px-0.5 py-1" : "h-7.5 pr-2 pl-1"
       )}
+      data-env-part="bar-media"
       layout
       onBlur={(event) => {
         // Collapse only once focus leaves the whole control (focus-within).
@@ -175,7 +186,7 @@ export function MediaMiniPill({
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
       role="group"
-      style={{ borderRadius: `${Math.max(barRadius - 3, 6)}px` }}
+      style={{ "--env-radius": `${Math.max(barRadius - 3, 6)}px` }}
       // Focusable so keyboard users can open it: focusing the capsule reveals
       // the transport, and the next Tab moves into those buttons.
       tabIndex={0}
@@ -203,6 +214,7 @@ export function MediaMiniPill({
             className="stroke-primary-ink transition-[stroke-dashoffset] duration-500"
             cx="12"
             cy="12"
+            data-env-part="bar-media-progress"
             fill="none"
             r={RING_RADIUS}
             strokeDasharray={RING_LENGTH}

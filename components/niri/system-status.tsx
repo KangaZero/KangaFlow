@@ -86,6 +86,7 @@ export function SystemStatus({
         "text-foreground/72 hover:bg-foreground/8 flex items-center gap-2.5 rounded-lg transition-colors",
         vertical ? "flex-col px-0 py-2" : "h-7 px-2"
       )}
+      data-env-part="bar-status"
       role="img"
     >
       <WifiIcon
@@ -140,6 +141,7 @@ export function SystemStatus({
               "tabular-nums",
               vertical ? "text-[0.625rem] leading-none" : "text-[0.71875rem]"
             )}
+            data-env-part="bar-status-level"
           >
             {percent}%
           </span>

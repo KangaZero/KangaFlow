@@ -103,6 +103,7 @@ function BarSeparator({ vertical }: { vertical: boolean }): React.JSX.Element {
         "bg-foreground/10 shrink-0",
         vertical ? "h-px w-4" : "h-4 w-px"
       )}
+      data-env-part="bar-sep"
     />
   )
 }
@@ -194,6 +195,7 @@ export function NoctaliaBar(props: {
               BAR_ICON_BUTTON,
               "text-primary-ink hover:text-primary-ink"
             )}
+            data-env-part="bar-launcher"
             onClick={onLauncher}
             type="button"
           >
@@ -206,6 +208,7 @@ export function NoctaliaBar(props: {
             isV ? "max-h-30 [writing-mode:vertical-rl]" : "max-w-55",
             title.length > TITLE_FADE_FROM && "bar-title-fade text-clip"
           )}
+          data-env-part="bar-title"
           data-vertical={isV}
           title={activeWindowTitle === "" ? undefined : activeWindowTitle}
         >
@@ -283,6 +286,7 @@ export function NoctaliaBar(props: {
               ? "min-h-5.5 w-5 py-1.25 [writing-mode:vertical-rl]"
               : "h-5 min-w-5.5 px-1.25"
           )}
+          data-env-part="bar-kbl"
           onClick={switchLocale}
           type="button"
         >
@@ -338,6 +342,7 @@ export function NoctaliaBar(props: {
           <button
             aria-label={translate("environment.settings.wallpaper")}
             className={BAR_ICON_BUTTON}
+            data-env-part="bar-btn"
             onClick={onWallpaper}
             type="button"
           >
@@ -352,6 +357,7 @@ export function NoctaliaBar(props: {
           <button
             aria-label={translate("environment.settings.title")}
             className={BAR_ICON_BUTTON}
+            data-env-part="bar-btn"
             onClick={onSettings}
             type="button"
           >

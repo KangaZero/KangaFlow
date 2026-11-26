@@ -117,11 +117,15 @@ export function NotificationCenter({
                 : translate("environment.bar.notifications")
             }
             className={cn(BAR_ICON_BUTTON, "aria-expanded:bg-foreground/10")}
+            data-env-part="bar-btn"
             type="button"
           >
             <Bell />
             {unreadCount > 0 ? (
-              <span className="bg-primary text-primary-foreground absolute top-px right-0 flex h-3.75 min-w-3.75 items-center justify-center rounded-full px-1 text-[0.5625rem] leading-none font-semibold tabular-nums shadow-[0_0_0_2px_color-mix(in_oklch,var(--card)_92%,transparent)]">
+              <span
+                className="bg-primary text-primary-foreground absolute top-px right-0 flex h-3.75 min-w-3.75 items-center justify-center rounded-full px-1 text-[0.5625rem] leading-none font-semibold tabular-nums shadow-[0_0_0_2px_color-mix(in_oklch,var(--card)_92%,transparent)]"
+                data-env-part="bar-badge"
+              >
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             ) : null}
@@ -175,6 +179,8 @@ export function NotificationCenter({
                           ? "border-border bg-muted/20"
                           : "border-primary/30 bg-primary/5"
                       )}
+                      data-env-part="notif-row"
+                      data-read={n.read}
                       exit={{ opacity: 0, scale: 0.95, x: -8 }}
                       initial={{ opacity: 0, scale: 0.95, y: 8 }}
                       key={n.id}

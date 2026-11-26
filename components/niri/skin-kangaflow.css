@@ -572,3 +572,188 @@
     }
   }
 }
+
+/* ── Round 3: the bar, "A · Keycap dock" (html-ui-plan mockup). Every
+   control is a keycap in the workspace pills' family; the launcher is the
+   one lit key. Skew only on plain buttons: the media pill is a Motion layout
+   element, so it gets a frame and fill but no transform. The keycaps draw
+   their own focus outline, because the Tailwind focus ring is a box-shadow
+   the launcher's gold shadow would replace. The press scale stays Tailwind's
+   individual `scale` property, so it composes with the skew. ── */
+:root[data-env-skin="kangaflow"] {
+  &
+    [data-env-surface="bar"]
+    :is([data-env-part="bar-btn"], [data-env-part="bar-launcher"]) {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 45%, transparent);
+    border-radius: 0;
+    background: color-mix(in oklch, var(--qa-slab) 60%, transparent);
+    transform: skewX(var(--kf-skew));
+    & > svg {
+      transform: skewX(calc(var(--kf-skew) * -1));
+    }
+    &:hover {
+      border-color: var(--qa-gold);
+    }
+    &:is(:active, [aria-expanded="true"]) {
+      border-color: var(--qa-hi);
+      color: var(--qa-slab);
+      background: var(--qa-hi);
+    }
+    &:focus-visible {
+      outline: 3px solid var(--qa-hi);
+      outline-offset: 2px;
+    }
+  }
+  & [data-env-surface="bar"] [data-env-part="bar-launcher"] {
+    border-color: var(--qa-hi);
+    color: var(--qa-slab);
+    background: var(--qa-hi);
+    box-shadow: 3px 3px 0 var(--qa-gold);
+  }
+
+  /* Notification count: a gold tag (it leans with its keycap). */
+  & [data-env-part="bar-badge"] {
+    border-radius: 0;
+    color: var(--qa-on-bright);
+    background: var(--qa-gold);
+  }
+
+  /* Active window title: a slanted accent tab (upright text in vertical
+     bars, where the slant would cut the rotated text). */
+  & [data-env-part="bar-title"] {
+    padding: 3px 16px 3px 10px;
+    font-style: italic;
+    font-weight: 800;
+    color: var(--primary-foreground);
+    background: var(--primary);
+    clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  }
+  & [data-env-part="bar-title"][data-vertical="true"] {
+    padding: 10px 3px;
+    clip-path: none;
+  }
+
+  /* Keyboard-layout badge: a keycap with a thick bottom edge. */
+  & [data-env-part="bar-kbl"] {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 55%, transparent);
+    border-block-end-width: 3px;
+    border-radius: 0;
+    box-shadow: none;
+    color: var(--foreground);
+    font-weight: 800;
+    transform: skewX(var(--kf-skew));
+    &:hover {
+      border-color: var(--qa-gold);
+      box-shadow: none;
+    }
+    &:focus-visible {
+      outline: 3px solid var(--qa-hi);
+      outline-offset: 2px;
+    }
+  }
+
+  /* Separators: gold slashes. */
+  & [data-env-part="bar-sep"] {
+    inline-size: 2px;
+    block-size: 18px;
+    background: var(--qa-gold);
+    transform: skewX(-20deg);
+  }
+  &
+    [data-env-surface="bar"]:is([data-edge="left"], [data-edge="right"])
+    [data-env-part="bar-sep"] {
+    inline-size: 18px;
+    block-size: 2px;
+    transform: skewY(-20deg);
+  }
+
+  /* Media pill: a framed slab; the disc is a lit key and the progress ring
+     turns gold. */
+  & [data-env-part="bar-media"] {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 45%, transparent);
+    border-radius: calc(var(--env-radius, 0px) / 2);
+    color: var(--foreground);
+    background: color-mix(in oklch, var(--qa-slab) 70%, transparent);
+  }
+  & [data-env-part="bar-media-disc"] {
+    border-radius: 0;
+    color: var(--qa-slab);
+    background: var(--qa-hi);
+    transform: skewX(var(--kf-skew));
+  }
+  & [data-env-part="bar-media-progress"] {
+    stroke: var(--qa-gold);
+    stroke-linecap: butt;
+  }
+
+  /* System status: one gold-edged cluster with a bold level. */
+  & [data-env-part="bar-status"] {
+    padding-inline: 8px;
+    border: 1px solid var(--qa-gold);
+    border-radius: 0;
+    background: color-mix(in oklch, var(--qa-hi) 10%, transparent);
+    transform: skewX(var(--kf-skew));
+    & > :is(svg, span) {
+      transform: skewX(calc(var(--kf-skew) * -1));
+    }
+  }
+  &
+    [data-env-surface="bar"]:is([data-edge="left"], [data-edge="right"])
+    [data-env-part="bar-status"] {
+    padding: 6px 2px;
+    transform: none;
+    & > :is(svg, span) {
+      transform: none;
+    }
+  }
+  & [data-env-part="bar-status-level"] {
+    font-style: italic;
+    font-weight: 800;
+  }
+
+  /* Tooltips (portalled, reached through :root): a slab with keycap hints.
+     The key text is --foreground: muted sits at the AA edge on the slab. */
+  & [data-env-part="bar-tip"] {
+    border: 2px solid var(--qa-hi);
+    border-radius: 0;
+    color: var(--foreground);
+    background: var(--qa-slab);
+    box-shadow: 3px 3px 0 var(--qa-gold);
+    font-style: italic;
+    font-weight: 800;
+    backdrop-filter: none;
+  }
+  & [data-env-part="bar-tip-key"] {
+    border: 1px solid currentColor;
+    border-block-end-width: 3px;
+    border-radius: 3px;
+    color: var(--foreground);
+    background: transparent;
+    font-style: normal;
+  }
+
+  /* Notification rows (Motion layout: no transform): framed; unread rows
+     are lit with the gold shadow. */
+  & [data-env-part="notif-row"] {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 30%, transparent);
+    border-radius: 0;
+  }
+  & [data-env-part="notif-row"][data-read="false"] {
+    border-color: var(--qa-hi);
+    box-shadow: 3px 3px 0 var(--qa-gold);
+  }
+}
+
+/* The bar's keys drop in after the bar slams in (individual translate/rotate,
+   so they compose with the keycap skew). */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-env-skin="kangaflow"]:not([data-env-reduced="true"])
+    [data-env-surface="bar"]
+    :is(
+      [data-env-part="bar-launcher"],
+      [data-env-part="bar-btn"],
+      [data-env-part="bar-kbl"]
+    ) {
+    animation: pm-drop 0.55s 0.35s var(--ease-slam) backwards;
+  }
+}
