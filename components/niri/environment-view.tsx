@@ -25,7 +25,11 @@ import {
   initialNiriState,
   niriReducer,
 } from "@/components/niri/engine"
-import { keyToAction } from "@/components/niri/keymap"
+import {
+  isHelpKey,
+  isTypingTarget,
+  keyToAction,
+} from "@/components/niri/keymap"
 import { NiriHelpDialog } from "@/components/niri/niri-help-dialog"
 import { NoctaliaBar } from "@/components/niri/noctalia-bar"
 import {
@@ -642,9 +646,14 @@ export function EnvironmentView() {
         togglePanel("settings")
         return
       }
-      // `?` toggles the shortcuts help. Match the produced character (not
-      // Shift+/) so it works regardless of keyboard layout.
-      if (event.key === "?") {
+      // `?` toggles the shortcuts help, except while another panel or a text
+      // field has the keyboard (typing ? in the launcher or a terminal).
+      if (
+        isHelpKey(event.key, {
+          panelOpen: panel !== null && panel !== "help",
+          typing: isTypingTarget(event.target),
+        })
+      ) {
         event.preventDefault()
         togglePanel("help")
         return
@@ -722,7 +731,8 @@ export function EnvironmentView() {
     columns,
     focusedCol,
     stripWidth,
-    state.isCenterAligned,
+    // Alt+Z keeps every focused column centred; Alt+Shift+C centres it once.
+    state.isCenterAligned || state.centerFocusedOnce,
     PAD,
     GAP
   )
@@ -1149,7 +1159,10 @@ export function EnvironmentView() {
                         ws.columns,
                         ws.focused,
                         stripSize.width,
-                        state.isCenterAligned,
+                        // Match the live strip: the one-shot centring only
+                        // applies to the active workspace.
+                        state.isCenterAligned ||
+                          (state.centerFocusedOnce && ws.id === state.active),
                         PAD,
                         GAP
                       )

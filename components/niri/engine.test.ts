@@ -303,3 +303,48 @@ describe("immutability", () => {
     expect(state.workspaces[0]?.columns).toHaveLength(0)
   })
 })
+
+describe("window ids", () => {
+  it("never reuses an id after a close (ids were count-based)", () => {
+    let state = initialNiriState()
+    for (let i = 0; i < 3; i++) {
+      state = niriReducer(state, { app: "terminal", type: "spawn" })
+    }
+    // Close the middle column, then spawn again: the count drops back to 2,
+    // which used to hand out the still-open "win-2" a second time.
+    state = niriReducer(state, { type: "focusLeft" })
+    state = niriReducer(state, { type: "close" })
+    state = niriReducer(state, { app: "terminal", type: "spawn" })
+
+    const columns = getActiveWorkspace(state).columns
+    const winIds = columns.flatMap((col) => col.windows.map((win) => win.id))
+    const colIds = columns.map((col) => col.id)
+    expect(winIds).toHaveLength(3)
+    expect(new Set(winIds).size).toBe(winIds.length)
+    expect(new Set(colIds).size).toBe(colIds.length)
+  })
+})
+
+describe("centerColumn", () => {
+  it("centres the focused column once, until focus moves", () => {
+    let state = initialNiriState()
+    state = niriReducer(state, { app: "terminal", type: "spawn" })
+    state = niriReducer(state, { app: "editor", type: "spawn" })
+    expect(state.centerFocusedOnce).toBe(false)
+
+    state = niriReducer(state, { type: "centerColumn" })
+    expect(state.centerFocusedOnce).toBe(true)
+
+    state = niriReducer(state, { type: "focusLeft" })
+    expect(state.centerFocusedOnce).toBe(false)
+  })
+
+  it("leaves the persistent alignment mode alone", () => {
+    let state = niriReducer(initialNiriState(), {
+      app: "terminal",
+      type: "spawn",
+    })
+    state = niriReducer(state, { type: "centerColumn" })
+    expect(state.isCenterAligned).toBe(false)
+  })
+})

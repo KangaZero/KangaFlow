@@ -44,6 +44,33 @@ afterEach(() => {
 })
 
 describe("niri workspace persistence", () => {
+  it("never re-issues a saved window id after a reload", () => {
+    let state = initialNiriState()
+    for (let i = 0; i < 3; i++) {
+      state = niriReducer(state, { app: "terminal", type: "spawn" })
+    }
+    saveNiriState(state)
+    // An older save has no id counter: the loader must derive one.
+    const key = NIRI_WORKSPACES_STORAGE_KEY
+    const stored = JSON.parse(localStorage.getItem(key) ?? "{}") as Record<
+      string,
+      unknown
+    >
+    delete stored.nextId
+    localStorage.setItem(key, JSON.stringify(stored))
+
+    const loaded = loadNiriState()
+    expect(loaded).not.toBeNull()
+    if (!loaded) return
+    const before = getActiveWorkspace(loaded).columns.flatMap((col) =>
+      col.windows.map((win) => win.id)
+    )
+    const next = niriReducer(loaded, { app: "terminal", type: "spawn" })
+    const spawned = getFocusedWindow(next)
+    expect(spawned).not.toBeNull()
+    expect(before).not.toContain(spawned?.id)
+  })
+
   it("round-trips layout + terminal content through the storage key", () => {
     const state = niriReducer(initialNiriState(), {
       app: "terminal",

@@ -66,6 +66,29 @@ function workspaceDigit(event: KeyboardEvent): number | null {
   return null
 }
 
+// Focus is in a text field or editable content, where a typed key is text,
+// not a desktop shortcut.
+export function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false
+  // closest(): a node inside an editable region (e.g. CodeMirror's content)
+  // counts too. A selector rather than isContentEditable, which jsdom lacks.
+  return (
+    target.closest(
+      'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+    ) !== null
+  )
+}
+
+// `?` toggles the shortcuts help, but not while a panel has the keyboard (the
+// launcher's search field) or while typing: there it is just a character.
+// Matches the produced character, not Shift+/, so any keyboard layout works.
+export function isHelpKey(
+  key: string,
+  context: { panelOpen: boolean; typing: boolean }
+): boolean {
+  return key === "?" && !context.panelOpen && !context.typing
+}
+
 export function keyToAction(event: KeyboardEvent): NiriAction | null {
   // Ctrl/Meta belong to the browser/global shortcuts — never shadow them.
   if (event.ctrlKey || event.metaKey) {

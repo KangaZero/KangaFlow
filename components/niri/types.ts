@@ -81,6 +81,13 @@ export type NiriWorkspace = {
 
 export type NiriState = {
   isCenterAligned: boolean
+  // One-shot centring (Alt+Shift+C, niri's center-column): the focused column
+  // is centred until the next state change, then edge scrolling resumes.
+  // Unlike isCenterAligned, which keeps every focused column centred.
+  centerFocusedOnce: boolean
+  // Next window/column id number. Only ever increases, so an id is never
+  // handed out twice (they key React lists and the window-content cache).
+  nextId: number
   workspaces: NiriWorkspace[]
   active: number // active workspace id
   overview: boolean

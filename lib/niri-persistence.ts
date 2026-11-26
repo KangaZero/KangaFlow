@@ -236,6 +236,23 @@ function collectContent(stored: unknown[]): Map<string, NiriWindowContent> {
   return out
 }
 
+// Next id number for a restored layout: above every saved window/column id, so
+// a reload never re-issues one. Older saves have no counter (and a stored one
+// may be stale or edited), so the ids themselves are the floor.
+function nextIdAfter(workspaces: NiriWorkspace[], stored: unknown): number {
+  let highest = -1
+  for (const ws of workspaces) {
+    for (const col of ws.columns) {
+      for (const id of [col.id, ...col.windows.map((win) => win.id)]) {
+        const n = Number(id.slice(id.lastIndexOf("-") + 1))
+        if (Number.isInteger(n)) highest = Math.max(highest, n)
+      }
+    }
+  }
+  const saved = Number.isInteger(stored) ? Number(stored) : 0
+  return Math.max(highest + 1, saved)
+}
+
 function hasWindow(workspaces: NiriWorkspace[], id: string): boolean {
   return workspaces.some((ws) =>
     ws.columns.some((col) => col.windows.some((win) => win.id === id))
@@ -292,8 +309,10 @@ export function loadNiriState(): NiriState | null {
 
   return {
     active,
+    centerFocusedOnce: false,
     fullscreenWinId,
     isCenterAligned: raw.isCenterAligned === true,
+    nextId: nextIdAfter(workspaces, raw.nextId),
     overview: false,
     workspaces,
   }

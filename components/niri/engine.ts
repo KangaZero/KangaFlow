@@ -19,9 +19,9 @@ import {
   WIDTH_PRESETS,
 } from "@/components/niri/types"
 
-//WARNING: Keep track that this does not create duplicate keys, sam just code it yourself
-//STOP BEING A LAZY CUNT
-const uid = (prefix: string, index: number): string => `${prefix}-${index}`
+// Ids come from the monotonic NiriState.nextId, never from a window count: a
+// count drops after a close, so the next spawn reused a still-open id.
+const uid = (prefix: string, n: number): string => `${prefix}-${n}`
 
 // Default window titles per app, so a bare `spawn` still gets a sensible label.
 const DEFAULT_TITLES: Record<AppId, string> = {
@@ -111,8 +111,10 @@ export function initialNiriState(): NiriState {
   )
   return {
     active: 1,
+    centerFocusedOnce: false,
     fullscreenWinId: null,
     isCenterAligned: false,
+    nextId: 0,
     overview: false,
     workspaces,
   }
@@ -146,23 +148,36 @@ export function getFocusedWindow(state: NiriState): NiriWindow | null {
 // ---------------------------------------------------------------------------
 
 export function niriReducer(state: NiriState, action: NiriAction): NiriState {
+  const next = reduce(state, action)
+  // Alt+Shift+C centres once: any other action that changes the state (focus,
+  // move, resize, spawn…) hands scrolling back to the normal edge mode.
+  if (
+    action.type === "centerColumn" ||
+    next === state ||
+    !next.centerFocusedOnce
+  )
+    return next
+  return { ...next, centerFocusedOnce: false }
+}
+
+function reduce(state: NiriState, action: NiriAction): NiriState {
   switch (action.type) {
     case "spawn": {
       if (totalWindows(state) >= WINDOW_MAX) return state
       const window: NiriWindow = {
         app: action.app,
         height: 1,
-        id: uid("win", totalWindows(state)),
+        id: uid("win", state.nextId),
         title: action.title ?? DEFAULT_TITLES[action.app],
       }
       const column: NiriColumn = {
         floating: false,
         focused: 0,
-        id: uid("col", totalWindows(state)),
+        id: uid("col", state.nextId),
         width: SPAWN_WIDTH,
         windows: [window],
       }
-      return mapActiveWorkspace(state, (workspace) => {
+      const spawned = mapActiveWorkspace(state, (workspace) => {
         const insertAt =
           workspace.columns.length === 0 ? 0 : workspace.focused + 1
         const columns = [
@@ -172,6 +187,7 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
         ]
         return { ...workspace, columns, focused: insertAt }
       })
+      return { ...spawned, nextId: state.nextId + 1 }
     }
 
     case "close": {
@@ -375,8 +391,11 @@ export function niriReducer(state: NiriState, action: NiriAction): NiriState {
     }
 
     case "centerColumn":
-      // Centering is a view concern (scroll offset), not layout state.
-      return state
+      // One-shot: the view centres the focused column while this is set, and
+      // niriReducer clears it on the next state change.
+      return state.centerFocusedOnce
+        ? state
+        : { ...state, centerFocusedOnce: true }
 
     case "cycleWidth": {
       const workspace = getActiveWorkspace(state)
