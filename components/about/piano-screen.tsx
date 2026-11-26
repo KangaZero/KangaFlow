@@ -132,7 +132,6 @@ export function PianoScreen({ reduced }: { reduced: boolean }) {
         {open ? (
           <PianoPanel
             key="panel"
-            onClose={() => setOpen(false)}
             onEnableSound={() => setSoundEffects(true)}
             reduced={reduced}
             soundOn={soundEffects}
@@ -147,12 +146,10 @@ function PianoPanel({
   reduced,
   soundOn,
   onEnableSound,
-  onClose,
 }: {
   reduced: boolean
   soundOn: boolean
   onEnableSound: () => void
-  onClose: () => void
 }) {
   const { translate } = useLocale()
   const [settings, setSettings] = useState<Settings>(DEFAULTS)

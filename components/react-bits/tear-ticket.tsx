@@ -12,7 +12,6 @@ import {
   useTransform,
 } from "motion/react"
 import React, {
-  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
   type ReactNode,
@@ -816,7 +815,7 @@ const TearTicket: React.FC<TearTicketProps> = ({
             </div>
           </div>
           <svg aria-hidden="true" className="tear-ticket__fibres">
-            {geo.bridges.map((b, i) => (
+            {geo.bridges.map((_bridge, i) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: bridges are positional along the perforation.
               <g key={i}>
                 <path

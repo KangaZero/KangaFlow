@@ -8,11 +8,9 @@
 import "react"
 
 declare module "react" {
-  // biome-ignore lint/correctness/noUnusedVariables: declaration merging must repeat React's type parameter.
   interface CanvasHTMLAttributes<T> {
     layoutsubtree?: "true" | undefined
   }
-  // biome-ignore lint/correctness/noUnusedVariables: declaration merging must repeat React's type parameter.
   interface HTMLAttributes<T> {
     drawable?: "" | undefined
   }

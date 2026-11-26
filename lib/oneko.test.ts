@@ -68,7 +68,7 @@ describe("summon / dismiss pop", () => {
 
   it("pops in, and only detaches after the pop-out finishes", async () => {
     motionAllowed()
-    let finish = () => undefined as void
+    let finish: () => void = () => undefined
     const finished = new Promise<void>((resolve) => {
       finish = resolve
     })
