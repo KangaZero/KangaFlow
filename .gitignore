@@ -40,6 +40,10 @@ next-env.d.ts
 # claude code local settings
 .claude/settings.local.json
 
+# modern-web-guidance opt-in (set-allow-volatile-features): a per-developer,
+# human-only choice, so it must not reach other clones, agents or CI.
+.mwgrc
+
 # nix / direnv / git-hooks (generated)
 /.direnv/
 /result
