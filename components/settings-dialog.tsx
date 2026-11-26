@@ -3,6 +3,7 @@
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import "@/components/settings/pause-menu.css"
+import "@/components/ui/slab-motion.css"
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { Dialog as DialogPrimitive } from "radix-ui"

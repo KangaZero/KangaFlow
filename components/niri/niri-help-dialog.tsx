@@ -72,6 +72,7 @@ export function NiriHelpDialog({
           GLASS_SURFACE.soft,
           WINDOW_ELEVATION.rest
         )}
+        data-env-surface="dialog"
       >
         <DialogHeader>
           <DialogTitle className="text-[17px] tracking-[-0.01em]">

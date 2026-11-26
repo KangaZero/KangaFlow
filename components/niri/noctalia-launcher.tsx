@@ -411,7 +411,9 @@ export function NoctaliaLauncher(props: {
             ? "bg-primary text-primary-foreground"
             : "text-foreground hover:bg-muted/60"
         )}
+        data-env-part="result"
         data-idx={result.index}
+        data-selected={selected}
         key={result.resultId}
         layout
         layoutId={result.resultId}
@@ -493,11 +495,12 @@ export function NoctaliaLauncher(props: {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             aria-label={translate("environment.launcher.title")}
             aria-modal="true"
-            className="glass-ink border-border bg-card/90 text-foreground relative z-10 w-[min(32rem,90vw)] overflow-hidden border shadow-2xl backdrop-blur-xl"
+            className="glass-ink border-border bg-card/90 text-foreground relative z-10 w-[min(32rem,90vw)] overflow-hidden rounded-(--env-radius) border shadow-2xl backdrop-blur-xl"
+            data-env-surface="launcher"
             exit={{ opacity: 0, scale: 0.96, y: -8 }}
             initial={{ opacity: 0, scale: 0.96, y: -8 }}
             role="dialog"
-            style={{ borderRadius: `${launcherRadius}px` }}
+            style={{ "--env-radius": `${launcherRadius}px` }}
             transition={TWEEN_QUICK}
           >
             <div className="border-border/60 border-b p-3">
@@ -527,7 +530,10 @@ export function NoctaliaLauncher(props: {
                 <LayoutGroup>
                   {pinnedResults.length > 0 ? (
                     <div>
-                      <p className="text-muted-foreground px-3 py-1.5 text-xs font-medium tracking-wide uppercase">
+                      <p
+                        className="text-muted-foreground px-3 py-1.5 text-xs font-medium tracking-wide uppercase"
+                        data-env-part="group"
+                      >
                         {translate("environment.launcher.pinned")}
                       </p>
                       {pinnedResults.map(renderRow)}
@@ -542,7 +548,10 @@ export function NoctaliaLauncher(props: {
                           : ""
                       }
                     >
-                      <p className="text-muted-foreground px-3 py-1.5 text-xs font-medium tracking-wide uppercase">
+                      <p
+                        className="text-muted-foreground px-3 py-1.5 text-xs font-medium tracking-wide uppercase"
+                        data-env-part="group"
+                      >
                         {translate("environment.launcher.applications")}
                       </p>
                       {unpinnedAppResults.map(renderRow)}
@@ -558,7 +567,10 @@ export function NoctaliaLauncher(props: {
                           : ""
                       }
                     >
-                      <p className="text-muted-foreground px-3 py-1.5 text-xs font-medium tracking-wide uppercase">
+                      <p
+                        className="text-muted-foreground px-3 py-1.5 text-xs font-medium tracking-wide uppercase"
+                        data-env-part="group"
+                      >
                         {translate("environment.launcher.system")}
                       </p>
                       {unpinnedActionResults.map(renderRow)}

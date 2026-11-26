@@ -1,6 +1,9 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
+import "@/components/ui/slab-motion.css"
+import "@/components/niri/skin-kangaflow.css"
+
 import { SquareIcon, X } from "lucide-react"
 import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import dynamic from "next/dynamic"
@@ -410,6 +413,19 @@ export function EnvironmentView() {
   // App animation preference + OS setting (drives the overview zoom / bar).
   const reduced = isReducedMotion(animationPref, reduceMotion)
 
+  // Desktop skin + motion preference on <html> while the desktop is mounted,
+  // so skin-kangaflow.css also reaches portalled dialogs and popovers (they
+  // render outside <main>). Removed on unmount: no other page is affected.
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.envSkin = settings.skin
+    root.dataset.envReduced = String(reduced)
+    return () => {
+      delete root.dataset.envSkin
+      delete root.dataset.envReduced
+    }
+  }, [settings.skin, reduced])
+
   // Hydrate the persisted layout after mount (reading storage during the initial
   // render would mismatch the server HTML). `hydratedRef` gates the persist
   // effect so the pristine defaults never clobber the stored desktop.
@@ -774,10 +790,17 @@ export function EnvironmentView() {
                 height: `calc(100svh / ${settings.uiScale})`,
                 zoom: settings.uiScale,
               }),
-          // Accent overrides the desktop's --primary token (default = theme).
+          // Accent overrides the desktop's --primary token (default = theme),
+          // and the KangaFlow skin's frame colour with it.
           ...(settings.accent === "default"
             ? {}
-            : { "--primary": ACCENT_COLORS[settings.accent] }),
+            : {
+                "--primary": ACCENT_COLORS[settings.accent],
+                "--qa-hi": ACCENT_COLORS[settings.accent],
+              }),
+          // Read by the KangaFlow skin's window frames (Default keeps the
+          // tiles' fixed rounded-lg).
+          "--env-window-radius": `${settings.windowRadius}px`,
         } as CSSProperties
       }
     >
@@ -849,7 +872,10 @@ export function EnvironmentView() {
                 >
                   {/* On a glass chip: bare text over a photo wallpaper cannot
                       hold 3:1 against every pixel in every theme. */}
-                  <span className="glass-ink rounded-xl bg-(--glass-fill) px-4 py-2 backdrop-blur-md [text-shadow:2px_1px_0_var(--color-sidebar-accent)]">
+                  <span
+                    className="glass-ink rounded-xl bg-(--glass-fill) px-4 py-2 backdrop-blur-md [text-shadow:2px_1px_0_var(--color-sidebar-accent)]"
+                    data-env-part="hint"
+                  >
                     {translate("environment.hint")}
                   </span>
                 </h1>
@@ -921,6 +947,8 @@ export function EnvironmentView() {
                                       : "bg-card",
                                   isFocused ? "border-primary" : "border-border"
                                 )}
+                                data-env-surface="window"
+                                data-focused={isFocused}
                                 data-win-id={win.id}
                                 // Close animation: shrink to nothing at the centre
                                 // (opacity-only when the user prefers reduced motion).
@@ -962,8 +990,14 @@ export function EnvironmentView() {
                                 }}
                                 transition={SPRING_TILE}
                               >
-                                <div className="border-border bg-muted/40 flex items-center gap-2 border-b px-3 py-1.5">
-                                  <span className="flex-1 truncate text-xs font-medium">
+                                <div
+                                  className="border-border bg-muted/40 flex items-center gap-2 border-b px-3 py-1.5"
+                                  data-env-part="titlebar"
+                                >
+                                  <span
+                                    className="flex-1 truncate text-xs font-medium"
+                                    data-env-part="title"
+                                  >
                                     {win.title}
                                   </span>
                                   <SquareIcon
@@ -1130,6 +1164,8 @@ export function EnvironmentView() {
                                           ? "border-primary"
                                           : "border-border"
                                       )}
+                                      data-env-surface="window"
+                                      data-focused={winFocused}
                                       key={win.id}
                                       style={{
                                         flexBasis: 0,
@@ -1137,8 +1173,14 @@ export function EnvironmentView() {
                                         flexShrink: 1,
                                       }}
                                     >
-                                      <div className="border-border bg-muted/40 flex items-center gap-2 border-b px-3 py-1.5">
-                                        <span className="flex-1 truncate text-xs font-medium">
+                                      <div
+                                        className="border-border bg-muted/40 flex items-center gap-2 border-b px-3 py-1.5"
+                                        data-env-part="titlebar"
+                                      >
+                                        <span
+                                          className="flex-1 truncate text-xs font-medium"
+                                          data-env-part="title"
+                                        >
                                           {win.title}
                                         </span>
                                       </div>

@@ -49,7 +49,12 @@ function BarClock({
   const minutes = Number(m)
   if (Number.isNaN(hours) || Number.isNaN(minutes)) {
     return (
-      <span className="text-foreground font-medium tabular-nums">{time}</span>
+      <span
+        className="text-foreground font-medium tabular-nums"
+        data-env-part="clock"
+      >
+        {time}
+      </span>
     )
   }
   return (
@@ -59,6 +64,7 @@ function BarClock({
         "text-foreground flex items-center font-medium tabular-nums",
         vertical && "flex-col"
       )}
+      data-env-part="clock"
       role="img"
     >
       <Counter
@@ -156,7 +162,7 @@ export function NoctaliaBar(props: {
   return (
     <header
       className={cn(
-        "noctalia-bar glass-ink text-foreground text-xs backdrop-blur-md backdrop-saturate-150",
+        "noctalia-bar glass-ink text-foreground rounded-(--env-radius) bg-[color-mix(in_oklch,var(--card)_var(--env-bar-alpha),transparent)] text-xs backdrop-blur-md backdrop-saturate-150",
         isV
           ? "flex h-full w-11 flex-col items-center justify-between gap-3 py-2"
           : // 1fr · auto · 1fr keeps the workspace cluster centred whatever the
@@ -164,10 +170,16 @@ export function NoctaliaBar(props: {
             // content, so the title side absorbs any squeeze.
             "grid h-10 grid-cols-[minmax(0,1fr)_auto_minmax(max-content,1fr)] items-center gap-4 px-2"
       )}
-      style={{
-        backgroundColor: `color-mix(in oklch, var(--card) ${Math.round(opacity * 100)}%, transparent)`,
-        borderRadius: `${barRadius}px`,
-      }}
+      // Radius and opacity as variables, not inline border-radius/background:
+      // an inline style would beat the KangaFlow skin (skin-kangaflow.css).
+      data-edge={barPosition}
+      data-env-surface="bar"
+      style={
+        {
+          "--env-bar-alpha": `${Math.round(opacity * 100)}%`,
+          "--env-radius": `${barRadius}px`,
+        } as React.CSSProperties
+      }
     >
       {/* LEFT: launcher logo + active window title */}
       <div className={cn("flex min-w-0 items-center gap-2", isV && "flex-col")}>
@@ -222,6 +234,7 @@ export function NoctaliaBar(props: {
                         ? "bg-foreground/10 text-foreground"
                         : "text-muted-foreground shadow-[inset_0_0_0_1px_color-mix(in_oklch,var(--foreground)_16%,transparent)]"
                   )}
+                  data-env-part="pill"
                   onClick={() => onWorkspace(ws.id)}
                   type="button"
                 >
@@ -230,9 +243,9 @@ export function NoctaliaBar(props: {
                     // newly focused workspace instead of blinking.
                     <motion.span
                       aria-hidden
-                      className="bg-primary pointer-events-none absolute inset-0 shadow-[0_2px_8px_-3px_var(--primary)]"
+                      className="bg-primary pointer-events-none absolute inset-0 rounded-full shadow-[0_2px_8px_-3px_var(--primary)]"
+                      data-env-part="pill-fill"
                       layoutId="bar-active-workspace"
-                      style={{ borderRadius: 999 }}
                       transition={SPRING_PILL}
                     />
                   ) : null}

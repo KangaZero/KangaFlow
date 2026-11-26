@@ -22,6 +22,7 @@ import {
   PanelTop,
   RotateCcw,
   ShieldCheck,
+  Shirt,
   SlidersHorizontal,
   Type,
 } from "lucide-react"
@@ -39,8 +40,10 @@ import {
   BORDER_RADIUS_MAX,
   BORDER_RADIUS_MIN,
   ENV_FONTS,
+  ENV_SKINS,
   type EnvFont,
   type EnvSettings,
+  type EnvSkin,
   GLASS_LEVELS,
   type GlassLevel,
   TOAST_DURATIONS,
@@ -212,7 +215,10 @@ function SettingCard(props: {
   return (
     <section className="bg-foreground/[0.035] ring-foreground/10 flex flex-col gap-3 rounded-xl px-4 py-3.5 ring-1 ring-inset">
       <div className="flex min-h-7 items-center gap-2.5">
-        <span className="bg-foreground/[0.08] text-muted-foreground grid size-6 shrink-0 place-items-center rounded-md">
+        <span
+          className="bg-foreground/[0.08] text-muted-foreground grid size-6 shrink-0 place-items-center rounded-md"
+          data-env-part="icon-chip"
+        >
           <Icon aria-hidden="true" className="size-3.5" />
         </span>
         <h3 className="flex-1 truncate text-[13px] font-medium">{title}</h3>
@@ -297,6 +303,7 @@ function Segmented<T extends string | number>(props: {
     <fieldset
       aria-label={label}
       className="bg-foreground/[0.08] inline-flex w-fit min-w-0 flex-wrap rounded-[10px] p-0.5"
+      data-env-part="segmented"
     >
       {options.map((option) => {
         const selected = option === value
@@ -313,6 +320,7 @@ function Segmented<T extends string | number>(props: {
               <motion.span
                 aria-hidden
                 className="bg-card absolute inset-0 rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.14),0_0_0_0.5px_var(--border)]"
+                data-env-part="segmented-fill"
                 layoutId={layoutId}
                 transition={SPRING_SEGMENTED}
               />
@@ -629,14 +637,15 @@ export function NoctaliaSettings(props: {
             aria-label={translate("environment.settings.title")}
             aria-modal="true"
             className={cn(
-              "text-foreground relative z-10 flex h-[min(32rem,88vh)] w-[min(52rem,94vw)] flex-col overflow-hidden",
+              "text-foreground relative z-10 flex h-[min(32rem,88vh)] w-[min(52rem,94vw)] flex-col overflow-hidden rounded-(--env-radius)",
               GLASS_SURFACE[settings.glass],
               WINDOW_ELEVATION.rest
             )}
+            data-env-surface="dialog"
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             role="dialog"
-            style={{ borderRadius: `${settings.windowRadius}px` }}
+            style={{ "--env-radius": `${settings.windowRadius}px` }}
             transition={TWEEN_QUICK}
           >
             {/* Header — always visible; mobile shows dropdown + close, desktop shows title + sidebar toggle */}
@@ -682,7 +691,10 @@ export function NoctaliaSettings(props: {
               </div>
 
               {/* Desktop: settings title */}
-              <h2 className="hidden flex-1 px-1 text-[13px] font-semibold md:block">
+              <h2
+                className="hidden flex-1 px-1 text-[13px] font-semibold md:block"
+                data-env-part="dialog-title"
+              >
                 {translate("environment.settings.title")}
               </h2>
 
@@ -739,6 +751,7 @@ export function NoctaliaSettings(props: {
                                 ? "text-foreground font-medium"
                                 : "text-muted-foreground hover:text-foreground"
                             )}
+                            data-env-part="nav"
                             key={s.id}
                             onClick={() => setSection(s.id)}
                             type="button"
@@ -746,6 +759,7 @@ export function NoctaliaSettings(props: {
                             {active ? (
                               <motion.span
                                 className="bg-foreground/10 absolute inset-0 rounded-lg"
+                                data-env-part="nav-fill"
                                 layoutId="settings-nav-pill"
                                 transition={
                                   reduce ? { duration: 0 } : SPRING_PILL
@@ -783,6 +797,7 @@ export function NoctaliaSettings(props: {
                     <motion.h2
                       animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
                       className="mb-1 text-[22px] font-semibold tracking-[-0.01em]"
+                      data-env-part="heading"
                       initial={
                         reduce
                           ? false
@@ -810,6 +825,24 @@ export function NoctaliaSettings(props: {
                 >
                   {section === "appearance" ? (
                     <>
+                      <SettingCard
+                        icon={Shirt}
+                        title={translate("environment.settings.skin")}
+                      >
+                        <Segmented<EnvSkin>
+                          format={(skin) =>
+                            translate(
+                              skin === "kangaflow"
+                                ? "environment.settings.skinKangaflow"
+                                : "environment.settings.skinDefault"
+                            )
+                          }
+                          label={translate("environment.settings.skin")}
+                          onSelect={(skin) => set("skin", skin)}
+                          options={ENV_SKINS}
+                          value={settings.skin}
+                        />
+                      </SettingCard>
                       <SettingCard
                         icon={Palette}
                         title={translate("environment.settings.theme")}

@@ -95,10 +95,11 @@ function ToastItem({
   return (
     <div
       className={cn(
-        "pointer-events-auto w-72 overflow-hidden shadow-xl",
+        "pointer-events-auto w-72 overflow-hidden rounded-(--env-radius) shadow-xl",
         glass
       )}
-      style={{ borderRadius: `${radius}px` }}
+      data-env-surface="toast"
+      style={{ "--env-radius": `${radius}px` } as React.CSSProperties}
     >
       <div className="flex items-start gap-2.5 p-3">
         <Icon

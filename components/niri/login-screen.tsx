@@ -423,6 +423,7 @@ export function LoginScreen({
   return (
     <div
       className="fixed inset-0"
+      data-env-lock=""
       ref={rootRef}
       style={{ zIndex: Z_LAYERS.toast + 50 }}
     >
@@ -487,10 +488,18 @@ export function LoginScreen({
               phase === "success" && "opacity-0"
             )}
           >
-            <div className="text-[clamp(64px,11vw,132px)] leading-none font-extralight tracking-tight tabular-nums">
+            <div
+              className="text-[clamp(64px,11vw,132px)] leading-none font-extralight tracking-tight tabular-nums"
+              data-env-part="lock-clock"
+            >
               {timeLabel}
             </div>
-            <div className="mt-2.5 text-[15px] font-medium">{dateLabel}</div>
+            <div
+              className="mt-2.5 text-[15px] font-medium"
+              data-env-part="lock-date"
+            >
+              {dateLabel}
+            </div>
           </div>
           <p
             className={cn(

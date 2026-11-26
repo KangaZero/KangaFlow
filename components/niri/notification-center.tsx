@@ -132,12 +132,13 @@ export function NotificationCenter({
       <PopoverContent
         align="end"
         className="w-80 p-0"
+        data-env-surface="popover"
         side={isV ? "right" : "bottom"}
         sideOffset={8}
         transition={SPRING_CONTENT}
       >
         <div className="border-border flex items-center justify-between border-b px-3 py-2">
-          <span className="text-sm font-semibold">
+          <span className="text-sm font-semibold" data-env-part="heading">
             {translate("notifications.title")}
           </span>
           {notifications.length > 0 ? (

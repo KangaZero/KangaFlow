@@ -1,0 +1,61 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+   Motion shared by the settings pause menu and the KangaFlow env skin. The
+   keyframes moved here from components/settings/pause-menu.css (names kept),
+   so both import one copy instead of the skin silently depending on the
+   pause menu's stylesheet being loaded (keyframe names are global). */
+
+:root {
+  /* Overshooting "slam" (pause menu letters, header dock). */
+  --ease-slam: cubic-bezier(0.3, 1.6, 0.5, 1);
+  /* Diagonal backdrop wipe. */
+  --ease-wipe: cubic-bezier(0.7, 0, 0.2, 1);
+  /* Rows and tabs sliding in. */
+  --ease-row: cubic-bezier(0.3, 1.4, 0.5, 1);
+  --ease-tab: cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+@keyframes pm-wipe {
+  from {
+    clip-path: polygon(0 0, 0 0, -20% 100%, -20% 100%);
+  }
+  to {
+    clip-path: polygon(0 0, 120% 0, 100% 100%, -20% 100%);
+  }
+}
+
+@keyframes pm-drop {
+  from {
+    opacity: 0;
+    translate: 0 -1.1em;
+    rotate: -28deg;
+  }
+}
+
+@keyframes pm-tab-in {
+  from {
+    opacity: 0;
+    translate: -80px 0;
+  }
+}
+
+@keyframes pm-row {
+  from {
+    opacity: 0;
+    translate: 60px 0;
+  }
+}
+
+/* A slab arriving from its own edge: set --slam-from per element. */
+@keyframes slab-slam {
+  from {
+    opacity: 0;
+    translate: var(--slam-from, 0 -36px);
+  }
+}
+
+/* A quick nudge, e.g. when a window takes focus. */
+@keyframes slab-nudge {
+  40% {
+    translate: -4px 2px;
+  }
+}

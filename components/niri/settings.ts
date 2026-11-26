@@ -35,6 +35,11 @@ export const WALLPAPERS = [
 ] as const
 export type WallpaperId = (typeof WALLPAPERS)[number]
 
+// Desktop skin: "default" is the noctalia glass look; "kangaflow" restyles the
+// same UI in the site's slab language (components/niri/skin-kangaflow.css).
+export const ENV_SKINS = ["default", "kangaflow"] as const
+export type EnvSkin = (typeof ENV_SKINS)[number]
+
 export const BAR_POSITIONS = ["top", "bottom", "left", "right"] as const
 export type BarPosition = (typeof BAR_POSITIONS)[number]
 
@@ -171,6 +176,7 @@ export type EnvSettings = {
   autoHideBar: boolean
   showStartingHint: boolean
   showSystemMonitor: boolean
+  skin: EnvSkin
   windowRadius: BorderRadius
   barRadius: BorderRadius
   launcherRadius: BorderRadius
@@ -205,6 +211,7 @@ export const DEFAULT_ENV_SETTINGS: EnvSettings = {
   },
   showStartingHint: true,
   showSystemMonitor: true,
+  skin: "default",
   toastDuration: 5000,
   toastMaxStack: 3,
   toastPosition: "bottom-right",

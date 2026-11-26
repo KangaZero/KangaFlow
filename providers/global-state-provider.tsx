@@ -19,6 +19,7 @@ import {
   BORDER_RADIUS_MIN,
   DEFAULT_ENV_SETTINGS,
   ENV_FONTS,
+  ENV_SKINS,
   type EnvSettings,
   GLASS_LEVELS,
   TOAST_DURATIONS,
@@ -261,6 +262,7 @@ function loadEnvSettings(): EnvSettings {
         typeof o.showSystemMonitor === "boolean"
           ? o.showSystemMonitor
           : DEFAULT_ENV_SETTINGS.showSystemMonitor,
+      skin: pickLiteral(o.skin, ENV_SKINS, DEFAULT_ENV_SETTINGS.skin),
       toastDuration: pickLiteral(
         o.toastDuration,
         TOAST_DURATIONS,

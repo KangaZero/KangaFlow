@@ -39,7 +39,7 @@
     0 0 / 9px 9px,
     linear-gradient(115deg, var(--pm-dim) 0 56%, var(--pm-band) 56% 100%);
   opacity: 0.97;
-  animation: pm-wipe 0.45s cubic-bezier(0.7, 0, 0.2, 1) both;
+  animation: pm-wipe 0.45s var(--ease-wipe) both;
 }
 
 /* ── Shell ── */
@@ -295,8 +295,7 @@
   background: color-mix(in oklch, var(--card) 85%, transparent);
   border-left: 4px solid transparent;
   transform: skewX(-10deg);
-  animation: pm-row 0.32s calc(var(--i) * 0.025s) cubic-bezier(0.3, 1.4, 0.5, 1)
-    both;
+  animation: pm-row 0.32s calc(var(--i) * 0.025s) var(--ease-row) both;
 }
 .pm-list[data-dir="prev"] .pm-row {
   animation-name: pm-row-prev;
@@ -539,21 +538,6 @@
   transition: none !important;
 }
 
-@keyframes pm-wipe {
-  from {
-    clip-path: polygon(0 0, 0 0, -20% 100%, -20% 100%);
-  }
-  to {
-    clip-path: polygon(0 0, 120% 0, 100% 100%, -20% 100%);
-  }
-}
-@keyframes pm-drop {
-  from {
-    opacity: 0;
-    translate: 0 -1.1em;
-    rotate: -28deg;
-  }
-}
 @keyframes pm-hop {
   40% {
     translate: 0 -0.2em;
@@ -598,18 +582,6 @@
     translate: calc(-50% + var(--dx)) calc(-50% + var(--dy));
     scale: 1;
     rotate: var(--r);
-  }
-}
-@keyframes pm-tab-in {
-  from {
-    opacity: 0;
-    translate: -80px 0;
-  }
-}
-@keyframes pm-row {
-  from {
-    opacity: 0;
-    translate: 60px 0;
   }
 }
 @keyframes pm-row-prev {

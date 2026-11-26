@@ -1,4 +1,5 @@
 "use client"
+
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
 import {
@@ -40,11 +41,12 @@ export function WallpaperDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent
         className={cn(
-          "gap-5 sm:max-w-xl",
+          "gap-5 rounded-(--env-radius) sm:max-w-xl",
           GLASS_SURFACE[glass],
           WINDOW_ELEVATION.rest
         )}
-        style={{ borderRadius: `${windowRadius}px` }}
+        data-env-surface="dialog"
+        style={{ "--env-radius": `${windowRadius}px` }}
       >
         <DialogHeader>
           <DialogTitle className="text-[17px] tracking-[-0.01em]">

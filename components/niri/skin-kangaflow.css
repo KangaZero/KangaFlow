@@ -1,0 +1,299 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+   KangaFlow desktop skin (Settings → Appearance → Skin), "A · Phantom/Regalia
+   slab" from the html-ui-plan mockup: the env page restyled in the site's slab
+   language (2px accent frame, hard gold shadow, skewed bar) with the settings
+   pause menu's motion.
+
+   Scope: every rule hangs off :root[data-env-skin="kangaflow"], which
+   EnvironmentView sets on <html> while it is mounted. On <html> rather than
+   <main> so portalled surfaces (dialogs, popovers) are styled too. Default
+   (no attribute) is untouched. The rules are unlayered, so they beat the
+   components' Tailwind utilities without !important.
+
+   Settings stay in charge: each surface carries its own radius as
+   --env-radius (windows read --env-window-radius from <main>); the skin halves
+   it. Bar opacity arrives as --env-bar-alpha. */
+
+:root[data-env-skin="kangaflow"] {
+  --kf-skew: -10deg;
+  /* Vertical bars lean on Y at a third of the angle: a tall bar sheared by
+     10deg would shift its far end by ~90px. */
+  --kf-skew-v: -3.3deg;
+  --kf-shadow: 5px;
+
+  & [data-env-surface] {
+    border: 2px solid var(--qa-hi);
+    border-radius: calc(var(--env-radius, 0px) / 2);
+    box-shadow: var(--kf-shadow) var(--kf-shadow) 0 var(--qa-gold);
+  }
+
+  /* ── Bar: a skewed slab; the gold shadow points into the desktop ── */
+  & [data-env-surface="bar"] {
+    background-color: color-mix(
+      in oklch,
+      var(--qa-slab) var(--env-bar-alpha, 70%),
+      transparent
+    );
+  }
+  & [data-env-surface="bar"]:is([data-edge="top"], [data-edge="bottom"]) {
+    transform: skewX(var(--kf-skew));
+    & > * {
+      transform: skewX(calc(var(--kf-skew) * -1));
+    }
+  }
+  & [data-env-surface="bar"]:is([data-edge="left"], [data-edge="right"]) {
+    transform: skewY(var(--kf-skew-v));
+    & > * {
+      transform: skewY(calc(var(--kf-skew-v) * -1));
+    }
+  }
+  & [data-env-surface="bar"][data-edge="top"] {
+    --slam-from: 0 -36px;
+  }
+  & [data-env-surface="bar"][data-edge="bottom"] {
+    --slam-from: 0 36px;
+    box-shadow: var(--kf-shadow) calc(var(--kf-shadow) * -1) 0 var(--qa-gold);
+  }
+  & [data-env-surface="bar"][data-edge="left"] {
+    --slam-from: -36px 0;
+  }
+  & [data-env-surface="bar"][data-edge="right"] {
+    --slam-from: 36px 0;
+    box-shadow: calc(var(--kf-shadow) * -1) var(--kf-shadow) 0 var(--qa-gold);
+  }
+
+  /* ── Windows: frame + shadow; the focused one is fully lit ── */
+  & [data-env-surface="window"] {
+    border-radius: calc(var(--env-window-radius, 0px) / 2);
+    border-color: color-mix(in oklch, var(--qa-hi) 35%, transparent);
+    box-shadow: 3px 3px 0 color-mix(in oklch, var(--qa-gold) 45%, transparent);
+  }
+  & [data-env-surface="window"][data-focused="true"] {
+    border-color: var(--qa-hi);
+    box-shadow: var(--kf-shadow) var(--kf-shadow) 0 var(--qa-gold);
+  }
+
+  /* Toasts arrive from the screen edge they sit on. */
+  & [data-env-surface="toast"] {
+    --slam-from: 36px 0;
+  }
+
+  /* ── Type: the slab display face. Bold italic with an accent drop shadow,
+     leaning like the dock; the family still follows the Font setting. ── */
+  & :is([data-env-part="heading"], [data-env-part="dialog-title"]) {
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-shadow: 0.06em 0.06em 0 var(--primary);
+    transform: skewX(-8deg);
+  }
+  & [data-env-part="dialog-title"] {
+    font-size: 17px;
+  }
+  & [data-env-part="clock"] {
+    font-style: italic;
+    font-weight: 800;
+    text-shadow: 0.08em 0.08em 0 var(--primary);
+  }
+  & [data-env-part="hint"] {
+    display: inline-block;
+    border: 2px solid var(--qa-hi);
+    border-radius: 0;
+    box-shadow: 4px 4px 0 var(--qa-gold);
+    font-style: italic;
+    font-weight: 800;
+    text-shadow: 0.06em 0.06em 0 var(--primary);
+    transform: skewX(var(--kf-skew)) rotate(-2deg);
+  }
+
+  /* Window title bars: the title becomes a slanted tab, lit when focused. */
+  & [data-env-part="titlebar"] {
+    border-block-end-color: color-mix(in oklch, var(--qa-hi) 35%, transparent);
+    background: color-mix(in oklch, var(--qa-slab) 80%, transparent);
+  }
+  & [data-env-part="title"] {
+    flex: 0 1 auto;
+    min-inline-size: 0;
+    padding: 3px 16px 3px 10px;
+    font-style: italic;
+    font-weight: 800;
+    color: var(--foreground);
+    background: color-mix(in oklch, var(--qa-hi) 22%, transparent);
+    clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  }
+  & [data-env-surface="window"][data-focused="true"] [data-env-part="title"] {
+    color: var(--primary-foreground);
+    background: var(--primary);
+  }
+
+  /* Lock screen: a leaning poster clock; the date stays its own colour (it
+     sits over arbitrary photos) with a gold rule under it. */
+  & [data-env-part="lock-clock"] {
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    text-shadow:
+      0.055em 0.055em 0 var(--primary),
+      0.11em 0.11em 0 color-mix(in oklch, var(--foreground) 22%, transparent);
+    transform: skewX(var(--kf-skew)) rotate(-2deg);
+  }
+  & [data-env-part="lock-date"] {
+    display: inline-block;
+    padding-block-end: 2px;
+    border-block-end: 2px solid var(--qa-gold);
+    font-weight: 800;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* ── Controls: keycaps and skewed buttons ── */
+  /* Workspace pills become numbered keycaps; the current one is lit. */
+  & [data-env-part="pill"] {
+    border-radius: 0;
+    font-weight: 800;
+    transform: skewX(var(--kf-skew));
+    & > span {
+      border-radius: 0;
+    }
+  }
+  & [data-env-part="pill"][aria-current="true"] {
+    box-shadow: 3px 3px 0 var(--qa-gold);
+  }
+
+  /* Settings nav: skewed rows; the current section is an accent slab. */
+  & [data-env-part="nav"] {
+    border-radius: 0;
+    font-weight: 700;
+    transform: skewX(var(--kf-skew));
+  }
+  & [data-env-part="nav"][aria-current="true"] {
+    font-style: italic;
+    color: var(--primary-foreground);
+  }
+  & [data-env-part="nav-fill"] {
+    border-radius: 0;
+    background: var(--primary);
+    box-shadow: 4px 4px 0 var(--qa-gold);
+  }
+
+  /* Segmented controls: separate skewed keys. The selected key's text is
+     --qa-slab on --qa-hi (foreground on the light theme's green fails AA). */
+  & [data-env-part="segmented"] {
+    gap: 4px;
+    border-radius: 0;
+    background: transparent;
+    & > button {
+      border: 2px solid color-mix(in oklch, var(--qa-hi) 55%, transparent);
+      border-radius: 0;
+      font-weight: 800;
+      transform: skewX(var(--kf-skew));
+    }
+    & [data-env-part="segmented-fill"] {
+      border-radius: 0;
+      background: var(--qa-hi);
+      box-shadow: 3px 3px 0 var(--qa-gold);
+    }
+    & > button[aria-pressed="true"] > span:last-child {
+      color: var(--qa-slab);
+    }
+  }
+
+  /* Settings card icons sit on small gold-edged skewed chips. */
+  & [data-env-part="icon-chip"] {
+    border: 1px solid var(--qa-gold);
+    border-radius: 0;
+    color: var(--qa-hi);
+    background: color-mix(in oklch, var(--qa-hi) 14%, transparent);
+    transform: skewX(var(--kf-skew));
+  }
+
+  /* Launcher: square rows; the highlighted one gets the gold shadow. No
+     transform (the rows reorder with Motion's layout animation, which owns
+     transform) and no clip-path (it would clip the shadow away). */
+  & [data-env-part="result"] {
+    border-radius: 0;
+  }
+  & [data-env-part="result"][data-selected="true"] {
+    font-style: italic;
+    font-weight: 800;
+    box-shadow: 4px 4px 0 var(--qa-gold);
+  }
+  & [data-env-part="group"] {
+    font-style: italic;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    color: var(--qa-gold-ink);
+  }
+
+  /* Keyboard hints read as real keycaps. */
+  & [data-slot="kbd"] {
+    border: 1px solid currentColor;
+    border-block-end-width: 3px;
+    border-radius: 3px;
+  }
+
+  /* Heavier icon strokes across the skin's surfaces, to match the weight of
+     the bold italic type. */
+  & [data-env-surface] svg.lucide {
+    stroke-width: 2.5;
+  }
+}
+
+/* ── Motion: the pause menu's own curves (components/ui/slab-motion.css).
+   Only when motion is allowed: the OS setting here, the site preference via
+   data-env-reduced on <html>. Reduced = every state shows, nothing moves. ── */
+@media (prefers-reduced-motion: no-preference) {
+  :root[data-env-skin="kangaflow"]:not([data-env-reduced="true"]) {
+    & [data-env-surface="bar"] {
+      animation: slab-slam 0.5s var(--ease-slam) backwards;
+    }
+    /* Workspace buttons drop in after the slam, left to right. */
+    & [data-env-surface="bar"] li {
+      animation: pm-drop 0.55s calc(0.3s + var(--k, 0) * 0.05s) var(--ease-slam)
+        backwards;
+    }
+    & [data-env-surface="bar"] li:nth-child(2) {
+      --k: 1;
+    }
+    & [data-env-surface="bar"] li:nth-child(3) {
+      --k: 2;
+    }
+    & [data-env-surface="bar"] li:nth-child(4) {
+      --k: 3;
+    }
+    & [data-env-surface="bar"] li:nth-child(5) {
+      --k: 4;
+    }
+
+    /* A window slides in when it opens; the newly focused one nudges. The
+       individual translate property composes with Motion's transform.
+       pm-row stays FIRST in both lists: running animations are matched by
+       name and position, so gaining or losing focus only adds or removes the
+       nudge and never restarts the slide-in. */
+    & [data-env-surface="window"] {
+      animation: pm-row 0.32s var(--ease-row) backwards;
+    }
+    & [data-env-surface="window"][data-focused="true"] {
+      animation:
+        pm-row 0.32s var(--ease-row) backwards,
+        slab-nudge 0.2s 0.05s var(--ease-slam);
+    }
+
+    /* Panels wipe in diagonally, like the pause menu backdrop. `backwards`,
+       not `both`: a clip-path left in place would cut off the gold shadow. */
+    &
+      :is(
+        [data-env-surface="launcher"],
+        [data-env-surface="dialog"],
+        [data-env-surface="popover"]
+      ) {
+      animation: pm-wipe 0.45s var(--ease-wipe) backwards;
+    }
+    & [data-env-surface="toast"] {
+      animation: slab-slam 0.5s var(--ease-slam) backwards;
+    }
+    & [data-env-lock] {
+      animation: pm-wipe 0.45s var(--ease-wipe) backwards;
+    }
+  }
+}
