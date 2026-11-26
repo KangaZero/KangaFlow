@@ -192,6 +192,8 @@ const ja = {
       side: "サイドクエスト",
       tools: "ツール",
     },
+    // Accessible name of the left section rail (<nav>).
+    sectionsNav: "ページ内のセクション",
     work: "職務経歴",
   },
   achievements: {

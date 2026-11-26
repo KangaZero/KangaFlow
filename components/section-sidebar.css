@@ -1,0 +1,106 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+   Section rail, "B · Ticker rail" (picked from the html-ui-plan mockup): the
+   header dock's language on a quiet rail. Each link draws its tick with
+   ::before, --tick-gap clear of the index: the tick ends exactly there and
+   grows from its LEFT end (scale ≤ 1), so it can never touch the number. The
+   slant is a clip-path, not a skew (a skew leaned it into the index). */
+
+.section-rail {
+  --tick-len: 28px;
+  --tick-gap: 12px;
+}
+
+.section-rail ol {
+  display: grid;
+  gap: 20px;
+  margin: 0;
+  padding: 1rem 0 1rem calc(var(--tick-len) + var(--tick-gap));
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.section-rail a {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  color: var(--muted-foreground);
+  text-decoration: none;
+}
+.section-rail a::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: calc(-1 * (var(--tick-len) + var(--tick-gap)));
+  inline-size: var(--tick-len);
+  block-size: 2px;
+  margin-block-start: -1px;
+  background: var(--line-marker);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 3px) 100%, 0 100%);
+  transform-origin: left;
+  scale: 0.45 1;
+}
+
+/* Gold as text: --qa-gold-ink is the darker gold light mode needs on white. */
+.section-rail__index {
+  display: inline-block;
+  font-size: 0.85em;
+  color: var(--qa-gold-ink);
+}
+
+.section-rail a:hover {
+  color: var(--foreground);
+}
+.section-rail a:hover::before {
+  background: var(--qa-gold);
+  scale: 0.8 1;
+}
+
+/* Current section. After :hover (same specificity), so it wins on order. The
+   shift is a state indicator, so it stays even with reduced motion. */
+.section-rail a[aria-current="true"] {
+  color: var(--foreground);
+  font-weight: 800;
+  font-style: italic;
+  translate: 26px 0;
+}
+.section-rail a[aria-current="true"]::before {
+  block-size: 6px;
+  margin-block-start: -3px;
+  background: var(--qa-gold);
+  scale: 1 1;
+}
+.section-rail a[aria-current="true"] .section-rail__index {
+  padding: 0 4px;
+  font-style: normal;
+  color: var(--qa-slab);
+  background: var(--qa-hi);
+  transform: skewX(-10deg);
+}
+
+.section-rail a:focus-visible {
+  outline: 2px solid var(--qa-hi);
+  outline-offset: 4px;
+}
+
+/* Movement only when motion is allowed: the OS setting here, the site
+   preference via data-reduced on the nav. The hover nudge is decorative, so
+   it is motion-only too. */
+@media (prefers-reduced-motion: no-preference) {
+  .section-rail:not([data-reduced="true"]) a {
+    transition:
+      translate 0.12s,
+      color 0.12s;
+  }
+  .section-rail:not([data-reduced="true"]) a::before {
+    transition:
+      scale 0.12s,
+      background-color 0.12s,
+      block-size 0.12s,
+      margin 0.12s;
+  }
+  .section-rail:not([data-reduced="true"]) a:not([aria-current="true"]):hover {
+    translate: 14px 0;
+  }
+}

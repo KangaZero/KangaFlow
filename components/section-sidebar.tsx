@@ -2,67 +2,48 @@
 
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { motion } from "motion/react"
-import { useEffect, useState } from "react"
+import "@/components/section-sidebar.css"
+
+import { motion, useReducedMotion } from "motion/react"
+import type { MouseEvent } from "react"
 import { ABOUT_SECTIONS } from "@/components/about-section"
-import LineSidebar from "@/components/LineSidebar"
 import { LocaleTransition } from "@/components/locale-transition"
+import { useActiveSection } from "@/hooks/use-active-section"
+import { isReducedMotion } from "@/lib/isReducedMotion"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
-// Right-rail table of contents: highlights whichever About section is in view
-// (scroll-spy via IntersectionObserver) and scrolls to a section on click.
+// Module-level, so useActiveSection gets the same array on every render.
+const SECTION_IDS = ABOUT_SECTIONS.map((section) => section.id)
+
+//TODO consider moving all motion variants to their own lib file
+const slideFromLeft = {
+  hidden: { opacity: 0, x: -100 },
+  show: { opacity: 1, x: 0 },
+} as const
+
+// Left-rail table of contents, "B · Ticker rail": in-page links with a gold
+// tick each; the section being read (scroll-spy) gets aria-current, a thick
+// gold bar and an accent index tag. Clicking scrolls to the section and moves
+// focus to it, so keyboard users continue from there.
 export function SectionSidebar() {
   const { translate } = useLocale()
-  const { isHelloEffectAnimationComplete } = useGlobalStates()
-  const [active, setActive] = useState(0)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) {
-            continue
-          }
-          const index = ABOUT_SECTIONS.findIndex(
-            (section) => section.id === entry.target.id
-          )
-          if (index !== -1) {
-            setActive(index)
-          }
-        }
-      },
-      // A thin band ~20% down the viewport acts as the "current section" line.
-      { rootMargin: "-20% 0px -55% 0px" }
-    )
-
-    for (const section of ABOUT_SECTIONS) {
-      const el = document.getElementById(section.id)
-      if (el) {
-        observer.observe(el)
-      }
-    }
-    return () => observer.disconnect()
-  }, [])
+  const { animationPref, isHelloEffectAnimationComplete } = useGlobalStates()
+  const reduced = isReducedMotion(animationPref, useReducedMotion())
+  const active = useActiveSection(SECTION_IDS)
 
   if (!isHelloEffectAnimationComplete) return null
 
-  const items = ABOUT_SECTIONS.map((section) => translate(section.labelKey))
-
-  const scrollToSection = (index: number) => {
-    const section = ABOUT_SECTIONS[index]
-    if (section) {
-      document
-        .getElementById(section.id)
-        ?.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
+  const goToSection = (event: MouseEvent<HTMLAnchorElement>, id: string) => {
+    const section = document.getElementById(id)
+    if (!section) return
+    event.preventDefault()
+    section.scrollIntoView({
+      behavior: reduced ? "auto" : "smooth",
+      block: "start",
+    })
+    section.focus({ preventScroll: true })
   }
-
-  //TODO consider moving all motion variants to their own lib file
-  const slideFromLeft = {
-    hidden: { opacity: 0, x: -100 },
-    show: { opacity: 1, x: 0 },
-  } as const
 
   return (
     <motion.div
@@ -72,24 +53,28 @@ export function SectionSidebar() {
       variants={slideFromLeft}
     >
       <LocaleTransition variant="fade">
-        <LineSidebar
-          activeIndex={active}
-          defaultActive={0}
-          falloff="smooth"
-          fontSize={0.85}
-          itemGap={20}
-          items={items}
-          markerGap={0}
-          markerLength={32}
-          maxShift={30}
-          onItemClick={scrollToSection}
-          proximityRadius={80}
-          scaleTick
-          showIndex
-          showMarker
-          smoothing={100}
-          tickScale={0.5}
-        />
+        <nav
+          aria-label={translate("about.sectionsNav")}
+          className="section-rail"
+          data-reduced={reduced}
+        >
+          <ol>
+            {ABOUT_SECTIONS.map((section, index) => (
+              <li key={section.id}>
+                <a
+                  aria-current={index === active ? "true" : undefined}
+                  href={`#${section.id}`}
+                  onClick={(event) => goToSection(event, section.id)}
+                >
+                  <span className="section-rail__index">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  {translate(section.labelKey)}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
       </LocaleTransition>
     </motion.div>
   )

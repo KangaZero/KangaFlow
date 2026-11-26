@@ -119,10 +119,16 @@ function Section({
 }) {
   return (
     <motion.section
-      className={cn("flex w-full scroll-mt-24 flex-col gap-6", className)}
+      // tabIndex -1 + outline-none: the section rail moves focus here after a
+      // jump (so Tab continues from the section); it is a target, not a control.
+      className={cn(
+        "flex w-full scroll-mt-24 flex-col gap-6 outline-none",
+        className
+      )}
       data-reduced={reduced}
       id={id}
       initial="hidden"
+      tabIndex={-1}
       transition={{ duration: 0.5, ease: "easeOut" }}
       variants={reveal}
       viewport={{ margin: "-80px", once: true }}

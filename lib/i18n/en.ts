@@ -193,6 +193,8 @@ const en = {
       side: "SIDE QUEST",
       tools: "Tools",
     },
+    // Accessible name of the left section rail (<nav>).
+    sectionsNav: "Page sections",
     work: "Work",
   },
   achievements: {
