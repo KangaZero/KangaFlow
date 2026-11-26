@@ -99,8 +99,11 @@ function Digit({ place, value, height, digitStyle }: DigitProps) {
   }
 
   return (
+    // Clip only vertically (the rolling digits above/below): `clip` is the one
+    // overflow value that allows a visible x axis, so a slanted or italic
+    // glyph (e.g. the KangaFlow skin's clock) isn't cut off at its sides.
     <span
-      className="relative inline-flex overflow-hidden"
+      className="relative inline-flex overflow-x-visible overflow-y-clip"
       style={{ ...defaultStyle, ...digitStyle }}
     >
       {Array.from({ length: 10 }, (_, i) => (
@@ -193,7 +196,9 @@ export function Counter({
     fontWeight,
     gap,
     lineHeight: 1,
-    overflow: "hidden",
+    // Vertical only, like each digit: slanted glyphs may spill sideways.
+    overflowX: "visible",
+    overflowY: "clip",
     paddingLeft: horizontalPadding,
     paddingRight: horizontalPadding,
   }
