@@ -336,6 +336,8 @@ const ja = {
     title: "コマンドパレット",
   },
   common: {
+    // Key name on Esc close tags; hidden on touch and phone-width screens.
+    escKey: "ESC",
     loading: [
       "生まれたことがある人の死亡率は１００％です",
       "「今日」という言葉は明日の前の日を意味します",
@@ -703,6 +705,7 @@ const ja = {
     title: "キーボードショートカット",
   },
   terminal: {
+    closeLabel: "ターミナルを閉じる",
     title: "ターミナル",
     viewCode: "このページのソースを見る",
   },

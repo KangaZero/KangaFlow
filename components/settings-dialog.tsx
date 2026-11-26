@@ -19,6 +19,7 @@ import { LiquidButton } from "@/components/animate-ui/components/buttons/liquid"
 import { GlitchError } from "@/components/settings/glitch-error"
 import { SettingsTitle } from "@/components/settings/settings-title"
 import { StorageWarning } from "@/components/storage-warning"
+import { EscCloseLabel } from "@/components/ui/esc-close-label"
 import { ANIMATION_PREFS } from "@/lib/globalStates"
 import { LOCALES } from "@/lib/i18n"
 import { isReducedMotion } from "@/lib/isReducedMotion"
@@ -447,9 +448,9 @@ export function SettingsDialog() {
                     </DialogPrimitive.Description>
                     <DialogPrimitive.Close
                       aria-label={translate("environment.settings.close")}
-                      className="pm-close"
+                      className="esc-close pm-close"
                     >
-                      ESC ✕
+                      <EscCloseLabel />
                     </DialogPrimitive.Close>
                   </header>
 

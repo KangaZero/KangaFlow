@@ -337,6 +337,8 @@ const en = {
     title: "Command Palette",
   },
   common: {
+    // Key name on Esc close tags; hidden on touch and phone-width screens.
+    escKey: "ESC",
     loading: [
       "Did you know waiting causes time to pass",
       "It is impossible to open doors that are already open",
@@ -696,6 +698,7 @@ const en = {
     title: "Keyboard shortcuts",
   },
   terminal: {
+    closeLabel: "Close the terminal",
     title: "Terminal",
     viewCode: "View this page's source",
   },

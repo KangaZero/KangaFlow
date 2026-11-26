@@ -69,28 +69,12 @@
 .pm-storage {
   grid-column: 1 / -1;
 }
+/* Placement only: the tag's look is the shared .esc-close
+   (components/ui/esc-close.css). */
 .pm-close {
   position: absolute;
   top: 0;
   right: 0;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 800;
-  font-style: italic;
-  padding: 6px 14px;
-  border: 0;
-  cursor: pointer;
-  color: var(--primary-foreground);
-  background: var(--primary);
-  transform: skewX(-12deg);
-  transition: translate 0.2s cubic-bezier(0.3, 1.6, 0.5, 1);
-}
-.pm-close:hover {
-  translate: -4px 2px;
-}
-.pm-close:focus-visible {
-  outline: 3px solid var(--pm-hi);
-  outline-offset: 3px;
 }
 
 /* ── Title: daring display word; the N (Neko) is the neko switch ── */

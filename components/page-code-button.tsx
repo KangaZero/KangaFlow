@@ -1,9 +1,13 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
+import "@/components/page-code-button.css"
+
 import { SquareCode } from "lucide-react"
+import { useReducedMotion } from "motion/react"
 import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { Button } from "@/components/ui/button"
+import { isReducedMotion } from "@/lib/isReducedMotion"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
 
@@ -18,7 +22,9 @@ function preloadTerminal(): void {
 // dialog straight into `nvim` on the given repo file.
 export function PageCodeButton({ file }: { file: string }) {
   const { translate } = useLocale()
-  const { setIsTerminalOpen, setTerminalFile } = useGlobalStates()
+  const { animationPref, setIsTerminalOpen, setTerminalFile } =
+    useGlobalStates()
+  const reduced = isReducedMotion(animationPref, useReducedMotion())
 
   const label = translate("terminal.viewCode")
 
@@ -27,6 +33,8 @@ export function PageCodeButton({ file }: { file: string }) {
       <AnimatedTooltip label={label} side="right">
         <Button
           aria-label={label}
+          className="page-code-btn"
+          data-reduced={reduced}
           onClick={() => {
             setTerminalFile(file)
             setIsTerminalOpen(true)
@@ -34,7 +42,7 @@ export function PageCodeButton({ file }: { file: string }) {
           onFocus={preloadTerminal}
           onPointerEnter={preloadTerminal}
           size="icon"
-          variant="outline"
+          variant="ghost"
         >
           <SquareCode />
         </Button>

@@ -40,7 +40,7 @@ import { useReducedMotion } from "motion/react"
 import localFont from "next/font/local"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 import { useXTerm } from "react-xtermjs"
 import { CodeEditor } from "@/components/code-editor"
 import { isReducedMotion } from "@/lib/isReducedMotion"
@@ -218,27 +218,31 @@ function useClock(): string {
 
 const GIT_ICON = "\ue725"
 
-// Slim tab strip above the dialog terminal: the active zsh tab, an nvim tab
-// while the editor is open, and the session title. The dialog's own close
-// button sits at the top-right, so the strip leaves room for it.
+// Slim tab strip above the dialog terminal: the dialog's title tab (when given),
+// the active zsh tab, an nvim tab while the editor is open, and the session
+// title. The dialog's own close tag sits at the top-right, so the strip leaves
+// room for it (pr-24 fits "ESC ✕"; below sm only the ✕ shows, so pr-12).
 function TerminalTabStrip({
   tab,
   editorOpen,
   palette,
+  title,
 }: {
   tab: string
   editorOpen: boolean
   palette: TerminalPalette
+  title?: ReactNode
 }) {
   return (
     <div
-      className="flex h-8 shrink-0 items-center gap-1.5 pr-12 pl-2 font-mono text-xs"
+      className="flex h-8 shrink-0 items-center gap-1.5 pr-12 pl-2 font-mono text-xs sm:pr-24"
       style={{
         background: palette.base,
         borderBottom: `1px solid color-mix(in srgb, ${palette.text} 8%, transparent)`,
         color: palette.overlay,
       }}
     >
+      {title}
       <span
         className="flex h-6 items-center gap-2 rounded-md px-2.5"
         style={{
@@ -354,11 +358,15 @@ export function TerminalBody({
   initialFile,
   onClose,
   routePath = "/",
+  titleSlot,
   windowId,
 }: {
   files: Record<string, string>
   initialFile: string | null
   onClose: () => void
+  // Rendered first in the dialog's tab strip (the dialog's own title tab).
+  // Ignored as a niri window, which has no tab strip.
+  titleSlot?: ReactNode
   // Current route pathname → the terminal starts in that page's folder.
   routePath?: string
   // When rendered as a niri window, live state (input/history/cwd) is persisted
@@ -1197,6 +1205,7 @@ export function TerminalBody({
           editorOpen={editor !== null}
           palette={palette}
           tab={bar.tab}
+          title={titleSlot}
         />
       ) : null}
       <div

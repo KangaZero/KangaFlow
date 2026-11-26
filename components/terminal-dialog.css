@@ -1,0 +1,39 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+   Terminal dialog frame, B · Ticker rail: square, accent frame, hard gold
+   shadow (the header dock's language). Unlayered, so these beat the dialog's
+   Tailwind utilities (rounded-lg, border, shadow-lg) without !important. */
+
+.terminal-dialog {
+  border: 2px solid var(--qa-hi);
+  border-radius: 0;
+  box-shadow: 6px 6px 0 var(--qa-gold);
+}
+
+/* Sits in the space the tab strip reserves at its right end (pr-24, h-8). */
+.terminal-dialog__close {
+  position: absolute;
+  top: 2px;
+  right: 10px;
+  z-index: 1;
+  padding-block: 4px;
+}
+
+/* Slanted title tab, first in the tab strip. */
+.terminal-dialog__tab {
+  display: inline-flex;
+  align-items: center;
+  block-size: 24px;
+  padding: 0 14px 0 10px;
+  font: italic 800 12px var(--font-mono);
+  color: var(--primary-foreground);
+  background: var(--primary);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  white-space: nowrap;
+}
+/* Phone width: the strip is too narrow for the tab and the session tabs, and
+   the tab is decorative (the sr-only DialogTitle names the dialog). */
+@media (width < 40rem) {
+  .terminal-dialog__tab {
+    display: none;
+  }
+}

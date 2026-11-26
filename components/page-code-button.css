@@ -1,0 +1,39 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+   "View this page's source" button, B · Ticker rail: a slanted keycap in the
+   header dock's language (accent frame, hard gold shadow). These rules are
+   unlayered, so they beat the shadcn Button's Tailwind utilities (radius,
+   hover fill, transition) without !important. */
+
+.page-code-btn {
+  border: 2px solid var(--qa-hi);
+  border-radius: 0;
+  background: var(--background);
+  box-shadow: 4px 4px 0 var(--qa-gold);
+  transform: skewX(-10deg);
+  transition: none;
+}
+.page-code-btn:hover {
+  background: var(--background);
+}
+/* Counter-skew the icon so it stands upright inside the slanted key. */
+.page-code-btn > svg {
+  transform: skewX(10deg);
+}
+.page-code-btn:focus-visible {
+  outline: 3px solid var(--qa-hi);
+  outline-offset: 3px;
+}
+
+/* The hover lift is movement: OS setting here, site preference via
+   data-reduced on the button. */
+@media (prefers-reduced-motion: no-preference) {
+  .page-code-btn:not([data-reduced="true"]) {
+    transition:
+      translate 0.2s cubic-bezier(0.3, 1.6, 0.5, 1),
+      box-shadow 0.2s;
+  }
+  .page-code-btn:not([data-reduced="true"]):hover {
+    translate: -2px -2px;
+    box-shadow: 6px 6px 0 var(--qa-gold);
+  }
+}

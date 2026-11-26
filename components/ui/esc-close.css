@@ -1,0 +1,44 @@
+/* [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
+   The skewed "ESC ✕" close tag, shared by the settings pause menu and the
+   terminal dialog (moved here from .pm-close). No `position`: each host places
+   it, so this class can never tie with (and override) a host's own layout.
+   On touch devices (no Esc key) and phone-width viewports the key name is
+   hidden and only the ✕ shows; the button keeps its full aria-label either way. */
+
+.esc-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 800;
+  font-style: italic;
+  padding: 6px 14px;
+  border: 0;
+  cursor: pointer;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  transform: skewX(-12deg);
+}
+.esc-close:focus-visible {
+  outline: 3px solid var(--qa-hi);
+  outline-offset: 3px;
+}
+
+/* The hover nudge is movement, so it only runs when motion is allowed: the OS
+   setting here, the site preference via a [data-reduced="true"] ancestor. */
+@media (prefers-reduced-motion: no-preference) {
+  .esc-close:not([data-reduced="true"] *) {
+    transition: translate 0.2s cubic-bezier(0.3, 1.6, 0.5, 1);
+  }
+  .esc-close:not([data-reduced="true"] *):hover {
+    translate: -4px 2px;
+  }
+}
+
+/* Touch (no Esc key) OR a phone-width viewport (the `sm` breakpoint, 40rem). */
+@media (pointer: coarse), (width < 40rem) {
+  .esc-close__key {
+    display: none;
+  }
+}
