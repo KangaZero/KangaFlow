@@ -14,27 +14,36 @@
   initial-value: 150px;
 }
 
-.card-hand {
-  position: relative;
-}
+/* The defaults sit in a cascade layer so a consumer's plain (unlayered) rule
+   always beats them, whatever order the stylesheets load in. Without the
+   layer, `.card-hand` vs `.tc-hand { position: absolute }` was a tie on
+   specificity, settled by load order. In dev, visiting /achievements
+   re-injected this file after projects.css, so `relative` won, the hand
+   collapsed to 0px and the cards rose over the about section. The state rules
+   below stay unlayered: they must keep beating consumers' :hover rules. */
+@layer components {
+  .card-hand {
+    position: relative;
+  }
 
-.card-hand-card {
-  --off: 0;
-  /* Fan: each slot from the centre turns by --fan-angle. */
-  --fan-angle: 8deg;
-  --r: calc(var(--off) * var(--fan-angle));
-  --spread: 150px;
-  --lift: 0px;
+  .card-hand-card {
+    --off: 0;
+    /* Fan: each slot from the centre turns by --fan-angle. */
+    --fan-angle: 8deg;
+    --r: calc(var(--off) * var(--fan-angle));
+    --spread: 150px;
+    --lift: 0px;
 
-  position: absolute;
-  inset-inline: 0;
-  margin-inline: auto;
-  transform: translateX(calc(var(--off) * var(--spread)))
-    translateY(calc(var(--lift) * -1)) rotate(var(--r));
-  transform-origin: 50% 115%;
-  transition:
-    transform 0.65s cubic-bezier(0.3, 1.25, 0.45, 1),
-    opacity 0.3s;
+    position: absolute;
+    inset-inline: 0;
+    margin-inline: auto;
+    transform: translateX(calc(var(--off) * var(--spread)))
+      translateY(calc(var(--lift) * -1)) rotate(var(--r));
+    transform-origin: 50% 115%;
+    transition:
+      transform 0.65s cubic-bezier(0.3, 1.25, 0.45, 1),
+      opacity 0.3s;
+  }
 }
 
 .card-hand-card[data-dragging="true"] {
