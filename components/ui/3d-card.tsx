@@ -1,7 +1,7 @@
 "use client"
 // [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md.
 
-import { createContext, useContext, useEffect, useRef, useState } from "react"
+import { createContext, use, useEffect, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
@@ -45,7 +45,7 @@ export function CardContainer({
   }
 
   return (
-    <MouseEnterContext.Provider value={[isMouseEntered, setIsMouseEntered]}>
+    <MouseEnterContext value={[isMouseEntered, setIsMouseEntered]}>
       <div
         className={cn(
           "flex items-center justify-center py-20",
@@ -68,7 +68,7 @@ export function CardContainer({
           {children}
         </div>
       </div>
-    </MouseEnterContext.Provider>
+    </MouseEnterContext>
   )
 }
 
@@ -145,7 +145,7 @@ export function CardItem({
 // Hook to read the shared mouse-enter state; throws when used outside a
 // CardContainer so the misuse surfaces at development time.
 export function useMouseEnter() {
-  const context = useContext(MouseEnterContext)
+  const context = use(MouseEnterContext)
   if (context === undefined) {
     throw new Error("useMouseEnter must be used within a CardContainer")
   }

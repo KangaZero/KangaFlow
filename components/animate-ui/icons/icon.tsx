@@ -95,7 +95,7 @@ const AnimateIconContext = React.createContext<AnimateIconContextValue | null>(
 )
 
 function useAnimateIconContext() {
-  const context = React.useContext(AnimateIconContext)
+  const context = React.use(AnimateIconContext)
   if (!context)
     return {
       active: undefined,
@@ -443,7 +443,7 @@ function AnimateIcon({
   )
 
   return (
-    <AnimateIconContext.Provider
+    <AnimateIconContext
       value={{
         active: localAnimate,
         animate,
@@ -457,7 +457,7 @@ function AnimateIcon({
       }}
     >
       {content}
-    </AnimateIconContext.Provider>
+    </AnimateIconContext>
   )
 }
 
@@ -483,7 +483,7 @@ function IconWrapper<T extends string>({
   className,
   ...props
 }: IconWrapperProps<T>) {
-  const context = React.useContext(AnimateIconContext)
+  const context = React.use(AnimateIconContext)
 
   if (context) {
     const {
@@ -572,7 +572,7 @@ function IconWrapper<T extends string>({
     const loopDelayToUse = parentLoopDelay
 
     return (
-      <AnimateIconContext.Provider
+      <AnimateIconContext
         value={{
           active: parentActive,
           ...(parentAnimate !== undefined ? { animate: parentAnimate } : {}),
@@ -598,7 +598,7 @@ function IconWrapper<T extends string>({
           size={size}
           {...props}
         />
-      </AnimateIconContext.Provider>
+      </AnimateIconContext>
     )
   }
 

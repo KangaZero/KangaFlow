@@ -21,11 +21,11 @@ function getStrictContext<T>(
   }: {
     value: T
     children?: React.ReactNode
-  }) => <Context.Provider value={value}>{children}</Context.Provider>
+  }) => <Context value={value}>{children}</Context>
 
   // biome-ignore lint/correctness/noComponentHookFactories: factory runs once at module scope per context, so hook identity is stable
   const useSafeContext = () => {
-    const ctx = React.useContext(Context)
+    const ctx = React.use(Context)
     if (ctx === undefined) {
       throw new Error(`useContext must be used within ${name ?? "a Provider"}`)
     }

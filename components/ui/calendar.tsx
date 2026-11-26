@@ -38,7 +38,7 @@ function CalendarChevron({
 function CalendarDayButtonWrapper({
   ...props
 }: React.ComponentProps<typeof DayButton>) {
-  const locale = React.useContext(LocaleContext)
+  const locale = React.use(LocaleContext)
   return (
     <CalendarDayButton {...(locale != null ? { locale } : {})} {...props} />
   )
@@ -90,7 +90,7 @@ function Calendar({
   const defaultClassNames = getDefaultClassNames()
 
   return (
-    <LocaleContext.Provider value={locale}>
+    <LocaleContext value={locale}>
       <DayPicker
         captionLayout={captionLayout}
         className={cn(
@@ -208,7 +208,7 @@ function Calendar({
         showOutsideDays={showOutsideDays}
         {...props}
       />
-    </LocaleContext.Provider>
+    </LocaleContext>
   )
 }
 
