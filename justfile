@@ -84,8 +84,10 @@ screenshot page="en" name="screenshot" base="https://kangazero.github.io/KangaFl
 clean:
     rm -rf out .next .preview
 
-# Gate locally, then push — the GitHub Actions workflow deploys to Pages.
-push: verify
+# Push; the GitHub Actions workflow deploys to Pages. No `verify` dependency:
+# the pre-push hook already runs `just verify`, so depending on it here would
+# run the whole gate twice.
+push:
     git push
 
 # Alias for push (deployment happens in CI).

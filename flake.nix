@@ -28,7 +28,23 @@
     in
     {
       checks = forEachSystem (
-        system: pkgs: {
+        system: pkgs:
+        let
+          # A whole-repo gate that runs one `just` recipe, so the hooks, CI and
+          # `just verify` all execute the same commands. pass_filenames = false:
+          # the checks are project-wide (a staged-files-only typecheck would miss
+          # errors in files that depend on a changed type).
+          justGate = recipe: stage: {
+            enable = true;
+            name = "just ${recipe}";
+            entry = "${pkgs.just}/bin/just ${recipe}";
+            language = "system";
+            pass_filenames = false;
+            always_run = true;
+            stages = [ stage ];
+          };
+        in
+        {
           pre-commit-check = inputs.git-hooks.lib.${system}.run {
             src = ./.;
             hooks = {
@@ -37,13 +53,14 @@
               statix.enable = true;
               deadnix.enable = true;
 
-              # Single source of truth: run the project-pinned Biome from
-              # node_modules so the hook, CI, and `just` all execute the same
-              # binary (matches @biomejs/biome in package.json / nixpkgs).
-              biome = {
-                enable = true;
-                settings.binPath = "./node_modules/.bin/biome";
-              };
+              # Pre-commit: the fast CI checks. `just lint` is `biome ci .`: no
+              # writes, and every file type Biome handles (CSS, Markdown, YAML,
+              # HTML, SVG too), not just the JS/TS/JSON the stock biome hook
+              # filters to. Format with `just fix` before committing.
+              lint = justGate "lint" "pre-commit";
+              typecheck = justGate "typecheck" "pre-commit";
+              test = justGate "test" "pre-commit";
+
               just-hook = {
                 enable = true;
                 name = "just hook";
@@ -62,20 +79,10 @@
                 stages = [ "pre-commit" ];
               };
 
-              # Pre-push type gate: run the same `tsc --noEmit` as CI so a clean
-              # checkout (no generated next-env.d.ts) can't slip type errors past
-              # `git push`. Mirrors `just typecheck`.
-              typecheck = {
-                enable = true;
-                name = "typecheck";
-                entry = "${pkgs.writeShellScriptBin "typecheck-hook" ''
-                  just typecheck
-                ''}/bin/typecheck-hook";
-                language = "system";
-                pass_filenames = false;
-                always_run = true;
-                stages = [ "pre-push" ];
-              };
+              # Pre-push: the full CI gate (lint, typecheck, test, build). It
+              # repeats the pre-commit checks on purpose: a commit made with
+              # --no-verify, or amended afterwards, is still caught here.
+              verify = justGate "verify" "pre-push";
 
               # Pre-push guard: reject any incoming commit whose author OR
               # committer is not the personal identity. Keeps work identity out
