@@ -15,6 +15,7 @@ import {
   loadNotes,
   loadOpenIds,
   NOTE_COLORS,
+  NOTE_DOT_CLASS,
   type Note,
   saveNotes,
   saveOpenIds,
@@ -113,13 +114,15 @@ export function NotesWidget(): React.JSX.Element {
         layout
         layoutId={note.id}
         onClick={() => openNote(note.id)}
-        style={{ "--note-c": colors.accent }}
+        style={{ "--note-c": colors.dot }}
         transition={SPRING_REORDER}
         whileHover={{ y: -2 }}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
-            <span className={cn("size-2 shrink-0 rounded-full", colors.dot)} />
+            <span
+              className={cn("size-2 shrink-0 rounded-full", NOTE_DOT_CLASS)}
+            />
             <span className="truncate font-medium" data-env-part="note-title">
               {note.title.trim() === ""
                 ? translate("widgets.notes.untitled")

@@ -14,47 +14,44 @@ export type NoteColor =
   | "sky"
   | "violet"
 
-// bg = card/window tint · dot = the colour pip in pickers and list rows ·
-// accent = the dot's colour as a CSS value (the KangaFlow skin's card band).
+// bg = card/window tint · dot = the note's colour as a CSS value, published
+// as --note-c: it paints the pip (NOTE_DOT_CLASS) and the KangaFlow skin's
+// card band, so the colour is spelled once.
 // Each theme gets its own `bg` variant: light pastel (:root), deep translucent
 // (dark), and a mid tint tuned for the terminal theme's Catppuccin surface
 // (`terminal:` custom variant in globals.css). Dots stay saturated — they read
 // on every surface — so they need no per-theme variant.
-export const NOTE_COLORS: Record<
-  NoteColor,
-  { bg: string; dot: string; accent: string }
-> = {
+type NoteSwatch = { bg: string; dot: `var(--color-${string})` }
+
+export const NOTE_COLORS = {
   amber: {
-    accent: "var(--color-amber-500)",
     bg: "bg-amber-100/70 dark:bg-amber-900/30 terminal:bg-amber-500/15",
-    dot: "bg-amber-500",
+    dot: "var(--color-amber-500)",
   },
   emerald: {
-    accent: "var(--color-emerald-500)",
     bg: "bg-emerald-100/70 dark:bg-emerald-900/30 terminal:bg-emerald-500/15",
-    dot: "bg-emerald-500",
+    dot: "var(--color-emerald-500)",
   },
   rose: {
-    accent: "var(--color-rose-500)",
     bg: "bg-rose-100/70 dark:bg-rose-900/30 terminal:bg-rose-500/15",
-    dot: "bg-rose-500",
+    dot: "var(--color-rose-500)",
   },
   sky: {
-    accent: "var(--color-sky-500)",
     bg: "bg-sky-100/70 dark:bg-sky-900/30 terminal:bg-sky-500/15",
-    dot: "bg-sky-500",
+    dot: "var(--color-sky-500)",
   },
   violet: {
-    accent: "var(--color-violet-500)",
     bg: "bg-violet-100/70 dark:bg-violet-900/30 terminal:bg-violet-500/15",
-    dot: "bg-violet-500",
+    dot: "var(--color-violet-500)",
   },
   yellow: {
-    accent: "var(--color-yellow-400)",
     bg: "bg-yellow-100/80 dark:bg-yellow-900/30 terminal:bg-yellow-500/15",
-    dot: "bg-yellow-400",
+    dot: "var(--color-yellow-400)",
   },
-}
+} as const satisfies Record<NoteColor, NoteSwatch>
+
+// Paints a colour pip from the --note-c its parent (or itself) sets.
+export const NOTE_DOT_CLASS = "bg-(--note-c)"
 
 export const NOTE_COLOR_KEYS = Object.keys(NOTE_COLORS) as NoteColor[]
 

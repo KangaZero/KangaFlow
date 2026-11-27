@@ -15,6 +15,7 @@ import {
   formatNoteDate,
   NOTE_COLOR_KEYS,
   NOTE_COLORS,
+  NOTE_DOT_CLASS,
   type Note,
 } from "@/lib/notes"
 import type { TextAlign } from "@/lib/rich-text"
@@ -115,11 +116,12 @@ export function NoteEditorWindow({
                   aria-pressed={note.color === c}
                   className={cn(
                     "size-4 rounded-full",
-                    NOTE_COLORS[c].dot,
+                    NOTE_DOT_CLASS,
                     note.color === c && "ring-ring ring-2 ring-offset-1"
                   )}
                   key={c}
                   onClick={() => onChange({ color: c })}
+                  style={{ "--note-c": NOTE_COLORS[c].dot }}
                   transition={SPRING_TAP}
                   type="button"
                   whileHover={{ scale: 1.2 }}
