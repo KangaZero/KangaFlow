@@ -29,7 +29,7 @@ import {
   useReducedMotion,
 } from "motion/react"
 import type { KeyboardEvent, PointerEvent } from "react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useId, useRef, useState } from "react"
 import { createPortal, flushSync } from "react-dom"
 
 import { GLASS_SURFACE } from "@/components/niri/glass"
@@ -38,6 +38,7 @@ import {
   WIDGET_STATE_STORAGE_PREFIX,
   WIDGET_STORAGE_KEYS,
 } from "@/components/niri/settings"
+import { AnimatedTooltip } from "@/components/ui/animated-tooltip"
 import { CorneKeycap, type KeycapKind } from "@/components/widgets/corne-keycap"
 import {
   activeLayer,
@@ -166,6 +167,13 @@ export function KeyboardWidget(): React.JSX.Element | null {
   const mounted = useIsClient()
   const [prefs] = useState<KeyboardPrefs>(loadPrefs)
   const [dock, setDock] = useState<DockMode>(prefs.dock)
+  const dockLabel = translate(
+    dock === "bottom" ? "widgets.keyboard.undock" : "widgets.keyboard.dock"
+  )
+  // Ids for hints that add to a control's name (EXT, QWERTY mapping): our
+  // tooltip only renders while open, so the hint text is also kept in the DOM.
+  const extHintId = useId()
+  const qwertyHintId = useId()
   const [showExt, setShowExt] = useState(prefs.showExt)
   const [frameless, setFrameless] = useState(false)
   const [dockHint, setDockHint] = useState(false)
@@ -671,16 +679,20 @@ export function KeyboardWidget(): React.JSX.Element | null {
                 className={cn("osk-capsule", glass)}
                 onPointerDown={keepCaret}
               >
-                <button
-                  aria-label={translate("widgets.keyboard.move")}
-                  className="osk-grip"
-                  onKeyDown={nudgeRoot}
-                  onPointerDown={startMove}
-                  title={translate("widgets.keyboard.move")}
-                  type="button"
+                <AnimatedTooltip
+                  label={translate("widgets.keyboard.move")}
+                  side="top"
                 >
-                  <GripVertical aria-hidden className="size-3.5" />
-                </button>
+                  <button
+                    aria-label={translate("widgets.keyboard.move")}
+                    className="osk-grip"
+                    onKeyDown={nudgeRoot}
+                    onPointerDown={startMove}
+                    type="button"
+                  >
+                    <GripVertical aria-hidden className="size-3.5" />
+                  </button>
+                </AnimatedTooltip>
                 <span className="osk-title">
                   {translate("widgets.keyboard.heading")}{" "}
                   <small>· {translate("widgets.keyboard.layoutName")}</small>
@@ -706,69 +718,87 @@ export function KeyboardWidget(): React.JSX.Element | null {
                     </button>
                   ))}
                 </fieldset>
-                <button
-                  aria-pressed={showExt}
-                  className="osk-toggle"
-                  onClick={toggleExt}
-                  title={translate("widgets.keyboard.extTitle")}
-                  type="button"
+                <AnimatedTooltip
+                  label={translate("widgets.keyboard.extTitle")}
+                  side="top"
                 >
-                  {translate("widgets.keyboard.extToggle")}
-                </button>
-                <button
-                  aria-label={translate("widgets.keyboard.qwertyMapping")}
-                  aria-pressed={qwertyMapping}
-                  className="osk-icon-btn"
-                  onClick={toggleQwertyMapping}
-                  title={translate("widgets.keyboard.qwertyMappingHint")}
-                  type="button"
+                  <button
+                    aria-describedby={extHintId}
+                    aria-pressed={showExt}
+                    className="osk-toggle"
+                    onClick={toggleExt}
+                    type="button"
+                  >
+                    {translate("widgets.keyboard.extToggle")}
+                  </button>
+                </AnimatedTooltip>
+                {/* The tooltip only exists while open; keep the hint readable. */}
+                <span className="sr-only" id={extHintId}>
+                  {translate("widgets.keyboard.extTitle")}
+                </span>
+                <AnimatedTooltip
+                  label={translate("widgets.keyboard.qwertyMappingHint")}
+                  side="top"
                 >
-                  <Keyboard aria-hidden className="size-3.5" />
-                </button>
-                <button
-                  aria-label={translate("widgets.keyboard.hideFrame")}
-                  aria-pressed={frameless}
-                  className="osk-icon-btn"
-                  onClick={(event) =>
-                    frameless ? showFrame() : hideFrame(event.detail === 0)
-                  }
-                  ref={toggleRef}
-                  title={translate("widgets.keyboard.hideFrame")}
-                  type="button"
+                  <button
+                    aria-describedby={qwertyHintId}
+                    aria-label={translate("widgets.keyboard.qwertyMapping")}
+                    aria-pressed={qwertyMapping}
+                    className="osk-icon-btn"
+                    onClick={toggleQwertyMapping}
+                    type="button"
+                  >
+                    <Keyboard aria-hidden className="size-3.5" />
+                  </button>
+                </AnimatedTooltip>
+                <span className="sr-only" id={qwertyHintId}>
+                  {translate("widgets.keyboard.qwertyMappingHint")}
+                </span>
+                <AnimatedTooltip
+                  label={translate("widgets.keyboard.hideFrame")}
+                  side="top"
                 >
-                  <EyeOff aria-hidden className="size-3.5" />
-                </button>
-                <button
-                  aria-label={translate(
-                    dock === "bottom"
-                      ? "widgets.keyboard.undock"
-                      : "widgets.keyboard.dock"
-                  )}
-                  className="osk-icon-btn"
-                  onClick={toggleDock}
-                  title={translate(
-                    dock === "bottom"
-                      ? "widgets.keyboard.undock"
-                      : "widgets.keyboard.dock"
-                  )}
-                  type="button"
+                  <button
+                    aria-label={translate("widgets.keyboard.hideFrame")}
+                    aria-pressed={frameless}
+                    className="osk-icon-btn"
+                    onClick={(event) =>
+                      frameless ? showFrame() : hideFrame(event.detail === 0)
+                    }
+                    ref={toggleRef}
+                    type="button"
+                  >
+                    <EyeOff aria-hidden className="size-3.5" />
+                  </button>
+                </AnimatedTooltip>
+                <AnimatedTooltip label={dockLabel} side="top">
+                  <button
+                    aria-label={dockLabel}
+                    className="osk-icon-btn"
+                    onClick={toggleDock}
+                    type="button"
+                  >
+                    {dock === "bottom" ? (
+                      <PictureInPicture2 aria-hidden className="size-3.5" />
+                    ) : (
+                      <PanelBottom aria-hidden className="size-3.5" />
+                    )}
+                  </button>
+                </AnimatedTooltip>
+                <AnimatedTooltip
+                  label={translate("widgets.keyboard.close")}
+                  side="top"
                 >
-                  {dock === "bottom" ? (
-                    <PictureInPicture2 aria-hidden className="size-3.5" />
-                  ) : (
-                    <PanelBottom aria-hidden className="size-3.5" />
-                  )}
-                </button>
-                <button
-                  aria-label={translate("widgets.keyboard.close")}
-                  className="osk-icon-btn"
-                  data-variant="close"
-                  onClick={close}
-                  title={translate("widgets.keyboard.close")}
-                  type="button"
-                >
-                  <X aria-hidden className="size-3.5" />
-                </button>
+                  <button
+                    aria-label={translate("widgets.keyboard.close")}
+                    className="osk-icon-btn"
+                    data-variant="close"
+                    onClick={close}
+                    type="button"
+                  >
+                    <X aria-hidden className="size-3.5" />
+                  </button>
+                </AnimatedTooltip>
               </div>
 
               <div className="osk-halves">
@@ -791,27 +821,37 @@ export function KeyboardWidget(): React.JSX.Element | null {
                       }}
                       style={{ x, y }}
                     >
-                      <button
-                        aria-label={translate(
-                          `widgets.keyboard.dragHalf.${half}`
-                        )}
-                        className="osk-half-grip"
-                        onDoubleClick={() => resetHalf(half)}
-                        onKeyDown={(event) => nudgeHalf(half, event)}
-                        onPointerDown={(event) => startHalfDrag(half, event)}
-                        title={translate(`widgets.keyboard.dragHalf.${half}`)}
-                        type="button"
-                      />
-                      {half === "L" ? (
+                      <AnimatedTooltip
+                        className="osk-grip-anchor"
+                        label={translate(`widgets.keyboard.dragHalf.${half}`)}
+                        side="top"
+                      >
                         <button
-                          aria-label={translate("widgets.keyboard.showFrame")}
-                          className="osk-restore-dot"
-                          onClick={showFrame}
-                          onPointerDown={keepCaret}
-                          ref={dotRef}
-                          title={translate("widgets.keyboard.showFrame")}
+                          aria-label={translate(
+                            `widgets.keyboard.dragHalf.${half}`
+                          )}
+                          className="osk-half-grip"
+                          onDoubleClick={() => resetHalf(half)}
+                          onKeyDown={(event) => nudgeHalf(half, event)}
+                          onPointerDown={(event) => startHalfDrag(half, event)}
                           type="button"
                         />
+                      </AnimatedTooltip>
+                      {half === "L" ? (
+                        <AnimatedTooltip
+                          className="osk-dot-anchor"
+                          label={translate("widgets.keyboard.showFrame")}
+                          side="top"
+                        >
+                          <button
+                            aria-label={translate("widgets.keyboard.showFrame")}
+                            className="osk-restore-dot"
+                            onClick={showFrame}
+                            onPointerDown={keepCaret}
+                            ref={dotRef}
+                            type="button"
+                          />
+                        </AnimatedTooltip>
                       ) : null}
                       <fieldset className="osk-half">
                         <legend className="sr-only">

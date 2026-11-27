@@ -165,11 +165,16 @@
      raster): median press cost ~220ms without this, ~75ms with it. */
   will-change: transform;
 }
-.osk-half-grip {
+/* The grip and the restore dot sit inside an AnimatedTooltip wrapper, so their
+   placement (and frameless show/hide) lives on the wrapper, not the button:
+   an absolutely placed button inside the wrapper would lose its anchor. */
+.osk-grip-anchor {
   position: absolute;
   top: 6px;
   left: 50%;
   translate: -50% 0;
+}
+.osk-half-grip {
   display: grid;
   place-items: center;
   width: 64px;
@@ -343,7 +348,7 @@
    at once, so focus can return to the toggle in the same frame. */
 .osk-capsule,
 .osk-foot,
-.osk-half-grip {
+.osk-grip-anchor {
   transition: opacity 0.22s ease;
 }
 .osk-root[data-frameless] .osk-slab {
@@ -352,7 +357,7 @@
   box-shadow: none;
   backdrop-filter: none;
 }
-.osk-root[data-frameless] :is(.osk-capsule, .osk-foot, .osk-half-grip) {
+.osk-root[data-frameless] :is(.osk-capsule, .osk-foot, .osk-grip-anchor) {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -360,12 +365,16 @@
     opacity 0.22s ease,
     visibility 0.22s allow-discrete;
 }
-.osk-restore-dot {
+.osk-dot-anchor {
   position: absolute;
   top: 6px;
   right: 6px;
   z-index: 2;
   display: none;
+}
+.osk-restore-dot {
+  position: relative;
+  display: block;
   width: 14px;
   height: 14px;
   border-radius: 99px;
@@ -380,8 +389,8 @@
   border-radius: inherit;
   background: var(--primary);
 }
-.osk-root[data-frameless] .osk-restore-dot {
-  display: block;
+.osk-root[data-frameless] .osk-dot-anchor {
+  display: flex;
 }
 .osk-restore-dot:is(:hover, :focus-visible) {
   opacity: 1;
@@ -396,6 +405,7 @@
     .osk-slab,
     .osk-capsule,
     .osk-foot,
+    .osk-grip-anchor,
     .osk-half-grip,
     .osk-restore-dot
   ) {
