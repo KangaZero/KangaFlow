@@ -51,6 +51,13 @@ describe("normalizeNote", () => {
     expect(normalizeNote({ id: "x" }).color).toBe("yellow")
   })
 
+  it("rejects a stored colour that names an Object.prototype key", () => {
+    expect(normalizeNote({ color: "toString", id: "x" }).color).toBe("yellow")
+    expect(normalizeNote({ color: "constructor", id: "x" }).color).toBe(
+      "yellow"
+    )
+  })
+
   it("migrates the legacy body field into html", () => {
     expect(normalizeNote({ body: "old text", id: "x" }).html).toBe("old text")
   })

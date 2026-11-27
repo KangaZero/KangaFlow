@@ -6,13 +6,18 @@ import type { Locale } from "@/lib/i18n"
 import type { TextAlign } from "@/lib/rich-text"
 import { asArrayOf, isString, safeLocalStorage } from "@/lib/safe-storage"
 
-export type NoteColor =
-  | "yellow"
-  | "rose"
-  | "amber"
-  | "emerald"
-  | "sky"
-  | "violet"
+// The one list of note colours, in picker order; NoteColor and NOTE_COLORS
+// derive from it.
+export const NOTE_COLOR_KEYS = [
+  "amber",
+  "emerald",
+  "rose",
+  "sky",
+  "violet",
+  "yellow",
+] as const
+
+export type NoteColor = (typeof NOTE_COLOR_KEYS)[number]
 
 // bg = card/window tint · dot = the note's colour as a CSS value, published
 // as --note-c: it paints the pip (NOTE_DOT_CLASS) and the KangaFlow skin's
@@ -53,8 +58,6 @@ export const NOTE_COLORS = {
 // Paints a colour pip from the --note-c its parent (or itself) sets.
 export const NOTE_DOT_CLASS = "bg-(--note-c)"
 
-export const NOTE_COLOR_KEYS = Object.keys(NOTE_COLORS) as NoteColor[]
-
 export type Note = {
   id: string
   title: string
@@ -86,7 +89,7 @@ export function formatNoteDate(ms: number, locale: Locale): string {
 const ALIGNS: readonly TextAlign[] = ["left", "center", "right", "justify"]
 
 function isNoteColor(value: unknown): value is NoteColor {
-  return typeof value === "string" && value in NOTE_COLORS
+  return NOTE_COLOR_KEYS.some((color) => color === value)
 }
 
 export const UNTITLED_BASE = "Untitled note"
