@@ -25,11 +25,7 @@ import {
   initialNiriState,
   niriReducer,
 } from "@/components/niri/engine"
-import {
-  isHelpKey,
-  isTypingTarget,
-  keyToAction,
-} from "@/components/niri/keymap"
+import { isHelpKey, keyToAction } from "@/components/niri/keymap"
 import { NiriHelpDialog } from "@/components/niri/niri-help-dialog"
 import { NoctaliaBar } from "@/components/niri/noctalia-bar"
 import {
@@ -69,6 +65,7 @@ import { playSfx } from "@/lib/sfx/play"
 import { matrixToGlyphRain } from "@/lib/terminal/cmatrix"
 import { SOURCE_FILES } from "@/lib/terminal/source"
 import { DEFAULT_THEME, isTheme } from "@/lib/themes"
+import { isTypingTarget } from "@/lib/typing-target"
 import { cn } from "@/lib/utils"
 import { Z_LAYERS } from "@/lib/z-order"
 import { useGlobalStates } from "@/providers/global-state-provider"

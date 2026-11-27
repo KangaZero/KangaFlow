@@ -127,6 +127,16 @@ export const DEFAULT_SHORTCUTS: readonly Shortcut[] = [
   },
 ]
 
+// A command modifier is held (Ctrl, Meta/Cmd or Alt/Option). Shift alone is
+// not one: Shift+letter is typing. While the on-screen Corne keyboard is open,
+// the dispatcher only runs shortcuts that have one, so plain keys typed into
+// the Corne (a bare "f") don't trigger bare-key actions like link hints.
+export function hasCommandModifier(
+  event: Pick<KeyboardEvent, "altKey" | "ctrlKey" | "metaKey">
+): boolean {
+  return event.ctrlKey || event.metaKey || event.altKey
+}
+
 // Actions allowed to bind to a bare key (no modifier). Vimium-style triggers are
 // bare by design; the dispatcher already ignores shortcuts while a text field is
 // focused (isTypingTarget), so a bare key can't fire mid-typing. Used to relax

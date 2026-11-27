@@ -6,11 +6,11 @@ import { useEffect, useEffectEvent } from "react"
 import { type AppPath, nextAchievementLayout } from "@/lib/globalStates"
 import { enterHints, isHintActive } from "@/lib/hint-store"
 import { hrefForRoute, PAGE } from "@/lib/pages"
-import { matchesShortcut } from "@/lib/shortcuts"
+import { hasCommandModifier, matchesShortcut } from "@/lib/shortcuts"
 import { DEFAULT_THEME, isTheme, nextTheme } from "@/lib/themes"
+import { isTypingTarget } from "@/lib/typing-target"
 import { useGlobalStates } from "@/providers/global-state-provider"
 import { useLocale } from "@/providers/locale-provider"
-import { isTypingTarget } from "@/providers/theme-provider"
 
 // Single global keydown listener: matches the user's configured shortcuts and
 // runs the corresponding action. Replaces the old hardcoded theme hotkey.
@@ -33,6 +33,7 @@ export function ShortcutDispatcher() {
     achievementLayout,
     setAchievementLayout,
     isHelloEffectAnimationComplete,
+    isKeyboardOpen,
   } = useGlobalStates()
 
   // An Effect Event: always sees the latest state/settings, yet never needs to
@@ -44,6 +45,10 @@ export function ShortcutDispatcher() {
     // handles keys); don't also run shortcuts.
     if (isHintActive()) return
     if (isTypingTarget(event.target)) return
+    // The on-screen Corne keyboard mirrors plain typing, so while it is open
+    // only shortcuts with a command modifier run (a bare "f" is a keystroke
+    // there, not link hints).
+    if (isKeyboardOpen && !hasCommandModifier(event)) return
 
     const hit = shortcuts.find((shortcut) => matchesShortcut(event, shortcut))
     if (!hit) return

@@ -5,6 +5,7 @@ import {
   bindingFromKeyboardEvent,
   DEFAULT_SHORTCUTS,
   formatShortcut,
+  hasCommandModifier,
   loadShortcuts,
   matchesShortcut,
   type Shortcut,
@@ -275,5 +276,20 @@ describe("shortcutProblem", () => {
     const hints = at("toggleHints")
     if (!hints) throw new Error("missing default")
     expect(shortcutProblem(hints, all)).toBeNull()
+  })
+})
+
+describe("hasCommandModifier", () => {
+  const key = (init: KeyboardEventInit) => new KeyboardEvent("keydown", init)
+
+  it("is true for Ctrl, Meta or Alt", () => {
+    expect(hasCommandModifier(key({ ctrlKey: true, key: "f" }))).toBe(true)
+    expect(hasCommandModifier(key({ key: "f", metaKey: true }))).toBe(true)
+    expect(hasCommandModifier(key({ altKey: true, key: "f" }))).toBe(true)
+  })
+
+  it("is false for a bare key or Shift alone (that is typing)", () => {
+    expect(hasCommandModifier(key({ key: "f" }))).toBe(false)
+    expect(hasCommandModifier(key({ key: "F", shiftKey: true }))).toBe(false)
   })
 })

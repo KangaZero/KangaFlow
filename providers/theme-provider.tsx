@@ -25,19 +25,4 @@ function ThemeProvider({
   )
 }
 
-// True when the event target is a text-entry element — used by the global
-// shortcut dispatcher to ignore bare-key shortcuts while the user is typing.
-function isTypingTarget(target: EventTarget | null) {
-  if (!(target instanceof HTMLElement)) {
-    return false
-  }
-
-  return (
-    target.isContentEditable ||
-    target.tagName === "INPUT" ||
-    target.tagName === "TEXTAREA" ||
-    target.tagName === "SELECT"
-  )
-}
-
-export { isTypingTarget, ThemeProvider }
+export { ThemeProvider }
