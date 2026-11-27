@@ -157,7 +157,9 @@ export function NotesWidget(): React.JSX.Element {
           </div>
         </div>
         {preview !== "" ? (
-          <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+          // foreground/80, not muted: muted on the tinted card fell under AA
+          // (4.4:1) in the light theme.
+          <p className="text-foreground/80 mt-1 line-clamp-2 text-xs">
             {preview}
           </p>
         ) : null}
