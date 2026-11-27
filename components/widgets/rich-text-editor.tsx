@@ -77,6 +77,7 @@ function ToolbarToggle({
       aria-label={label}
       aria-pressed={active}
       className={cn(active && "bg-muted text-foreground")}
+      data-env-part="tool"
       onMouseDown={(e) => {
         e.preventDefault()
         onToggle()
@@ -241,7 +242,7 @@ export function RichTextEditor({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <span className="bg-border mx-0.5 h-4 w-px" />
+        <span className="bg-border mx-0.5 h-4 w-px" data-env-part="tool-sep" />
 
         {/* Alignment (document-level) */}
         {ALIGNMENTS.map(({ icon: Icon, value }) => (
@@ -249,6 +250,7 @@ export function RichTextEditor({
             aria-label={translate(`widgets.editor.align.${value}`)}
             aria-pressed={align === value}
             className={cn(align === value && "bg-muted text-foreground")}
+            data-env-part="tool"
             key={value}
             onMouseDown={(e) => {
               e.preventDefault()
@@ -262,7 +264,7 @@ export function RichTextEditor({
           </Button>
         ))}
 
-        <span className="bg-border mx-0.5 h-4 w-px" />
+        <span className="bg-border mx-0.5 h-4 w-px" data-env-part="tool-sep" />
 
         {/* Spacing (document-level: line + letter) */}
         <DropdownMenu>
@@ -314,7 +316,7 @@ export function RichTextEditor({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <span className="bg-border mx-0.5 h-4 w-px" />
+        <span className="bg-border mx-0.5 h-4 w-px" data-env-part="tool-sep" />
 
         {/* Raw HTML view toggle */}
         <ToolbarToggle

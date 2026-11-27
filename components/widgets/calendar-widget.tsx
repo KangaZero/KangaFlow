@@ -130,6 +130,7 @@ function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
       <PopoverTrigger asChild>
         <button
           className="hover:bg-accent hover:text-accent-foreground flex items-center gap-1 rounded-md px-2 py-0.5 text-sm font-medium transition-colors"
+          data-env-part="cal-caption"
           id={id}
           type="button"
         >
@@ -143,6 +144,7 @@ function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
           <button
             aria-label={translate("widgets.calendar.previousYear")}
             className="hover:bg-accent hover:text-accent-foreground rounded p-1 transition-colors"
+            data-env-part="key"
             onClick={() => shiftYear(-1)}
             type="button"
           >
@@ -152,6 +154,7 @@ function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
           <button
             aria-label={translate("widgets.calendar.nextYear")}
             className="hover:bg-accent hover:text-accent-foreground rounded p-1 transition-colors"
+            data-env-part="key"
             onClick={() => shiftYear(1)}
             type="button"
           >
@@ -162,11 +165,13 @@ function CaptionLabelPicker({ id }: CaptionLabelProps): React.JSX.Element {
         <div className="grid grid-cols-4 gap-1">
           {monthNames.map((name, i) => (
             <button
+              aria-pressed={i === monthIdx}
               className={cn(
                 "hover:bg-accent hover:text-accent-foreground rounded px-1 py-1.5 text-xs transition-colors",
                 i === monthIdx &&
                   "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
               )}
+              data-env-part="cal-month"
               key={name}
               onClick={() => pickMonth(i)}
               type="button"
@@ -262,7 +267,10 @@ export function CalendarWidget(): React.JSX.Element {
               mode="single"
               modifiers={hasEventModifier}
               modifiersClassNames={{
-                hasEvent: "font-bold underline decoration-primary decoration-2",
+                // rdp-has-event: a stable hook (no styles of its own) for the
+                // KangaFlow skin's event dot.
+                hasEvent:
+                  "rdp-has-event font-bold underline decoration-primary decoration-2",
               }}
               month={month}
               onMonthChange={setMonth}
@@ -274,7 +282,10 @@ export function CalendarWidget(): React.JSX.Element {
 
         {/* Day event list */}
         <div className="border-border flex flex-col gap-2 border-t p-3">
-          <p className="text-muted-foreground text-xs font-medium">
+          <p
+            className="text-muted-foreground text-xs font-medium"
+            data-env-part="cal-date"
+          >
             {selected
               ? selected.toLocaleDateString(locale, {
                   day: "numeric",
@@ -289,6 +300,7 @@ export function CalendarWidget(): React.JSX.Element {
               <motion.div
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center gap-2"
+                data-env-part="cal-event"
                 exit={{ opacity: 0, x: -8 }}
                 initial={{ opacity: 0, x: -8 }}
                 key={ev.id}
@@ -296,6 +308,7 @@ export function CalendarWidget(): React.JSX.Element {
               >
                 <span
                   className={cn("size-2 shrink-0 rounded-full", ev.color)}
+                  data-env-part="cal-event-dot"
                 />
                 <span className="flex-1 truncate text-sm">{ev.title}</span>
                 <motion.button
@@ -306,6 +319,7 @@ export function CalendarWidget(): React.JSX.Element {
                     }
                   )}
                   className="text-muted-foreground hover:text-destructive rounded p-0.5"
+                  data-env-part="key flat"
                   onClick={() => deleteEvent(ev.id)}
                   transition={SPRING_TAP}
                   type="button"
@@ -327,12 +341,14 @@ export function CalendarWidget(): React.JSX.Element {
                     aria-label={interpolate(translate("widgets.colorOption"), {
                       color: translate(`widgets.colors.${name}`),
                     })}
+                    aria-pressed={newColor === c}
                     className={cn(
                       "size-4 rounded-full",
                       c,
                       newColor === c &&
                         "ring-ring scale-125 ring-2 ring-offset-1"
                     )}
+                    data-env-part="cal-swatch"
                     key={c}
                     onClick={() => setNewColor(c)}
                     transition={SPRING_TAP}
@@ -358,7 +374,7 @@ export function CalendarWidget(): React.JSX.Element {
             <motion.button
               aria-label={translate("widgets.calendar.addEvent")}
               className="border-border bg-muted/40 hover:bg-muted rounded border p-1"
-              data-env-part="key flat"
+              data-env-part="key-primary flat"
               onClick={addEvent}
               transition={SPRING_TAP}
               type="button"

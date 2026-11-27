@@ -247,7 +247,7 @@
   &
     :is(
       [data-env-part~="key"],
-      [data-env-part="key-primary"],
+      [data-env-part~="key-primary"],
       [data-env-part="win-ctrl"],
       [data-env-part="win-close"]
     ) {
@@ -274,7 +274,7 @@
       transform: skewX(calc(var(--kf-skew) * -1));
     }
   }
-  & :is([data-env-part="key-primary"], [data-env-part="win-close"]) {
+  & :is([data-env-part~="key-primary"], [data-env-part="win-close"]) {
     border-color: var(--primary);
     color: var(--primary-foreground);
     background: var(--primary);
@@ -438,15 +438,8 @@
     color: var(--qa-gold);
   }
 
-  /* Calendar (react-day-picker's own class hooks): today is a lit key, the
-     weekday row gold italics, month nav keys. */
-  & .rdp-today:not([data-selected="true"]) button {
-    border-radius: 0;
-    font-weight: 800;
-    color: var(--qa-slab);
-    background: var(--qa-hi);
-    transform: skewX(var(--kf-skew));
-  }
+  /* Calendar (react-day-picker's own class hooks): weekday row gold
+     italics, month nav keys. Day keys are in the widget section below. */
   & .rdp-weekday {
     font-style: italic;
     font-weight: 800;
@@ -514,11 +507,304 @@
   }
 }
 
+/* ── Widgets round 3: Calendar, Notes, Corne (A · Keycap slab) ──
+   [!IMPORTANT] Human review needed — AI-generated, unreviewed. See AI_POLICY.md. */
+:root[data-env-skin="kangaflow"] {
+  /* No overflow: a widget panel is never narrower than its content can
+     shrink to (the inline width from DraggableWindow is the floor, this the
+     ceiling's floor). Truncating text must not set that width, so it gets
+     contain: inline-size and truncates instead. The body keeps a little
+     extra room on the right for the skew overhang and the gold shadow. */
+  & [data-env-widget] {
+    min-inline-size: min-content;
+  }
+  /* Only inside the body: the title-bar title must keep its own width (with
+     contain it shrank to a couple of letters). */
+  & [data-env-part="widget-body"] {
+    padding-inline: 4px 8px;
+    & :is(.truncate, .line-clamp-2) {
+      contain: inline-size;
+    }
+  }
+
+  /* ── Calendar ── */
+  & [data-env-part="cal-caption"] {
+    border-radius: 0;
+    font-style: italic;
+    font-weight: 800;
+    background: color-mix(in oklch, var(--qa-hi) 22%, transparent);
+    padding-inline: 10px 18px;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  }
+  & [data-env-part="cal-month"] {
+    border: 2px solid transparent;
+    border-radius: 0;
+    font-weight: 700;
+    &[aria-pressed="true"] {
+      color: var(--qa-slab);
+      background: var(--qa-hi);
+      border-color: var(--qa-hi);
+      box-shadow: 2px 2px 0 var(--qa-gold);
+    }
+  }
+  & .rdp-day button {
+    border: 2px solid transparent;
+    border-radius: 0;
+    font-weight: 700;
+    &:hover {
+      background: transparent;
+      border-color: color-mix(in oklch, var(--qa-hi) 55%, transparent);
+    }
+  }
+  & .rdp-outside button {
+    font-style: italic;
+    font-weight: 400;
+  }
+  /* Event days: a gold square under the number instead of the underline. */
+  & .rdp-has-event button {
+    text-decoration: none;
+    &::after {
+      content: "";
+      position: absolute;
+      inset-block-end: 3px;
+      inset-inline-start: 50%;
+      inline-size: 5px;
+      block-size: 5px;
+      translate: -50% 0;
+      background: var(--qa-gold);
+    }
+  }
+  /* Selected = the lit key (the bar's launcher); today when not selected =
+     a gold-edged key, so it never reads as a second selection. */
+  & .rdp-day[data-selected="true"] button {
+    color: var(--qa-slab);
+    background: var(--qa-hi);
+    font-weight: 800;
+    box-shadow: 3px 3px 0 var(--qa-gold);
+    transform: skewX(var(--kf-skew));
+  }
+  & .rdp-today:not([data-selected="true"]) button {
+    color: var(--qa-gold-ink);
+    background: transparent;
+    border-color: var(--qa-gold);
+    font-weight: 800;
+  }
+  & [data-env-part="cal-date"] {
+    justify-self: start;
+    padding-block-end: 1px;
+    border-block-end: 2px solid var(--qa-gold);
+    font-style: italic;
+    font-weight: 800;
+    color: var(--foreground);
+    inline-size: fit-content;
+  }
+  /* Event rows slide in with Motion (x): frame only, no transform. */
+  & [data-env-part="cal-event"] {
+    padding: 3px 6px;
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 35%, transparent);
+  }
+  & :is([data-env-part="cal-event-dot"], [data-env-part="cal-swatch"]) {
+    border-radius: 0;
+  }
+  /* Swatches scale with Motion (whileHover): the pick is a gold outline. */
+  & [data-env-part="cal-swatch"][aria-pressed="true"] {
+    --tw-ring-shadow: 0 0 #0000;
+    outline: 2px solid var(--qa-gold);
+    outline-offset: 2px;
+  }
+
+  /* ── Notes ── Cards are Motion layout elements (reorder + whileHover):
+     the colour band and the pinned shadow are box-shadows, no transform. */
+  & [data-env-part="note-card"] {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 30%, transparent);
+    border-radius: 0;
+    box-shadow: inset 5px 0 0 var(--note-c, var(--qa-hi));
+    &[data-pinned="true"] {
+      border-color: var(--qa-hi);
+      box-shadow:
+        inset 5px 0 0 var(--note-c, var(--qa-hi)),
+        4px 4px 0 var(--qa-gold);
+    }
+  }
+  & [data-env-part="note-title"] {
+    font-style: italic;
+    font-weight: 800;
+  }
+  & [data-env-part="note-tag"] {
+    border: 1px solid currentColor;
+    border-block-end-width: 2px;
+    border-radius: 0;
+    color: var(--foreground);
+    background: transparent;
+    font-weight: 700;
+  }
+  & [data-env-part="note-meta"] {
+    font-style: italic;
+    color: var(--qa-gold-ink);
+  }
+  & [data-env-part="empty"] {
+    font-style: italic;
+    font-weight: 800;
+    &::after {
+      content: "";
+      display: block;
+      inline-size: 44px;
+      block-size: 2px;
+      margin: 8px auto 0;
+      background: var(--qa-gold);
+    }
+  }
+  & [data-env-part="note-ed-title"] {
+    font-style: italic;
+    font-weight: 800;
+    text-shadow: 0.06em 0.06em 0 var(--primary);
+  }
+  & [data-env-part="tool"] {
+    border: 2px solid transparent;
+    border-radius: 0;
+    transform: skewX(var(--kf-skew));
+    & > svg {
+      transform: skewX(calc(var(--kf-skew) * -1));
+    }
+    &:hover {
+      border-color: color-mix(in oklch, var(--qa-hi) 45%, transparent);
+    }
+    &[aria-pressed="true"] {
+      color: var(--qa-slab);
+      background: var(--qa-hi);
+      box-shadow: 2px 2px 0 var(--qa-gold);
+    }
+  }
+  & [data-env-part="tool-sep"] {
+    inline-size: 2px;
+    background: var(--qa-gold);
+    transform: skewX(var(--kf-skew));
+  }
+
+  /* ── Corne keyboard · A Keycap slab (its own stable .osk-* hooks) ── */
+  & .osk-capsule {
+    border: 2px solid var(--qa-hi);
+    border-radius: 0;
+    background: var(--qa-slab);
+    box-shadow: 4px 4px 0 var(--qa-gold);
+  }
+  & .osk-title {
+    font-style: italic;
+    font-weight: 800;
+  }
+  & .osk-tabs {
+    gap: 4px;
+    border-radius: 0;
+    background: transparent;
+  }
+  & .osk-tab {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 45%, transparent);
+    border-radius: 0;
+    font-weight: 800;
+    color: color-mix(in oklch, var(--foreground) 80%, transparent);
+    transform: skewX(var(--kf-skew));
+    &[aria-pressed="true"] {
+      color: var(--qa-slab);
+      background: var(--qa-hi);
+      border-color: var(--qa-hi);
+      box-shadow: 2px 2px 0 var(--qa-gold);
+    }
+  }
+  & .osk-toggle {
+    border-width: 2px;
+    border-radius: 0;
+    font-weight: 700;
+    transform: skewX(var(--kf-skew));
+  }
+  & .osk-icon-btn {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 45%, transparent);
+    border-radius: 0;
+    transform: skewX(var(--kf-skew));
+  }
+  & .osk-slab {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 45%, transparent);
+    border-radius: 0;
+    background: color-mix(in oklch, var(--qa-slab) 88%, transparent);
+    box-shadow: 5px 5px 0 var(--qa-gold);
+  }
+  & .osk-half-grip {
+    border-radius: 0;
+    &::before {
+      border-radius: 0;
+      background: var(--qa-gold);
+    }
+  }
+  /* Keys: a thick bottom edge; pressed now = the lit key, held = gold. */
+  & .osk-key {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 28%, transparent);
+    border-block-end-width: 5px;
+    border-radius: 2px;
+    background: color-mix(in oklch, var(--qa-slab) 75%, var(--card));
+    box-shadow: none;
+    font-weight: 800;
+    &[data-kind="mod"] {
+      font-style: italic;
+      color: var(--qa-gold-ink);
+    }
+    &[data-kind="none"] {
+      border-style: dashed;
+      border-block-end-width: 2px;
+      background: transparent;
+    }
+    &:is([data-down], [data-lit]) {
+      border-color: var(--qa-hi);
+      border-block-end-width: 2px;
+      color: var(--qa-slab);
+      background: var(--qa-hi);
+      box-shadow: 3px 3px 0 var(--qa-gold);
+      outline: none;
+    }
+    &[aria-pressed="true"] {
+      border-color: var(--qa-gold);
+      color: var(--qa-on-bright);
+      background: var(--qa-gold);
+      & .osk-hold {
+        color: inherit;
+      }
+    }
+    &:focus-visible {
+      outline: 2px solid var(--qa-hi);
+      outline-offset: 2px;
+    }
+  }
+  & .osk-foot {
+    border: 2px solid color-mix(in oklch, var(--qa-hi) 45%, transparent);
+    border-radius: 0;
+    background: var(--qa-slab);
+    font-style: italic;
+  }
+  & .osk-flag {
+    border-width: 2px;
+    border-block-end-width: 3px;
+    border-radius: 0;
+    font-weight: 700;
+    &[data-on] {
+      color: var(--qa-slab);
+      background: var(--qa-hi);
+    }
+  }
+}
+
 /* ── Motion: the pause menu's own curves (components/ui/slab-motion.css).
    Only when motion is allowed: the OS setting here, the site preference via
    data-env-reduced on <html>. Reduced = every state shows, nothing moves. ── */
 @media (prefers-reduced-motion: no-preference) {
   :root[data-env-skin="kangaflow"]:not([data-env-reduced="true"]) {
+    /* Widgets: Corne halves wipe in, calendar days drop. Note cards get no
+       CSS entrance: they are Motion elements with their own (opacity +
+       scale), and a stacked translate entrance stalled at +60px for over a
+       second, pushing the card out of its panel. */
+    & .osk-slab {
+      animation: pm-wipe 0.45s var(--ease-wipe) backwards;
+    }
+    & .rdp-day {
+      animation: pm-drop 0.4s var(--ease-slam) backwards;
+    }
     & [data-env-surface="bar"] {
       animation: slab-slam 0.5s var(--ease-slam) backwards;
     }

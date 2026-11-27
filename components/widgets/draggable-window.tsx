@@ -370,6 +370,9 @@ export function DraggableWindow({
               anchorClass
             )}
             data-env-surface="window"
+            // Widget panel (vs a tiled niri window): the KangaFlow skin sizes
+            // it to at least its content.
+            data-env-widget=""
             data-focused={isActive}
             drag
             dragConstraints={dragBounds.current}
@@ -467,7 +470,12 @@ export function DraggableWindow({
               </Button>
             </div>
 
-            <div className="min-h-0 flex-1 overflow-auto">{children}</div>
+            <div
+              className="min-h-0 flex-1 overflow-auto"
+              data-env-part="widget-body"
+            >
+              {children}
+            </div>
 
             {/* Resize handle — bottom-right corner, uses pointer capture */}
             <div

@@ -105,19 +105,22 @@ export function NotesWidget(): React.JSX.Element {
           colors.bg,
           openIds.includes(note.id) && "ring-ring ring-1"
         )}
+        data-env-part="note-card"
+        data-pinned={note.pinned}
         exit={{ opacity: 0, scale: 0.95 }}
         initial={{ opacity: 0, scale: 0.95 }}
         key={note.id}
         layout
         layoutId={note.id}
         onClick={() => openNote(note.id)}
+        style={{ "--note-c": colors.accent }}
         transition={SPRING_REORDER}
         whileHover={{ y: -2 }}
       >
         <div className="flex items-start justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-1.5">
             <span className={cn("size-2 shrink-0 rounded-full", colors.dot)} />
-            <span className="truncate font-medium">
+            <span className="truncate font-medium" data-env-part="note-title">
               {note.title.trim() === ""
                 ? translate("widgets.notes.untitled")
                 : note.title}
@@ -168,6 +171,7 @@ export function NotesWidget(): React.JSX.Element {
             {note.tags.map((tag) => (
               <span
                 className="bg-muted text-muted-foreground rounded-full px-1.5 py-0.5 text-[10px]"
+                data-env-part="note-tag"
                 key={tag}
               >
                 {tag}
@@ -175,7 +179,10 @@ export function NotesWidget(): React.JSX.Element {
             ))}
           </div>
         ) : null}
-        <p className="text-muted-foreground/80 mt-1.5 text-[10px]">
+        <p
+          className="text-muted-foreground/80 mt-1.5 text-[10px]"
+          data-env-part="note-meta"
+        >
           {interpolate(translate("widgets.notes.created"), {
             date: formatNoteDate(note.createdOn, locale),
           })}
@@ -207,6 +214,7 @@ export function NotesWidget(): React.JSX.Element {
           <div className="border-border flex flex-col gap-2 border-b p-2">
             <motion.button
               className="bg-primary text-primary-foreground flex w-full items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium shadow-sm"
+              data-env-part="key-primary flat"
               onClick={addNote}
               transition={SPRING_TAP}
               type="button"
@@ -216,7 +224,10 @@ export function NotesWidget(): React.JSX.Element {
               <Plus className="size-4" />
               {translate("widgets.notes.newNote")}
             </motion.button>
-            <div className="border-border bg-muted/40 flex items-center gap-1.5 rounded-md border px-2">
+            <div
+              className="border-border bg-muted/40 flex items-center gap-1.5 rounded-md border px-2"
+              data-env-part="field"
+            >
               <Search className="text-muted-foreground size-3.5 shrink-0" />
               <input
                 aria-label={translate("widgets.notes.search")}
@@ -239,6 +250,7 @@ export function NotesWidget(): React.JSX.Element {
                 <motion.p
                   animate={{ opacity: 1 }}
                   className="text-muted-foreground py-8 text-center text-sm"
+                  data-env-part="empty"
                   initial={{ opacity: 0 }}
                 >
                   {translate("widgets.notes.empty")}
@@ -247,6 +259,7 @@ export function NotesWidget(): React.JSX.Element {
                 <motion.p
                   animate={{ opacity: 1 }}
                   className="text-muted-foreground py-8 text-center text-sm"
+                  data-env-part="empty"
                   initial={{ opacity: 0 }}
                 >
                   {translate("widgets.notes.noMatches")}

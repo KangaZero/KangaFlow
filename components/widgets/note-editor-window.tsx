@@ -84,6 +84,7 @@ export function NoteEditorWindow({
         {/* Title */}
         <input
           className="border-border placeholder:text-muted-foreground shrink-0 border-b bg-transparent px-3 py-2 text-sm font-semibold outline-none"
+          data-env-part="note-ed-title"
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder={translate("widgets.notes.titlePlaceholder")}
           ref={titleRef}
